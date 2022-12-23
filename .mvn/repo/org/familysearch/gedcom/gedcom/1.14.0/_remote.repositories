@@ -1,0 +1,6 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Fri Dec 23 20:07:39 ART 2022
+gedcom-1.14.0.pom>local-maven-repo=
+gedcom-1.14.0.jar>=
+gedcom-1.14.0.pom>=
+gedcom-1.14.0.jar>local-maven-repo=
