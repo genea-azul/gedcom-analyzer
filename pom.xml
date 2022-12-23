@@ -19,7 +19,7 @@
 
   <properties>
     <java.version>17</java.version>
-    <gedcom.version>1.15.1</gedcom.version>
+    <gedcom.version>1.14.0</gedcom.version>
     <commons-collections4.version>4.4</commons-collections4.version>
     <commons-io.version>2.11.0</commons-io.version>
     <commons-lang3.version>3.12.0</commons-lang3.version>
@@ -111,5 +111,12 @@
       </plugin>
     </plugins>
   </build>
+
+  <repositories>
+    <repository>
+      <id>local-maven-repo</id>
+      <url>file:///${project.basedir}/.mvn/repo</url>
+    </repository>
+  </repositories>
 
 </project>
