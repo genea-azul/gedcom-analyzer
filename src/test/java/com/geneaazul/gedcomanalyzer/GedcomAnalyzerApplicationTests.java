@@ -7,7 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 class GedcomAnalyzerApplicationTests {
 
     @Test
-    void contextLoads() {
+    public void contextLoads() {
     }
 
 }
