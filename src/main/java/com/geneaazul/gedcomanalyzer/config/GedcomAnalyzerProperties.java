@@ -2,6 +2,7 @@ package com.geneaazul.gedcomanalyzer.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.system.SystemProperties;
+import org.springframework.context.annotation.Configuration;
 
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -10,6 +11,7 @@ import java.time.Period;
 import lombok.Getter;
 
 @Getter
+@Configuration
 @ConfigurationProperties
 public class GedcomAnalyzerProperties {
 
