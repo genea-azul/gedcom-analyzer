@@ -1,6 +1,6 @@
 package com.geneaazul.gedcomanalyzer.model;
 
-import org.apache.commons.lang3.tuple.Pair;
+import com.geneaazul.gedcomanalyzer.domain.Date;
 
 import java.util.List;
 
@@ -27,7 +27,11 @@ public class PersonDto {
     private boolean alive;
     @ToString.Include
     private String displayName;
+    @ToString.Include
+    private String dateOfBirth;
+    @ToString.Include
+    private String dateOfDeath;
     private List<String> parents;
-    private List<Pair<String, Integer>> spouses;
+    private List<SpouseWithChildrenCountDto> spouses;
 
 }

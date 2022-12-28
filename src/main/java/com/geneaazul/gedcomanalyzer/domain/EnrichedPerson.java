@@ -77,9 +77,9 @@ public class EnrichedPerson {
                 .or(() -> isAlive ? Optional.of(Date.now()) : Optional.empty()));
 
         displayNameForSearch = PersonUtils.getDisplayNameForSearch(person);
-        givenNameForSearch = PersonUtils.getNormalizedGivenNameForSearch(person);
+        givenNameForSearch = PersonUtils.getNormalizedGivenNameForSearch(person, properties.getNormalizedNamesMap());
         surnameForSearch = PersonUtils.getSurnameForSearch(person);
-        surnameMainWordForSearch = PersonUtils.getSurnameMainWordForSearch(person);
+        surnameMainWordForSearch = PersonUtils.getSurnameMainWordForSearch(person, properties.getNormalizedSurnamesMap());
         placeOfBirthForSearch = placeOfBirth
                 .map(PlaceUtils::removeLastParenthesis);
         countryOfBirthForSearch = placeOfBirthForSearch

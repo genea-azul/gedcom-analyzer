@@ -2,12 +2,24 @@ package com.geneaazul.gedcomanalyzer.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
+
 import org.folg.gedcom.model.EventFact;
 import org.folg.gedcom.model.Name;
 import org.folg.gedcom.model.Person;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
+@SpringBootTest
+@EnableConfigurationProperties
+@ActiveProfiles("test")
 public class SearchUtilsTests {
+
+    @Autowired
+    private GedcomAnalyzerProperties properties;
 
     @Test
     public void testGetNormalizedGivenNameForSearch() {
@@ -23,7 +35,7 @@ public class SearchUtilsTests {
         person.addName(name);
         person.addEventFact(sexEventFact);
 
-        assertThat(PersonUtils.getNormalizedGivenNameForSearch(person))
+        assertThat(PersonUtils.getNormalizedGivenNameForSearch(person, properties.getNormalizedNamesMap()))
                 .get()
                 .satisfies(givenName -> {
                     assertThat(givenName.getName()).isEqualTo("d yicbjejizaeu domingo");
@@ -54,7 +66,7 @@ public class SearchUtilsTests {
         Person person = new Person();
         person.addName(name);
 
-        assertThat(PersonUtils.getSurnameMainWordForSearch(person))
+        assertThat(PersonUtils.getSurnameMainWordForSearch(person, properties.getNormalizedSurnamesMap()))
                 .contains("dianigevescl_");
     }
 

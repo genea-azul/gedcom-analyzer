@@ -18,12 +18,14 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.net.URL;
 
 @WebMvcTest(GedcomAnalyzerController.class)
 @Import({GedcomParsingService.class, GedcomAnalyzerService.class, GedcomAnalyzerProperties.class, SearchService.class, PersonMapper.class})
+@ActiveProfiles("test")
 class GedcomAnalyzerControllerIT {
 
     @Autowired

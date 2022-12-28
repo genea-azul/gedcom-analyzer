@@ -93,9 +93,9 @@ public class PersonUtils {
                 .filter(StringUtils::isNotEmpty);
     }
 
-    public static Optional<GivenName> getNormalizedGivenNameForSearch(Person person) {
+    public static Optional<GivenName> getNormalizedGivenNameForSearch(Person person, Map<SearchUtils.NameAndSex, String> normalizedNamesMap) {
         return getGivenNameForSearch(person)
-                .map(name -> SearchUtils.normalizeName(name, PersonUtils.getSex(person)))
+                .map(name -> SearchUtils.normalizeName(name, PersonUtils.getSex(person), normalizedNamesMap))
                 .map(GivenName::of);
     }
 
@@ -117,9 +117,9 @@ public class PersonUtils {
                 .filter(StringUtils::isNotEmpty);
     }
 
-    public static Optional<String> getSurnameMainWordForSearch(Person person) {
+    public static Optional<String> getSurnameMainWordForSearch(Person person, Map<String, String> normalizedSurnamesMap) {
         return getSurnameForSearch(person)
-                .map(SearchUtils::normalizeSurname);
+                .map(surname -> SearchUtils.normalizeSurname(surname, normalizedSurnamesMap));
     }
 
     public static Optional<String> getDateOfBirth(Person person) {
