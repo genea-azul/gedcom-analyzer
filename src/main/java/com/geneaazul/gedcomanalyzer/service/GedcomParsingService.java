@@ -37,6 +37,11 @@ public class GedcomParsingService {
 
     private final GedcomAnalyzerProperties properties;
 
+    public EnrichedGedcom parse(Path gedcomPath) throws IOException, SAXParseException {
+        Gedcom gedcom = parseGedcom(gedcomPath.toFile());
+        return EnrichedGedcom.of(gedcom, gedcomPath.toString(), properties);
+    }
+
     public EnrichedGedcom parse(MultipartFile gedcomFile) throws IOException, SAXParseException {
         log.info("Upload gedcom: {}", gedcomFile.getOriginalFilename());
         Path gedcomDirPath = null;
@@ -90,7 +95,7 @@ public class GedcomParsingService {
     }
 
     public Gedcom parseGedcom(File gedcomFile) throws IOException, SAXParseException {
-        log.info("Parse gedcom: {}", gedcomFile);
+        log.info("Parse gedcom file: {}", gedcomFile);
         ModelParser modelParser = new ModelParser();
         Gedcom gedcom = modelParser.parseGedcom(gedcomFile);
         gedcom.createIndexes();

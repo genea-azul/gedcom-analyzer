@@ -1,5 +1,8 @@
 package com.geneaazul.gedcomanalyzer.config;
 
+import com.geneaazul.gedcomanalyzer.model.SexType;
+import com.geneaazul.gedcomanalyzer.utils.SearchUtils;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.system.SystemProperties;
 import org.springframework.context.annotation.Configuration;
@@ -7,10 +10,17 @@ import org.springframework.context.annotation.Configuration;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import jakarta.annotation.PostConstruct;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter
 @Configuration
 @ConfigurationProperties
 public class GedcomAnalyzerProperties {
@@ -40,7 +50,18 @@ public class GedcomAnalyzerProperties {
     private Period matchByMonthMaxPeriod = Period.ofMonths(4);
     private Period matchByYearMaxPeriod = Period.ofYears(3);
 
-    public GedcomAnalyzerProperties() {
+    private Map<SearchUtils.NameAndSex, String> normalizedNamesMap;
+    private Map<String, String> normalizedSurnamesMap;
+
+    @Getter(AccessLevel.NONE)
+    private Map<String, List<String>> nameNormalizedM;
+    @Getter(AccessLevel.NONE)
+    private Map<String, List<String>> nameNormalizedF;
+    @Getter(AccessLevel.NONE)
+    private Map<String, String> surnameNormalized;
+
+    @PostConstruct
+    public void postConstruct() {
         int parentMinAge = alivePersonMaxAge + parentMinAgeDiff;
         int parentMaxAge = alivePersonMaxAge + parentMaxAgeDiff;
         int siblingMaxAge = alivePersonMaxAge + siblingMaxAgeDiff;
@@ -58,6 +79,25 @@ public class GedcomAnalyzerProperties {
         this.spouseMinDateOfDeath = now.minusYears(spouseMinAge);
         this.childMinDateOfBirth = now.minusYears(childMaxAge);
         this.childMinDateOfDeath = now.minusYears(childMaxAge);
+
+        Map<SearchUtils.NameAndSex, String> m = buildNamesMap(nameNormalizedM, SexType.M);
+        Map<SearchUtils.NameAndSex, String> f = buildNamesMap(nameNormalizedF, SexType.F);
+        m.putAll(f);
+
+        this.normalizedNamesMap = Map.copyOf(m);
+        this.normalizedSurnamesMap = Map.copyOf(surnameNormalized);
+    }
+
+    private Map<SearchUtils.NameAndSex, String> buildNamesMap(Map<String, List<String>> normalizedNames, SexType sex) {
+        return normalizedNames
+                .entrySet()
+                .stream()
+                .flatMap(entry -> entry
+                        .getValue()
+                        .stream()
+                        .map(name -> new SearchUtils.NameAndSex(name, sex))
+                        .map(nameAndSex -> Map.entry(nameAndSex, entry.getKey())))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
 }

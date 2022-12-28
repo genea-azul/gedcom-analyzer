@@ -40,7 +40,7 @@ public class EnrichedGedcom {
                 .stream()
                 .filter(person -> person.getSurnameMainWordForSearch().isPresent())
                 .filter(person -> person.getSex() != SexType.U)
-                .collect(Collectors.groupingBy(person -> NameAndSex.of(person.getSurnameMainWordForSearch().get(), person.getSex())));
+                .collect(Collectors.groupingBy(person -> new NameAndSex(person.getSurnameMainWordForSearch().get(), person.getSex())));
     }
 
     public static EnrichedGedcom of(Gedcom gedcom, String gedcomName, GedcomAnalyzerProperties properties) {
@@ -68,7 +68,7 @@ public class EnrichedGedcom {
     }
 
     public List<EnrichedPerson> getPersonsBySurnameMainWordAndSex(String surnameMainWord, SexType sex) {
-        return peopleBySurnameMainWordForSearchAndSexIndex.getOrDefault(NameAndSex.of(surnameMainWord, sex), List.of());
+        return peopleBySurnameMainWordForSearchAndSexIndex.getOrDefault(new NameAndSex(surnameMainWord, sex), List.of());
     }
 
 }
