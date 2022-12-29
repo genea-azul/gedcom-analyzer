@@ -1,6 +1,7 @@
 package com.geneaazul.gedcomanalyzer.utils;
 
 import com.geneaazul.gedcomanalyzer.domain.GivenName;
+import com.geneaazul.gedcomanalyzer.domain.NameAndSex;
 import com.geneaazul.gedcomanalyzer.model.SexType;
 
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +16,7 @@ import org.folg.gedcom.model.Person;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -65,14 +67,10 @@ public class PersonUtils {
                 .stream()
                 .map(Name::getDisplayValue)
                 .map(name -> NAME_SEPARATOR_PATTERN.matcher(name).replaceAll(""))
-                .map(StringUtils::trim)
-                .filter(StringUtils::isNotEmpty)
+                .map(StringUtils::trimToNull)
+                .filter(Objects::nonNull)
                 .findFirst()
                 .orElse("<no name>");
-    }
-
-    public static String getDisplayNameForSearch(Person person) {
-        return SearchUtils.simplifyName(getDisplayName(person));
     }
 
     /**
@@ -83,19 +81,24 @@ public class PersonUtils {
                 .stream()
                 .findFirst()
                 .map(Name::getGiven)
-                .map(StringUtils::trim)
-                .filter(StringUtils::isNotEmpty);
+                .map(StringUtils::trimToNull);
     }
 
     public static Optional<String> getGivenNameForSearch(Person person) {
         return getGivenName(person)
-                .map(SearchUtils::simplifyName)
-                .filter(StringUtils::isNotEmpty);
+                .map(SearchUtils::simplifyName);
     }
 
-    public static Optional<GivenName> getNormalizedGivenNameForSearch(Person person, Map<SearchUtils.NameAndSex, String> normalizedNamesMap) {
+    public static Optional<GivenName> getNormalizedGivenNameForSearch(Person person, Map<NameAndSex, String> normalizedNamesMap) {
         return getGivenNameForSearch(person)
                 .map(name -> SearchUtils.normalizeName(name, PersonUtils.getSex(person), normalizedNamesMap))
+                .map(GivenName::of);
+    }
+
+    public static Optional<GivenName> getNormalizedGivenNameForSearch(String givenName, SexType sex, Map<NameAndSex, String> normalizedNamesMap) {
+        return Optional.ofNullable(givenName)
+                .map(SearchUtils::simplifyName)
+                .map(name -> SearchUtils.normalizeName(name, sex, normalizedNamesMap))
                 .map(GivenName::of);
     }
 
@@ -107,19 +110,23 @@ public class PersonUtils {
                 .stream()
                 .findFirst()
                 .map(Name::getSurname)
-                .map(StringUtils::trim)
-                .filter(StringUtils::isNotEmpty);
+                .map(StringUtils::trimToNull);
     }
 
     public static Optional<String> getSurnameForSearch(Person person) {
         return getSurname(person)
-                .map(SearchUtils::simplifyName)
-                .filter(StringUtils::isNotEmpty);
+                .map(SearchUtils::simplifyName);
     }
 
     public static Optional<String> getSurnameMainWordForSearch(Person person, Map<String, String> normalizedSurnamesMap) {
         return getSurnameForSearch(person)
                 .map(surname -> SearchUtils.normalizeSurname(surname, normalizedSurnamesMap));
+    }
+
+    public static Optional<String> getSurnameMainWordForSearch(String surname, Map<String, String> normalizedSurnamesMap) {
+        return Optional.ofNullable(surname)
+                .map(SearchUtils::simplifyName)
+                .map(s -> SearchUtils.normalizeSurname(s, normalizedSurnamesMap));
     }
 
     public static Optional<String> getDateOfBirth(Person person) {
@@ -136,8 +143,7 @@ public class PersonUtils {
                         .filter(eventFact -> CHRISTENING_TAGS.contains(eventFact.getTag()))
                         .findFirst())
                 .map(EventFact::getDate)
-                .map(StringUtils::trim)
-                .filter(StringUtils::isNotEmpty);
+                .map(StringUtils::trimToNull);
     }
 
     public static Optional<String> getDateOfDeath(Person person) {
@@ -146,8 +152,7 @@ public class PersonUtils {
                 .filter(eventFact -> DEATH_TAGS.contains(eventFact.getTag()))
                 .findFirst()
                 .map(EventFact::getDate)
-                .map(StringUtils::trim)
-                .filter(StringUtils::isNotEmpty);
+                .map(StringUtils::trimToNull);
     }
 
     public static Optional<String> getPlaceOfBirth(Person person) {
@@ -164,8 +169,7 @@ public class PersonUtils {
                         .filter(eventFact -> CHRISTENING_TAGS.contains(eventFact.getTag()))
                         .findFirst())
                 .map(EventFact::getPlace)
-                .map(StringUtils::trim)
-                .filter(StringUtils::isNotEmpty);
+                .map(StringUtils::trimToNull);
     }
 
     public static List<EventFact> getCustomEventFacts(Person person) {
@@ -228,7 +232,7 @@ public class PersonUtils {
                 .toList();
     }
 
-    public static List<Pair<Optional<Person>, Integer>> getSpousesWithChildrenCount(Person person, Gedcom gedcom) {
+    public static List<Pair<Optional<Person>, List<String>>> getSpousesWithChildren(Person person, Gedcom gedcom) {
         return person
                 .getSpouseFamilies(gedcom)
                 .stream()
@@ -238,7 +242,10 @@ public class PersonUtils {
                                 family.getWives(gedcom))
                         .flatMap(List::stream)
                         .map(spouse -> spouse.getId().equals(person.getId()) ? Optional.<Person>empty() : Optional.of(spouse))
-                        .map(spouse -> Pair.of(spouse, family.getChildRefs().size()))
+                        .map(spouse -> Pair.of(spouse, family.getChildren(gedcom)
+                                .stream()
+                                .map(PersonUtils::getDisplayName)
+                                .toList()))
                         .toList())
                 .map(spouses -> spouses.size() == 1
                         ? spouses

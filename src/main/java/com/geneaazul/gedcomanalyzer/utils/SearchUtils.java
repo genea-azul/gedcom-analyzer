@@ -1,6 +1,7 @@
 package com.geneaazul.gedcomanalyzer.utils;
 
 import com.geneaazul.gedcomanalyzer.domain.GivenName;
+import com.geneaazul.gedcomanalyzer.domain.NameAndSex;
 import com.geneaazul.gedcomanalyzer.model.SexType;
 
 import org.apache.commons.lang3.RegExUtils;
@@ -33,7 +34,7 @@ public class SearchUtils {
         name = StringUtils.lowerCase(name);
         name = StringUtils.replaceEach(name, NAME_SEARCH_SPECIAL_CHARS, NAME_REPLACEMENT_SPECIAL_CHARS);
         name = RegExUtils.replaceAll(name, NAME_MULTIPLE_SPACES_PATTERN, " ");
-        name = StringUtils.trim(name);
+        name = StringUtils.trimToNull(name);
         return name;
     }
 
@@ -53,6 +54,9 @@ public class SearchUtils {
     }
 
     public static String normalizeName(String name, SexType sex, Map<NameAndSex, String> normalizedNamesMap) {
+        if (name == null || sex == null) {
+            return null;
+        }
         String[] words = StringUtils.splitByWholeSeparator(name, " ");
         return Arrays.stream(words)
                 .map(word -> Optional.ofNullable(normalizedNamesMap.get(new NameAndSex(word, sex)))
@@ -79,7 +83,5 @@ public class SearchUtils {
                 .orElse(surname);
         return surname;
     }
-
-    public record NameAndSex(String name, SexType sex) {}
 
 }

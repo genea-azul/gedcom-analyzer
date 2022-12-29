@@ -1,5 +1,7 @@
 package com.geneaazul.gedcomanalyzer.model;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,11 +15,9 @@ import lombok.ToString;
 @AllArgsConstructor
 @Builder
 @ToString(onlyExplicitlyIncluded = true)
-public class SpouseWithChildrenCountDto {
+public class SearchFamilyResultDto {
 
     @ToString.Include
-    private String displayName;
-    @ToString.Include
-    private Integer childrenCount;
+    private List<PersonDto> people;
 
 }
