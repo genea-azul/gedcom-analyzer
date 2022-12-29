@@ -1,0 +1,45 @@
+package com.geneaazul.gedcomanalyzer.model;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@ToString(onlyExplicitlyIncluded = true)
+public class SearchFamilyDto {
+
+    @Valid
+    @ToString.Include
+    private SearchPersonDto individual;
+    @Valid
+    @ToString.Include
+    private SearchPersonDto father;
+    @Valid
+    @ToString.Include
+    private SearchPersonDto mother;
+    @Valid
+    @ToString.Include
+    private SearchPersonDto paternalGrandfather;
+    @Valid
+    @ToString.Include
+    private SearchPersonDto paternalGrandmother;
+    @Valid
+    @ToString.Include
+    private SearchPersonDto maternalGrandfather;
+    @Valid
+    @ToString.Include
+    private SearchPersonDto maternalGrandmother;
+    @Size(max = 120)
+    @ToString.Include
+    private String contact;
+
+}

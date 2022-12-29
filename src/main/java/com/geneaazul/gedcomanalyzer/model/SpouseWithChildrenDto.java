@@ -15,21 +15,11 @@ import lombok.ToString;
 @AllArgsConstructor
 @Builder
 @ToString(onlyExplicitlyIncluded = true)
-public class PersonDto {
+public class SpouseWithChildrenDto {
 
-    @ToString.Include
-    private String id;
-    @ToString.Include
-    private SexType sex;
-    @ToString.Include
-    private Boolean isAlive;
     @ToString.Include
     private String name;
     @ToString.Include
-    private String dateOfBirth;
-    @ToString.Include
-    private String dateOfDeath;
-    private List<String> parents;
-    private List<SpouseWithChildrenDto> spouses;
+    private List<String> children;
 
 }

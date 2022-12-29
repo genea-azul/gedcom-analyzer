@@ -7,17 +7,21 @@ import com.geneaazul.gedcomanalyzer.domain.PersonComparisonResults;
 import com.geneaazul.gedcomanalyzer.model.PersonDto;
 import com.geneaazul.gedcomanalyzer.model.PersonDuplicateCompareDto;
 import com.geneaazul.gedcomanalyzer.model.PersonDuplicateDto;
-import com.geneaazul.gedcomanalyzer.model.SpouseWithChildrenCountDto;
+import com.geneaazul.gedcomanalyzer.model.SpouseWithChildrenDto;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 
+import org.apache.commons.lang3.tuple.Pair;
+import org.folg.gedcom.model.Person;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class PersonMapper {
 
-    public List<PersonDto> toPersonDto(List<EnrichedPerson> persons) {
+    public List<PersonDto> toPersonDto(Collection<EnrichedPerson> persons) {
         return persons
                 .stream()
                 .map(this::toPersonDto)
@@ -26,21 +30,13 @@ public class PersonMapper {
 
     public PersonDto toPersonDto(EnrichedPerson person) {
 
-        List<SpouseWithChildrenCountDto> spouses = PersonUtils.getSpousesWithChildrenCount(person.getPerson(), person.getGedcom())
-                .stream()
-                .map(spouseCountPair -> SpouseWithChildrenCountDto.builder()
-                        .displayName(spouseCountPair.getLeft()
-                                .map(PersonUtils::getDisplayName)
-                                .orElse("<no spouse>"))
-                        .childrenCount(spouseCountPair.getRight())
-                        .build())
-                .toList();
+        List<SpouseWithChildrenDto> spouses = toSpouseWithChildrenDto(PersonUtils.getSpousesWithChildren(person.getPerson(), person.getGedcom()));
 
         return PersonDto.builder()
                 .id(person.getId())
                 .sex(person.getSex())
-                .alive(person.isAlive())
-                .displayName(person.getDisplayName())
+                .isAlive(person.isAlive())
+                .name(person.getDisplayName())
                 .dateOfBirth(person.getDateOfBirth()
                         .map(Date::format)
                         .orElse(null))
@@ -55,7 +51,23 @@ public class PersonMapper {
                 .build();
     }
 
-    public List<PersonDuplicateDto> toPersonDuplicateDto(List<PersonComparisonResults> personComparisonResults) {
+    public List<SpouseWithChildrenDto> toSpouseWithChildrenDto(Collection<Pair<Optional<Person>, List<String>>> spouseChildrenPairs) {
+        return spouseChildrenPairs
+                .stream()
+                .map(this::toSpouseWithChildrenDto)
+                .toList();
+    }
+
+    public SpouseWithChildrenDto toSpouseWithChildrenDto(Pair<Optional<Person>, List<String>> spouseChildrenPair) {
+        return SpouseWithChildrenDto.builder()
+                .name(spouseChildrenPair.getLeft()
+                        .map(PersonUtils::getDisplayName)
+                        .orElse("<no spouse>"))
+                .children(spouseChildrenPair.getRight())
+                .build();
+    }
+
+    public List<PersonDuplicateDto> toPersonDuplicateDto(Collection<PersonComparisonResults> personComparisonResults) {
         return personComparisonResults
                 .stream()
                 .map(this::toPersonDuplicateDto)
@@ -69,7 +81,7 @@ public class PersonMapper {
                 .build();
     }
 
-    private List<PersonDuplicateCompareDto> toPersonDuplicateCompareDto(List<PersonComparisonResult> personComparisonResults) {
+    private List<PersonDuplicateCompareDto> toPersonDuplicateCompareDto(Collection<PersonComparisonResult> personComparisonResults) {
         return personComparisonResults
                 .stream()
                 .map(this::toPersonDuplicateDto)

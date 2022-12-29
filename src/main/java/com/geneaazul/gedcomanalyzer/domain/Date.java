@@ -7,6 +7,7 @@ import java.time.Month;
 import java.time.Period;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Optional;
@@ -15,8 +16,10 @@ import java.util.regex.Pattern;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 @Getter
+@Slf4j
 public class Date {
 
     private static final String LOCAL_DATE_REGEX = " ?(ABT|EST|BEF|AFT)?(?:(?: ?(\\d{1,2}))? ?([A-Za-z]{3}))? ?(\\d{4})";
@@ -79,8 +82,8 @@ public class Date {
         return new Date(year, month, day, operator, secondary);
     }
 
-    public static Date now() {
-        return new Date(LocalDate.now());
+    public static Date now(ZoneId zoneId) {
+        return new Date(LocalDate.now(zoneId));
     }
 
     public boolean isFullDate() {
@@ -230,7 +233,7 @@ public class Date {
                                     .orElse(null)));
         }
 
-        System.err.println("Date not parsed: " + dateStr);
+        log.warn("Date not parsed: {}", dateStr);
         return Optional.empty();
     }
 

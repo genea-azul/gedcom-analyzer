@@ -17,7 +17,7 @@ import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/analyzer")
+@RequestMapping("/api/gedcom-analyzer")
 @RequiredArgsConstructor
 public class GedcomAnalyzerController {
 

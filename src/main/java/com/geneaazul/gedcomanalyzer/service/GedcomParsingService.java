@@ -1,12 +1,15 @@
 package com.geneaazul.gedcomanalyzer.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.domain.EnrichedGedcom;
+import com.geneaazul.gedcomanalyzer.model.SearchFamilyDto;
 
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folg.gedcom.model.Gedcom;
 import org.folg.gedcom.parser.ModelParser;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.xml.sax.SAXParseException;
@@ -14,9 +17,12 @@ import org.xml.sax.SAXParseException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -36,6 +42,7 @@ public class GedcomParsingService {
     private static final String GEDCOM_FILE_EXTENSION = ".ged";
 
     private final GedcomAnalyzerProperties properties;
+    private final Jackson2ObjectMapperBuilder mapperBuilder;
 
     public EnrichedGedcom parse(Path gedcomPath) throws IOException, SAXParseException {
         Gedcom gedcom = parseGedcom(gedcomPath.toFile());
@@ -47,7 +54,7 @@ public class GedcomParsingService {
         Path gedcomDirPath = null;
 
         try {
-            gedcomDirPath = Files.createTempDirectory(properties.getTempDir(), properties.getTempGedcomDirPrefix());
+            gedcomDirPath = Files.createTempDirectory(properties.getTempDir(), properties.getTempUploadedGedcomDirPrefix());
             Path gedcomPath = uploadAndDecompress(gedcomDirPath, gedcomFile);
             Gedcom gedcom = parseGedcom(gedcomPath.toFile());
             return EnrichedGedcom.of(gedcom, gedcomFile.getOriginalFilename(), properties);
@@ -101,6 +108,19 @@ public class GedcomParsingService {
         gedcom.createIndexes();
         gedcom.updateReferences();
         return gedcom;
+    }
+
+    public void storeSearch(SearchFamilyDto searchFamilyDto) throws IOException {
+        // Create file if it doesn't exist
+        if (Files.notExists(properties.getSearchFamilyPath())) {
+            Files.createFile(properties.getSearchFamilyPath());
+        }
+
+        LocalDateTime now = LocalDateTime.now(properties.getZoneId());
+        ObjectMapper objectMapper = mapperBuilder.build();
+        String jsonString = objectMapper.writeValueAsString(searchFamilyDto);
+        String line = now + " - " + jsonString + "\n\n";
+        Files.writeString(properties.getSearchFamilyPath(), line, StandardCharsets.UTF_8, StandardOpenOption.APPEND);
     }
 
 }

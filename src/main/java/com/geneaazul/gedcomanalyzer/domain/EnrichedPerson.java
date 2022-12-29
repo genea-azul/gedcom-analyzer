@@ -42,7 +42,6 @@ public class EnrichedPerson {
     private final Optional<Age> age;
 
     // Search values
-    private final String displayNameForSearch;
     private final Optional<GivenName> givenNameForSearch;
     private final Optional<String> surnameForSearch;
     private final Optional<String> surnameMainWordForSearch;
@@ -74,9 +73,8 @@ public class EnrichedPerson {
         placeOfBirth = PersonUtils.getPlaceOfBirth(person);
         isAlive = PersonUtils.isAlive(person);
         age = Age.of(dateOfBirth, dateOfDeath
-                .or(() -> isAlive ? Optional.of(Date.now()) : Optional.empty()));
+                .or(() -> isAlive ? Optional.of(Date.now(properties.getZoneId())) : Optional.empty()));
 
-        displayNameForSearch = PersonUtils.getDisplayNameForSearch(person);
         givenNameForSearch = PersonUtils.getNormalizedGivenNameForSearch(person, properties.getNormalizedNamesMap());
         surnameForSearch = PersonUtils.getSurnameForSearch(person);
         surnameMainWordForSearch = PersonUtils.getSurnameMainWordForSearch(person, properties.getNormalizedSurnamesMap());
@@ -270,11 +268,11 @@ public class EnrichedPerson {
                         .stream()
                         .map(EnrichedPerson::getDisplayName)
                         .collect(Collectors.joining(", ")), 64)
-                + " - " + PersonUtils.getSpousesWithChildrenCount(person, gedcom)
+                + " - " + PersonUtils.getSpousesWithChildren(person, gedcom)
                         .stream()
                         .map(spouseCountPair -> spouseCountPair.getLeft()
                                 .map(PersonUtils::getDisplayName)
-                                .orElse("<no spouse>") + " (" + spouseCountPair.getRight() + ")")
+                                .orElse("<no spouse>") + " (" + spouseCountPair.getRight().size() + ")")
                         .collect(Collectors.joining(", "));
     }
 

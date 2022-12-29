@@ -1,7 +1,8 @@
 package com.geneaazul.gedcomanalyzer.model;
 
-import java.util.List;
-
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,21 +16,25 @@ import lombok.ToString;
 @AllArgsConstructor
 @Builder
 @ToString(onlyExplicitlyIncluded = true)
-public class PersonDto {
+public class SearchPersonDto {
 
+    @Size(max = 60)
     @ToString.Include
-    private String id;
+    private String givenName;
+    @Size(max = 60)
+    @ToString.Include
+    private String surname;
     @ToString.Include
     private SexType sex;
     @ToString.Include
     private Boolean isAlive;
+    @Min(0)
+    @Max(2050)
     @ToString.Include
-    private String name;
+    private Integer yearOfBirth;
+    @Min(0)
+    @Max(2050)
     @ToString.Include
-    private String dateOfBirth;
-    @ToString.Include
-    private String dateOfDeath;
-    private List<String> parents;
-    private List<SpouseWithChildrenDto> spouses;
+    private Integer yearOfDeath;
 
 }
