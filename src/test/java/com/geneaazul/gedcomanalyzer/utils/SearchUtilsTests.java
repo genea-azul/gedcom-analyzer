@@ -70,4 +70,30 @@ public class SearchUtilsTests {
                 .contains("dianigevescl_");
     }
 
+    @Test
+    public void testGetSurnameMainWordForSearchUsingProperties() {
+        Name name = new Name();
+        name.setGiven("?");
+        Person person = new Person();
+        person.addName(name);
+
+        name.setSurname("La Camera");
+        assertThat(PersonUtils.getSurnameForSearch(person))
+                .contains("la camera");
+        assertThat(PersonUtils.getSurnameMainWordForSearch(person, properties.getNormalizedSurnamesMap()))
+                .contains("lacamar_");
+
+        name.setSurname("Mac Cabe");
+        assertThat(PersonUtils.getSurnameForSearch(person))
+                .contains("mac cabe");
+        assertThat(PersonUtils.getSurnameMainWordForSearch(person, properties.getNormalizedSurnamesMap()))
+                .contains("mcav_");
+
+        name.setSurname("Sainte-Cluque");
+        assertThat(PersonUtils.getSurnameForSearch(person))
+                .contains("sainte cluque");
+        assertThat(PersonUtils.getSurnameMainWordForSearch(person, properties.getNormalizedSurnamesMap()))
+                .contains("saintecluq_");
+    }
+
 }

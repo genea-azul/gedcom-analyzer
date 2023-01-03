@@ -64,7 +64,7 @@ public class GedcomAnalyzerProperties {
     @Getter(AccessLevel.NONE)
     private Map<String, List<String>> nameNormalizedF;
     @Getter(AccessLevel.NONE)
-    private Map<String, String> surnameNormalized;
+    private Map<String, List<String>> surnameNormalized;
 
     @PostConstruct
     public void postConstruct() {
@@ -86,15 +86,17 @@ public class GedcomAnalyzerProperties {
         this.childMinDateOfBirth = now.minusYears(childMaxAge);
         this.childMinDateOfDeath = now.minusYears(childMaxAge);
 
-        Map<NameAndSex, String> m = buildNamesMap(nameNormalizedM, SexType.M);
-        Map<NameAndSex, String> f = buildNamesMap(nameNormalizedF, SexType.F);
+        Map<NameAndSex, String> m = invertNamesMap(nameNormalizedM, SexType.M);
+        Map<NameAndSex, String> f = invertNamesMap(nameNormalizedF, SexType.F);
         m.putAll(f);
 
+        Map<String, String> s = invertSurnamesMap(surnameNormalized);
+
         this.normalizedNamesMap = Map.copyOf(m);
-        this.normalizedSurnamesMap = Map.copyOf(surnameNormalized);
+        this.normalizedSurnamesMap = Map.copyOf(s);
     }
 
-    private Map<NameAndSex, String> buildNamesMap(Map<String, List<String>> normalizedNames, SexType sex) {
+    private Map<NameAndSex, String> invertNamesMap(Map<String, List<String>> normalizedNames, SexType sex) {
         return normalizedNames
                 .entrySet()
                 .stream()
@@ -103,6 +105,17 @@ public class GedcomAnalyzerProperties {
                         .stream()
                         .map(name -> new NameAndSex(name, sex))
                         .map(nameAndSex -> Map.entry(nameAndSex, entry.getKey())))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    private Map<String, String> invertSurnamesMap(Map<String, List<String>> normalizedSurnames) {
+        return normalizedSurnames
+                .entrySet()
+                .stream()
+                .flatMap(entry -> entry
+                        .getValue()
+                        .stream()
+                        .map(surname -> Map.entry(surname, entry.getKey())))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 

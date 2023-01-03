@@ -151,28 +151,38 @@ $(document).ready(function() {
             contentType: "application/json",
             data: JSON.stringify(searchFamilyRequest),
             success: function(data) {
-                resultComponent.empty(); // remove the "searching.." message
+                // remove the "searching.." message
+                resultComponent.empty();
+
                 $(data.people).each(function() {
                     var personComponent = $("<div>");
                     personComponent.jsonViewer(this, {collapsed: true, rootCollapsable: false});
                     resultComponent.append(personComponent);
                 });
+
                 if (data.people.length === 0) {
                     resultComponent.append("<p>No se encontraron resultados.</p>");
                 }
             },
-            error: function(error) {
-                console.log(error);
+            error: function(xhr) {
+                console.log(xhr);
                 resultComponent.html("Error!");
 
                 // Get error details
                 try {
-                    var errorJson = JSON.parse("{\"error\": \"" + error.responseJSON.message + "\"}");
+                    var errorJson;
+                    if (xhr.status >= 500 && xhr.status < 600) {
+                        errorJson = JSON.parse("{\"error\": \"El servidor se est\u00E1 reiniciando, intent\u00E1 de nuevo.\"}");
+                    } else {
+                        errorJson = JSON.parse("{\"error\": \"" + xhr.responseJSON.message + "\"}");
+                    }
+
                     var personComponent = $("<div>");
                     personComponent.jsonViewer(errorJson, {rootCollapsable: false});
                     resultComponent.html(personComponent);
+
                 } catch (ex) {
-                    console.log(error);
+                    console.log(xhr);
                     console.log(ex);
                 }
             },

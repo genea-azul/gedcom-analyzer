@@ -36,7 +36,6 @@ public class GedcomHolder {
                 log.info("Gedcom file loaded: {}", storageService.getGedcomName());
             } catch (Throwable e) {
                 log.error("Error when loading gedcom file: {}", storageService.getGedcomName(), e);
-                throw new RuntimeException(e);
             }
         });
     }
