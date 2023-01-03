@@ -12,7 +12,7 @@
 
   <groupId>com.geneaazul</groupId>
   <artifactId>gedcom-analyzer</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.1.1-SNAPSHOT</version>
   <name>Gedcom Analyzer</name>
   <description>Gedcom Analyzer by Genea Azul</description>
   <url>https://github.com/genea-azul/gedcom-analyzer</url>
@@ -21,6 +21,7 @@
     <java.version>17</java.version>
     <google-cloud.version>26.2.0</google-cloud.version>
     <google-cloud-sql.version>1.8.0</google-cloud-sql.version>
+    <google-cloud-tools.version>2.4.4</google-cloud-tools.version>
     <gedcom.version>1.14.0</gedcom.version>
     <commons-collections4.version>4.4</commons-collections4.version>
     <commons-io.version>2.11.0</commons-io.version>
@@ -169,19 +170,9 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-resources-plugin</artifactId>
-        <!-- Do not filter properties files cause they contain non ASCII chars -->
-        <configuration>
-          <nonFilteredFileExtensions>
-            <nonFilteredFileExtension>properties</nonFilteredFileExtension>
-          </nonFilteredFileExtensions>
-        </configuration>
-      </plugin>
-      <plugin>
         <groupId>com.google.cloud.tools</groupId>
         <artifactId>appengine-maven-plugin</artifactId>
-        <version>2.4.4</version>
+        <version>${google-cloud-tools.version}</version>
       </plugin>
     </plugins>
   </build>
