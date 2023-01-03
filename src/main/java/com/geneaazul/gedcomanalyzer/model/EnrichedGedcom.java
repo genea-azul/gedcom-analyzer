@@ -1,8 +1,9 @@
-package com.geneaazul.gedcomanalyzer.domain;
+package com.geneaazul.gedcomanalyzer.model;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
-import com.geneaazul.gedcomanalyzer.model.SexType;
+import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.folg.gedcom.model.Gedcom;
 
 import java.time.Year;
@@ -45,19 +46,15 @@ public class EnrichedGedcom {
                 .filter(person -> person.getSex() != SexType.U)
                 .collect(Collectors.groupingBy(person -> new NameAndSex(person.getSurnameMainWordForSearch().get(), person.getSex())));
 
-        this.peopleBySurnameMainWordForSearchAndSexAndYearOfBirthIndex = this.people
-                .stream()
-                .filter(person -> person.getSurnameMainWordForSearch().isPresent())
-                .filter(person -> person.getSex() != SexType.U)
-                .filter(person -> person.getDateOfBirth().isPresent())
-                .collect(Collectors.groupingBy(person -> new NameSexYear(person.getSurnameMainWordForSearch().get(), person.getSex(), person.getDateOfBirth().get().getYear())));
+        this.peopleBySurnameMainWordForSearchAndSexAndYearOfBirthIndex = buildNameSexYearIndex(
+                person -> person.getSurnameMainWordForSearch().orElse(null),
+                EnrichedPerson::getSex,
+                person -> person.getDateOfBirth().orElse(null));
 
-        this.peopleBySurnameMainWordForSearchAndSexAndYearOfDeathIndex = this.people
-                .stream()
-                .filter(person -> person.getSurnameMainWordForSearch().isPresent())
-                .filter(person -> person.getSex() != SexType.U)
-                .filter(person -> person.getDateOfDeath().isPresent())
-                .collect(Collectors.groupingBy(person -> new NameSexYear(person.getSurnameMainWordForSearch().get(), person.getSex(), person.getDateOfDeath().get().getYear())));
+        this.peopleBySurnameMainWordForSearchAndSexAndYearOfDeathIndex = buildNameSexYearIndex(
+                person -> person.getSurnameMainWordForSearch().orElse(null),
+                EnrichedPerson::getSex,
+                person -> person.getDateOfDeath().orElse(null));
     }
 
     public static EnrichedGedcom of(Gedcom gedcom, String gedcomName, GedcomAnalyzerProperties properties) {
@@ -94,6 +91,35 @@ public class EnrichedGedcom {
 
     public List<EnrichedPerson> getPersonsBySurnameMainWordAndSexAndYearOfDeathIndex(String surnameMainWord, SexType sex, Year yearOfDeath) {
         return peopleBySurnameMainWordForSearchAndSexAndYearOfDeathIndex.getOrDefault(new NameSexYear(surnameMainWord, sex, yearOfDeath), List.of());
+    }
+
+    private Map<NameSexYear, List<EnrichedPerson>> buildNameSexYearIndex(
+            Function<EnrichedPerson, String> nameMapper,
+            Function<EnrichedPerson, SexType> sexMapper,
+            Function<EnrichedPerson, Date> dateMapper) {
+        return this.people
+                .stream()
+                .filter(person -> nameMapper.apply(person) != null)
+                .filter(person -> sexMapper.apply(person) != SexType.U)
+                .filter(person -> {
+                    Date date = dateMapper.apply(person);
+                    return date != null && date.getOperator() != Date.Operator.BEF && date.getOperator() != Date.Operator.AFT;
+                })
+                .map(person -> {
+                    Date date = dateMapper.apply(person);
+                    if (date.isOnlyYearDate()
+                            && (date.getOperator() == Date.Operator.ABT || date.getOperator() == Date.Operator.EST)) {
+                        return List.of(
+                                Pair.of(person, date.getYear().minusYears(1)),
+                                Pair.of(person, date.getYear()),
+                                Pair.of(person, date.getYear().plusYears(1)));
+                    }
+                    return List.of(Pair.of(person, date.getYear()));
+                })
+                .flatMap(List::stream)
+                .collect(Collectors.groupingBy(
+                        pair -> new NameSexYear(nameMapper.apply(pair.getLeft()), sexMapper.apply(pair.getLeft()), pair.getRight()),
+                        Collectors.mapping(Pair::getLeft, Collectors.toList())));
     }
 
 }

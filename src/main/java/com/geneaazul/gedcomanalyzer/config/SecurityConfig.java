@@ -19,6 +19,11 @@ public class SecurityConfig {
                 .and()
                 .csrf()
                 .disable();
+
+        http.headers()
+                .frameOptions()
+                .disable();
+
         return http.build();
     }
 

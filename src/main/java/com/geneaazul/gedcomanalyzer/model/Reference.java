@@ -1,6 +1,6 @@
-package com.geneaazul.gedcomanalyzer.domain;
+package com.geneaazul.gedcomanalyzer.model;
 
-import com.geneaazul.gedcomanalyzer.model.ReferenceType;
+import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 
 import org.folg.gedcom.model.Family;

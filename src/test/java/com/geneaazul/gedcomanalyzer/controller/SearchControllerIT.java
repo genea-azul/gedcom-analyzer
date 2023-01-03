@@ -1,6 +1,8 @@
 package com.geneaazul.gedcomanalyzer.controller;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doReturn;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -8,13 +10,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.geneaazul.gedcomanalyzer.GedcomAnalyzerApplication;
-import com.geneaazul.gedcomanalyzer.model.SearchFamilyDto;
-import com.geneaazul.gedcomanalyzer.model.SearchPersonDto;
-import com.geneaazul.gedcomanalyzer.model.SexType;
+import com.geneaazul.gedcomanalyzer.domain.SearchFamily;
+import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
+import com.geneaazul.gedcomanalyzer.model.dto.SearchPersonDto;
+import com.geneaazul.gedcomanalyzer.model.dto.SexType;
+import com.geneaazul.gedcomanalyzer.repository.SearchFamilyRepository;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
@@ -31,6 +36,9 @@ class SearchControllerIT {
 
     @Autowired
     private Jackson2ObjectMapperBuilder mapperBuilder;
+
+    @MockBean
+    private SearchFamilyRepository searchFamilyRepository;
 
     @Test
     public void testSearchFamily() throws Exception {
@@ -61,7 +69,11 @@ class SearchControllerIT {
                 .contact("juan.perez@gmail.com")
                 .build();
 
-        System.out.println(objectMapper.writeValueAsString(searchFamilyDto));
+        doReturn(SearchFamily.builder()
+                .id(1L)
+                .build())
+                .when(searchFamilyRepository)
+                .save(any());
 
         mvc.perform(post("/api/search/family")
                         .content(objectMapper.writeValueAsBytes(searchFamilyDto))

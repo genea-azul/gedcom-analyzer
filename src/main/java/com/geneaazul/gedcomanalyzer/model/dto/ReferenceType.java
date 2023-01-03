@@ -1,4 +1,4 @@
-package com.geneaazul.gedcomanalyzer.model;
+package com.geneaazul.gedcomanalyzer.model.dto;
 
 public enum ReferenceType {
 

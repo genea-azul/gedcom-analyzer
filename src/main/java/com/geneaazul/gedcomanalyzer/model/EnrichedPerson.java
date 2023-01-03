@@ -1,7 +1,7 @@
-package com.geneaazul.gedcomanalyzer.domain;
+package com.geneaazul.gedcomanalyzer.model;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
-import com.geneaazul.gedcomanalyzer.model.SexType;
+import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.utils.FamilyUtils;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 import com.geneaazul.gedcomanalyzer.utils.PlaceUtils;

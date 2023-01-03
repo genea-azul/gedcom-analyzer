@@ -1,8 +1,8 @@
 package com.geneaazul.gedcomanalyzer.utils;
 
-import com.geneaazul.gedcomanalyzer.domain.GivenName;
-import com.geneaazul.gedcomanalyzer.domain.NameAndSex;
-import com.geneaazul.gedcomanalyzer.model.SexType;
+import com.geneaazul.gedcomanalyzer.model.GivenName;
+import com.geneaazul.gedcomanalyzer.model.NameAndSex;
+import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;

@@ -1,4 +1,4 @@
-package com.geneaazul.gedcomanalyzer.domain;
+package com.geneaazul.gedcomanalyzer.model;
 
 import com.geneaazul.gedcomanalyzer.service.SearchService;
 
