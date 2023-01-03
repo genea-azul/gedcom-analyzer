@@ -1,14 +1,14 @@
 package com.geneaazul.gedcomanalyzer.service;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
-import com.geneaazul.gedcomanalyzer.domain.Age;
-import com.geneaazul.gedcomanalyzer.domain.Date;
-import com.geneaazul.gedcomanalyzer.domain.EnrichedGedcom;
-import com.geneaazul.gedcomanalyzer.domain.EnrichedPerson;
-import com.geneaazul.gedcomanalyzer.domain.GivenName;
-import com.geneaazul.gedcomanalyzer.domain.PersonComparisonResult;
-import com.geneaazul.gedcomanalyzer.domain.PersonComparisonResults;
-import com.geneaazul.gedcomanalyzer.model.SexType;
+import com.geneaazul.gedcomanalyzer.model.Age;
+import com.geneaazul.gedcomanalyzer.model.Date;
+import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
+import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.GivenName;
+import com.geneaazul.gedcomanalyzer.model.PersonComparisonResult;
+import com.geneaazul.gedcomanalyzer.model.PersonComparisonResults;
+import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 import com.geneaazul.gedcomanalyzer.utils.SearchUtils;
 

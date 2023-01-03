@@ -1,4 +1,4 @@
-package com.geneaazul.gedcomanalyzer.domain;
+package com.geneaazul.gedcomanalyzer.model;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

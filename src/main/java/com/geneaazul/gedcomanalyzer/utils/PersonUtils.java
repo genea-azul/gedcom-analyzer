@@ -1,8 +1,8 @@
 package com.geneaazul.gedcomanalyzer.utils;
 
-import com.geneaazul.gedcomanalyzer.domain.GivenName;
-import com.geneaazul.gedcomanalyzer.domain.NameAndSex;
-import com.geneaazul.gedcomanalyzer.model.SexType;
+import com.geneaazul.gedcomanalyzer.model.GivenName;
+import com.geneaazul.gedcomanalyzer.model.NameAndSex;
+import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -232,7 +232,7 @@ public class PersonUtils {
                 .toList();
     }
 
-    public static List<Pair<Optional<Person>, List<String>>> getSpousesWithChildren(Person person, Gedcom gedcom) {
+    public static List<Pair<Optional<Person>, List<Person>>> getSpousesWithChildren(Person person, Gedcom gedcom) {
         return person
                 .getSpouseFamilies(gedcom)
                 .stream()
@@ -242,10 +242,7 @@ public class PersonUtils {
                                 family.getWives(gedcom))
                         .flatMap(List::stream)
                         .map(spouse -> spouse.getId().equals(person.getId()) ? Optional.<Person>empty() : Optional.of(spouse))
-                        .map(spouse -> Pair.of(spouse, family.getChildren(gedcom)
-                                .stream()
-                                .map(PersonUtils::getDisplayName)
-                                .toList()))
+                        .map(spouse -> Pair.of(spouse, family.getChildren(gedcom)))
                         .toList())
                 .map(spouses -> spouses.size() == 1
                         ? spouses

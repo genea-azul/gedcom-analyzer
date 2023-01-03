@@ -30,6 +30,14 @@ var toggleCardColorBySex = function(cardComponent, sexRadioComponent) {
     });
 };
 
+var toggleContainers = function(displayBtnComponent, container1Component, container2Component) {
+    $(displayBtnComponent).on('change', function() {
+        var show = $(displayBtnComponent).prop("checked");
+        $(container1Component).toggleClass("d-none", show);
+        $(container2Component).toggleClass("d-none", !show);
+    });
+};
+
 var trimToNull = function(str) {
     if (isEmpty(str)) {
         return null;
@@ -46,6 +54,12 @@ var toNumber = function(str) {
     return isEmpty(str) ? null : parseInt(str);
 };
 
+var maxLengthCheck = function(input) {
+    if (input.value.length > input.max.length) {
+        input.value = input.value.slice(0, input.max.length)
+    }
+};
+
 $(document).ready(function() {
     toggleYearOfDeath("#paternalGrandfatherIsAlive", "#paternalGrandfatherYearOfDeath");
     toggleYearOfDeath("#paternalGrandmotherIsAlive", "#paternalGrandmotherYearOfDeath");
@@ -55,13 +69,20 @@ $(document).ready(function() {
     toggleYearOfDeath("#motherIsAlive", "#motherYearOfDeath");
     toggleYearOfDeath("#individualIsAlive", "#individualYearOfDeath");
     toggleCardColorBySex("#individualCard", "individualSex");
+    toggleContainers("#grandparentsContainerShowBtn", "#grandparentsContainerShowBtnContainer", "#grandparentsContainer");
 
+    $("input[type=number]").on("input", function() {
+        maxLengthCheck(this);
+    });
+});
+
+$(document).ready(function() {
     $("#searchBtn").on("click", function() {
         $("#searchBtn").prop("disabled", true);
         var resultComponent = $("#searchResultCard div.card-body");
         resultComponent.html("<p>Buscando...</p>");
 
-        var searchFamily = JSON.stringify({
+        var searchFamilyRequest = {
             "individual": {
                 "givenName": trimToNull($("#individualGivenName").val()),
                 "surname": trimToNull($("#individualSurname").val()),
@@ -87,46 +108,48 @@ $(document).ready(function() {
                 "yearOfDeath": toNumber($("#motherYearOfDeath:enabled").val())
             },
             "paternalGrandfather": {
-                "givenName": trimToNull($("#paternalGandfatherGivenName").val()),
-                "surname": trimToNull($("#paternalGandfatherSurname").val()),
+                "givenName": trimToNull($("#paternalGrandfatherGivenName").val()),
+                "surname": trimToNull($("#paternalGrandfatherSurname").val()),
                 "sex": "M",
-                "isAlive": $("#paternalGandfatherIsAlive").prop("checked"),
-                "yearOfBirth": toNumber($("#paternalGandfatherYearOfBirth").val()),
-                "yearOfDeath": toNumber($("#paternalGandfatherYearOfDeath:enabled").val())
+                "isAlive": $("#paternalGrandfatherIsAlive").prop("checked"),
+                "yearOfBirth": toNumber($("#paternalGrandfatherYearOfBirth").val()),
+                "yearOfDeath": toNumber($("#paternalGrandfatherYearOfDeath:enabled").val())
             },
             "paternalGrandmother": {
-                "givenName": trimToNull($("#paternalGandmotherGivenName").val()),
-                "surname": trimToNull($("#paternalGandmotherSurname").val()),
+                "givenName": trimToNull($("#paternalGrandmotherGivenName").val()),
+                "surname": trimToNull($("#paternalGrandmotherSurname").val()),
                 "sex": "F",
-                "isAlive": $("#paternalGandmotherIsAlive").prop("checked"),
-                "yearOfBirth": toNumber($("#paternalGandmotherYearOfBirth").val()),
-                "yearOfDeath": toNumber($("#paternalGandmotherYearOfDeath:enabled").val())
+                "isAlive": $("#paternalGrandmotherIsAlive").prop("checked"),
+                "yearOfBirth": toNumber($("#paternalGrandmotherYearOfBirth").val()),
+                "yearOfDeath": toNumber($("#paternalGrandmotherYearOfDeath:enabled").val())
             },
             "maternalGrandfather": {
-                "givenName": trimToNull($("#maternalGandfatherGivenName").val()),
-                "surname": trimToNull($("#maternalGandfatherSurname").val()),
+                "givenName": trimToNull($("#maternalGrandfatherGivenName").val()),
+                "surname": trimToNull($("#maternalGrandfatherSurname").val()),
                 "sex": "M",
-                "isAlive": $("#maternalGandfatherIsAlive").prop("checked"),
-                "yearOfBirth": toNumber($("#maternalGandfatherYearOfBirth").val()),
-                "yearOfDeath": toNumber($("#maternalGandfatherYearOfDeath:enabled").val())
+                "isAlive": $("#maternalGrandfatherIsAlive").prop("checked"),
+                "yearOfBirth": toNumber($("#maternalGrandfatherYearOfBirth").val()),
+                "yearOfDeath": toNumber($("#maternalGrandfatherYearOfDeath:enabled").val())
             },
             "maternalGrandmother": {
-                "givenName": trimToNull($("#maternalGandmotherGivenName").val()),
-                "surname": trimToNull($("#maternalGandmotherSurname").val()),
+                "givenName": trimToNull($("#maternalGrandmotherGivenName").val()),
+                "surname": trimToNull($("#maternalGrandmotherSurname").val()),
                 "sex": "F",
-                "isAlive": $("#maternalGandmotherIsAlive").prop("checked"),
-                "yearOfBirth": toNumber($("#maternalGandmotherYearOfBirth").val()),
-                "yearOfDeath": toNumber($("#maternalGandmotherYearOfDeath:enabled").val())
+                "isAlive": $("#maternalGrandmotherIsAlive").prop("checked"),
+                "yearOfBirth": toNumber($("#maternalGrandmotherYearOfBirth").val()),
+                "yearOfDeath": toNumber($("#maternalGrandmotherYearOfDeath:enabled").val())
             },
             "contact": trimToNull($("#individualContact").val())
-        });
+        };
+
+        postProcessRequest(searchFamilyRequest);
 
         $.ajax({
             type: "POST",
             url: "/api/search/family",
             dataType: "json",
             contentType: "application/json",
-            data: searchFamily,
+            data: JSON.stringify(searchFamilyRequest),
             success: function(data) {
                 resultComponent.empty(); // remove the "searching.." message
                 $(data.people).each(function() {
@@ -139,17 +162,58 @@ $(document).ready(function() {
                 }
             },
             error: function(error) {
+                console.log(error);
                 resultComponent.html("Error!");
 
                 // Get error details
-                var errorJson = JSON.parse("{\"error\": \"" + error.responseJSON.message + "\"}");
-                var personComponent = $("<div>");
-                personComponent.jsonViewer(errorJson, {rootCollapsable: false});
-                resultComponent.html(personComponent);
+                try {
+                    var errorJson = JSON.parse("{\"error\": \"" + error.responseJSON.message + "\"}");
+                    var personComponent = $("<div>");
+                    personComponent.jsonViewer(errorJson, {rootCollapsable: false});
+                    resultComponent.html(personComponent);
+                } catch (ex) {
+                    console.log(error);
+                    console.log(ex);
+                }
             },
             complete: function() {
                 $("#searchBtn").prop("disabled", false);
+                $('html, body').animate({
+                    scrollTop: $("#searchResultCard").offset().top
+                }, 1000);
             }
         });
     });
 });
+
+var postProcessRequest = function(searchFamilyRequest) {
+    var personsInRq = [
+        "individual",
+        "father",
+        "mother",
+        "paternalGrandfather",
+        "paternalGrandmother",
+        "maternalGrandfather",
+        "maternalGrandmother"
+    ];
+    $(personsInRq).each(function() {
+        if (isPersonEmpty(searchFamilyRequest[this])) {
+            delete searchFamilyRequest[this];
+        }
+    });
+};
+
+var isPersonEmpty = function(person) {
+    var personProps = [
+        "givenName",
+        "surname",
+        "yearOfBirth",
+        "yearOfDeath"
+    ];
+    for (var prop of personProps) {
+        if (person[prop] != null) {
+            return false;
+        }
+    }
+    return true;
+};

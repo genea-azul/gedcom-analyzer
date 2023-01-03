@@ -1,16 +1,16 @@
 package com.geneaazul.gedcomanalyzer.service;
 
-import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
-import com.geneaazul.gedcomanalyzer.domain.EnrichedGedcom;
+import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
+import com.geneaazul.gedcomanalyzer.service.storage.StorageService;
 
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,21 +19,23 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class GedcomHolder {
 
-    private final GedcomParsingService gedcomParsingService;
-    private final GedcomAnalyzerProperties properties;
-
+    private final StorageService storageService;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-    @Getter
     private EnrichedGedcom gedcom;
+
+    public Optional<EnrichedGedcom> getGedcom() {
+        return Optional.ofNullable(gedcom);
+    }
 
     @PostConstruct
     public void postConstruct() {
         executorService.submit(() -> {
             try {
-                gedcom = gedcomParsingService.parse(properties.getMainGedcomPath());
-                log.info("Gedcom file loaded: {}", properties.getMainGedcomPath());
-            } catch (Exception e) {
+                gedcom = storageService.getGedcom();
+                log.info("Gedcom file loaded: {}", storageService.getGedcomName());
+            } catch (Throwable e) {
+                log.error("Error when loading gedcom file: {}", storageService.getGedcomName(), e);
                 throw new RuntimeException(e);
             }
         });

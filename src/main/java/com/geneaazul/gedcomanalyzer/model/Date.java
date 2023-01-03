@@ -1,4 +1,4 @@
-package com.geneaazul.gedcomanalyzer.domain;
+package com.geneaazul.gedcomanalyzer.model;
 
 import org.apache.commons.lang3.StringUtils;
 

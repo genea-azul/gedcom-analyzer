@@ -1,7 +1,7 @@
 package com.geneaazul.gedcomanalyzer.controller;
 
-import com.geneaazul.gedcomanalyzer.domain.EnrichedGedcom;
-import com.geneaazul.gedcomanalyzer.model.GedcomAnalysisDto;
+import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
+import com.geneaazul.gedcomanalyzer.model.dto.GedcomAnalysisDto;
 import com.geneaazul.gedcomanalyzer.service.GedcomAnalyzerService;
 import com.geneaazul.gedcomanalyzer.service.GedcomParsingService;
 

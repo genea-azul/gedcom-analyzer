@@ -1,13 +1,11 @@
 package com.geneaazul.gedcomanalyzer.config;
 
-import com.geneaazul.gedcomanalyzer.domain.NameAndSex;
-import com.geneaazul.gedcomanalyzer.model.SexType;
+import com.geneaazul.gedcomanalyzer.model.NameAndSex;
+import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.Period;
@@ -31,11 +29,12 @@ public class GedcomAnalyzerProperties {
 
     private Path tempDir = Path.of("../gedcoms/temp");
     private String tempUploadedGedcomDirPrefix = "gedcomfile_";
-    private Path mainGedcomPath = Path.of("../gedcoms/genea-azul-full-gedcom.ged");
-    private Path searchFamilyPath = Path.of("../gedcoms/temp/searchfamily.log");
+    private Path localStorageGedcomPath = Path.of("../gedcoms/genea-azul-full-gedcom.ged");
+    private String googleStorageBucketName;
+    private String googleStorageGedcomBlobName;
 
     private boolean deleteUploadedGedcom = false;
-    private boolean storeUploadedSearch = true;
+    private boolean storeFamilySearch = true;
 
     private int alivePersonMaxAge = 105;
     private int parentMinAgeDiff = 20;
@@ -68,7 +67,7 @@ public class GedcomAnalyzerProperties {
     private Map<String, String> surnameNormalized;
 
     @PostConstruct
-    public void postConstruct() throws IOException {
+    public void postConstruct() {
         int parentMinAge = alivePersonMaxAge + parentMinAgeDiff;
         int parentMaxAge = alivePersonMaxAge + parentMaxAgeDiff;
         int siblingMaxAge = alivePersonMaxAge + siblingMaxAgeDiff;
@@ -93,10 +92,6 @@ public class GedcomAnalyzerProperties {
 
         this.normalizedNamesMap = Map.copyOf(m);
         this.normalizedSurnamesMap = Map.copyOf(surnameNormalized);
-
-        if (Files.notExists(tempDir)) {
-            Files.createDirectories(tempDir);
-        }
     }
 
     private Map<NameAndSex, String> buildNamesMap(Map<String, List<String>> normalizedNames, SexType sex) {

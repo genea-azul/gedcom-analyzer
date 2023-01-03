@@ -1,15 +1,15 @@
 package com.geneaazul.gedcomanalyzer.service;
 
 import com.geneaazul.gedcomanalyzer.mapper.PersonMapper;
-import com.geneaazul.gedcomanalyzer.domain.Date;
-import com.geneaazul.gedcomanalyzer.domain.EnrichedGedcom;
-import com.geneaazul.gedcomanalyzer.domain.EnrichedPerson;
-import com.geneaazul.gedcomanalyzer.model.GedcomAnalysisDto;
-import com.geneaazul.gedcomanalyzer.domain.PersonComparisonResults;
-import com.geneaazul.gedcomanalyzer.model.PersonDto;
-import com.geneaazul.gedcomanalyzer.model.PersonDuplicateDto;
-import com.geneaazul.gedcomanalyzer.domain.Reference;
-import com.geneaazul.gedcomanalyzer.model.ReferenceType;
+import com.geneaazul.gedcomanalyzer.model.Date;
+import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
+import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.dto.GedcomAnalysisDto;
+import com.geneaazul.gedcomanalyzer.model.PersonComparisonResults;
+import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
+import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateDto;
+import com.geneaazul.gedcomanalyzer.model.Reference;
+import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
 import com.geneaazul.gedcomanalyzer.utils.DateUtils;
 import com.geneaazul.gedcomanalyzer.utils.EnumCollectionUtils;
 import com.geneaazul.gedcomanalyzer.utils.FamilyUtils;
@@ -61,10 +61,10 @@ public class GedcomAnalyzerService {
         log.info("Analyze gedcom: {}", gedcom.getGedcomName());
 
         List<PersonComparisonResults> duplicatedPersons = searchService.findDuplicatedPersons(gedcom);
-        List<PersonDuplicateDto> personDuplicatesDto = personMapper.toPersonDuplicateDto(duplicatedPersons);
+        List<PersonDuplicateDto> personDuplicatesDto = personMapper.toPersonDuplicateDto(duplicatedPersons, false);
 
         List<EnrichedPerson> alivePersons = searchService.findAlivePersonsTooOldOrWithFamilyMembersTooOld(gedcom.getPeople());
-        List<PersonDto> invalidAlivePersonsDto = personMapper.toPersonDto(alivePersons);
+        List<PersonDto> invalidAlivePersonsDto = personMapper.toPersonDto(alivePersons, false);
 
         log.info("Gedcom analyzed: {}", gedcom.getGedcomName());
         return GedcomAnalysisDto.builder()
