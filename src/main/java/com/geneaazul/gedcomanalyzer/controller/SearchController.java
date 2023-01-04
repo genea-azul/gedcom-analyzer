@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Optional;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -23,10 +25,19 @@ public class SearchController {
 
     @PostMapping("/family")
     public SearchFamilyResultDto searchFamily(@Valid @RequestBody SearchFamilyDto searchFamilyDto) {
+        Optional<Long> searchId = Optional.empty();
+
         if (properties.isStoreFamilySearch()) {
-            familyService.persistSearch(searchFamilyDto);
+            searchId = familyService.persistSearch(searchFamilyDto);
         }
-        return familyService.search(searchFamilyDto);
+
+        SearchFamilyResultDto searchFamilyResult = familyService.search(searchFamilyDto);
+
+        searchId
+                .filter(id -> properties.isStoreFamilySearch())
+                .ifPresent(id -> familyService.updateSearch(id, searchFamilyResult.getPeople().size() > 0));
+
+        return searchFamilyResult;
     }
 
 }
