@@ -303,8 +303,8 @@ public class SearchService {
 
     public List<EnrichedPerson> findPersonsByNameAndParentsNames(
             String givenName, String surname, SexType sex,
-            String fatherGivenName, String fatherSurname,
-            String motherGivenName, String motherSurname,
+            String parent1GivenName, String parent1Surname, SexType parent1Sex,
+            String parent2GivenName, String parent2Surname, SexType parent2Sex,
             EnrichedGedcom gedcom) {
 
         if (sex == null) {
@@ -320,17 +320,17 @@ public class SearchService {
             return List.of();
         }
 
-        GivenName fatherGivenNameForSearch = PersonUtils.getNormalizedGivenNameForSearch(fatherGivenName, sex, properties.getNormalizedNamesMap())
+        GivenName parent1GivenNameForSearch = PersonUtils.getNormalizedGivenNameForSearch(parent1GivenName, parent1Sex, properties.getNormalizedNamesMap())
                 .orElse(null);
-        String fatherSurnameMainWordForSearch = PersonUtils.getSurnameMainWordForSearch(fatherSurname, properties.getNormalizedSurnamesMap())
+        String parent1SurnameMainWordForSearch = PersonUtils.getSurnameMainWordForSearch(parent1Surname, properties.getNormalizedSurnamesMap())
                 .orElse(null);
-        GivenName motherGivenNameForSearch = PersonUtils.getNormalizedGivenNameForSearch(motherGivenName, sex, properties.getNormalizedNamesMap())
+        GivenName parent2GivenNameForSearch = PersonUtils.getNormalizedGivenNameForSearch(parent2GivenName, parent2Sex, properties.getNormalizedNamesMap())
                 .orElse(null);
-        String motherSurnameMainWordForSearch = PersonUtils.getSurnameMainWordForSearch(motherSurname, properties.getNormalizedSurnamesMap())
+        String parent2SurnameMainWordForSearch = PersonUtils.getSurnameMainWordForSearch(parent2Surname, properties.getNormalizedSurnamesMap())
                 .orElse(null);
 
-        if ((fatherGivenNameForSearch == null || fatherSurnameMainWordForSearch == null)
-                && (motherGivenNameForSearch == null || motherSurnameMainWordForSearch == null)) {
+        if ((parent1GivenNameForSearch == null || parent1SurnameMainWordForSearch == null)
+                && (parent2GivenNameForSearch == null || parent2SurnameMainWordForSearch == null)) {
             return List.of();
         }
 
@@ -343,16 +343,16 @@ public class SearchService {
                         .stream()
                         .filter(parent -> parent.getSurnameMainWordForSearch().isPresent()
                                 && parent.getGivenNameForSearch().isPresent())
-                        .anyMatch(parent -> parent.getSurnameMainWordForSearch().get().equals(fatherSurnameMainWordForSearch)
-                                        && SearchUtils.matchesGivenName(parent.getGivenNameForSearch().get(), fatherGivenNameForSearch)
-                                || parent.getSurnameMainWordForSearch().get().equals(motherSurnameMainWordForSearch)
-                                        && SearchUtils.matchesGivenName(parent.getGivenNameForSearch().get(), motherGivenNameForSearch)))
+                        .anyMatch(parent -> parent.getSurnameMainWordForSearch().get().equals(parent1SurnameMainWordForSearch)
+                                        && SearchUtils.matchesGivenName(parent.getGivenNameForSearch().get(), parent1GivenNameForSearch)
+                                || parent.getSurnameMainWordForSearch().get().equals(parent2SurnameMainWordForSearch)
+                                        && SearchUtils.matchesGivenName(parent.getGivenNameForSearch().get(), parent2GivenNameForSearch)))
                 .toList();
     }
 
     public List<EnrichedPerson> findPersonsByNameAndSpouseName(
             String givenName, String surname, SexType sex,
-            String spouseGivenName, String spouseSurname,
+            String spouseGivenName, String spouseSurname, SexType spouseSex,
             EnrichedGedcom gedcom) {
 
         if (sex == null) {
@@ -368,7 +368,7 @@ public class SearchService {
             return List.of();
         }
 
-        GivenName spouseGivenNameForSearch = PersonUtils.getNormalizedGivenNameForSearch(spouseGivenName, sex, properties.getNormalizedNamesMap())
+        GivenName spouseGivenNameForSearch = PersonUtils.getNormalizedGivenNameForSearch(spouseGivenName, spouseSex, properties.getNormalizedNamesMap())
                 .orElse(null);
         String spouseSurnameMainWordForSearch = PersonUtils.getSurnameMainWordForSearch(spouseSurname, properties.getNormalizedSurnamesMap())
                 .orElse(null);

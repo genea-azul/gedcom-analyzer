@@ -7,12 +7,16 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
+import lombok.ToString;
 
 @Getter
+@ToString(onlyExplicitlyIncluded = true)
 public class GivenName {
 
+    @ToString.Include
     private final String name;
 
+    @ToString.Include
     private final int wordsCount;
 
     private final Pattern searchPattern;

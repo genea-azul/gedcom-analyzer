@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -20,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 public class GedcomHolder {
 
     private final StorageService storageService;
-    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private final ExecutorService gedcomHolderExecutorService;
 
     private EnrichedGedcom gedcom;
 
@@ -30,7 +29,7 @@ public class GedcomHolder {
 
     @PostConstruct
     public void postConstruct() {
-        executorService.submit(() -> {
+        gedcomHolderExecutorService.submit(() -> {
             try {
                 gedcom = storageService.getGedcom();
                 log.info("Gedcom file loaded: {}", storageService.getGedcomName());
@@ -42,7 +41,7 @@ public class GedcomHolder {
 
     @PreDestroy
     public void preDestroy() {
-        executorService.shutdownNow();
+        gedcomHolderExecutorService.shutdownNow();
     }
 
 }

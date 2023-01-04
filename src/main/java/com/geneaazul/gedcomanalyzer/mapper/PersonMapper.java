@@ -23,16 +23,19 @@ public class PersonMapper {
 
     public List<PersonDto> toPersonDto(
             Collection<EnrichedPerson> persons,
-            boolean obfuscateLiving) {
+            ObfuscationType obfuscationType) {
         return persons
                 .stream()
-                .map(person -> toPersonDto(person, obfuscateLiving))
+                .map(person -> toPersonDto(person, obfuscationType))
                 .toList();
     }
 
     public PersonDto toPersonDto(
             EnrichedPerson person,
-            boolean obfuscateLiving) {
+            ObfuscationType obfuscationType) {
+
+        boolean obfuscateLiving = obfuscationType != ObfuscationType.NONE;
+        boolean obfuscateName = obfuscateLiving && obfuscationType != ObfuscationType.SKIP_MAIN_PERSON_NAME;
 
         List<SpouseWithChildrenDto> spouses = toSpouseWithChildrenDto(
                 PersonUtils.getSpousesWithChildren(person.getPerson(), person.getGedcom()),
@@ -42,7 +45,7 @@ public class PersonMapper {
         return PersonDto.builder()
                 .sex(person.getSex())
                 .isAlive(person.isAlive())
-                .name(obfuscateLiving && person.isAlive()
+                .name(obfuscateName && person.isAlive()
                         ? person.getSurname()
                                 .map(surname -> "<private> " + surname)
                                 .orElse("<private>")
@@ -109,36 +112,36 @@ public class PersonMapper {
 
     public List<PersonDuplicateDto> toPersonDuplicateDto(
             Collection<PersonComparisonResults> personComparisonResults,
-            boolean obfuscateLiving) {
+            ObfuscationType obfuscationType) {
         return personComparisonResults
                 .stream()
-                .map(results -> toPersonDuplicateDto(results, obfuscateLiving))
+                .map(results -> toPersonDuplicateDto(results, obfuscationType))
                 .toList();
     }
 
     public PersonDuplicateDto toPersonDuplicateDto(
             PersonComparisonResults personComparisonResults,
-            boolean obfuscateLiving) {
+            ObfuscationType obfuscationType) {
         return PersonDuplicateDto.builder()
-                .person(toPersonDto(personComparisonResults.getPerson(), obfuscateLiving))
-                .duplicates(toPersonDuplicateCompareDto(personComparisonResults.getResults(), obfuscateLiving))
+                .person(toPersonDto(personComparisonResults.getPerson(), obfuscationType))
+                .duplicates(toPersonDuplicateCompareDto(personComparisonResults.getResults(), obfuscationType))
                 .build();
     }
 
     private List<PersonDuplicateCompareDto> toPersonDuplicateCompareDto(
             Collection<PersonComparisonResult> personComparisonResults,
-            boolean obfuscateLiving) {
+            ObfuscationType obfuscationType) {
         return personComparisonResults
                 .stream()
-                .map(result -> toPersonDuplicateDto(result, obfuscateLiving))
+                .map(result -> toPersonDuplicateDto(result, obfuscationType))
                 .toList();
     }
 
     private PersonDuplicateCompareDto toPersonDuplicateDto(
             PersonComparisonResult personComparisonResult,
-            boolean obfuscateLiving) {
+            ObfuscationType obfuscationType) {
         return PersonDuplicateCompareDto.builder()
-                .person(toPersonDto(personComparisonResult.getCompare(), obfuscateLiving))
+                .person(toPersonDto(personComparisonResult.getCompare(), obfuscationType))
                 .score(personComparisonResult.getScore())
                 .build();
     }
