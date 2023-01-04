@@ -17,7 +17,7 @@
 
 ```shell
 # The gedcom location can be overridden in application-local.properties file or with command:
-./mvnw clean package spring-boot:run -Dspring-boot.run.profiles=local -Dlocal-storage-gedcom-path=/path/gedcom.ged
+./mvnw clean spring-boot:run -Dspring-boot.run.profiles=local -Dlocal-storage-gedcom-path=/path/gedcom.ged
 ```
 
 #### Production environment
@@ -35,7 +35,7 @@ export CLOUD_SQL_PASS=""
 ./mvnw clean package -DskipTests
 
 # Run Java app
-java -jar -Dspring.profiles.active=prod target/gedcom-analyzer-0.2.0-SNAPSHOT.jar
+java -jar -Dspring.profiles.active=prod target/gedcom-analyzer-0.2.1-SNAPSHOT.jar
 ```
 
 ### Deploy appengine to Google Cloud

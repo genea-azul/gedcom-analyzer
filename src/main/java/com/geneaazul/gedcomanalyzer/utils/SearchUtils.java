@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import jakarta.annotation.Nullable;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -29,7 +30,7 @@ public class SearchUtils {
     private static final String[] SURNAME_SEARCH_CHARS = new String[]{ "b", "ç", "je", "ji", "y", "z" };
     private static final String[] SURNAME_REPLACEMENT_CHARS = new String[]{ "v", "c", "ge", "gi", "i", "s" };
 
-    public static String simplifyName(String name) {
+    public static String simplifyName(@Nullable String name) {
         name = StringUtils.stripAccents(name);
         name = StringUtils.lowerCase(name);
         name = StringUtils.replaceEach(name, NAME_SEARCH_SPECIAL_CHARS, NAME_REPLACEMENT_SPECIAL_CHARS);
@@ -38,7 +39,13 @@ public class SearchUtils {
         return name;
     }
 
-    public static boolean matchesGivenName(GivenName name1, GivenName name2) {
+    public static boolean matchesGivenName(
+            @Nullable GivenName name1,
+            @Nullable GivenName name2) {
+
+        if (name1 == null || name2 == null) {
+            return false;
+        }
 
         if (name1.getWordsCount() == 1 && name2.getWordsCount() == 1) {
             return name1.getName().equals(name2.getName());
@@ -53,9 +60,15 @@ public class SearchUtils {
         }
     }
 
-    public static String normalizeName(String name, SexType sex, Map<NameAndSex, String> normalizedNamesMap) {
-        if (name == null || sex == null) {
+    public static String normalizeName(
+            @Nullable String name,
+            @Nullable SexType sex,
+            Map<NameAndSex, String> normalizedNamesMap) {
+        if (name == null) {
             return null;
+        }
+        if (sex == null) {
+            return name;
         }
         String[] words = StringUtils.splitByWholeSeparator(name, " ");
         return Arrays.stream(words)
@@ -72,7 +85,9 @@ public class SearchUtils {
      *          dianiveli  ->  dianivel_           (replace last vowels with a _)
      *          dianivel_  ->  ciamivel_           (get optional replacement from NORMALIZED_SURNAMES_MAP)
      */
-    public static String normalizeSurname(String surname, Map<String, String> normalizedSurnamesMap) {
+    public static String normalizeSurname(
+            @Nullable String surname,
+            Map<String, String> normalizedSurnamesMap) {
         surname = RegExUtils.replaceAll(surname, SURNAME_COMMON_SUFFIX_PATTERN, "$1$2");
         surname = StringUtils.substringBefore(surname, " ");
         surname = StringUtils.replaceEach(surname, SURNAME_SEARCH_CHARS, SURNAME_REPLACEMENT_CHARS);

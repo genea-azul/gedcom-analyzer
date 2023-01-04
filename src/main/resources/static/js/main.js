@@ -257,13 +257,13 @@ var getPersonComponent = function(person, index) {
         .addClass("mt-1");
 
     if (person.dateOfBirth != null) {
-        birthDeath.text(displayDateInSpanish(person.dateOfBirth));
+        birthDeath.text("n. " + displayDateInSpanish(person.dateOfBirth));
     } else if (person.dateOfDeath != null) {
         birthDeath.text("?");
     }
 
     if (person.dateOfDeath != null) {
-        birthDeath.append(" - " + displayDateInSpanish(person.dateOfDeath));
+        birthDeath.append(" - f. " + displayDateInSpanish(person.dateOfDeath));
     } else {
         if (person.dateOfBirth != null) {
             birthDeath.append(" - ");
@@ -340,13 +340,48 @@ var getPersonComponent = function(person, index) {
 
 var displayNameInSpanish = function(name) {
     // Only the name is private
-    return name.replace("<private>", "(nombre privado)");
+    name = name.replace("<private>", "<nombre privado>");
+    return name.replace("<no spouse>", "<sin pareja>");
 };
 
 var displayDateInSpanish = function(date) {
     // Only the date of birth is private
     if (date == "<private>") {
-        return "(fecha de nac. privada)";
+        return "<fecha de nac. privada>";
     }
+
+    date = date.replaceAll("BET", "entre");
+    date = date.replaceAll("AND", "y");
+    date = date.replaceAll("ABT", "aprox.");
+    date = date.replaceAll("EST", "se estima");
+    date = date.replaceAll("BEF", "antes de");
+    date = date.replaceAll("AFT", "despu\u00E9s de");
+
+    date = date.replace(/(\d+) JAN/g, "$1 de ene de");
+    date = date.replace(/(\d+) FEB/g, "$1 de feb de");
+    date = date.replace(/(\d+) MAR/g, "$1 de mar de");
+    date = date.replace(/(\d+) APR/g, "$1 de abr de");
+    date = date.replace(/(\d+) MAY/g, "$1 de may de");
+    date = date.replace(/(\d+) JUN/g, "$1 de jun de");
+    date = date.replace(/(\d+) JUL/g, "$1 de jul de");
+    date = date.replace(/(\d+) AUG/g, "$1 de ago de");
+    date = date.replace(/(\d+) SEP/g, "$1 de sep de");
+    date = date.replace(/(\d+) OCT/g, "$1 de oct de");
+    date = date.replace(/(\d+) NOV/g, "$1 de nov de");
+    date = date.replace(/(\d+) DEC/g, "$1 de dic de");
+
+    date = date.replaceAll("JAN", "ene de");
+    date = date.replaceAll("FEB", "feb de");
+    date = date.replaceAll("MAR", "mar de");
+    date = date.replaceAll("APR", "abr de");
+    date = date.replaceAll("MAY", "may de");
+    date = date.replaceAll("JUN", "jun de");
+    date = date.replaceAll("JUL", "jul de");
+    date = date.replaceAll("AUG", "ago de");
+    date = date.replaceAll("SEP", "sep de");
+    date = date.replaceAll("OCT", "oct de");
+    date = date.replaceAll("NOV", "nov de");
+    date = date.replaceAll("DEC", "dic de");
+
     return date;
 };

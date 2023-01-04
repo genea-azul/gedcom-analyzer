@@ -1,9 +1,6 @@
-package com.geneaazul.gedcomanalyzer.service;
+package com.geneaazul.gedcomanalyzer.service.storage;
 
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
-import com.geneaazul.gedcomanalyzer.service.storage.StorageService;
-
-import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -14,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Component
 @RequiredArgsConstructor
 public class GedcomHolder {
 
