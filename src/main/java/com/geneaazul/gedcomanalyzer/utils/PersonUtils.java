@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import jakarta.annotation.Nullable;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -95,7 +96,8 @@ public class PersonUtils {
                 .map(GivenName::of);
     }
 
-    public static Optional<GivenName> getNormalizedGivenNameForSearch(String givenName, SexType sex, Map<NameAndSex, String> normalizedNamesMap) {
+    public static Optional<GivenName> getNormalizedGivenNameForSearch(
+            @Nullable String givenName, SexType sex, Map<NameAndSex, String> normalizedNamesMap) {
         return Optional.ofNullable(givenName)
                 .map(SearchUtils::simplifyName)
                 .map(name -> SearchUtils.normalizeName(name, sex, normalizedNamesMap))

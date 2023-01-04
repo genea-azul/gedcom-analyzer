@@ -13,6 +13,7 @@ import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 import com.geneaazul.gedcomanalyzer.utils.SearchUtils;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -24,6 +25,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -258,9 +260,13 @@ public class SearchService {
     }
 
     public List<EnrichedPerson> findPersonsByNameAndYearOfBirth(
-            String givenName, String surname, SexType sex, Integer yearOfBirth, EnrichedGedcom gedcom) {
+            @Nullable String givenName,
+            @Nullable String surname,
+            @Nullable SexType sex,
+            @Nullable Integer yearOfBirth,
+            EnrichedGedcom gedcom) {
 
-        if (sex == null || yearOfBirth == null) {
+        if (ObjectUtils.anyNull(givenName, surname, sex, yearOfBirth)) {
             return List.of();
         }
 
@@ -280,9 +286,13 @@ public class SearchService {
     }
 
     public List<EnrichedPerson> findPersonsByNameAndYearOfDeath(
-            String givenName, String surname, SexType sex, Integer yearOfDeath, EnrichedGedcom gedcom) {
+            @Nullable String givenName,
+            @Nullable String surname,
+            @Nullable SexType sex,
+            @Nullable Integer yearOfDeath,
+            EnrichedGedcom gedcom) {
 
-        if (sex == null || yearOfDeath == null) {
+        if (ObjectUtils.anyNull(givenName, surname, sex, yearOfDeath)) {
             return List.of();
         }
 
@@ -302,12 +312,14 @@ public class SearchService {
     }
 
     public List<EnrichedPerson> findPersonsByNameAndParentsNames(
-            String givenName, String surname, SexType sex,
-            String parent1GivenName, String parent1Surname, SexType parent1Sex,
-            String parent2GivenName, String parent2Surname, SexType parent2Sex,
+            @Nullable String givenName, @Nullable String surname, @Nullable SexType sex,
+            @Nullable String parent1GivenName, @Nullable String parent1Surname, @Nullable SexType parent1Sex,
+            @Nullable String parent2GivenName, @Nullable String parent2Surname, @Nullable SexType parent2Sex,
             EnrichedGedcom gedcom) {
 
-        if (sex == null) {
+        if (ObjectUtils.anyNull(givenName, surname, sex)
+                || ObjectUtils.anyNull(parent1GivenName, parent1Surname, parent1Sex)
+                && ObjectUtils.anyNull(parent2GivenName, parent2Surname, parent2Sex)) {
             return List.of();
         }
 
@@ -351,11 +363,12 @@ public class SearchService {
     }
 
     public List<EnrichedPerson> findPersonsByNameAndSpouseName(
-            String givenName, String surname, SexType sex,
-            String spouseGivenName, String spouseSurname, SexType spouseSex,
+            @Nullable String givenName, @Nullable String surname, @Nullable SexType sex,
+            @Nullable String spouseGivenName, @Nullable String spouseSurname, @Nullable SexType spouseSex,
             EnrichedGedcom gedcom) {
 
-        if (sex == null) {
+        if (ObjectUtils.anyNull(givenName, surname, sex)
+                || ObjectUtils.anyNull(spouseGivenName, spouseSurname, spouseSex)) {
             return List.of();
         }
 

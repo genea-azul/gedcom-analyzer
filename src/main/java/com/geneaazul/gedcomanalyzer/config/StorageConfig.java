@@ -1,14 +1,15 @@
 package com.geneaazul.gedcomanalyzer.config;
 
 import com.geneaazul.gedcomanalyzer.service.GedcomParsingService;
+import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.service.storage.GoogleCloudStorageService;
 import com.geneaazul.gedcomanalyzer.service.storage.LocalStorageService;
+import com.geneaazul.gedcomanalyzer.service.storage.StorageService;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Configuration
@@ -35,8 +36,8 @@ public class StorageConfig {
     }
 
     @Bean
-    public ExecutorService gedcomHolderExecutorService() {
-        return Executors.newSingleThreadExecutor();
+    public GedcomHolder gedcomHolder(StorageService storageService) {
+        return new GedcomHolder(storageService, Executors.newSingleThreadExecutor());
     }
 
 }

@@ -11,6 +11,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyResultDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchPersonDto;
 import com.geneaazul.gedcomanalyzer.repository.SearchFamilyRepository;
+import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +23,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -83,266 +86,103 @@ public class FamilyService {
                         .map(SearchPersonDto::getSurname))
                 .orElse(null);
 
+        String paternalGrandmotherSurname = Optional.ofNullable(searchFamilyDto.getPaternalGrandmother())
+                .map(SearchPersonDto::getSurname)
+                .orElse(null);
+
         String maternalGrandfatherSurname = Optional.ofNullable(searchFamilyDto.getMaternalGrandfather())
                 .map(SearchPersonDto::getSurname)
                 .or(() -> Optional.ofNullable(searchFamilyDto.getMother())
                         .map(SearchPersonDto::getSurname))
                 .orElse(null);
 
-        if (searchFamilyDto.getIndividual() != null) {
-            List<EnrichedPerson> individualResultA = searchService.findPersonsByNameAndYearOfBirth(
-                    searchFamilyDto.getIndividual().getGivenName(),
-                    individualSurname,
-                    searchFamilyDto.getIndividual().getSex(),
-                    searchFamilyDto.getIndividual().getYearOfBirth(),
-                    gedcom);
-            List<EnrichedPerson> individualResultB = searchService.findPersonsByNameAndYearOfDeath(
-                    searchFamilyDto.getIndividual().getGivenName(),
-                    individualSurname,
-                    searchFamilyDto.getIndividual().getSex(),
-                    searchFamilyDto.getIndividual().getYearOfDeath(),
-                    gedcom);
-            result.addAll(individualResultA);
-            result.addAll(individualResultB);
+        String maternalGrandmotherSurname = Optional.ofNullable(searchFamilyDto.getMaternalGrandmother())
+                .map(SearchPersonDto::getSurname)
+                .orElse(null);
 
-            if (searchFamilyDto.getFather() != null || searchFamilyDto.getMother() != null) {
-                List<EnrichedPerson> individualResultC = searchService.findPersonsByNameAndParentsNames(
-                        searchFamilyDto.getIndividual().getGivenName(),
-                        individualSurname,
-                        searchFamilyDto.getIndividual().getSex(),
-                        Optional.ofNullable(searchFamilyDto.getFather())
-                                .map(SearchPersonDto::getGivenName)
-                                .orElse(null),
-                        fatherSurname,
-                        Optional.ofNullable(searchFamilyDto.getFather())
-                                .map(SearchPersonDto::getSex)
-                                .orElse(null),
-                        Optional.ofNullable(searchFamilyDto.getMother())
-                                .map(SearchPersonDto::getGivenName)
-                                .orElse(null),
-                        motherSurname,
-                        Optional.ofNullable(searchFamilyDto.getMother())
-                                .map(SearchPersonDto::getSex)
-                                .orElse(null),
-                        gedcom);
-                result.addAll(individualResultC);
-            }
-        }
+        /*
+         * Individual
+         */
 
-        if (searchFamilyDto.getFather() != null && searchFamilyDto.getMother() != null) {
-            List<EnrichedPerson> individualResultA = searchService.findPersonsByNameAndSpouseName(
-                    searchFamilyDto.getFather().getGivenName(),
-                    fatherSurname,
-                    searchFamilyDto.getFather().getSex(),
-                    searchFamilyDto.getMother().getGivenName(),
-                    motherSurname,
-                    searchFamilyDto.getMother().getSex(),
-                    gedcom);
-            List<EnrichedPerson> individualResultB = searchService.findPersonsByNameAndSpouseName(
-                    searchFamilyDto.getMother().getGivenName(),
-                    motherSurname,
-                    searchFamilyDto.getMother().getSex(),
-                    searchFamilyDto.getFather().getGivenName(),
-                    fatherSurname,
-                    searchFamilyDto.getFather().getSex(),
-                    gedcom);
-            result.addAll(individualResultA);
-            result.addAll(individualResultB);
-        }
+        result.addAll(searchPersons(
+                searchFamilyDto.getIndividual(),
+                individualSurname,
+                searchFamilyDto.getFather(),
+                fatherSurname,
+                searchFamilyDto.getMother(),
+                motherSurname,
+                gedcom));
 
-        if (searchFamilyDto.getFather() != null) {
-            List<EnrichedPerson> individualResultA = searchService.findPersonsByNameAndYearOfBirth(
-                    searchFamilyDto.getFather().getGivenName(),
-                    fatherSurname,
-                    searchFamilyDto.getFather().getSex(),
-                    searchFamilyDto.getFather().getYearOfBirth(),
-                    gedcom);
-            List<EnrichedPerson> individualResultB = searchService.findPersonsByNameAndYearOfDeath(
-                    searchFamilyDto.getFather().getGivenName(),
-                    fatherSurname,
-                    searchFamilyDto.getFather().getSex(),
-                    searchFamilyDto.getFather().getYearOfDeath(),
-                    gedcom);
-            result.addAll(individualResultA);
-            result.addAll(individualResultB);
+        /*
+         * Parents
+         */
 
-            if (searchFamilyDto.getPaternalGrandfather() != null || searchFamilyDto.getPaternalGrandmother() != null) {
-                List<EnrichedPerson> individualResultC = searchService.findPersonsByNameAndParentsNames(
-                        searchFamilyDto.getFather().getGivenName(),
-                        fatherSurname,
-                        searchFamilyDto.getFather().getSex(),
-                        Optional.ofNullable(searchFamilyDto.getPaternalGrandfather())
-                                .map(SearchPersonDto::getGivenName)
-                                .orElse(null),
-                        paternalGrandfatherSurname,
-                        Optional.ofNullable(searchFamilyDto.getPaternalGrandfather())
-                                .map(SearchPersonDto::getSex)
-                                .orElse(null),
-                        Optional.ofNullable(searchFamilyDto.getPaternalGrandmother())
-                                .map(SearchPersonDto::getGivenName)
-                                .orElse(null),
-                        Optional.ofNullable(searchFamilyDto.getPaternalGrandmother())
-                                .map(SearchPersonDto::getSurname)
-                                .orElse(null),
-                        Optional.ofNullable(searchFamilyDto.getPaternalGrandmother())
-                                .map(SearchPersonDto::getSex)
-                                .orElse(null),
-                        gedcom);
-                result.addAll(individualResultC);
-            }
-        }
+        result.addAll(searchCouples(
+                searchFamilyDto.getFather(),
+                fatherSurname,
+                searchFamilyDto.getMother(),
+                motherSurname,
+                gedcom));
 
-        if (searchFamilyDto.getMother() != null) {
-            List<EnrichedPerson> individualResultA = searchService.findPersonsByNameAndYearOfBirth(
-                    searchFamilyDto.getMother().getGivenName(),
-                    motherSurname,
-                    searchFamilyDto.getMother().getSex(),
-                    searchFamilyDto.getMother().getYearOfBirth(),
-                    gedcom);
-            List<EnrichedPerson> individualResultB = searchService.findPersonsByNameAndYearOfDeath(
-                    searchFamilyDto.getMother().getGivenName(),
-                    motherSurname,
-                    searchFamilyDto.getMother().getSex(),
-                    searchFamilyDto.getMother().getYearOfDeath(),
-                    gedcom);
-            result.addAll(individualResultA);
-            result.addAll(individualResultB);
+        result.addAll(searchPersons(
+                searchFamilyDto.getFather(),
+                fatherSurname,
+                searchFamilyDto.getPaternalGrandfather(),
+                paternalGrandfatherSurname,
+                searchFamilyDto.getPaternalGrandmother(),
+                paternalGrandmotherSurname,
+                gedcom));
 
-            if (searchFamilyDto.getMaternalGrandfather() != null || searchFamilyDto.getMaternalGrandmother() != null) {
-                List<EnrichedPerson> individualResultC = searchService.findPersonsByNameAndParentsNames(
-                        searchFamilyDto.getMother().getGivenName(),
-                        motherSurname,
-                        searchFamilyDto.getMother().getSex(),
-                        Optional.ofNullable(searchFamilyDto.getMaternalGrandfather())
-                                .map(SearchPersonDto::getGivenName)
-                                .orElse(null),
-                        maternalGrandfatherSurname,
-                        Optional.ofNullable(searchFamilyDto.getMaternalGrandfather())
-                                .map(SearchPersonDto::getSex)
-                                .orElse(null),
-                        Optional.ofNullable(searchFamilyDto.getMaternalGrandmother())
-                                .map(SearchPersonDto::getGivenName)
-                                .orElse(null),
-                        Optional.ofNullable(searchFamilyDto.getMaternalGrandmother())
-                                .map(SearchPersonDto::getSurname)
-                                .orElse(null),
-                        Optional.ofNullable(searchFamilyDto.getMaternalGrandmother())
-                                .map(SearchPersonDto::getSex)
-                                .orElse(null),
-                        gedcom);
-                result.addAll(individualResultC);
-            }
-        }
+        result.addAll(searchPersons(
+                searchFamilyDto.getMother(),
+                motherSurname,
+                searchFamilyDto.getMaternalGrandfather(),
+                maternalGrandfatherSurname,
+                searchFamilyDto.getMaternalGrandmother(),
+                maternalGrandmotherSurname,
+                gedcom));
 
-        if (searchFamilyDto.getPaternalGrandfather() != null && searchFamilyDto.getPaternalGrandmother() != null) {
-            List<EnrichedPerson> individualResultA = searchService.findPersonsByNameAndSpouseName(
-                    searchFamilyDto.getPaternalGrandfather().getGivenName(),
-                    paternalGrandfatherSurname,
-                    searchFamilyDto.getPaternalGrandfather().getSex(),
-                    searchFamilyDto.getPaternalGrandmother().getGivenName(),
-                    searchFamilyDto.getPaternalGrandmother().getSurname(),
-                    searchFamilyDto.getPaternalGrandmother().getSex(),
-                    gedcom);
-            List<EnrichedPerson> individualResultB = searchService.findPersonsByNameAndSpouseName(
-                    searchFamilyDto.getPaternalGrandmother().getGivenName(),
-                    searchFamilyDto.getPaternalGrandmother().getSurname(),
-                    searchFamilyDto.getPaternalGrandmother().getSex(),
-                    searchFamilyDto.getPaternalGrandfather().getGivenName(),
-                    paternalGrandfatherSurname,
-                    searchFamilyDto.getPaternalGrandfather().getSex(),
-                    gedcom);
-            result.addAll(individualResultA);
-            result.addAll(individualResultB);
-        }
+        /*
+         * Paternal grandparents
+         */
 
-        if (searchFamilyDto.getMaternalGrandfather() != null && searchFamilyDto.getMaternalGrandmother() != null) {
-            List<EnrichedPerson> individualResultA = searchService.findPersonsByNameAndSpouseName(
-                    searchFamilyDto.getMaternalGrandfather().getGivenName(),
-                    maternalGrandfatherSurname,
-                    searchFamilyDto.getMaternalGrandfather().getSex(),
-                    searchFamilyDto.getMaternalGrandmother().getGivenName(),
-                    searchFamilyDto.getMaternalGrandmother().getSurname(),
-                    searchFamilyDto.getMaternalGrandmother().getSex(),
-                    gedcom);
-            List<EnrichedPerson> individualResultB = searchService.findPersonsByNameAndSpouseName(
-                    searchFamilyDto.getMaternalGrandmother().getGivenName(),
-                    searchFamilyDto.getMaternalGrandmother().getSurname(),
-                    searchFamilyDto.getMaternalGrandmother().getSex(),
-                    searchFamilyDto.getMaternalGrandfather().getGivenName(),
-                    maternalGrandfatherSurname,
-                    searchFamilyDto.getMaternalGrandfather().getSex(),
-                    gedcom);
-            result.addAll(individualResultA);
-            result.addAll(individualResultB);
-        }
+        result.addAll(searchCouples(
+                searchFamilyDto.getPaternalGrandfather(),
+                paternalGrandfatherSurname,
+                searchFamilyDto.getPaternalGrandmother(),
+                paternalGrandmotherSurname,
+                gedcom));
 
-        if (searchFamilyDto.getPaternalGrandfather() != null) {
-            List<EnrichedPerson> individualResultA = searchService.findPersonsByNameAndYearOfBirth(
-                    searchFamilyDto.getPaternalGrandfather().getGivenName(),
-                    paternalGrandfatherSurname,
-                    searchFamilyDto.getPaternalGrandfather().getSex(),
-                    searchFamilyDto.getPaternalGrandfather().getYearOfBirth(),
-                    gedcom);
-            List<EnrichedPerson> individualResultB = searchService.findPersonsByNameAndYearOfDeath(
-                    searchFamilyDto.getPaternalGrandfather().getGivenName(),
-                    paternalGrandfatherSurname,
-                    searchFamilyDto.getPaternalGrandfather().getSex(),
-                    searchFamilyDto.getPaternalGrandfather().getYearOfDeath(),
-                    gedcom);
-            result.addAll(individualResultA);
-            result.addAll(individualResultB);
-        }
+        result.addAll(searchPersons(
+                searchFamilyDto.getPaternalGrandfather(),
+                paternalGrandfatherSurname,
+                gedcom));
 
-        if (searchFamilyDto.getPaternalGrandmother() != null) {
-            List<EnrichedPerson> individualResultA = searchService.findPersonsByNameAndYearOfBirth(
-                    searchFamilyDto.getPaternalGrandmother().getGivenName(),
-                    searchFamilyDto.getPaternalGrandmother().getSurname(),
-                    searchFamilyDto.getPaternalGrandmother().getSex(),
-                    searchFamilyDto.getPaternalGrandmother().getYearOfBirth(),
-                    gedcom);
-            List<EnrichedPerson> individualResultB = searchService.findPersonsByNameAndYearOfDeath(
-                    searchFamilyDto.getPaternalGrandmother().getGivenName(),
-                    searchFamilyDto.getPaternalGrandmother().getSurname(),
-                    searchFamilyDto.getPaternalGrandmother().getSex(),
-                    searchFamilyDto.getPaternalGrandmother().getYearOfDeath(),
-                    gedcom);
-            result.addAll(individualResultA);
-            result.addAll(individualResultB);
-        }
+        result.addAll(searchPersons(
+                searchFamilyDto.getPaternalGrandmother(),
+                paternalGrandmotherSurname,
+                gedcom));
 
-        if (searchFamilyDto.getMaternalGrandfather() != null) {
-            List<EnrichedPerson> individualResultA = searchService.findPersonsByNameAndYearOfBirth(
-                    searchFamilyDto.getMaternalGrandfather().getGivenName(),
-                    maternalGrandfatherSurname,
-                    searchFamilyDto.getMaternalGrandfather().getSex(),
-                    searchFamilyDto.getMaternalGrandfather().getYearOfBirth(),
-                    gedcom);
-            List<EnrichedPerson> individualResultB = searchService.findPersonsByNameAndYearOfDeath(
-                    searchFamilyDto.getMaternalGrandfather().getGivenName(),
-                    maternalGrandfatherSurname,
-                    searchFamilyDto.getMaternalGrandfather().getSex(),
-                    searchFamilyDto.getMaternalGrandfather().getYearOfDeath(),
-                    gedcom);
-            result.addAll(individualResultA);
-            result.addAll(individualResultB);
-        }
+        /*
+         * Maternal grandparents
+         */
 
-        if (searchFamilyDto.getMaternalGrandmother() != null) {
-            List<EnrichedPerson> individualResultA = searchService.findPersonsByNameAndYearOfBirth(
-                    searchFamilyDto.getMaternalGrandmother().getGivenName(),
-                    searchFamilyDto.getMaternalGrandmother().getSurname(),
-                    searchFamilyDto.getMaternalGrandmother().getSex(),
-                    searchFamilyDto.getMaternalGrandmother().getYearOfBirth(),
-                    gedcom);
-            List<EnrichedPerson> individualResultB = searchService.findPersonsByNameAndYearOfDeath(
-                    searchFamilyDto.getMaternalGrandmother().getGivenName(),
-                    searchFamilyDto.getMaternalGrandmother().getSurname(),
-                    searchFamilyDto.getMaternalGrandmother().getSex(),
-                    searchFamilyDto.getMaternalGrandmother().getYearOfDeath(),
-                    gedcom);
-            result.addAll(individualResultA);
-            result.addAll(individualResultB);
-        }
+        result.addAll(searchCouples(
+                searchFamilyDto.getMaternalGrandfather(),
+                maternalGrandfatherSurname,
+                searchFamilyDto.getMaternalGrandmother(),
+                maternalGrandmotherSurname,
+                gedcom));
+
+        result.addAll(searchPersons(
+                searchFamilyDto.getMaternalGrandfather(),
+                maternalGrandfatherSurname,
+                gedcom));
+
+        result.addAll(searchPersons(
+                searchFamilyDto.getMaternalGrandmother(),
+                maternalGrandmotherSurname,
+                gedcom));
 
         result = result
                 .stream()
@@ -356,7 +196,114 @@ public class FamilyService {
                 .build();
     }
 
-    public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+    private List<EnrichedPerson> searchPersons(
+            @Nullable SearchPersonDto searchPerson,
+            @Nullable String personSurname,
+            EnrichedGedcom gedcom) {
+        return searchPersons(
+                searchPerson,
+                personSurname,
+                null,
+                null,
+                null,
+                null,
+                gedcom);
+    }
+
+    private List<EnrichedPerson> searchPersons(
+            @Nullable SearchPersonDto searchPerson,
+            @Nullable String personSurname,
+            @Nullable SearchPersonDto searchFather,
+            @Nullable String fatherSurname,
+            @Nullable SearchPersonDto searchMother,
+            @Nullable String motherSurname,
+            EnrichedGedcom gedcom) {
+
+        if (searchPerson == null || personSurname == null) {
+            return List.of();
+        }
+
+        List<EnrichedPerson> yearOfBirthResult = searchService.findPersonsByNameAndYearOfBirth(
+                searchPerson.getGivenName(),
+                personSurname,
+                searchPerson.getSex(),
+                searchPerson.getYearOfBirth(),
+                gedcom);
+
+        List<EnrichedPerson> yearOfDeathResult = searchService.findPersonsByNameAndYearOfDeath(
+                searchPerson.getGivenName(),
+                personSurname,
+                searchPerson.getSex(),
+                searchPerson.getYearOfDeath(),
+                gedcom);
+
+        List<EnrichedPerson> parentsResult = searchService.findPersonsByNameAndParentsNames(
+                searchPerson.getGivenName(),
+                personSurname,
+                searchPerson.getSex(),
+                Optional.ofNullable(searchFather)
+                        .map(SearchPersonDto::getGivenName)
+                        .orElse(null),
+                fatherSurname,
+                Optional.ofNullable(searchFather)
+                        .map(SearchPersonDto::getSex)
+                        .orElse(null),
+                Optional.ofNullable(searchMother)
+                        .map(SearchPersonDto::getGivenName)
+                        .orElse(null),
+                motherSurname,
+                Optional.ofNullable(searchMother)
+                        .map(SearchPersonDto::getSex)
+                        .orElse(null),
+                gedcom);
+
+        return Stream
+                .of(
+                        yearOfBirthResult,
+                        yearOfDeathResult,
+                        parentsResult)
+                .flatMap(List::stream)
+                .toList();
+    }
+
+    private List<EnrichedPerson> searchCouples(
+            @Nullable SearchPersonDto spouse1,
+            @Nullable String spouse1Surname,
+            @Nullable SearchPersonDto spouse2,
+            @Nullable String spouse2Surname,
+            EnrichedGedcom gedcom) {
+
+        if (spouse1 == null || spouse1Surname == null || spouse2 == null || spouse2Surname == null) {
+            return List.of();
+        }
+
+        List<EnrichedPerson> spousesResult1 = searchService.findPersonsByNameAndSpouseName(
+                spouse1.getGivenName(),
+                spouse1Surname,
+                spouse1.getSex(),
+                spouse2.getGivenName(),
+                spouse2Surname,
+                spouse2.getSex(),
+                gedcom);
+
+        List<EnrichedPerson> spousesResult2 = searchService.findPersonsByNameAndSpouseName(
+                spouse2.getGivenName(),
+                spouse2Surname,
+                spouse2.getSex(),
+                spouse1.getGivenName(),
+                spouse1Surname,
+                spouse1.getSex(),
+                gedcom);
+
+        return Stream
+                .of(
+                        spousesResult1,
+                        spousesResult2)
+                .flatMap(List::stream)
+                .toList();
+    }
+
+    private static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
         final Set<Object> seen = ConcurrentHashMap.newKeySet();
         return t -> seen.add(keyExtractor.apply(t));
     }
