@@ -121,6 +121,8 @@ public class SearchFamily {
     private SearchPerson maternalGrandmother;
     @ToString.Include
     private String contact;
+    @ToString.Include
+    private Boolean isMatch;
 
     @PrePersist
     protected void onCreate() {

@@ -47,6 +47,13 @@ public class FamilyService {
                 .map(SearchFamily::getId);
     }
 
+    @Transactional
+    public void updateSearch(Long searchFamilyId, boolean isMatch) {
+        searchFamilyRepository
+                .findById(searchFamilyId)
+                .ifPresent(searchFamily -> searchFamily.setIsMatch(isMatch));
+    }
+
     public SearchFamilyResultDto search(SearchFamilyDto searchFamilyDto) {
 
         EnrichedGedcom gedcom = gedcomHolder.getGedcom()
