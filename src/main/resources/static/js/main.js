@@ -154,9 +154,8 @@ $(document).ready(function() {
                 // remove the "searching.." message
                 resultComponent.empty();
 
-                $(data.people).each(function() {
-                    var personComponent = $("<div>");
-                    personComponent.jsonViewer(this, {collapsed: true, rootCollapsable: false});
+                $(data.people).each(function(index) {
+                    var personComponent = getPersonComponent(this, index);
                     resultComponent.append(personComponent);
                 });
 
@@ -170,19 +169,20 @@ $(document).ready(function() {
 
                 // Get error details
                 try {
-                    var errorJson;
+                    var errorMsg;
                     if (xhr.status >= 500 && xhr.status < 600) {
-                        errorJson = JSON.parse("{\"error\": \"El servidor se est\u00E1 reiniciando, intent\u00E1 de nuevo.\"}");
+                        errorMsg = "<b>Error:</b> El servidor se est\u00E1 reiniciando, intent\u00E1 de nuevo.";
+                    } else if (xhr.status == 0) {
+                        errorMsg = "<b>Error:</b> El servidor est\u00E1 ca\u00EDdo, intent\u00E1 de nuevo.";
                     } else {
-                        errorJson = JSON.parse("{\"error\": \"" + xhr.responseJSON.message + "\"}");
+                        errorMsg = "<b>Error:</b> " + xhr.responseJSON.message;
                     }
 
-                    var personComponent = $("<div>");
-                    personComponent.jsonViewer(errorJson, {rootCollapsable: false});
-                    resultComponent.html(personComponent);
+                    resultComponent.html(
+                        $("<div>")
+                            .html(errorMsg));
 
                 } catch (ex) {
-                    console.log(xhr);
                     console.log(ex);
                 }
             },
@@ -226,4 +226,127 @@ var isPersonEmpty = function(person) {
         }
     }
     return true;
+};
+
+var getPersonComponent = function(person, index) {
+    var card = $("<div>").addClass("card");
+
+    if (index > 0) {
+        card.addClass("mt-2");
+    }
+
+    var cardBody = $("<div>").addClass("card-body small");
+
+    if (person.sex == "M") {
+        card.addClass("border-secondary");
+        cardBody.addClass("text-bg-secondary");
+    } else if (person.sex == "F") {
+        card.addClass("border-danger");
+        cardBody.addClass("text-bg-danger");
+    } else {
+        card.addClass("border-light");
+        cardBody.addClass("text-bg-light");
+    }
+
+    cardBody.append(
+        $("<div>")
+            .addClass("h6")
+            .text(displayNameInSpanish(person.name)));
+
+    var birthDeath = $("<div>")
+        .addClass("mt-1");
+
+    if (person.dateOfBirth != null) {
+        birthDeath.text(displayDateInSpanish(person.dateOfBirth));
+    } else if (person.dateOfDeath != null) {
+        birthDeath.text("?");
+    }
+
+    if (person.dateOfDeath != null) {
+        birthDeath.append(" - " + displayDateInSpanish(person.dateOfDeath));
+    } else {
+        if (person.dateOfBirth != null) {
+            birthDeath.append(" - ");
+        }
+        if (person.isAlive) {
+            birthDeath.append("Vive");
+        } else {
+            birthDeath.append(person.sex == "F" ? "Fallecida" : "Fallecido");
+        }
+    }
+
+    cardBody.append(birthDeath);
+
+    if (person.placeOfBirth != null) {
+        cardBody.append(
+            $("<div>")
+                .addClass("mt-1")
+                .html("Pa&iacute;s de nacimiento: " + person.placeOfBirth));
+    }
+
+    if (person.parents.length > 0) {
+        var parents = $("<ul>")
+            .addClass("mb-0");
+
+        $(person.parents).each(function() {
+            parents.append(
+                $("<li>")
+                    .html(
+                        $("<b>")
+                            .text(displayNameInSpanish(this))));
+        });
+
+        cardBody.append(
+            $("<div>")
+                .addClass("mt-1")
+                .html("Padres: ")
+                .append(parents));
+    }
+
+    if (person.spouses.length > 0) {
+        var spouses = $("<ul>")
+            .addClass("mb-0");
+
+        $(person.spouses).each(function() {
+            spouses.append(
+                $("<li>")
+                    .html(
+                        $("<b>")
+                            .text(displayNameInSpanish(this.name))));
+
+            if (this.children.length > 0) {
+                var children = $("<ul>")
+                    .addClass("mb-0");
+
+                $(this.children).each(function() {
+                    children.append(
+                        $("<li>")
+                            .text(displayNameInSpanish(this)));
+                });
+
+                spouses.append(children);
+            }
+        });
+
+        cardBody.append(
+            $("<div>")
+                .addClass("mt-1")
+                .html("Parejas: ")
+                .append(spouses));
+    }
+
+    return card.html(cardBody);
+};
+
+var displayNameInSpanish = function(name) {
+    // Only the name is private
+    return name.replace("<private>", "(nombre privado)");
+};
+
+var displayDateInSpanish = function(date) {
+    // Only the date of birth is private
+    if (date == "<private>") {
+        return "(fecha de nac. privada)";
+    }
+    return date;
 };

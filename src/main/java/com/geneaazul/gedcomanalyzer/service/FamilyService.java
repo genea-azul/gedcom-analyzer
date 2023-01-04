@@ -1,6 +1,7 @@
 package com.geneaazul.gedcomanalyzer.service;
 
 import com.geneaazul.gedcomanalyzer.domain.SearchFamily;
+import com.geneaazul.gedcomanalyzer.mapper.ObfuscationType;
 import com.geneaazul.gedcomanalyzer.mapper.PersonMapper;
 import com.geneaazul.gedcomanalyzer.mapper.SearchFamilyMapper;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
@@ -113,10 +114,16 @@ public class FamilyService {
                                 .map(SearchPersonDto::getGivenName)
                                 .orElse(null),
                         fatherSurname,
+                        Optional.ofNullable(searchFamilyDto.getFather())
+                                .map(SearchPersonDto::getSex)
+                                .orElse(null),
                         Optional.ofNullable(searchFamilyDto.getMother())
                                 .map(SearchPersonDto::getGivenName)
                                 .orElse(null),
                         motherSurname,
+                        Optional.ofNullable(searchFamilyDto.getMother())
+                                .map(SearchPersonDto::getSex)
+                                .orElse(null),
                         gedcom);
                 result.addAll(individualResultC);
             }
@@ -129,6 +136,7 @@ public class FamilyService {
                     searchFamilyDto.getFather().getSex(),
                     searchFamilyDto.getMother().getGivenName(),
                     motherSurname,
+                    searchFamilyDto.getMother().getSex(),
                     gedcom);
             List<EnrichedPerson> individualResultB = searchService.findPersonsByNameAndSpouseName(
                     searchFamilyDto.getMother().getGivenName(),
@@ -136,6 +144,7 @@ public class FamilyService {
                     searchFamilyDto.getMother().getSex(),
                     searchFamilyDto.getFather().getGivenName(),
                     fatherSurname,
+                    searchFamilyDto.getFather().getSex(),
                     gedcom);
             result.addAll(individualResultA);
             result.addAll(individualResultB);
@@ -166,11 +175,17 @@ public class FamilyService {
                                 .map(SearchPersonDto::getGivenName)
                                 .orElse(null),
                         paternalGrandfatherSurname,
+                        Optional.ofNullable(searchFamilyDto.getPaternalGrandfather())
+                                .map(SearchPersonDto::getSex)
+                                .orElse(null),
                         Optional.ofNullable(searchFamilyDto.getPaternalGrandmother())
                                 .map(SearchPersonDto::getGivenName)
                                 .orElse(null),
                         Optional.ofNullable(searchFamilyDto.getPaternalGrandmother())
                                 .map(SearchPersonDto::getSurname)
+                                .orElse(null),
+                        Optional.ofNullable(searchFamilyDto.getPaternalGrandmother())
+                                .map(SearchPersonDto::getSex)
                                 .orElse(null),
                         gedcom);
                 result.addAll(individualResultC);
@@ -202,11 +217,17 @@ public class FamilyService {
                                 .map(SearchPersonDto::getGivenName)
                                 .orElse(null),
                         maternalGrandfatherSurname,
+                        Optional.ofNullable(searchFamilyDto.getMaternalGrandfather())
+                                .map(SearchPersonDto::getSex)
+                                .orElse(null),
                         Optional.ofNullable(searchFamilyDto.getMaternalGrandmother())
                                 .map(SearchPersonDto::getGivenName)
                                 .orElse(null),
                         Optional.ofNullable(searchFamilyDto.getMaternalGrandmother())
                                 .map(SearchPersonDto::getSurname)
+                                .orElse(null),
+                        Optional.ofNullable(searchFamilyDto.getMaternalGrandmother())
+                                .map(SearchPersonDto::getSex)
                                 .orElse(null),
                         gedcom);
                 result.addAll(individualResultC);
@@ -220,6 +241,7 @@ public class FamilyService {
                     searchFamilyDto.getPaternalGrandfather().getSex(),
                     searchFamilyDto.getPaternalGrandmother().getGivenName(),
                     searchFamilyDto.getPaternalGrandmother().getSurname(),
+                    searchFamilyDto.getPaternalGrandmother().getSex(),
                     gedcom);
             List<EnrichedPerson> individualResultB = searchService.findPersonsByNameAndSpouseName(
                     searchFamilyDto.getPaternalGrandmother().getGivenName(),
@@ -227,6 +249,7 @@ public class FamilyService {
                     searchFamilyDto.getPaternalGrandmother().getSex(),
                     searchFamilyDto.getPaternalGrandfather().getGivenName(),
                     paternalGrandfatherSurname,
+                    searchFamilyDto.getPaternalGrandfather().getSex(),
                     gedcom);
             result.addAll(individualResultA);
             result.addAll(individualResultB);
@@ -239,6 +262,7 @@ public class FamilyService {
                     searchFamilyDto.getMaternalGrandfather().getSex(),
                     searchFamilyDto.getMaternalGrandmother().getGivenName(),
                     searchFamilyDto.getMaternalGrandmother().getSurname(),
+                    searchFamilyDto.getMaternalGrandmother().getSex(),
                     gedcom);
             List<EnrichedPerson> individualResultB = searchService.findPersonsByNameAndSpouseName(
                     searchFamilyDto.getMaternalGrandmother().getGivenName(),
@@ -246,6 +270,7 @@ public class FamilyService {
                     searchFamilyDto.getMaternalGrandmother().getSex(),
                     searchFamilyDto.getMaternalGrandfather().getGivenName(),
                     maternalGrandfatherSurname,
+                    searchFamilyDto.getMaternalGrandfather().getSex(),
                     gedcom);
             result.addAll(individualResultA);
             result.addAll(individualResultB);
@@ -324,7 +349,7 @@ public class FamilyService {
                 .filter(distinctByKey(EnrichedPerson::getId))
                 .toList();
 
-        List<PersonDto> people = personMapper.toPersonDto(result, true);
+        List<PersonDto> people = personMapper.toPersonDto(result, ObfuscationType.SKIP_MAIN_PERSON_NAME);
 
         return SearchFamilyResultDto.builder()
                 .people(people)
