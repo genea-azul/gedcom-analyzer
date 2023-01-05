@@ -8,7 +8,7 @@ import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest
 @EnableConfigurationProperties
 @ActiveProfiles("test")
-class GedcomAnalyzerApplicationTests {
+public class GedcomAnalyzerApplicationTests {
 
     @Test
     public void contextLoads() {

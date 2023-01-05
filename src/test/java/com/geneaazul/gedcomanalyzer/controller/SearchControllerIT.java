@@ -9,36 +9,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.geneaazul.gedcomanalyzer.GedcomAnalyzerApplication;
 import com.geneaazul.gedcomanalyzer.domain.SearchFamily;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchPersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
-import com.geneaazul.gedcomanalyzer.repository.SearchFamilyRepository;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(SearchController.class)
-@ComponentScan(basePackageClasses = GedcomAnalyzerApplication.class)
-@ActiveProfiles("test")
-class SearchControllerIT {
+public class SearchControllerIT extends AbstractControllerIT {
 
     @Autowired
     private MockMvc mvc;
 
     @Autowired
     private Jackson2ObjectMapperBuilder mapperBuilder;
-
-    @MockBean
-    private SearchFamilyRepository searchFamilyRepository;
 
     @Test
     public void testSearchFamily() throws Exception {

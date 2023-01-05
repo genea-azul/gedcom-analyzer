@@ -7,6 +7,7 @@ import com.geneaazul.gedcomanalyzer.mapper.SearchFamilyMapper;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
+import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDetailsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyResultDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchPersonDto;
@@ -14,6 +15,9 @@ import com.geneaazul.gedcomanalyzer.repository.SearchFamilyRepository;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,6 +55,15 @@ public class FamilyService {
         searchFamilyRepository
                 .findById(searchFamilyId)
                 .ifPresent(searchFamily -> searchFamily.setIsMatch(isMatch));
+    }
+
+    @Transactional(readOnly = true)
+    public List<SearchFamilyDetailsDto> getLatest(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+        return searchFamilyRepository
+                .findAll(pageable)
+                .map(searchFamilyMapper::toSearchFamilyDetailsDto)
+                .toList();
     }
 
     public SearchFamilyResultDto search(SearchFamilyDto searchFamilyDto) {

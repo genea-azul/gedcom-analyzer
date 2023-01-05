@@ -7,31 +7,18 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.geneaazul.gedcomanalyzer.GedcomAnalyzerApplication;
-import com.geneaazul.gedcomanalyzer.repository.SearchFamilyRepository;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpMethod;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.net.URL;
 
-@WebMvcTest(GedcomAnalyzerController.class)
-@ComponentScan(basePackageClasses = GedcomAnalyzerApplication.class)
-@ActiveProfiles("test")
-class GedcomAnalyzerControllerIT {
+public class GedcomAnalyzerControllerIT extends AbstractControllerIT {
 
     @Autowired
     private MockMvc mvc;
-
-    @MockBean
-    private SearchFamilyRepository searchFamilyRepository;
 
     @Test
     public void testAnalyzeGedcom() throws Exception {

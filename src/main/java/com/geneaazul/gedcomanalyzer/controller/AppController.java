@@ -12,4 +12,9 @@ public class AppController {
         return "index";
     }
 
+    @GetMapping("/search-family/latest")
+    public String searchFamily(Model model) {
+        return "search-family/latest";
+    }
+
 }

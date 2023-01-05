@@ -1,8 +1,10 @@
 package com.geneaazul.gedcomanalyzer.mapper;
 
 import com.geneaazul.gedcomanalyzer.domain.SearchFamily;
+import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDetailsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchPersonDto;
+import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -36,6 +38,26 @@ public class SearchFamilyMapper {
                 .maternalGrandfather(searchPersonMapper.toSearchPersonEntity(searchFamilyDto.getMaternalGrandfather()))
                 .maternalGrandmother(searchPersonMapper.toSearchPersonEntity(searchFamilyDto.getMaternalGrandmother()))
                 .contact(searchFamilyDto.getContact())
+                .build();
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public SearchFamilyDetailsDto toSearchFamilyDetailsDto(SearchFamily searchFamily) {
+        if (searchFamily == null) {
+            return null;
+        }
+        return SearchFamilyDetailsDto.builder()
+                .id(searchFamily.getId())
+                .individual(searchPersonMapper.toSearchPersonDto(searchFamily.getIndividual(), searchFamily.getIndividualSex()))
+                .father(searchPersonMapper.toSearchPersonDto(searchFamily.getFather(), SexType.M))
+                .mother(searchPersonMapper.toSearchPersonDto(searchFamily.getMother(), SexType.F))
+                .paternalGrandfather(searchPersonMapper.toSearchPersonDto(searchFamily.getPaternalGrandfather(), SexType.M))
+                .paternalGrandmother(searchPersonMapper.toSearchPersonDto(searchFamily.getPaternalGrandmother(), SexType.F))
+                .maternalGrandfather(searchPersonMapper.toSearchPersonDto(searchFamily.getMaternalGrandfather(), SexType.M))
+                .maternalGrandmother(searchPersonMapper.toSearchPersonDto(searchFamily.getMaternalGrandmother(), SexType.F))
+                .isMatch(searchFamily.getIsMatch())
+                .contact(searchFamily.getContact())
+                .createDate(searchFamily.getCreateDate())
                 .build();
     }
 

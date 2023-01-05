@@ -36,6 +36,7 @@ public class StorageConfig {
     }
 
     @Bean
+    @Profile("!test")
     public GedcomHolder gedcomHolder(StorageService storageService) {
         return new GedcomHolder(storageService, Executors.newSingleThreadExecutor());
     }
