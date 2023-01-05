@@ -9,12 +9,12 @@
   </head>
 
   <body class="container-fluid">
-    <h3 class="mb-0">Genea Azul - Buscador de personas</h3>
-    <div class="mt-0 small">Versi&oacute;n 0.3.1 (en desarrollo)</div>
+    <div class="h4 mb-0">Genea Azul - Buscador de personas</div>
+    <div class="mt-0 small">Versi&oacute;n 0.3.2 (en desarrollo)</div>
     <div class="mt-3 mb-3">Todos los campos son opcionales, para obtener un mejor resultado complet&aacute; la mayor cantidad de datos posibles.</div>
 
     <div class="row">
-      <div class="col-xl-auto">
+      <div class="col-xl-auto mb-2">
 
         <div class="row justify-content-center">
           <div class="col-xl-auto"></div>
@@ -41,11 +41,11 @@
                   <input type="number" class="form-control" id="individualYearOfBirth" max="2050">
                   <label for="individualYearOfBirth">A&ntilde;o de nacimiento</label>
                 </div>
-                <div class="form-check form-switch mt-1">
-                  <input class="form-check-input" type="checkbox" role="switch" id="individualIsAlive" checked>
+                <div class="form-check mt-1">
+                  <input class="form-check-input" type="checkbox" id="individualIsAlive" checked>
                   <label class="form-check-label" for="individualIsAlive">Vive</label>
                 </div>
-                <div class="form-floating d-none mt-1">
+                <div class="form-floating mt-1">
                   <input type="number" class="form-control" id="individualYearOfDeath" max="2050" disabled>
                   <label for="individualYearOfDeath">A&ntilde;o de fallecimiento</label>
                 </div>
@@ -69,11 +69,11 @@
                   <input type="number" class="form-control" id="fatherYearOfBirth" max="2050">
                   <label for="fatherYearOfBirth">A&ntilde;o de nacimiento</label>
                 </div>
-                <div class="form-check form-switch mt-1">
-                  <input class="form-check-input" type="checkbox" role="switch" id="fatherIsAlive" checked>
+                <div class="form-check mt-1">
+                  <input class="form-check-input" type="checkbox" id="fatherIsAlive" checked>
                   <label class="form-check-label" for="fatherIsAlive">Vive</label>
                 </div>
-                <div class="form-floating d-none mt-1">
+                <div class="form-floating mt-1">
                   <input type="number" class="form-control" id="fatherYearOfDeath" max="2050" disabled>
                   <label for="fatherYearOfDeath">A&ntilde;o de fallecimiento</label>
                 </div>
@@ -97,11 +97,11 @@
                   <input type="number" class="form-control" id="motherYearOfBirth" max="2050">
                   <label for="motherYearOfBirth">A&ntilde;o de nacimiento</label>
                 </div>
-                <div class="form-check form-switch mt-1">
-                  <input class="form-check-input" type="checkbox" role="switch" id="motherIsAlive" checked>
+                <div class="form-check mt-1">
+                  <input class="form-check-input" type="checkbox" id="motherIsAlive" checked>
                   <label class="form-check-label" for="motherIsAlive">Vive</label>
                 </div>
-                <div class="form-floating d-none mt-1">
+                <div class="form-floating mt-1">
                   <input type="number" class="form-control" id="motherYearOfDeath" max="2050" disabled>
                   <label for="motherYearOfDeath">A&ntilde;o de fallecimiento</label>
                 </div>
@@ -111,10 +111,10 @@
           <div class="col-xl-auto"></div>
         </div>
 
-        <div class="row" id="grandparentsContainerShowBtnContainer">
+        <div class="row mt-2 mb-2" id="grandparentsContainerShowBtnContainer">
           <div class="col-xl-auto">
-            <div class="form-check form-switch mt-2 mb-4">
-              <input class="form-check-input" type="checkbox" role="switch" id="grandparentsContainerShowBtn">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="grandparentsContainerShowBtn">
               <label class="form-check-label" for="grandparentsContainerShowBtn">Agregar informaci&oacute;n de abuelos</label>
             </div>
           </div>
@@ -137,11 +137,11 @@
                   <input type="number" class="form-control" id="paternalGrandfatherYearOfBirth" max="2050">
                   <label for="paternalGrandfatherYearOfBirth">A&ntilde;o de nacimiento</label>
                 </div>
-                <div class="form-check form-switch mt-1">
-                  <input class="form-check-input" type="checkbox" role="switch" id="paternalGrandfatherIsAlive" checked>
+                <div class="form-check mt-1">
+                  <input class="form-check-input" type="checkbox" id="paternalGrandfatherIsAlive" checked>
                   <label class="form-check-label" for="paternalGrandfatherIsAlive">Vive</label>
                 </div>
-                <div class="form-floating d-none mt-1">
+                <div class="form-floating mt-1">
                   <input type="number" class="form-control" id="paternalGrandfatherYearOfDeath" max="2050" disabled>
                   <label for="paternalGrandfatherYearOfDeath">A&ntilde;o de fallecimiento</label>
                 </div>
@@ -164,11 +164,11 @@
                   <input type="number" class="form-control" id="paternalGrandmotherYearOfBirth" max="2050">
                   <label for="paternalGrandmotherYearOfBirth">A&ntilde;o de nacimiento</label>
                 </div>
-                <div class="form-check form-switch mt-1">
-                  <input class="form-check-input" type="checkbox" role="switch" id="paternalGrandmotherIsAlive" checked>
+                <div class="form-check mt-1">
+                  <input class="form-check-input" type="checkbox" id="paternalGrandmotherIsAlive" checked>
                   <label class="form-check-label" for="paternalGrandmotherIsAlive">Vive</label>
                 </div>
-                <div class="form-floating d-none mt-1">
+                <div class="form-floating mt-1">
                   <input type="number" class="form-control" id="paternalGrandmotherYearOfDeath" max="2050" disabled>
                   <label for="paternalGrandmotherYearOfDeath">A&ntilde;o de fallecimiento</label>
                 </div>
@@ -191,11 +191,11 @@
                   <input type="number" class="form-control" id="maternalGrandfatherYearOfBirth" max="2050">
                   <label for="maternalGrandfatherYearOfBirth">A&ntilde;o de nacimiento</label>
                 </div>
-                <div class="form-check form-switch mt-1">
-                  <input class="form-check-input" type="checkbox" role="switch" id="maternalGrandfatherIsAlive" checked>
+                <div class="form-check mt-1">
+                  <input class="form-check-input" type="checkbox" id="maternalGrandfatherIsAlive" checked>
                   <label class="form-check-label" for="maternalGrandfatherIsAlive">Vive</label>
                 </div>
-                <div class="form-floating d-none mt-1">
+                <div class="form-floating mt-1">
                   <input type="number" class="form-control" id="maternalGrandfatherYearOfDeath" max="2050" disabled>
                   <label for="maternalGrandfatherYearOfDeath">A&ntilde;o de fallecimiento</label>
                 </div>
@@ -218,11 +218,11 @@
                   <input type="number" class="form-control" id="maternalGrandmotherYearOfBirth" max="2050">
                   <label for="maternalGrandmotherYearOfBirth">A&ntilde;o de nacimiento</label>
                 </div>
-                <div class="form-check form-switch mt-1">
-                  <input class="form-check-input" type="checkbox" role="switch" id="maternalGrandmotherIsAlive" checked>
+                <div class="form-check mt-1">
+                  <input class="form-check-input" type="checkbox" id="maternalGrandmotherIsAlive" checked>
                   <label class="form-check-label" for="maternalGrandmotherIsAlive">Vive</label>
                 </div>
-                <div class="form-floating d-none mt-1">
+                <div class="form-floating mt-1">
                   <input type="number" class="form-control" id="maternalGrandmotherYearOfDeath" max="2050" disabled>
                   <label for="maternalGrandmotherYearOfDeath">A&ntilde;o de fallecimiento</label>
                 </div>
@@ -233,18 +233,18 @@
 
       </div>
 
-      <div class="col-xl-4">
-        <div class="small">
+      <div class="col-xl-4 mb-2">
+        <div class="small mb-3">
           Dejanos tu email, Whatsapp o Instagram y nos pondremos en contacto en caso de encontrar personas relacionadas a tu b&uacute;squeda en un futuro.
         </div>
-        <div class="row justify-content-center align-items-center mt-3 mb-3">
-          <div class="col-auto">
+        <div class="row justify-content-center align-items-center">
+          <div class="col-auto mb-3">
             <div class="form-floating">
               <input type="text" class="form-control" id="individualContact" size="24">
               <label for="individualContact">Email, Whatsapp o Instagram</label>
             </div>
           </div>
-          <div class="col-auto">
+          <div class="col-auto mb-3">
             <button type="button" class="btn btn-dark" id="searchBtn">Buscar</button>
           </div>
         </div>

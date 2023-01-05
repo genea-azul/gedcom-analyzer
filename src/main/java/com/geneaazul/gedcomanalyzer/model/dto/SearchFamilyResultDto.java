@@ -21,4 +21,7 @@ public class SearchFamilyResultDto {
     @ToString.Include
     private List<PersonDto> people;
 
+    @ToString.Include
+    private Integer potentialResults;
+
 }

@@ -1,12 +1,9 @@
 runtime: java17
-instance_class: F4_1G
-automatic_scaling:
-  min_idle_instances: automatic
-  max_idle_instances: 1
-  min_pending_latency: automatic
-  max_pending_latency: 0.030s
+instance_class: B4
+basic_scaling:
+  idle_timeout: 3600s
   max_instances: 1
-entrypoint: java -jar -Dspring.profiles.active=prod gedcom-analyzer-0.3.1-SNAPSHOT.jar
+entrypoint: java -jar -Dspring.profiles.active=prod gedcom-analyzer-0.3.2-SNAPSHOT.jar
 env_variables:
   CLOUD_SQL_INSTANCE: ""
   CLOUD_SQL_USER: ""

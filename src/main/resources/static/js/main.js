@@ -13,15 +13,17 @@ $(document).ready(function() {
 });
 
 var toggleYearOfDeath = function(isAliveComponent, yearOfDeathComponent) {
-    $(isAliveComponent).on('change', function() {
+    $(isAliveComponent).on("change", function() {
         var show = $(isAliveComponent).prop("checked");
-        $("div:has(> " + yearOfDeathComponent + ")").toggleClass("d-none", show);
-        $(yearOfDeathComponent).prop("disabled", show);
+        //$("div:has(> " + yearOfDeathComponent + ")").toggleClass("d-none", show);
+        $(yearOfDeathComponent)
+            .val("")
+            .prop("disabled", show);
     });
 };
 
 var toggleCardColorBySex = function(cardComponent, sexRadioComponent) {
-    $("input[type=radio][name=" + sexRadioComponent + "]").on('change', function() {
+    $("input[type=radio][name=" + sexRadioComponent + "]").on("change", function() {
         var isMale = $(this).val() === "M";
         $(cardComponent).toggleClass("border-secondary", isMale);
         $(cardComponent).toggleClass("border-danger", !isMale);
@@ -31,7 +33,7 @@ var toggleCardColorBySex = function(cardComponent, sexRadioComponent) {
 };
 
 var toggleContainers = function(displayBtnComponent, container1Component, container2Component) {
-    $(displayBtnComponent).on('change', function() {
+    $(displayBtnComponent).on("change", function() {
         var show = $(displayBtnComponent).prop("checked");
         $(container1Component).toggleClass("d-none", show);
         $(container2Component).toggleClass("d-none", !show);
@@ -159,8 +161,12 @@ $(document).ready(function() {
                     resultComponent.append(personComponent);
                 });
 
-                if (data.people.length === 0) {
-                    resultComponent.append("<p>No se encontraron resultados.</p>");
+                if (data.people.length == 0) {
+                    if (!data.potentialResults) {
+                        resultComponent.html("No se encontraron resultados.");
+                    } else {
+                        resultComponent.html("Refin\u00E1 la b\u00FAsqueda agregando fechas.<br>Potenciales resultados: " + data.potentialResults);
+                    }
                 }
             },
             error: function(xhr) {
@@ -188,7 +194,7 @@ $(document).ready(function() {
             },
             complete: function() {
                 $("#searchBtn").prop("disabled", false);
-                $('html, body').animate({
+                $("html, body").animate({
                     scrollTop: $("#searchResultCard").offset().top
                 }, 1000);
             }
