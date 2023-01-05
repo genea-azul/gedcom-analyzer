@@ -13,6 +13,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.SearchPersonDto;
 import com.geneaazul.gedcomanalyzer.repository.SearchFamilyRepository;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,9 +28,7 @@ import java.util.stream.Stream;
 
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FamilyService {
@@ -67,6 +66,7 @@ public class FamilyService {
                         .map(SearchPersonDto::getSurname))
                 .or(() -> Optional.ofNullable(searchFamilyDto.getPaternalGrandfather())
                         .map(SearchPersonDto::getSurname))
+                .map(StringUtils::trimToNull)
                 .orElse(null);
 
         String fatherSurname = Optional.ofNullable(searchFamilyDto.getFather())
@@ -75,6 +75,7 @@ public class FamilyService {
                         .map(SearchPersonDto::getSurname))
                 .or(() -> Optional.ofNullable(searchFamilyDto.getIndividual())
                         .map(SearchPersonDto::getSurname))
+                .map(StringUtils::trimToNull)
                 .orElse(null);
 
         String motherSurname = Optional.ofNullable(searchFamilyDto.getMother())
@@ -83,6 +84,7 @@ public class FamilyService {
                         .map(SearchPersonDto::getSurname))
                 .or(() -> Optional.ofNullable(searchFamilyDto.getIndividual())
                         .map(SearchPersonDto::getSurname))
+                .map(StringUtils::trimToNull)
                 .orElse(null);
 
         String paternalGrandfatherSurname = Optional.ofNullable(searchFamilyDto.getPaternalGrandfather())
@@ -91,27 +93,31 @@ public class FamilyService {
                         .map(SearchPersonDto::getSurname))
                 .or(() -> Optional.ofNullable(searchFamilyDto.getIndividual())
                         .map(SearchPersonDto::getSurname))
+                .map(StringUtils::trimToNull)
                 .orElse(null);
 
         String paternalGrandmotherSurname = Optional.ofNullable(searchFamilyDto.getPaternalGrandmother())
                 .map(SearchPersonDto::getSurname)
+                .map(StringUtils::trimToNull)
                 .orElse(null);
 
         String maternalGrandfatherSurname = Optional.ofNullable(searchFamilyDto.getMaternalGrandfather())
                 .map(SearchPersonDto::getSurname)
                 .or(() -> Optional.ofNullable(searchFamilyDto.getMother())
                         .map(SearchPersonDto::getSurname))
+                .map(StringUtils::trimToNull)
                 .orElse(null);
 
         String maternalGrandmotherSurname = Optional.ofNullable(searchFamilyDto.getMaternalGrandmother())
                 .map(SearchPersonDto::getSurname)
+                .map(StringUtils::trimToNull)
                 .orElse(null);
 
         /*
          * Individual
          */
 
-        result.addAll(searchPersons(
+        result.addAll(searchPersonByNameAndYearAndParentsNames(
                 searchFamilyDto.getIndividual(),
                 individualSurname,
                 searchFamilyDto.getFather(),
@@ -124,14 +130,14 @@ public class FamilyService {
          * Parents
          */
 
-        result.addAll(searchCouples(
+        result.addAll(searchPersonsByNameAndSpouseName(
                 searchFamilyDto.getFather(),
                 fatherSurname,
                 searchFamilyDto.getMother(),
                 motherSurname,
                 gedcom));
 
-        result.addAll(searchPersons(
+        result.addAll(searchPersonByNameAndYearAndParentsNames(
                 searchFamilyDto.getFather(),
                 fatherSurname,
                 searchFamilyDto.getPaternalGrandfather(),
@@ -140,7 +146,7 @@ public class FamilyService {
                 paternalGrandmotherSurname,
                 gedcom));
 
-        result.addAll(searchPersons(
+        result.addAll(searchPersonByNameAndYearAndParentsNames(
                 searchFamilyDto.getMother(),
                 motherSurname,
                 searchFamilyDto.getMaternalGrandfather(),
@@ -153,19 +159,19 @@ public class FamilyService {
          * Paternal grandparents
          */
 
-        result.addAll(searchCouples(
+        result.addAll(searchPersonsByNameAndSpouseName(
                 searchFamilyDto.getPaternalGrandfather(),
                 paternalGrandfatherSurname,
                 searchFamilyDto.getPaternalGrandmother(),
                 paternalGrandmotherSurname,
                 gedcom));
 
-        result.addAll(searchPersons(
+        result.addAll(searchPersonByNameAndYear(
                 searchFamilyDto.getPaternalGrandfather(),
                 paternalGrandfatherSurname,
                 gedcom));
 
-        result.addAll(searchPersons(
+        result.addAll(searchPersonByNameAndYear(
                 searchFamilyDto.getPaternalGrandmother(),
                 paternalGrandmotherSurname,
                 gedcom));
@@ -174,19 +180,19 @@ public class FamilyService {
          * Maternal grandparents
          */
 
-        result.addAll(searchCouples(
+        result.addAll(searchPersonsByNameAndSpouseName(
                 searchFamilyDto.getMaternalGrandfather(),
                 maternalGrandfatherSurname,
                 searchFamilyDto.getMaternalGrandmother(),
                 maternalGrandmotherSurname,
                 gedcom));
 
-        result.addAll(searchPersons(
+        result.addAll(searchPersonByNameAndYear(
                 searchFamilyDto.getMaternalGrandfather(),
                 maternalGrandfatherSurname,
                 gedcom));
 
-        result.addAll(searchPersons(
+        result.addAll(searchPersonByNameAndYear(
                 searchFamilyDto.getMaternalGrandmother(),
                 maternalGrandmotherSurname,
                 gedcom));
@@ -196,28 +202,141 @@ public class FamilyService {
                 .filter(distinctByKey(EnrichedPerson::getId))
                 .toList();
 
+        Integer potentialResultsCount = null;
+
+        if (result.isEmpty()) {
+            List<EnrichedPerson> potentialResults = new ArrayList<>();
+            potentialResults.addAll(getPotentialResults(searchFamilyDto.getIndividual(), individualSurname, gedcom));
+            potentialResults.addAll(getPotentialResults(searchFamilyDto.getFather(), fatherSurname, gedcom));
+            potentialResults.addAll(getPotentialResults(searchFamilyDto.getMother(), motherSurname, gedcom));
+            potentialResults.addAll(getPotentialResults(searchFamilyDto.getPaternalGrandfather(), paternalGrandfatherSurname, gedcom));
+            potentialResults.addAll(getPotentialResults(searchFamilyDto.getPaternalGrandmother(), paternalGrandmotherSurname, gedcom));
+            potentialResults.addAll(getPotentialResults(searchFamilyDto.getMaternalGrandfather(), maternalGrandfatherSurname, gedcom));
+            potentialResults.addAll(getPotentialResults(searchFamilyDto.getMaternalGrandmother(), maternalGrandmotherSurname, gedcom));
+
+            potentialResultsCount = (int) potentialResults
+                    .stream()
+                    .filter(distinctByKey(EnrichedPerson::getId))
+                    .count();
+        }
+
         List<PersonDto> people = personMapper.toPersonDto(result, ObfuscationType.SKIP_MAIN_PERSON_NAME);
 
         return SearchFamilyResultDto.builder()
                 .people(people)
+                .potentialResults(potentialResultsCount)
                 .build();
     }
 
-    private List<EnrichedPerson> searchPersons(
+    private List<EnrichedPerson> getPotentialResults(
+            @Nullable SearchPersonDto searchPerson,
+            @Nullable String surname,
+            EnrichedGedcom gedcom) {
+        if (hasSurnameButMissingDates(searchPerson, surname)) {
+            return searchPersonByNameOrSurname(searchPerson, surname, gedcom);
+        }
+        if (hasAnyDateButMissingGivenName(searchPerson, surname)) {
+            return searchPersonBySurnameAndYear(searchPerson, surname, gedcom);
+        }
+        return List.of();
+    }
+
+    private boolean hasSurnameButMissingDates(SearchPersonDto searchPersonDto, String surname) {
+        return searchPersonDto != null
+                && surname != null
+                && searchPersonDto.getYearOfBirth() == null
+                && searchPersonDto.getYearOfDeath() == null;
+    }
+
+    private boolean hasAnyDateButMissingGivenName(SearchPersonDto searchPersonDto, String surname) {
+        return searchPersonDto != null
+                && surname != null
+                && StringUtils.isBlank(searchPersonDto.getGivenName())
+                && (searchPersonDto.getYearOfBirth() != null || searchPersonDto.getYearOfDeath() != null);
+    }
+
+    private List<EnrichedPerson> searchPersonByNameOrSurname(
             @Nullable SearchPersonDto searchPerson,
             @Nullable String personSurname,
             EnrichedGedcom gedcom) {
-        return searchPersons(
-                searchPerson,
-                personSurname,
-                null,
-                null,
-                null,
-                null,
-                gedcom);
+
+        if (searchPerson == null || personSurname == null) {
+            return List.of();
+        }
+
+        return StringUtils.isNotBlank(searchPerson.getGivenName())
+                ? searchService.findPersonsByName(
+                        searchPerson.getGivenName(),
+                        personSurname,
+                        searchPerson.getSex(),
+                        gedcom)
+                : searchService.findPersonsBySurname(
+                        personSurname,
+                        searchPerson.getSex(),
+                        gedcom);
     }
 
-    private List<EnrichedPerson> searchPersons(
+    private List<EnrichedPerson> searchPersonBySurnameAndYear(
+            @Nullable SearchPersonDto searchPerson,
+            @Nullable String personSurname,
+            EnrichedGedcom gedcom) {
+
+        if (searchPerson == null || personSurname == null) {
+            return List.of();
+        }
+
+        List<EnrichedPerson> yearOfBirthResult = searchService.findPersonsBySurnameAndYearOfBirth(
+                personSurname,
+                searchPerson.getSex(),
+                searchPerson.getYearOfBirth(),
+                gedcom);
+
+        List<EnrichedPerson> yearOfDeathResult = searchService.findPersonsBySurnameAndYearOfDeath(
+                personSurname,
+                searchPerson.getSex(),
+                searchPerson.getYearOfDeath(),
+                gedcom);
+
+        return Stream
+                .of(
+                        yearOfBirthResult,
+                        yearOfDeathResult)
+                .flatMap(List::stream)
+                .toList();
+    }
+
+    private List<EnrichedPerson> searchPersonByNameAndYear(
+            @Nullable SearchPersonDto searchPerson,
+            @Nullable String personSurname,
+            EnrichedGedcom gedcom) {
+
+        if (searchPerson == null || personSurname == null) {
+            return List.of();
+        }
+
+        List<EnrichedPerson> yearOfBirthResult = searchService.findPersonsByNameAndYearOfBirth(
+                searchPerson.getGivenName(),
+                personSurname,
+                searchPerson.getSex(),
+                searchPerson.getYearOfBirth(),
+                gedcom);
+
+        List<EnrichedPerson> yearOfDeathResult = searchService.findPersonsByNameAndYearOfDeath(
+                searchPerson.getGivenName(),
+                personSurname,
+                searchPerson.getSex(),
+                searchPerson.getYearOfDeath(),
+                gedcom);
+
+        return Stream
+                .of(
+                        yearOfBirthResult,
+                        yearOfDeathResult)
+                .flatMap(List::stream)
+                .toList();
+    }
+
+    private List<EnrichedPerson> searchPersonByNameAndYearAndParentsNames(
             @Nullable SearchPersonDto searchPerson,
             @Nullable String personSurname,
             @Nullable SearchPersonDto searchFather,
@@ -273,7 +392,7 @@ public class FamilyService {
                 .toList();
     }
 
-    private List<EnrichedPerson> searchCouples(
+    private List<EnrichedPerson> searchPersonsByNameAndSpouseName(
             @Nullable SearchPersonDto spouse1,
             @Nullable String spouse1Surname,
             @Nullable SearchPersonDto spouse2,

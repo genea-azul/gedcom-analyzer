@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
@@ -259,30 +261,85 @@ public class SearchService {
         return age.isPresent() && age.get().getYears() > properties.getAlivePersonMaxAge();
     }
 
+    private List<EnrichedPerson> findPersonsByName(
+            Supplier<GivenNameAndSurname> givenNameAndSurnameSupplier,
+            Function<String, List<EnrichedPerson>> personsSupplier) {
+        return findPersonsByNameAndAnyRelative(
+                givenNameAndSurnameSupplier,
+                personsSupplier,
+                List::of,
+                ep -> List.of());
+    }
+
+    private List<EnrichedPerson> findPersonsByNameAndAnyRelative(
+            Supplier<GivenNameAndSurname> givenNameAndSurnameSupplier,
+            Function<String, List<EnrichedPerson>> personsSupplier,
+            Supplier<List<GivenNameAndSurname>> relativesGivenNameAndSurnamesSupplier,
+            Function<EnrichedPerson, List<EnrichedPerson>> relativesSupplier) {
+
+        GivenNameAndSurname givenNameAndSurname = givenNameAndSurnameSupplier.get();
+        if (givenNameAndSurname.isAnyValueEmpty()) {
+            return List.of();
+        }
+
+        List<EnrichedPerson> persons = personsSupplier.apply(givenNameAndSurname.surname());
+        if (persons.isEmpty()) {
+            return persons;
+        }
+
+        List<GivenNameAndSurname> relativesGivenNameAndSurnames = relativesGivenNameAndSurnamesSupplier.get();
+        if (!relativesGivenNameAndSurnames.isEmpty()
+                && relativesGivenNameAndSurnames
+                        .stream()
+                        .allMatch(GivenNameAndSurname::isAnyValueEmpty)) {
+            return List.of();
+        }
+
+        return persons
+                .stream()
+                .filter(person -> SearchUtils.matchesGivenName(person.getGivenNameForSearch().orElse(null), givenNameAndSurname.givenName()))
+                .filter(person -> relativesGivenNameAndSurnames.isEmpty()
+                        || relativesSupplier
+                                .apply(person)
+                                .stream()
+                                .anyMatch(relative -> relativesGivenNameAndSurnames
+                                        .stream()
+                                        .anyMatch(gns
+                                                -> relative.getSurnameMainWordForSearch()
+                                                        .map(s -> s.equals(gns.surname()))
+                                                        .orElse(false)
+                                                && SearchUtils.matchesGivenName(
+                                                        relative.getGivenNameForSearch()
+                                                                .orElse(null),
+                                                        gns.givenName()))))
+                .toList();
+    }
+
+    public List<EnrichedPerson> findPersonsByName(
+            @Nullable String givenName,
+            @Nullable String surname,
+            @Nullable SexType sex,
+            EnrichedGedcom gedcom) {
+        if (ObjectUtils.anyNull(givenName, surname, sex)) {
+            return List.of();
+        }
+        return findPersonsByName(
+                () -> GivenNameAndSurname.of(givenName, surname, sex, properties),
+                surnameMainWord -> gedcom.getPersonsBySurnameMainWordAndSex(surnameMainWord, sex));
+    }
+
     public List<EnrichedPerson> findPersonsByNameAndYearOfBirth(
             @Nullable String givenName,
             @Nullable String surname,
             @Nullable SexType sex,
             @Nullable Integer yearOfBirth,
             EnrichedGedcom gedcom) {
-
         if (ObjectUtils.anyNull(givenName, surname, sex, yearOfBirth)) {
             return List.of();
         }
-
-        Optional<GivenName> givenNameForSearch = PersonUtils.getNormalizedGivenNameForSearch(givenName, sex, properties.getNormalizedNamesMap());
-        Optional<String> surnameMainWordForSearch = PersonUtils.getSurnameMainWordForSearch(surname, properties.getNormalizedSurnamesMap());
-
-        if (givenNameForSearch.isEmpty() || surnameMainWordForSearch.isEmpty()) {
-            return List.of();
-        }
-
-        return gedcom
-                .getPersonsBySurnameMainWordAndSexAndYearOfBirthIndex(surnameMainWordForSearch.get(), sex, Year.of(yearOfBirth))
-                .stream()
-                .filter(person -> person.getGivenNameForSearch().isPresent())
-                .filter(person -> SearchUtils.matchesGivenName(person.getGivenNameForSearch().get(), givenNameForSearch.get()))
-                .toList();
+        return findPersonsByName(
+                () -> GivenNameAndSurname.of(givenName, surname, sex, properties),
+                surnameMainWord -> gedcom.getPersonsBySurnameMainWordAndSexAndYearOfBirthIndex(surnameMainWord, sex, Year.of(yearOfBirth)));
     }
 
     public List<EnrichedPerson> findPersonsByNameAndYearOfDeath(
@@ -291,24 +348,12 @@ public class SearchService {
             @Nullable SexType sex,
             @Nullable Integer yearOfDeath,
             EnrichedGedcom gedcom) {
-
         if (ObjectUtils.anyNull(givenName, surname, sex, yearOfDeath)) {
             return List.of();
         }
-
-        Optional<GivenName> givenNameForSearch = PersonUtils.getNormalizedGivenNameForSearch(givenName, sex, properties.getNormalizedNamesMap());
-        Optional<String> surnameMainWordForSearch = PersonUtils.getSurnameMainWordForSearch(surname, properties.getNormalizedSurnamesMap());
-
-        if (givenNameForSearch.isEmpty() || surnameMainWordForSearch.isEmpty()) {
-            return List.of();
-        }
-
-        return gedcom
-                .getPersonsBySurnameMainWordAndSexAndYearOfDeathIndex(surnameMainWordForSearch.get(), sex, Year.of(yearOfDeath))
-                .stream()
-                .filter(person -> person.getGivenNameForSearch().isPresent())
-                .filter(person -> SearchUtils.matchesGivenName(person.getGivenNameForSearch().get(), givenNameForSearch.get()))
-                .toList();
+        return findPersonsByName(
+                () -> GivenNameAndSurname.of(givenName, surname, sex, properties),
+                surnameMainWord -> gedcom.getPersonsBySurnameMainWordAndSexAndYearOfDeathIndex(surnameMainWord, sex, Year.of(yearOfDeath)));
     }
 
     public List<EnrichedPerson> findPersonsByNameAndParentsNames(
@@ -316,92 +361,91 @@ public class SearchService {
             @Nullable String parent1GivenName, @Nullable String parent1Surname, @Nullable SexType parent1Sex,
             @Nullable String parent2GivenName, @Nullable String parent2Surname, @Nullable SexType parent2Sex,
             EnrichedGedcom gedcom) {
-
         if (ObjectUtils.anyNull(givenName, surname, sex)
                 || ObjectUtils.anyNull(parent1GivenName, parent1Surname, parent1Sex)
                 && ObjectUtils.anyNull(parent2GivenName, parent2Surname, parent2Sex)) {
             return List.of();
         }
-
-        GivenName givenNameForSearch = PersonUtils.getNormalizedGivenNameForSearch(givenName, sex, properties.getNormalizedNamesMap())
-                .orElse(null);
-        String surnameMainWordForSearch = PersonUtils.getSurnameMainWordForSearch(surname, properties.getNormalizedSurnamesMap())
-                .orElse(null);
-
-        if (givenNameForSearch == null || surnameMainWordForSearch == null) {
-            return List.of();
-        }
-
-        GivenName parent1GivenNameForSearch = PersonUtils.getNormalizedGivenNameForSearch(parent1GivenName, parent1Sex, properties.getNormalizedNamesMap())
-                .orElse(null);
-        String parent1SurnameMainWordForSearch = PersonUtils.getSurnameMainWordForSearch(parent1Surname, properties.getNormalizedSurnamesMap())
-                .orElse(null);
-        GivenName parent2GivenNameForSearch = PersonUtils.getNormalizedGivenNameForSearch(parent2GivenName, parent2Sex, properties.getNormalizedNamesMap())
-                .orElse(null);
-        String parent2SurnameMainWordForSearch = PersonUtils.getSurnameMainWordForSearch(parent2Surname, properties.getNormalizedSurnamesMap())
-                .orElse(null);
-
-        if ((parent1GivenNameForSearch == null || parent1SurnameMainWordForSearch == null)
-                && (parent2GivenNameForSearch == null || parent2SurnameMainWordForSearch == null)) {
-            return List.of();
-        }
-
-        return gedcom
-                .getPersonsBySurnameMainWordAndSex(surnameMainWordForSearch, sex)
-                .stream()
-                .filter(person -> person.getGivenNameForSearch().isPresent())
-                .filter(person -> SearchUtils.matchesGivenName(person.getGivenNameForSearch().get(), givenNameForSearch))
-                .filter(person -> person.getParents()
-                        .stream()
-                        .filter(parent -> parent.getSurnameMainWordForSearch().isPresent()
-                                && parent.getGivenNameForSearch().isPresent())
-                        .anyMatch(parent -> parent.getSurnameMainWordForSearch().get().equals(parent1SurnameMainWordForSearch)
-                                        && SearchUtils.matchesGivenName(parent.getGivenNameForSearch().get(), parent1GivenNameForSearch)
-                                || parent.getSurnameMainWordForSearch().get().equals(parent2SurnameMainWordForSearch)
-                                        && SearchUtils.matchesGivenName(parent.getGivenNameForSearch().get(), parent2GivenNameForSearch)))
-                .toList();
+        return findPersonsByNameAndAnyRelative(
+                () -> GivenNameAndSurname.of(givenName, surname, sex, properties),
+                surnameMainWord -> gedcom.getPersonsBySurnameMainWordAndSex(surnameMainWord, sex),
+                () -> List.of(
+                        GivenNameAndSurname.of(parent1GivenName, parent1Surname, parent1Sex, properties),
+                        GivenNameAndSurname.of(parent2GivenName, parent2Surname, parent2Sex, properties)),
+                EnrichedPerson::getParents);
     }
 
     public List<EnrichedPerson> findPersonsByNameAndSpouseName(
             @Nullable String givenName, @Nullable String surname, @Nullable SexType sex,
             @Nullable String spouseGivenName, @Nullable String spouseSurname, @Nullable SexType spouseSex,
             EnrichedGedcom gedcom) {
-
         if (ObjectUtils.anyNull(givenName, surname, sex)
                 || ObjectUtils.anyNull(spouseGivenName, spouseSurname, spouseSex)) {
             return List.of();
         }
+        return findPersonsByNameAndAnyRelative(
+                () -> GivenNameAndSurname.of(givenName, surname, sex, properties),
+                surnameMainWord -> gedcom.getPersonsBySurnameMainWordAndSex(surnameMainWord, sex),
+                () -> List.of(
+                        GivenNameAndSurname.of(spouseGivenName, spouseSurname, spouseSex, properties)),
+                EnrichedPerson::getSpouses);
+    }
 
-        GivenName givenNameForSearch = PersonUtils.getNormalizedGivenNameForSearch(givenName, sex, properties.getNormalizedNamesMap())
-                .orElse(null);
-        String surnameMainWordForSearch = PersonUtils.getSurnameMainWordForSearch(surname, properties.getNormalizedSurnamesMap())
-                .orElse(null);
-
-        if (givenNameForSearch == null || surnameMainWordForSearch == null) {
+    public List<EnrichedPerson> findPersonsBySurname(
+            @Nullable String surname,
+            @Nullable SexType sex,
+            EnrichedGedcom gedcom) {
+        if (ObjectUtils.anyNull(surname, sex)) {
             return List.of();
         }
+        return PersonUtils.getSurnameMainWordForSearch(surname, properties.getNormalizedSurnamesMap())
+                .map(surnameMainWord -> gedcom.getPersonsBySurnameMainWordAndSex(surnameMainWord, sex))
+                .orElseGet(List::of);
+    }
 
-        GivenName spouseGivenNameForSearch = PersonUtils.getNormalizedGivenNameForSearch(spouseGivenName, spouseSex, properties.getNormalizedNamesMap())
-                .orElse(null);
-        String spouseSurnameMainWordForSearch = PersonUtils.getSurnameMainWordForSearch(spouseSurname, properties.getNormalizedSurnamesMap())
-                .orElse(null);
-
-        if (spouseGivenNameForSearch == null || spouseSurnameMainWordForSearch == null) {
+    public List<EnrichedPerson> findPersonsBySurnameAndYearOfBirth(
+            @Nullable String surname,
+            @Nullable SexType sex,
+            @Nullable Integer yearOfBirth,
+            EnrichedGedcom gedcom) {
+        if (ObjectUtils.anyNull(surname, sex, yearOfBirth)) {
             return List.of();
         }
+        return PersonUtils.getSurnameMainWordForSearch(surname, properties.getNormalizedSurnamesMap())
+                .map(surnameMainWord -> gedcom.getPersonsBySurnameMainWordAndSexAndYearOfBirthIndex(surnameMainWord, sex, Year.of(yearOfBirth)))
+                .orElseGet(List::of);
+    }
 
-        return gedcom
-                .getPersonsBySurnameMainWordAndSex(surnameMainWordForSearch, sex)
-                .stream()
-                .filter(person -> person.getGivenNameForSearch().isPresent())
-                .filter(person -> SearchUtils.matchesGivenName(person.getGivenNameForSearch().get(), givenNameForSearch))
-                .filter(person -> person.getSpouses()
-                        .stream()
-                        .filter(spouse -> spouse.getSurnameMainWordForSearch().isPresent()
-                                && spouse.getGivenNameForSearch().isPresent())
-                        .anyMatch(spouse -> spouse.getSurnameMainWordForSearch().get().equals(spouseSurnameMainWordForSearch)
-                                && SearchUtils.matchesGivenName(spouse.getGivenNameForSearch().get(), spouseGivenNameForSearch)))
-                .toList();
+    public List<EnrichedPerson> findPersonsBySurnameAndYearOfDeath(
+            @Nullable String surname,
+            @Nullable SexType sex,
+            @Nullable Integer yearOfDeath,
+            EnrichedGedcom gedcom) {
+        if (ObjectUtils.anyNull(surname, sex, yearOfDeath)) {
+            return List.of();
+        }
+        return PersonUtils.getSurnameMainWordForSearch(surname, properties.getNormalizedSurnamesMap())
+                .map(surnameMainWord -> gedcom.getPersonsBySurnameMainWordAndSexAndYearOfDeathIndex(surnameMainWord, sex, Year.of(yearOfDeath)))
+                .orElseGet(List::of);
+    }
+
+    private record GivenNameAndSurname(GivenName givenName, String surname) {
+
+        public boolean isAnyValueEmpty() {
+            return givenName == null || surname == null;
+        }
+
+        public static GivenNameAndSurname of(
+                @Nullable String givenName,
+                @Nullable String surname,
+                @Nullable SexType sex,
+                GedcomAnalyzerProperties properties) {
+            Optional<GivenName> givenNameForSearch = PersonUtils.getNormalizedGivenNameForSearch(givenName, sex, properties.getNormalizedNamesMap());
+            Optional<String> surnameMainWordForSearch = PersonUtils.getSurnameMainWordForSearch(surname, properties.getNormalizedSurnamesMap());
+            return new GivenNameAndSurname(
+                    givenNameForSearch.orElse(null),
+                    surnameMainWordForSearch.orElse(null));
+        }
     }
 
 }
