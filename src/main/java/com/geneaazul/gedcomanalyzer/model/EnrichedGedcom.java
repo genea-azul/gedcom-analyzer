@@ -64,7 +64,7 @@ public class EnrichedGedcom {
     private List<EnrichedPerson> getEnrichedPeople() {
         List<EnrichedPerson> enrichedPeople = gedcom.getPeople()
                 .stream()
-                .map(p -> EnrichedPerson.of(p, gedcom, properties))
+                .map(p -> EnrichedPerson.of(p, this))
                 .toList();
 
         Map<String, EnrichedPerson> enrichedPeopleIndex = enrichedPeople
@@ -120,6 +120,10 @@ public class EnrichedGedcom {
                 .collect(Collectors.groupingBy(
                         pair -> new NameSexYear(nameMapper.apply(pair.getLeft()), sexMapper.apply(pair.getLeft()), pair.getRight()),
                         Collectors.mapping(Pair::getLeft, Collectors.toList())));
+    }
+
+    public void analyzeCustomEventFactsAndTagExtensions() {
+        people.forEach(EnrichedPerson::analyzeCustomEventFactsAndTagExtensions);
     }
 
 }

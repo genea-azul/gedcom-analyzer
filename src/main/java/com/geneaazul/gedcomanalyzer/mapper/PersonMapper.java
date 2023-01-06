@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 @Component
@@ -24,18 +25,31 @@ public class PersonMapper {
     private static final String PRIVATE_DATE = "<private>";
     private static final String NO_SPOUSE = "<no spouse>";
 
-    public List<PersonDto> toPersonDto(
-            Collection<EnrichedPerson> persons,
-            ObfuscationType obfuscationType) {
+    public List<PersonDto> toPersonDto(Collection<EnrichedPerson> persons) {
         return persons
                 .stream()
-                .map(person -> toPersonDto(person, obfuscationType))
+                .map(this::toPersonDto)
+                .toList();
+    }
+
+    public PersonDto toPersonDto(EnrichedPerson person) {
+        return toPersonDto(person, ObfuscationType.NONE, ep -> List.of());
+    }
+
+    public List<PersonDto> toPersonDto(
+            Collection<EnrichedPerson> persons,
+            ObfuscationType obfuscationType,
+            Function<EnrichedPerson, List<String>> ancestryCountriesResolver) {
+        return persons
+                .stream()
+                .map(person -> toPersonDto(person, obfuscationType, ancestryCountriesResolver))
                 .toList();
     }
 
     public PersonDto toPersonDto(
             EnrichedPerson person,
-            ObfuscationType obfuscationType) {
+            ObfuscationType obfuscationType,
+            Function<EnrichedPerson, List<String>> ancestryCountriesResolver) {
 
         boolean obfuscateLiving = obfuscationType != ObfuscationType.NONE;
         boolean obfuscateName = obfuscateLiving && obfuscationType != ObfuscationType.SKIP_MAIN_PERSON_NAME;
@@ -68,6 +82,7 @@ public class PersonMapper {
                                 obfuscateLiving && (person.isAlive() || parent.isAlive())))
                         .toList())
                 .spouses(spouses)
+                .ancestryCountries(ancestryCountriesResolver.apply(person))
                 .build();
     }
 
@@ -123,37 +138,33 @@ public class PersonMapper {
     }
 
     public List<PersonDuplicateDto> toPersonDuplicateDto(
-            Collection<PersonComparisonResults> personComparisonResults,
-            ObfuscationType obfuscationType) {
+            Collection<PersonComparisonResults> personComparisonResults) {
         return personComparisonResults
                 .stream()
-                .map(results -> toPersonDuplicateDto(results, obfuscationType))
+                .map(this::toPersonDuplicateDto)
                 .toList();
     }
 
     public PersonDuplicateDto toPersonDuplicateDto(
-            PersonComparisonResults personComparisonResults,
-            ObfuscationType obfuscationType) {
+            PersonComparisonResults personComparisonResults) {
         return PersonDuplicateDto.builder()
-                .person(toPersonDto(personComparisonResults.getPerson(), obfuscationType))
-                .duplicates(toPersonDuplicateCompareDto(personComparisonResults.getResults(), obfuscationType))
+                .person(toPersonDto(personComparisonResults.getPerson()))
+                .duplicates(toPersonDuplicateCompareDto(personComparisonResults.getResults()))
                 .build();
     }
 
     private List<PersonDuplicateCompareDto> toPersonDuplicateCompareDto(
-            Collection<PersonComparisonResult> personComparisonResults,
-            ObfuscationType obfuscationType) {
+            Collection<PersonComparisonResult> personComparisonResults) {
         return personComparisonResults
                 .stream()
-                .map(result -> toPersonDuplicateDto(result, obfuscationType))
+                .map(this::toPersonDuplicateDto)
                 .toList();
     }
 
     private PersonDuplicateCompareDto toPersonDuplicateDto(
-            PersonComparisonResult personComparisonResult,
-            ObfuscationType obfuscationType) {
+            PersonComparisonResult personComparisonResult) {
         return PersonDuplicateCompareDto.builder()
-                .person(toPersonDto(personComparisonResult.getCompare(), obfuscationType))
+                .person(toPersonDto(personComparisonResult.getCompare()))
                 .score(personComparisonResult.getScore())
                 .build();
     }

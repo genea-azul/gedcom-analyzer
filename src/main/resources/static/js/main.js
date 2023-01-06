@@ -290,6 +290,13 @@ var getPersonComponent = function(person, index) {
                 .html("Pa&iacute;s de nacimiento: " + person.placeOfBirth));
     }
 
+    if (person.ancestryCountries.length > 0) {
+        cardBody.append(
+            $("<div>")
+                .addClass("mt-1")
+                .html("Pa&iacute;ses en su ascendencia: " + person.ancestryCountries.join(", ")));
+    }
+
     if (person.parents.length > 0) {
         var parents = $("<ul>")
             .addClass("mb-0");

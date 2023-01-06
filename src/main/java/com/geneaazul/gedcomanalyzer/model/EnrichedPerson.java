@@ -11,7 +11,6 @@ import org.apache.commons.collections4.ComparatorUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folg.gedcom.model.EventFact;
-import org.folg.gedcom.model.Gedcom;
 import org.folg.gedcom.model.GedcomTag;
 import org.folg.gedcom.model.Person;
 
@@ -32,7 +31,7 @@ import lombok.Getter;
 public class EnrichedPerson {
 
     private final Person person;
-    private final Gedcom gedcom;
+    private final EnrichedGedcom gedcom;
     private final GedcomAnalyzerProperties properties;
 
     private final String id;
@@ -53,21 +52,20 @@ public class EnrichedPerson {
     private final Optional<String> countryOfBirthForSearch;
 
     // Custom event facts and tag extensions
-    private final List<EventFact> customEventFacts;
-    private final List<EventFact> familyCustomEventFacts;
-    private final List<GedcomTag> tagExtensions;
+    private List<EventFact> customEventFacts;
+    private List<EventFact> familyCustomEventFacts;
+    private List<GedcomTag> tagExtensions;
 
     // Enriched family
     private List<EnrichedPerson> parents;
     private List<EnrichedPerson> siblings;
     private List<EnrichedPerson> spouses;
     private List<EnrichedPerson> children;
-    private List<Pair<Optional<EnrichedPerson>, List<EnrichedPerson>>> spousesWithChildren;
 
-    private EnrichedPerson(Person person, Gedcom gedcom, GedcomAnalyzerProperties properties) {
+    private EnrichedPerson(Person person, EnrichedGedcom gedcom) {
         this.person = person;
         this.gedcom = gedcom;
-        this.properties = properties;
+        this.properties = gedcom.getProperties();
 
         id = person.getId();
         sex = PersonUtils.getSex(person);
@@ -87,30 +85,17 @@ public class EnrichedPerson {
                 .map(PlaceUtils::removeLastParenthesis);
         countryOfBirthForSearch = placeOfBirthForSearch
                 .map(PlaceUtils::getCountry);
-
-        customEventFacts = PersonUtils.getCustomEventFacts(person);
-        familyCustomEventFacts =  person.getSpouseFamilies(gedcom)
-                .stream()
-                .map(FamilyUtils::getCustomEventFacts)
-                .flatMap(List::stream)
-                .toList();
-        tagExtensions = PersonUtils.getTagExtensions(person);
     }
 
-    public static EnrichedPerson of(Person person, Gedcom gedcom, GedcomAnalyzerProperties properties) {
-        return new EnrichedPerson(person, gedcom, properties);
+    public static EnrichedPerson of(Person person, EnrichedGedcom gedcom) {
+        return new EnrichedPerson(person, gedcom);
     }
 
     public void enrichFamily(Map<String, EnrichedPerson> enrichedPeopleIndex) {
-        parents = toEnrichedPeople(PersonUtils.getParents(person, gedcom), enrichedPeopleIndex, null);
-        siblings = toEnrichedPeople(PersonUtils.getSiblings(person, gedcom), enrichedPeopleIndex, PersonUtils.DATES_COMPARATOR);
-        spouses = toEnrichedPeople(PersonUtils.getSpouses(person, gedcom), enrichedPeopleIndex, PersonUtils.DATES_COMPARATOR);
-        children = toEnrichedPeople(PersonUtils.getChildren(person, gedcom), enrichedPeopleIndex, PersonUtils.DATES_COMPARATOR);
-
-        spousesWithChildren = toEnrichedSpousesWithChildren(
-                PersonUtils.getSpousesWithChildren(person, gedcom),
-                enrichedPeopleIndex,
-                PersonUtils.DATES_COMPARATOR);
+        parents = toEnrichedPeople(PersonUtils.getParents(person, gedcom.getGedcom()), enrichedPeopleIndex, null);
+        siblings = toEnrichedPeople(PersonUtils.getSiblings(person, gedcom.getGedcom()), enrichedPeopleIndex, PersonUtils.DATES_COMPARATOR);
+        spouses = toEnrichedPeople(PersonUtils.getSpouses(person, gedcom.getGedcom()), enrichedPeopleIndex, PersonUtils.DATES_COMPARATOR);
+        children = toEnrichedPeople(PersonUtils.getChildren(person, gedcom.getGedcom()), enrichedPeopleIndex, PersonUtils.DATES_COMPARATOR);
     }
 
     private List<EnrichedPerson> toEnrichedPeople(
@@ -130,6 +115,13 @@ public class EnrichedPerson {
 
         return peopleStream
                 .toList();
+    }
+
+    public List<Pair<Optional<EnrichedPerson>, List<EnrichedPerson>>> getSpousesWithChildren() {
+        return toEnrichedSpousesWithChildren(
+                PersonUtils.getSpousesWithChildren(person, gedcom.getGedcom()),
+                gedcom.getPeopleByIdIndex(),
+                PersonUtils.DATES_COMPARATOR);
     }
 
     private List<Pair<Optional<EnrichedPerson>, List<EnrichedPerson>>> toEnrichedSpousesWithChildren(
@@ -152,6 +144,16 @@ public class EnrichedPerson {
                     return ComparatorUtils.nullHighComparator(personComparator).compare(p1, p2);
                 })
                 .toList();
+    }
+
+    public void analyzeCustomEventFactsAndTagExtensions() {
+        customEventFacts = PersonUtils.getCustomEventFacts(person);
+        familyCustomEventFacts =  person.getSpouseFamilies(gedcom.getGedcom())
+                .stream()
+                .map(FamilyUtils::getCustomEventFacts)
+                .flatMap(List::stream)
+                .toList();
+        tagExtensions = PersonUtils.getTagExtensions(person);
     }
 
     public boolean equalsSex(EnrichedPerson other) {
@@ -311,7 +313,7 @@ public class EnrichedPerson {
                         .stream()
                         .map(EnrichedPerson::getDisplayName)
                         .collect(Collectors.joining(", ")), 64)
-                + " - " + spousesWithChildren
+                + " - " + getSpousesWithChildren()
                         .stream()
                         .map(spouseCountPair -> spouseCountPair.getLeft()
                                 .map(EnrichedPerson::getDisplayName)

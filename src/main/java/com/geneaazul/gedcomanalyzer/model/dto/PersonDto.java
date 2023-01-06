@@ -32,5 +32,6 @@ public class PersonDto {
     private String dateOfDeath;
     private List<String> parents;
     private List<SpouseWithChildrenDto> spouses;
+    private List<String> ancestryCountries;
 
 }
