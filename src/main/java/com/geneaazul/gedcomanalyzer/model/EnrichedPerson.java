@@ -7,6 +7,7 @@ import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 import com.geneaazul.gedcomanalyzer.utils.PlaceUtils;
 import com.geneaazul.gedcomanalyzer.utils.SearchUtils;
 
+import org.apache.commons.collections4.ComparatorUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folg.gedcom.model.EventFact;
@@ -15,12 +16,15 @@ import org.folg.gedcom.model.GedcomTag;
 import org.folg.gedcom.model.Person;
 
 import java.time.Period;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import jakarta.annotation.Nullable;
 import lombok.Getter;
 
 @Getter
@@ -58,6 +62,7 @@ public class EnrichedPerson {
     private List<EnrichedPerson> siblings;
     private List<EnrichedPerson> spouses;
     private List<EnrichedPerson> children;
+    private List<Pair<Optional<EnrichedPerson>, List<EnrichedPerson>>> spousesWithChildren;
 
     private EnrichedPerson(Person person, Gedcom gedcom, GedcomAnalyzerProperties properties) {
         this.person = person;
@@ -97,17 +102,55 @@ public class EnrichedPerson {
     }
 
     public void enrichFamily(Map<String, EnrichedPerson> enrichedPeopleIndex) {
-        parents = toEnrichedPeople(PersonUtils.getParents(person, gedcom), enrichedPeopleIndex);
-        siblings = toEnrichedPeople(PersonUtils.getSiblings(person, gedcom), enrichedPeopleIndex);
-        spouses = toEnrichedPeople(PersonUtils.getSpouses(person, gedcom), enrichedPeopleIndex);
-        children = toEnrichedPeople(PersonUtils.getChildren(person, gedcom), enrichedPeopleIndex);
+        parents = toEnrichedPeople(PersonUtils.getParents(person, gedcom), enrichedPeopleIndex, null);
+        siblings = toEnrichedPeople(PersonUtils.getSiblings(person, gedcom), enrichedPeopleIndex, PersonUtils.DATES_COMPARATOR);
+        spouses = toEnrichedPeople(PersonUtils.getSpouses(person, gedcom), enrichedPeopleIndex, PersonUtils.DATES_COMPARATOR);
+        children = toEnrichedPeople(PersonUtils.getChildren(person, gedcom), enrichedPeopleIndex, PersonUtils.DATES_COMPARATOR);
+
+        spousesWithChildren = toEnrichedSpousesWithChildren(
+                PersonUtils.getSpousesWithChildren(person, gedcom),
+                enrichedPeopleIndex,
+                PersonUtils.DATES_COMPARATOR);
     }
 
-    private List<EnrichedPerson> toEnrichedPeople(List<Person> people, Map<String, EnrichedPerson> enrichedPeopleIndex) {
-        return people
+    private List<EnrichedPerson> toEnrichedPeople(
+            List<Person> people,
+            Map<String, EnrichedPerson> enrichedPeopleIndex,
+            @Nullable Comparator<EnrichedPerson> personComparator) {
+
+        Stream<EnrichedPerson> peopleStream = people
                 .stream()
                 .map(Person::getId)
-                .map(enrichedPeopleIndex::get)
+                .map(enrichedPeopleIndex::get);
+
+        if (personComparator != null) {
+            peopleStream = peopleStream
+                    .sorted(personComparator);
+        }
+
+        return peopleStream
+                .toList();
+    }
+
+    private List<Pair<Optional<EnrichedPerson>, List<EnrichedPerson>>> toEnrichedSpousesWithChildren(
+            List<Pair<Optional<Person>, List<Person>>> spousesWithChildren,
+            Map<String, EnrichedPerson> enrichedPeopleIndex,
+            Comparator<EnrichedPerson> personComparator) {
+        return spousesWithChildren
+                .stream()
+                .map(pair -> Pair.of(
+                        pair.getLeft()
+                                .map(Person::getId)
+                                .map(enrichedPeopleIndex::get),
+                        toEnrichedPeople(
+                                pair.getRight(),
+                                enrichedPeopleIndex,
+                                personComparator)))
+                .sorted((pair1, pair2) -> {
+                    EnrichedPerson p1 = pair1.getLeft().orElse(null);
+                    EnrichedPerson p2 = pair2.getLeft().orElse(null);
+                    return ComparatorUtils.nullHighComparator(personComparator).compare(p1, p2);
+                })
                 .toList();
     }
 
@@ -268,10 +311,10 @@ public class EnrichedPerson {
                         .stream()
                         .map(EnrichedPerson::getDisplayName)
                         .collect(Collectors.joining(", ")), 64)
-                + " - " + PersonUtils.getSpousesWithChildren(person, gedcom)
+                + " - " + spousesWithChildren
                         .stream()
                         .map(spouseCountPair -> spouseCountPair.getLeft()
-                                .map(PersonUtils::getDisplayName)
+                                .map(EnrichedPerson::getDisplayName)
                                 .orElse("<no spouse>") + " (" + spouseCountPair.getRight().size() + ")")
                         .collect(Collectors.joining(", "));
     }

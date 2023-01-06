@@ -1,5 +1,6 @@
 package com.geneaazul.gedcomanalyzer.model;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDate;
@@ -20,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Getter
 @Slf4j
-public class Date {
+public class Date implements Comparable<Date> {
 
     private static final String LOCAL_DATE_REGEX = " ?(ABT|EST|BEF|AFT)?(?:(?: ?(\\d{1,2}))? ?([A-Za-z]{3}))? ?(\\d{4})";
     private static final Pattern DATE_REGEX = Pattern.compile("(BET|FROM)?" + LOCAL_DATE_REGEX + "(?: ?(AND|TO)" + LOCAL_DATE_REGEX + ")?");
@@ -235,6 +236,19 @@ public class Date {
 
         log.warn("Date not parsed: {}", dateStr);
         return Optional.empty();
+    }
+
+    @Override
+    public int compareTo(Date other) {
+        int cmp = ObjectUtils.compare(this.year, other.year, true);
+        if (cmp != 0) {
+            return cmp;
+        }
+        cmp = ObjectUtils.compare(this.month, other.month, true);
+        if (cmp != 0) {
+            return cmp;
+        }
+        return ObjectUtils.compare(this.day, other.day, true);
     }
 
     private static Optional<String> trimToNull(Matcher matcher, int group) {
