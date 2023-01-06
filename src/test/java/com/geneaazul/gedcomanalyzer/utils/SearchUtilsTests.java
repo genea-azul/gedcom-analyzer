@@ -94,6 +94,18 @@ public class SearchUtilsTests {
                 .contains("sainte cluque");
         assertThat(PersonUtils.getSurnameMainWordForSearch(person, properties.getNormalizedSurnamesMap()))
                 .contains("saintecluq_");
+
+        name.setSurname("Bebedé");
+        assertThat(PersonUtils.getSurnameForSearch(person))
+                .contains("bebede");
+        assertThat(PersonUtils.getSurnameMainWordForSearch(person, properties.getNormalizedSurnamesMap()))
+                .contains("vegveder");
+
+        name.setSurname("De Paula");
+        assertThat(PersonUtils.getSurnameForSearch(person))
+                .contains("de paula");
+        assertThat(PersonUtils.getSurnameMainWordForSearch(person, properties.getNormalizedSurnamesMap()))
+                .contains("depaol_");
     }
 
 }

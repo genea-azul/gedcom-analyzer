@@ -15,7 +15,6 @@ $(document).ready(function() {
 var toggleYearOfDeath = function(isAliveComponent, yearOfDeathComponent) {
     $(isAliveComponent).on("change", function() {
         var show = $(isAliveComponent).prop("checked");
-        //$("div:has(> " + yearOfDeathComponent + ")").toggleClass("d-none", show);
         $(yearOfDeathComponent)
             .val("")
             .prop("disabled", show);
@@ -156,8 +155,8 @@ $(document).ready(function() {
                 // remove the "searching.." message
                 resultComponent.empty();
 
-                $(data.people).each(function(index) {
-                    var personComponent = getPersonComponent(this, index);
+                data.people.forEach((person, index) => {
+                    var personComponent = getPersonComponent(person, index);
                     resultComponent.append(personComponent);
                 });
 
@@ -291,22 +290,32 @@ var getPersonComponent = function(person, index) {
     }
 
     if (person.ancestryCountries.length > 0) {
+        var countries = $("<ul>")
+            .addClass("mb-0");
+
+        person.ancestryCountries.forEach((countryName, index) => {
+            countries.append(
+                $("<li>")
+                    .html(countryName));
+        });
+
         cardBody.append(
             $("<div>")
                 .addClass("mt-1")
-                .html("Pa&iacute;ses en su ascendencia: " + person.ancestryCountries.join(", ")));
+                .html("Pa&iacute;ses en su ascendencia: ")
+                .append(countries));
     }
 
     if (person.parents.length > 0) {
         var parents = $("<ul>")
             .addClass("mb-0");
 
-        $(person.parents).each(function() {
+        person.parents.forEach((parentName, index) => {
             parents.append(
                 $("<li>")
                     .html(
                         $("<b>")
-                            .text(displayNameInSpanish(this))));
+                            .text(displayNameInSpanish(parentName))));
         });
 
         cardBody.append(
@@ -320,21 +329,21 @@ var getPersonComponent = function(person, index) {
         var spouses = $("<ul>")
             .addClass("mb-0");
 
-        $(person.spouses).each(function() {
+        person.spouses.forEach((spouseWithChildren, index) => {
             spouses.append(
                 $("<li>")
                     .html(
                         $("<b>")
-                            .text(displayNameInSpanish(this.name))));
+                            .text(displayNameInSpanish(spouseWithChildren.name))));
 
-            if (this.children.length > 0) {
+            if (spouseWithChildren.children.length > 0) {
                 var children = $("<ul>")
                     .addClass("mb-0");
 
-                $(this.children).each(function() {
+                spouseWithChildren.children.forEach((childName, index) => {
                     children.append(
                         $("<li>")
-                            .text(displayNameInSpanish(this)));
+                            .text(displayNameInSpanish(childName)));
                 });
 
                 spouses.append(children);
@@ -352,13 +361,14 @@ var getPersonComponent = function(person, index) {
 };
 
 var displayNameInSpanish = function(name) {
-    // Only the name is private
+    // Only the name is private, surname is not obfuscated
     name = name.replace("<private>", "<nombre privado>");
+    name = name.replace("<no name>", "<nombre desconocido>");
     return name.replace("<no spouse>", "<sin pareja>");
 };
 
 var displayDateInSpanish = function(date) {
-    // Only the date of birth is private
+    // Only the date of birth is private, date of death is not obfuscated
     if (date == "<private>") {
         return "<fecha de nac. privada>";
     }
