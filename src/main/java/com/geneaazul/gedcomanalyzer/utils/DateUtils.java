@@ -1,5 +1,7 @@
 package com.geneaazul.gedcomanalyzer.utils;
 
+import com.geneaazul.gedcomanalyzer.model.Date;
+
 import java.time.Month;
 
 import lombok.experimental.UtilityClass;
@@ -9,6 +11,12 @@ public class DateUtils {
 
     public enum AstrologicalSign {
         ARIES, TAURUS, GEMINI, CANCER, LEO, VIRGO, LIBRA, SCORPIO, SAGITTARIUS, CAPRICORN, AQUARIUS, PISCES
+    }
+
+    private static final String PRIVATE_DATE = "<private>";
+
+    public static String obfuscateDate(Date date, boolean condition) {
+        return condition ? PRIVATE_DATE : date.format();
     }
 
     public static AstrologicalSign getAstrologicalSign(Month month, int day, boolean useMinDayOnOverlap) {

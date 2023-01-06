@@ -8,6 +8,8 @@ import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateCompareDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SpouseWithChildrenDto;
+import com.geneaazul.gedcomanalyzer.utils.DateUtils;
+import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Component;
@@ -16,14 +18,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 @Component
 public class PersonMapper {
-
-    private static final String PRIVATE_NAME = "<private>";
-    private static final String PRIVATE_DATE = "<private>";
-    private static final String NO_SPOUSE = "<no spouse>";
 
     public List<PersonDto> toPersonDto(Collection<EnrichedPerson> persons) {
         return persons
@@ -62,13 +59,9 @@ public class PersonMapper {
         return PersonDto.builder()
                 .sex(person.getSex())
                 .isAlive(person.isAlive())
-                .name(obfuscateName(
-                        person,
-                        obfuscateName && person.isAlive()))
+                .name(PersonUtils.obfuscateName(person, obfuscateName && person.isAlive()))
                 .dateOfBirth(person.getDateOfBirth()
-                        .map(date -> obfuscateLiving && person.isAlive()
-                                ? PRIVATE_DATE
-                                : date.format())
+                        .map(date -> DateUtils.obfuscateDate(date, obfuscateLiving && person.isAlive()))
                         .orElse(null))
                 .placeOfBirth(person.getCountryOfBirthForSearch()
                         .orElse(null))
@@ -77,7 +70,7 @@ public class PersonMapper {
                         .orElse(null))
                 .parents(person.getParents()
                         .stream()
-                        .map(parent -> obfuscateName(
+                        .map(parent -> PersonUtils.obfuscateName(
                                 parent,
                                 obfuscateLiving && (person.isAlive() || parent.isAlive())))
                         .toList())
@@ -106,35 +99,16 @@ public class PersonMapper {
                 .orElse(false);
 
         return SpouseWithChildrenDto.builder()
-                .name(obfuscateSpouseName(
+                .name(PersonUtils.obfuscateSpouseName(
                         spouseChildrenPair.getLeft(),
                         spouse -> obfuscateLiving && (mainPersonIsAlive || spouse.isAlive())))
                 .children(spouseChildrenPair.getRight()
                         .stream()
-                        .map(child -> obfuscateName(
+                        .map(child -> PersonUtils.obfuscateName(
                                 child,
                                 obfuscateLiving && (mainPersonIsAlive || spouseIsAlive || child.isAlive())))
                         .toList())
                 .build();
-    }
-
-    private static String obfuscateName(
-            EnrichedPerson person,
-            boolean condition) {
-        return condition
-                ? person.getSurname()
-                        .map(surname -> PRIVATE_NAME + " " + surname)
-                        .orElse(PRIVATE_NAME)
-                : person.getDisplayName();
-    }
-
-    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    private static String obfuscateSpouseName(
-            Optional<EnrichedPerson> maybeSpouse,
-            Predicate<EnrichedPerson> condition) {
-        return maybeSpouse
-                .map(spouse -> obfuscateName(spouse, condition.test(spouse)))
-                .orElse(NO_SPOUSE);
     }
 
     public List<PersonDuplicateDto> toPersonDuplicateDto(

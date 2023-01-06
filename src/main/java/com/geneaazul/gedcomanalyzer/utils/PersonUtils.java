@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import jakarta.annotation.Nullable;
@@ -30,6 +31,10 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class PersonUtils {
+
+    private static final String PRIVATE_NAME = "<private>";
+    private static final String NO_NAME = "<no name>";
+    private static final String NO_SPOUSE = "<no spouse>";
 
     /**
      * Tags taken from EventFact class.
@@ -71,7 +76,7 @@ public class PersonUtils {
                 .map(StringUtils::trimToNull)
                 .filter(Objects::nonNull)
                 .findFirst()
-                .orElse("<no name>");
+                .orElse(NO_NAME);
     }
 
     private static String buildDisplayName(Name name) {
@@ -291,6 +296,25 @@ public class PersonUtils {
                 .map(family -> family.getChildren(gedcom))
                 .flatMap(List::stream)
                 .toList();
+    }
+
+    public static String obfuscateName(
+            EnrichedPerson person,
+            boolean condition) {
+        return condition
+                ? person.getSurname()
+                .map(surname -> PRIVATE_NAME + " " + surname)
+                .orElse(PRIVATE_NAME)
+                : person.getDisplayName();
+    }
+
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+    public static String obfuscateSpouseName(
+            Optional<EnrichedPerson> maybeSpouse,
+            Predicate<EnrichedPerson> condition) {
+        return maybeSpouse
+                .map(spouse -> obfuscateName(spouse, condition.test(spouse)))
+                .orElse(NO_SPOUSE);
     }
 
     public static final Comparator<EnrichedPerson> DATES_COMPARATOR = (p1, p2) -> {

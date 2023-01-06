@@ -4,9 +4,7 @@ $(document).ready(function() {
         url: "/api/search/family/latest",
         contentType: "application/json",
         success: function(data) {
-            data.forEach(function(currentValue, index) {
-                data[index] = removeEmpty(currentValue);
-            });
+            data.forEach((element, index) => data[index] = removeEmpty(element));
             $("#result-container").jsonViewer(data, {collapsed: false, rootCollapsable: false});
         },
         error: function(xhr) {
