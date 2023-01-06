@@ -1,15 +1,14 @@
 package com.geneaazul.gedcomanalyzer.service;
 
-import com.geneaazul.gedcomanalyzer.mapper.ObfuscationType;
 import com.geneaazul.gedcomanalyzer.mapper.PersonMapper;
 import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
-import com.geneaazul.gedcomanalyzer.model.dto.GedcomAnalysisDto;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResults;
+import com.geneaazul.gedcomanalyzer.model.Reference;
+import com.geneaazul.gedcomanalyzer.model.dto.GedcomAnalysisDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateDto;
-import com.geneaazul.gedcomanalyzer.model.Reference;
 import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
 import com.geneaazul.gedcomanalyzer.utils.DateUtils;
 import com.geneaazul.gedcomanalyzer.utils.EnumCollectionUtils;
@@ -55,17 +54,16 @@ import lombok.extern.slf4j.Slf4j;
 public class GedcomAnalyzerService {
 
     private final SearchService searchService;
-
     private final PersonMapper personMapper;
 
     public GedcomAnalysisDto analyze(EnrichedGedcom gedcom) {
         log.info("Analyze gedcom: {}", gedcom.getGedcomName());
 
         List<PersonComparisonResults> duplicatedPersons = searchService.findDuplicatedPersons(gedcom);
-        List<PersonDuplicateDto> personDuplicatesDto = personMapper.toPersonDuplicateDto(duplicatedPersons, ObfuscationType.NONE);
+        List<PersonDuplicateDto> personDuplicatesDto = personMapper.toPersonDuplicateDto(duplicatedPersons);
 
         List<EnrichedPerson> alivePersons = searchService.findAlivePersonsTooOldOrWithFamilyMembersTooOld(gedcom.getPeople());
-        List<PersonDto> invalidAlivePersonsDto = personMapper.toPersonDto(alivePersons, ObfuscationType.NONE);
+        List<PersonDto> invalidAlivePersonsDto = personMapper.toPersonDto(alivePersons);
 
         log.info("Gedcom analyzed: {}", gedcom.getGedcomName());
         return GedcomAnalysisDto.builder()

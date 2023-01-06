@@ -38,6 +38,7 @@ import lombok.RequiredArgsConstructor;
 public class FamilyService {
 
     private final GedcomHolder gedcomHolder;
+    private final PersonService personService;
     private final SearchService searchService;
     private final SearchFamilyRepository searchFamilyRepository;
     private final SearchFamilyMapper searchFamilyMapper;
@@ -233,7 +234,10 @@ public class FamilyService {
                     .count();
         }
 
-        List<PersonDto> people = personMapper.toPersonDto(result, ObfuscationType.SKIP_MAIN_PERSON_NAME);
+        List<PersonDto> people = personMapper.toPersonDto(
+                result,
+                ObfuscationType.SKIP_MAIN_PERSON_NAME,
+                personService::getAncestryCountries);
 
         return SearchFamilyResultDto.builder()
                 .people(people)

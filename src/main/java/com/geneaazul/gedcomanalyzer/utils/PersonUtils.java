@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import jakarta.annotation.Nullable;
@@ -41,8 +40,6 @@ public class PersonUtils {
     public static final Set<String> DEATH_TAGS = Set.of("DEAT", "DEATH");
     public static final Set<String> SEX_TAGS = Set.of("SEX");
     public static final Set<String> EVENT_TAGS = Set.of("EVEN", "EVENT");
-
-    public static final Pattern NAME_SEPARATOR_PATTERN = Pattern.compile("/");
 
     public static boolean isAlive(Person person) {
         return !isDead(person);
@@ -70,12 +67,38 @@ public class PersonUtils {
     public static String getDisplayName(Person person) {
         return person.getNames()
                 .stream()
-                .map(Name::getDisplayValue)
-                .map(name -> NAME_SEPARATOR_PATTERN.matcher(name).replaceAll(""))
+                .map(PersonUtils::buildDisplayName)
                 .map(StringUtils::trimToNull)
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElse("<no name>");
+    }
+
+    private static String buildDisplayName(Name name) {
+        String displayName = "";
+        if (StringUtils.isNotBlank(name.getPrefix())) {
+            displayName = append(displayName, name.getPrefix());
+        }
+        if (StringUtils.isNotBlank(name.getGiven())) {
+            displayName = append(displayName, name.getGiven());
+        }
+        if (StringUtils.isNotBlank(name.getNickname())) {
+            displayName = append(displayName, "\"" + name.getNickname() + "\"");
+        }
+        if (StringUtils.isNotBlank(name.getSurnamePrefix())) {
+            displayName = append(displayName, name.getSurnamePrefix());
+        }
+        if (StringUtils.isNotBlank(name.getSurname())) {
+            displayName = append(displayName, name.getSurname());
+        }
+        if (StringUtils.isNotBlank(name.getSuffix())) {
+            displayName = append(displayName, name.getSuffix());
+        }
+        return displayName;
+    }
+
+    private static String append(String str, String append) {
+        return StringUtils.isEmpty(str) ? append : str + " " + append;
     }
 
     /**

@@ -37,6 +37,8 @@ public class GedcomAnalyzerServiceTests {
         EnrichedGedcom gedcom = gedcomHolder.getGedcom()
                 .orElseThrow();
 
+        gedcom.analyzeCustomEventFactsAndTagExtensions();
+
         System.out.println("\ngetMissingReferences:");
         gedcomAnalyzerService
                 .getMissingReferences(gedcom.getGedcom())
