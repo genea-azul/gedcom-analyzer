@@ -10,7 +10,7 @@
 
   <body class="container-fluid">
     <div class="h4 mb-0">Genea Azul - Buscador de personas</div>
-    <div class="mt-0 small">Versi&oacute;n 0.4.1 (en desarrollo)</div>
+    <div class="mt-0 small">Versi&oacute;n 0.4.2 (en desarrollo)</div>
     <div class="mt-3 mb-3">Todos los campos son opcionales, para obtener un mejor resultado complet&aacute; la mayor cantidad de datos posibles.</div>
 
     <div class="row">

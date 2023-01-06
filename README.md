@@ -2,6 +2,7 @@
 
 ### Requirements
 - Java JDK 17+
+- Google Cloud CLI (only for production deployment)
 
 ### Run commands
 
@@ -35,7 +36,7 @@ export CLOUD_SQL_PASS=""
 ./mvnw clean package -DskipTests
 
 # Run Java app
-java -jar -Dspring.profiles.active=prod target/gedcom-analyzer-0.4.1-SNAPSHOT.jar
+java -jar -Dspring.profiles.active=prod target/gedcom-analyzer-0.4.2-SNAPSHOT.jar
 ```
 
 ### Deploy appengine to Google Cloud

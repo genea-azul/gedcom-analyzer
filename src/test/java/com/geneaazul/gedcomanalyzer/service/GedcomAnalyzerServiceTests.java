@@ -37,6 +37,11 @@ public class GedcomAnalyzerServiceTests {
         EnrichedGedcom gedcom = gedcomHolder.getGedcom()
                 .orElseThrow();
 
+        System.out.println("\ngetMissingReferences:");
+        gedcomAnalyzerService
+                .getMissingReferences(gedcom.getGedcom())
+                .forEach(System.out::println);
+
         System.out.println("\nfindPersonsWithTagExtensions:");
         searchService
                 .findPersonsWithTagExtensions(gedcom.getPeople())

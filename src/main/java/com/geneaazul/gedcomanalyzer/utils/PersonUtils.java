@@ -1,9 +1,12 @@
 package com.geneaazul.gedcomanalyzer.utils;
 
+import com.geneaazul.gedcomanalyzer.model.Date;
+import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.NameAndSex;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folg.gedcom.model.EventFact;
@@ -14,6 +17,7 @@ import org.folg.gedcom.model.Name;
 import org.folg.gedcom.model.Person;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -246,6 +250,7 @@ public class PersonUtils {
                         .map(spouse -> spouse.getId().equals(person.getId()) ? Optional.<Person>empty() : Optional.of(spouse))
                         .map(spouse -> Pair.of(spouse, family.getChildren(gedcom)))
                         .toList())
+                // Keep current person as spouse (empty optional) if it is a uni-parental family
                 .map(spouses -> spouses.size() == 1
                         ? spouses
                         : spouses
@@ -264,5 +269,21 @@ public class PersonUtils {
                 .flatMap(List::stream)
                 .toList();
     }
+
+    public static final Comparator<EnrichedPerson> DATES_COMPARATOR = (p1, p2) -> {
+        Date dob1 = p1.getDateOfBirth().orElse(null);
+        Date dob2 = p2.getDateOfBirth().orElse(null);
+        int cmp = ObjectUtils.compare(dob1, dob2, true);
+        if (cmp != 0) {
+            return cmp;
+        }
+        Date dod1 = p1.getDateOfDeath().orElse(null);
+        Date dod2 = p2.getDateOfDeath().orElse(null);
+        cmp = ObjectUtils.compare(dod1, dod2, true);
+        if (cmp != 0) {
+            return cmp;
+        }
+        return p1.getId().compareTo(p2.getId());
+    };
 
 }
