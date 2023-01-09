@@ -4,6 +4,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -16,9 +17,13 @@ import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.List;
 
 public class SearchControllerIT extends AbstractControllerIT {
 
@@ -69,6 +74,25 @@ public class SearchControllerIT extends AbstractControllerIT {
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.people", hasSize(2)));
+    }
+
+    @Test
+    public void testSearchFamilyLatest() throws Exception {
+
+        doReturn(new PageImpl<>(
+                List.of(
+                        SearchFamily.builder()
+                                .id(1L)
+                                .isMatch(true)
+                                .build()
+                )))
+                .when(searchFamilyRepository)
+                .findAll(any(Pageable.class));
+
+        mvc.perform(get("/api/search/family/latest?page=0&size=5")
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)));
     }
 
 }
