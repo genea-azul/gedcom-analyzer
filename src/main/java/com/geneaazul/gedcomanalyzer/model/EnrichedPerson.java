@@ -71,7 +71,8 @@ public class EnrichedPerson {
         sex = PersonUtils.getSex(person);
         surname = PersonUtils.getSurname(person);
         displayName = PersonUtils.getDisplayName(person);
-        aka = PersonUtils.getAka(person);
+        aka = PersonUtils.getAka(person)
+                .filter(akaName -> !akaName.equals(displayName));
         dateOfBirth = PersonUtils.getDateOfBirth(person).flatMap(Date::parse);
         dateOfDeath = PersonUtils.getDateOfDeath(person).flatMap(Date::parse);
         placeOfBirth = PersonUtils.getPlaceOfBirth(person);
