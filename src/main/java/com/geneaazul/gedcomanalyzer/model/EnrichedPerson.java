@@ -5,7 +5,6 @@ import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.utils.FamilyUtils;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 import com.geneaazul.gedcomanalyzer.utils.PlaceUtils;
-import com.geneaazul.gedcomanalyzer.utils.SearchUtils;
 
 import org.apache.commons.collections4.ComparatorUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -38,6 +37,7 @@ public class EnrichedPerson {
     private final SexType sex;
     private final Optional<String> surname;
     private final String displayName;
+    private final Optional<String> aka;
     private final Optional<Date> dateOfBirth;
     private final Optional<Date> dateOfDeath;
     private final Optional<String> placeOfBirth;
@@ -71,6 +71,7 @@ public class EnrichedPerson {
         sex = PersonUtils.getSex(person);
         surname = PersonUtils.getSurname(person);
         displayName = PersonUtils.getDisplayName(person);
+        aka = PersonUtils.getAka(person);
         dateOfBirth = PersonUtils.getDateOfBirth(person).flatMap(Date::parse);
         dateOfDeath = PersonUtils.getDateOfDeath(person).flatMap(Date::parse);
         placeOfBirth = PersonUtils.getPlaceOfBirth(person);
@@ -160,10 +161,10 @@ public class EnrichedPerson {
         return this.sex != SexType.U && this.sex == other.sex;
     }
 
-    public boolean matchesGiven(EnrichedPerson other) {
+    public boolean matchesGivenName(EnrichedPerson other) {
         return this.givenNameForSearch.isPresent()
                 && other.givenNameForSearch.isPresent()
-                && SearchUtils.matchesGivenName(this.givenNameForSearch.get(), other.givenNameForSearch.get());
+                && this.givenNameForSearch.get().matches(other.givenNameForSearch.get());
     }
 
     public boolean matchesSurname(EnrichedPerson other) {
@@ -211,7 +212,7 @@ public class EnrichedPerson {
                 .stream()
                 .anyMatch(otherPair
                         -> pair.getRight().equals(otherPair.getRight())
-                        && SearchUtils.matchesGivenName(pair.getLeft(), otherPair.getLeft()));
+                        && pair.getLeft().matches(otherPair.getLeft()));
 
         return isAllMatch
                 ? givenAndSurnamePairs1

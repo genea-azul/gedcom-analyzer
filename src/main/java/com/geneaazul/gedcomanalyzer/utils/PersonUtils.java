@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -45,6 +46,12 @@ public class PersonUtils {
     public static final Set<String> DEATH_TAGS = Set.of("DEAT", "DEATH");
     public static final Set<String> SEX_TAGS = Set.of("SEX");
     public static final Set<String> EVENT_TAGS = Set.of("EVEN", "EVENT");
+
+    /**
+     * Custom extension tags.
+     */
+    public static final String FORMER_NAME_TAG = "_FORMERNAME";
+    public static final String UPDATED_TAG = "_UPD";
 
     public static boolean isAlive(Person person) {
         return !isDead(person);
@@ -163,6 +170,30 @@ public class PersonUtils {
                 .map(s -> SearchUtils.normalizeSurname(s, normalizedSurnamesMap));
     }
 
+    /**
+     * The main name's a.k.a. name (or former name).
+     */
+    public static Optional<String> getAka(Person person) {
+        Optional<Name> mainName = person.getNames()
+                .stream()
+                .findFirst();
+        return mainName
+                .map(Name::getAka)
+                .or(() -> mainName
+                        .map(Name::getExtensions)
+                        .map(Map::values)
+                        .map(gedcomTags -> (Collection<?>) gedcomTags)
+                        .flatMap(gedcomTagsList -> gedcomTagsList
+                                .stream()
+                                .map(gedcomTags -> (List<?>) gedcomTags)
+                                .flatMap(Collection::stream)
+                                .map(gedcomTag -> (GedcomTag) gedcomTag)
+                                .filter(gedcomTag -> gedcomTag.getTag().equals(FORMER_NAME_TAG))
+                                .findFirst())
+                        .map(GedcomTag::getValue))
+                .map(StringUtils::trimToNull);
+    }
+
     public static Optional<String> getDateOfBirth(Person person) {
         return person.getEventsFacts()
                 .stream()
@@ -215,19 +246,25 @@ public class PersonUtils {
 
     public static List<GedcomTag> getTagExtensions(Person person) {
         return Stream
-                .concat(
+                .of(
                         person.getExtensions()
                                 .values()
                                 .stream(),
+                        person.getNames()
+                                .stream()
+                                .map(ExtensionContainer::getExtensions)
+                                .map(Map::values)
+                                .flatMap(Collection::stream),
                         person.getEventsFacts()
                                 .stream()
                                 .map(ExtensionContainer::getExtensions)
                                 .map(Map::values)
                                 .flatMap(Collection::stream))
+                .flatMap(Function.identity())
                 .map(gedcomTags -> (List<?>) gedcomTags)
                 .flatMap(List::stream)
                 .map(gedcomTag -> (GedcomTag) gedcomTag)
-                .filter(gedcomTag -> !gedcomTag.getTag().equals("_UPD"))
+                .filter(gedcomTag -> !gedcomTag.getTag().equals(UPDATED_TAG))
                 .toList();
     }
 

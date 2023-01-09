@@ -37,6 +37,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class FamilyService {
 
+    private static final int MAX_PAGE_SIZE = 1000;
+
     private final GedcomHolder gedcomHolder;
     private final PersonService personService;
     private final SearchService searchService;
@@ -60,6 +62,7 @@ public class FamilyService {
 
     @Transactional(readOnly = true)
     public List<SearchFamilyDetailsDto> getLatest(int page, int size) {
+        size = Math.max(size, MAX_PAGE_SIZE);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
         return searchFamilyRepository
                 .findAll(pageable)

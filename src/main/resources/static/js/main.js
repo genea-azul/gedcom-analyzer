@@ -255,8 +255,15 @@ var getPersonComponent = function(person, index) {
 
     cardBody.append(
         $("<div>")
-            .addClass("h6")
+            .addClass(person.aka == null ? "h6" : "h6 mb-0")
             .text(displayNameInSpanish(person.name)));
+
+    if (person.aka != null) {
+        cardBody.append(
+            $("<div>")
+                .addClass("small mb-2")
+                .text(displayNameInSpanish(person.aka)));
+    }
 
     var birthDeath = $("<div>")
         .addClass("mt-1");

@@ -43,4 +43,20 @@ public class GivenName {
         return new GivenName(name);
     }
 
+    public boolean matches(GivenName other) {
+        if (other == null) {
+            return false;
+        }
+
+        if (this.wordsCount == 1 && other.wordsCount == 1) {
+            return this.name.equals(other.name);
+        }
+
+        if (this.wordsCount <= other.wordsCount) {
+            return this.searchPattern.matcher(other.name).find();
+        } else {
+            return other.searchPattern.matcher(this.name).find();
+        }
+    }
+
 }

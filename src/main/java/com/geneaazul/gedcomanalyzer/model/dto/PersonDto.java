@@ -25,6 +25,8 @@ public class PersonDto {
     @ToString.Include
     private String name;
     @ToString.Include
+    private String aka;
+    @ToString.Include
     private String dateOfBirth;
     @ToString.Include
     private String placeOfBirth;

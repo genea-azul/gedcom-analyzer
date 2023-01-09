@@ -179,7 +179,7 @@ public class SearchService {
         if (!person.matchesSurname(compare)) {
             return NOT_A_DUPLICATE_SCORE;
         }
-        if (!person.matchesGiven(compare)) {
+        if (!person.matchesGivenName(compare)) {
             return NOT_A_DUPLICATE_SCORE;
         }
 
@@ -297,7 +297,9 @@ public class SearchService {
 
         return persons
                 .stream()
-                .filter(person -> SearchUtils.matchesGivenName(person.getGivenNameForSearch().orElse(null), givenNameAndSurname.givenName()))
+                .filter(person -> person.getGivenNameForSearch()
+                        .map(givenName -> givenName.matches(givenNameAndSurname.givenName()))
+                        .orElse(false))
                 .filter(person -> relativesGivenNameAndSurnames.isEmpty()
                         || relativesSupplier
                                 .apply(person)
@@ -308,10 +310,9 @@ public class SearchService {
                                                 -> relative.getSurnameMainWordForSearch()
                                                         .map(s -> s.equals(gns.surname()))
                                                         .orElse(false)
-                                                && SearchUtils.matchesGivenName(
-                                                        relative.getGivenNameForSearch()
-                                                                .orElse(null),
-                                                        gns.givenName()))))
+                                                && relative.getGivenNameForSearch()
+                                                        .map(g -> g.matches(gns.givenName()))
+                                                        .orElse(false))))
                 .toList();
     }
 
