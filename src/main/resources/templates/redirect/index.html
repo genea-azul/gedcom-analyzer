@@ -18,8 +18,10 @@
   <body>
     <div class="container d-flex flex-column align-items-center justify-content-center">
       <img class="img-fluid" src="/img/genea-azul-logo.png" alt="Genea Azul logo" />
-      <div class="spinner-border mt-5" role="status"></div>
-      Iniciando el servidor, esper&aacute; unos segundos...
+      <div class="invisible" id="spinner-container">
+        <div class="spinner-border spinner-border-sm mt-5" role="status"></div>
+        Iniciando el servidor, esper&aacute; unos segundos...
+      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
@@ -36,6 +38,10 @@
                 }
             });
         });
+
+        setTimeout(function() {
+            $("#spinner-container").removeClass("invisible");
+        }, 1500);
     </script>
   </body>
 

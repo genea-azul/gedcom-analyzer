@@ -1,8 +1,14 @@
 $(document).ready(function() {
+    var searchParams = new URLSearchParams(window.location.search);
+
     $.ajax({
         type: "GET",
         url: "/api/search/family/latest",
         contentType: "application/json",
+        data: {
+            page: searchParams.get("page"),
+            size: searchParams.get("size")
+        },
         success: function(data) {
             data.forEach((element, index) => data[index] = removeEmpty(element));
             $("#result-container").jsonViewer(data, {collapsed: false, rootCollapsable: false});

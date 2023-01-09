@@ -162,9 +162,12 @@ $(document).ready(function() {
 
                 if (data.people.length == 0) {
                     if (!data.potentialResults) {
-                        resultComponent.html("No se encontraron resultados.");
+                        resultComponent.html("<p>No se encontraron resultados. \u2639</p>");
                     } else {
-                        resultComponent.html("Refin\u00E1 la b\u00FAsqueda agregando fechas.<br>Potenciales resultados: " + data.potentialResults);
+                        resultComponent
+                            .html("<p>La b\u00FAsqueda es ambigua.</p>")
+                            .append("<p>Refin\u00E1 la b\u00FAsqueda agregando fechas o completando nombres de padres y parejas.</p>")
+                            .append("<p><b>Potenciales resultados:</b> " + data.potentialResults + "</p>");
                     }
                 }
             },
@@ -195,7 +198,7 @@ $(document).ready(function() {
                 $("#searchBtn").prop("disabled", false);
                 $("html, body").animate({
                     scrollTop: $("#searchResultCard").offset().top
-                }, 1000);
+                }, 600);
             }
         });
     });
