@@ -62,7 +62,7 @@ public class FamilyService {
 
     @Transactional(readOnly = true)
     public List<SearchFamilyDetailsDto> getLatest(int page, int size) {
-        size = Math.max(size, MAX_PAGE_SIZE);
+        size = Math.min(size, MAX_PAGE_SIZE);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
         return searchFamilyRepository
                 .findAll(pageable)
