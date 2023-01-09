@@ -46,8 +46,8 @@ public class SearchController {
 
     @GetMapping("/family/latest")
     public List<SearchFamilyDetailsDto> getLatest(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size) {
         return familyService.getLatest(page, size);
     }
 

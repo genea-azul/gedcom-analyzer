@@ -290,7 +290,8 @@ public class GedcomAnalyzerService {
                             person,
                             visitedPersons,
                             0,
-                            p -> p.getSurname().orElse("Undefined"));
+                            p -> p.getSurname()
+                                    .orElse("Undefined"));
                     Map<String, Integer> cardinality = CollectionUtils.getCardinalityMap(surnames);
                     return Map.entry(
                             person,

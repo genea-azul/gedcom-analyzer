@@ -1,6 +1,5 @@
 package com.geneaazul.gedcomanalyzer.utils;
 
-import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.NameAndSex;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
@@ -23,41 +22,21 @@ public class SearchUtils {
     private static final String[] NAME_REPLACEMENT_SPECIAL_CHARS = new String[]{ "", "", "", "", " " };
     private static final Pattern NAME_MULTIPLE_SPACES_PATTERN = Pattern.compile("  +");
 
-    private static final Pattern SURNAME_COMMON_SUFFIX_PATTERN = Pattern.compile("^([a-z]|de|di|la|lo|mc|mac|saint|sainte) +(.*)$");
+    private static final Pattern SURNAME_COMMON_SUFFIX_PATTERN = Pattern.compile("^([a-z]|de|di|la|lo|mc|mac|ahets|saint|sainte) +(.*)$");
     private static final Pattern SURNAME_DOUBLE_LETTERS_PATTERN = Pattern.compile("([a-z])\\1+");
     private static final Pattern SURNAME_VOWELS_ENDING_PATTERN = Pattern.compile("[aeiou]+$");
     private static final String SURNAME_VOWELS_ENDING_REPLACEMENT = "_";
-    private static final String[] SURNAME_SEARCH_CHARS = new String[]{ "b", "ç", "je", "ji", "y", "z" };
-    private static final String[] SURNAME_REPLACEMENT_CHARS = new String[]{ "v", "c", "ge", "gi", "i", "s" };
+    private static final String[] SURNAME_SEARCH_CHARS = new String[]{ "b", "ç", "je", "ji", "k", "y", "z" };
+    private static final String[] SURNAME_REPLACEMENT_CHARS = new String[]{ "v", "c", "ge", "gi", "c", "i", "s" };
 
     public static String simplifyName(@Nullable String name) {
+        name = AlphabetUtils.convertAnyToLatin(name);
         name = StringUtils.stripAccents(name);
         name = StringUtils.lowerCase(name);
         name = StringUtils.replaceEach(name, NAME_SEARCH_SPECIAL_CHARS, NAME_REPLACEMENT_SPECIAL_CHARS);
         name = RegExUtils.replaceAll(name, NAME_MULTIPLE_SPACES_PATTERN, " ");
         name = StringUtils.trimToNull(name);
         return name;
-    }
-
-    public static boolean matchesGivenName(
-            @Nullable GivenName name1,
-            @Nullable GivenName name2) {
-
-        if (name1 == null || name2 == null) {
-            return false;
-        }
-
-        if (name1.getWordsCount() == 1 && name2.getWordsCount() == 1) {
-            return name1.getName().equals(name2.getName());
-        }
-
-        if (name1.getWordsCount() <= name2.getWordsCount()) {
-            // In case name1 is whole-word, make a whole-word search in name2
-            return name1.getSearchPattern().matcher(name2.getName()).find();
-        } else {
-            // In case name2 is whole-word, make a whole-word search in name1
-            return name2.getSearchPattern().matcher(name1.getName()).find();
-        }
     }
 
     public static String normalizeName(
