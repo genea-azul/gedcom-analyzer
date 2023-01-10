@@ -145,6 +145,15 @@ $(document).ready(function() {
 
         postProcessRequest(searchFamilyRequest);
 
+        if (isRequestEmpty(searchFamilyRequest)) {
+            var errorMsg = "<p><b>Error:</b> Llen\u00E1 por lo menos un dato.</p>";
+            resultComponent.html(
+                $("<div>")
+                    .html(errorMsg));
+            finalizeSearch();
+            return;
+        }
+
         $.ajax({
             type: "POST",
             url: "/api/search/family",
@@ -162,7 +171,13 @@ $(document).ready(function() {
 
                 if (data.people.length == 0) {
                     if (!data.potentialResults) {
-                        resultComponent.html("<p>No se encontraron resultados. \u2639</p>");
+                        if (isMissingSurname(searchFamilyRequest)) {
+                            resultComponent.html("<p>No se encontraron resultados. Por favor ingres\u00E1 un apellido.</p>");
+                        } else {
+                            resultComponent
+                                .html("<p>No se encontraron resultados. \u2639</p>")
+                                .append("<p>Refin\u00E1 la b\u00FAsqueda agregando fechas o completando nombres de padres y parejas.</p>");
+                        }
                     } else {
                         resultComponent
                             .html("<p>La b\u00FAsqueda es ambigua.</p>")
@@ -179,11 +194,11 @@ $(document).ready(function() {
                 try {
                     var errorMsg;
                     if (xhr.status >= 500 && xhr.status < 600) {
-                        errorMsg = "<b>Error:</b> El servidor se est\u00E1 reiniciando, intent\u00E1 de nuevo.";
+                        errorMsg = "<p><b>Error:</b> El servidor se est\u00E1 reiniciando, intent\u00E1 de nuevo.</p>";
                     } else if (xhr.status == 0) {
-                        errorMsg = "<b>Error:</b> El servidor est\u00E1 ca\u00EDdo, intent\u00E1 de nuevo.";
+                        errorMsg = "<p><b>Error:</b> El servidor est\u00E1 ca\u00EDdo, intent\u00E1 de nuevo.</p>";
                     } else {
-                        errorMsg = "<b>Error:</b> " + xhr.responseJSON.message;
+                        errorMsg = "<p><b>Error:</b> " + xhr.responseJSON.message + "</p>";
                     }
 
                     resultComponent.html(
@@ -195,41 +210,65 @@ $(document).ready(function() {
                 }
             },
             complete: function() {
-                $("#searchBtn").prop("disabled", false);
-                $("html, body").animate({
-                    scrollTop: $("#searchResultCard").offset().top
-                }, 600);
+                finalizeSearch();
             }
         });
     });
 });
 
+var finalizeSearch = function() {
+    $("#searchBtn").prop("disabled", false);
+    $("html, body").animate({
+        scrollTop: $("#searchResultCard").offset().top
+    }, 600);
+};
+
+var personsInRq = [
+    "individual",
+    "father",
+    "mother",
+    "paternalGrandfather",
+    "paternalGrandmother",
+    "maternalGrandfather",
+    "maternalGrandmother"
+];
+
+var personProps = [
+    "givenName",
+    "surname",
+    "yearOfBirth",
+    "yearOfDeath"
+];
+
 var postProcessRequest = function(searchFamilyRequest) {
-    var personsInRq = [
-        "individual",
-        "father",
-        "mother",
-        "paternalGrandfather",
-        "paternalGrandmother",
-        "maternalGrandfather",
-        "maternalGrandmother"
-    ];
-    $(personsInRq).each(function() {
-        if (isPersonEmpty(searchFamilyRequest[this])) {
-            delete searchFamilyRequest[this];
+    for (var person of personsInRq) {
+        if (isPersonEmpty(searchFamilyRequest[person])) {
+            delete searchFamilyRequest[person];
         }
-    });
+    }
 };
 
 var isPersonEmpty = function(person) {
-    var personProps = [
-        "givenName",
-        "surname",
-        "yearOfBirth",
-        "yearOfDeath"
-    ];
     for (var prop of personProps) {
         if (person[prop] != null) {
+            return false;
+        }
+    }
+    return true;
+};
+
+var isRequestEmpty = function(searchFamilyRequest) {
+    for (var person of personsInRq) {
+        if (!!searchFamilyRequest[person]) {
+            return false;
+        }
+    }
+    return true;
+};
+
+var isMissingSurname = function(searchFamilyRequest) {
+    for (var person of personsInRq) {
+        if (!!searchFamilyRequest[person] && !!searchFamilyRequest[person].surname) {
             return false;
         }
     }
