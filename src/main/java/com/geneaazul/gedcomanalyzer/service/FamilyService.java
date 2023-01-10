@@ -255,7 +255,7 @@ public class FamilyService {
         if (hasSurnameButMissingDates(searchPerson, surname)) {
             return searchPersonByNameOrSurname(searchPerson, surname, gedcom);
         }
-        if (hasAnyDateButMissingGivenName(searchPerson, surname)) {
+        if (hasAnyDateAndSurnameButMissingGivenName(searchPerson, surname)) {
             return searchPersonBySurnameAndYear(searchPerson, surname, gedcom);
         }
         return List.of();
@@ -268,7 +268,7 @@ public class FamilyService {
                 && searchPersonDto.getYearOfDeath() == null;
     }
 
-    private boolean hasAnyDateButMissingGivenName(SearchPersonDto searchPersonDto, String surname) {
+    private boolean hasAnyDateAndSurnameButMissingGivenName(SearchPersonDto searchPersonDto, String surname) {
         return searchPersonDto != null
                 && surname != null
                 && StringUtils.isBlank(searchPersonDto.getGivenName())
