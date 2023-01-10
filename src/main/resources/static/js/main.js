@@ -146,7 +146,7 @@ $(document).ready(function() {
         postProcessRequest(searchFamilyRequest);
 
         if (isRequestEmpty(searchFamilyRequest)) {
-            var errorMsg = "<p><b>Error:</b> Llen\u00E1 por lo menos un dato.</p>";
+            var errorMsg = "<p><b>Error:</b> Llen&aacute; por lo menos un dato.</p>";
             resultComponent.html(
                 $("<div>")
                     .html(errorMsg));
@@ -172,16 +172,16 @@ $(document).ready(function() {
                 if (data.people.length == 0) {
                     if (!data.potentialResults) {
                         if (isMissingSurname(searchFamilyRequest)) {
-                            resultComponent.html("<p>No se encontraron resultados. Por favor ingres\u00E1 un apellido.</p>");
+                            resultComponent.html("<p>No se encontraron resultados. Por favor ingres&aacute; un apellido.</p>");
                         } else {
                             resultComponent
                                 .html("<p>No se encontraron resultados. \u2639</p>")
-                                .append("<p>Refin\u00E1 la b\u00FAsqueda agregando fechas o completando nombres de padres y parejas.</p>");
+                                .append("<p>Refin&aacute; la b&uacute;squeda agregando fechas o completando nombres de padres y parejas.</p>");
                         }
                     } else {
                         resultComponent
-                            .html("<p>La b\u00FAsqueda es ambigua.</p>")
-                            .append("<p>Refin\u00E1 la b\u00FAsqueda agregando fechas o completando nombres de padres y parejas.</p>")
+                            .html("<p>La b&uacute;squeda es ambigua.</p>")
+                            .append("<p>Refin&aacute; la b&uacute;squeda agregando fechas o completando nombres de padres y parejas.</p>")
                             .append("<p><b>Potenciales resultados:</b> " + data.potentialResults + "</p>");
                     }
                 }
@@ -194,9 +194,9 @@ $(document).ready(function() {
                 try {
                     var errorMsg;
                     if (xhr.status >= 500 && xhr.status < 600) {
-                        errorMsg = "<p><b>Error:</b> El servidor se est\u00E1 reiniciando, intent\u00E1 de nuevo.</p>";
+                        errorMsg = "<p><b>Error:</b> El servidor se est&aacute; reiniciando, intent&aacute; de nuevo.</p>";
                     } else if (xhr.status == 0) {
-                        errorMsg = "<p><b>Error:</b> El servidor est\u00E1 ca\u00EDdo, intent\u00E1 de nuevo.</p>";
+                        errorMsg = "<p><b>Error:</b> El servidor est&aacute; ca&iacute;do, intent&aacute; de nuevo.</p>";
                     } else {
                         errorMsg = "<p><b>Error:</b> " + xhr.responseJSON.message + "</p>";
                     }
@@ -298,22 +298,22 @@ var getPersonComponent = function(person, index) {
     cardBody.append(
         $("<div>")
             .addClass(person.aka == null ? "h6" : "h6 mb-0")
-            .text(displayNameInSpanish(person.name)));
+            .html(displayNameInSpanish(person.name)));
 
     if (person.aka != null) {
         cardBody.append(
             $("<div>")
                 .addClass("small mb-2")
-                .text(displayNameInSpanish(person.aka)));
+                .html(displayNameInSpanish(person.aka)));
     }
 
     var birthDeath = $("<div>")
         .addClass("mt-1");
 
     if (person.dateOfBirth != null) {
-        birthDeath.text("n. " + displayDateInSpanish(person.dateOfBirth));
+        birthDeath.html("n. " + displayDateInSpanish(person.dateOfBirth));
     } else if (person.dateOfDeath != null) {
-        birthDeath.text("?");
+        birthDeath.html("?");
     }
 
     if (person.dateOfDeath != null) {
@@ -338,23 +338,6 @@ var getPersonComponent = function(person, index) {
                 .html("Pa&iacute;s de nacimiento: " + person.placeOfBirth));
     }
 
-    if (person.ancestryCountries.length > 0) {
-        var countries = $("<ul>")
-            .addClass("mb-0");
-
-        person.ancestryCountries.forEach((countryName, index) => {
-            countries.append(
-                $("<li>")
-                    .html(countryName));
-        });
-
-        cardBody.append(
-            $("<div>")
-                .addClass("mt-1")
-                .html("Pa&iacute;ses en su ascendencia: ")
-                .append(countries));
-    }
-
     if (person.parents.length > 0) {
         var parents = $("<ul>")
             .addClass("mb-0");
@@ -364,7 +347,7 @@ var getPersonComponent = function(person, index) {
                 $("<li>")
                     .html(
                         $("<b>")
-                            .text(displayNameInSpanish(parentName))));
+                            .html(displayNameInSpanish(parentName))));
         });
 
         cardBody.append(
@@ -383,7 +366,7 @@ var getPersonComponent = function(person, index) {
                 $("<li>")
                     .html(
                         $("<b>")
-                            .text(displayNameInSpanish(spouseWithChildren.name))));
+                            .html(displayNameInSpanish(spouseWithChildren.name))));
 
             if (spouseWithChildren.children.length > 0) {
                 var children = $("<ul>")
@@ -392,7 +375,7 @@ var getPersonComponent = function(person, index) {
                 spouseWithChildren.children.forEach((childName, index) => {
                     children.append(
                         $("<li>")
-                            .text(displayNameInSpanish(childName)));
+                            .html(displayNameInSpanish(childName)));
                 });
 
                 spouses.append(children);
@@ -406,20 +389,61 @@ var getPersonComponent = function(person, index) {
                 .append(spouses));
     }
 
+    if (person.ancestryGenerations != null
+           && (person.ancestryGenerations.ascending > 0 || person.ancestryGenerations.descending > 0)) {
+        var generations = $("<ul>")
+            .addClass("mb-0");
+
+        generations.append(
+            $("<li>")
+                .html("Ascendencia: " + getCardinal(person.ancestryGenerations.ascending, "generaci&oacute;n", "generaciones")));
+
+        generations.append(
+            $("<li>")
+                .html("Descendencia: " + getCardinal(person.ancestryGenerations.descending, "generaci&oacute;n", "generaciones")));
+
+        cardBody.append(
+            $("<div>")
+                .addClass("mt-1")
+                .html("Informaci&oacute;n en el &aacute;rbol: ")
+                .append(generations));
+    }
+
+    if (person.ancestryCountries.length > 0) {
+        var countries = $("<ul>")
+            .addClass("mb-0");
+
+        person.ancestryCountries.forEach((countryName, index) => {
+            countries.append(
+                $("<li>")
+                    .html(countryName));
+        });
+
+        cardBody.append(
+            $("<div>")
+                .addClass("mt-1")
+                .html("Pa&iacute;ses en su ascendencia: ")
+                .append(countries));
+    }
+
     return card.html(cardBody);
 };
 
+var getCardinal = function(num, singular, plural) {
+    return "" + num + " " + (num == 1 ? singular : plural);
+}
+
 var displayNameInSpanish = function(name) {
     // Only the name is private, surname is not obfuscated
-    name = name.replace("<private>", "<nombre privado>");
-    name = name.replace("<no name>", "<nombre desconocido>");
-    return name.replace("<no spouse>", "<sin pareja>");
+    name = name.replace("<private>", "&lt;nombre privado&gt;");
+    name = name.replace("<no name>", "&lt;nombre desconocido&gt;");
+    return name.replace("<no spouse>", "&lt;sin pareja&gt;");
 };
 
 var displayDateInSpanish = function(date) {
     // Only the date of birth is private, date of death is not obfuscated
     if (date == "<private>") {
-        return "<fecha de nac. privada>";
+        return "&lt;fecha de nac. privada&gt;";
     }
 
     date = date.replaceAll("BET", "entre");
@@ -427,7 +451,7 @@ var displayDateInSpanish = function(date) {
     date = date.replaceAll("ABT", "aprox.");
     date = date.replaceAll("EST", "se estima");
     date = date.replaceAll("BEF", "antes de");
-    date = date.replaceAll("AFT", "despu\u00E9s de");
+    date = date.replaceAll("AFT", "despu&eacute;s de");
 
     date = date.replace(/(\d+) JAN/g, "$1 de ene de");
     date = date.replace(/(\d+) FEB/g, "$1 de feb de");

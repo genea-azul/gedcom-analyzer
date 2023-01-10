@@ -35,5 +35,7 @@ public class PersonDto {
     private List<String> parents;
     private List<SpouseWithChildrenDto> spouses;
     private List<String> ancestryCountries;
+    @ToString.Include
+    private AncestryGenerationsDto ancestryGenerations;
 
 }

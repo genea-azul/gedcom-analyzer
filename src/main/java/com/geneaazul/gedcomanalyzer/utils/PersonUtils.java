@@ -89,28 +89,29 @@ public class PersonUtils {
     private static String buildDisplayName(Name name) {
         String displayName = "";
         if (StringUtils.isNotBlank(name.getPrefix())) {
-            displayName = append(displayName, name.getPrefix());
+            displayName = trimAndAppend(displayName, name.getPrefix());
         }
         if (StringUtils.isNotBlank(name.getGiven())) {
-            displayName = append(displayName, name.getGiven());
+            String givenName = "?".equals(StringUtils.trim(name.getGiven())) ? NO_NAME : name.getGiven();
+            displayName = trimAndAppend(displayName, givenName);
         }
         if (StringUtils.isNotBlank(name.getNickname())) {
-            displayName = append(displayName, "\"" + name.getNickname() + "\"");
+            displayName = trimAndAppend(displayName, "\"" + name.getNickname() + "\"");
         }
         if (StringUtils.isNotBlank(name.getSurnamePrefix())) {
-            displayName = append(displayName, name.getSurnamePrefix());
+            displayName = trimAndAppend(displayName, name.getSurnamePrefix());
         }
         if (StringUtils.isNotBlank(name.getSurname())) {
-            displayName = append(displayName, name.getSurname());
+            displayName = trimAndAppend(displayName, name.getSurname());
         }
         if (StringUtils.isNotBlank(name.getSuffix())) {
-            displayName = append(displayName, name.getSuffix());
+            displayName = trimAndAppend(displayName, name.getSuffix());
         }
         return displayName;
     }
 
-    private static String append(String str, String append) {
-        return StringUtils.isEmpty(str) ? append : str + " " + append;
+    private static String trimAndAppend(String str, String append) {
+        return StringUtils.isEmpty(str) ? append : str + " " + append.trim();
     }
 
     /**
