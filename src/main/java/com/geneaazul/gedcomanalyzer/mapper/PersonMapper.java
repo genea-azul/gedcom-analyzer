@@ -1,9 +1,11 @@
 package com.geneaazul.gedcomanalyzer.mapper;
 
+import com.geneaazul.gedcomanalyzer.model.AncestryGenerations;
 import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResult;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResults;
+import com.geneaazul.gedcomanalyzer.model.dto.AncestryGenerationsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateCompareDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateDto;
@@ -30,23 +32,25 @@ public class PersonMapper {
     }
 
     public PersonDto toPersonDto(EnrichedPerson person) {
-        return toPersonDto(person, ObfuscationType.NONE, ep -> List.of());
+        return toPersonDto(person, ObfuscationType.NONE, ep -> List.of(), ep -> AncestryGenerations.empty());
     }
 
     public List<PersonDto> toPersonDto(
             Collection<EnrichedPerson> persons,
             ObfuscationType obfuscationType,
-            Function<EnrichedPerson, List<String>> ancestryCountriesResolver) {
+            Function<EnrichedPerson, List<String>> ancestryCountriesResolver,
+            Function<EnrichedPerson, AncestryGenerations> ancestryGenerationsResolver) {
         return persons
                 .stream()
-                .map(person -> toPersonDto(person, obfuscationType, ancestryCountriesResolver))
+                .map(person -> toPersonDto(person, obfuscationType, ancestryCountriesResolver, ancestryGenerationsResolver))
                 .toList();
     }
 
     public PersonDto toPersonDto(
             EnrichedPerson person,
             ObfuscationType obfuscationType,
-            Function<EnrichedPerson, List<String>> ancestryCountriesResolver) {
+            Function<EnrichedPerson, List<String>> ancestryCountriesResolver,
+            Function<EnrichedPerson, AncestryGenerations> ancestryGenerationsResolver) {
 
         boolean obfuscateLiving = obfuscationType != ObfuscationType.NONE;
         boolean obfuscateName = obfuscateLiving && obfuscationType != ObfuscationType.SKIP_MAIN_PERSON_NAME;
@@ -55,6 +59,14 @@ public class PersonMapper {
                 person.getSpousesWithChildren(),
                 obfuscateLiving,
                 person.isAlive());
+
+        List<String> ancestryCountries = ancestryCountriesResolver.apply(person);
+        AncestryGenerations ancestryGenerations = ancestryGenerationsResolver.apply(person);
+
+        AncestryGenerationsDto ancestryGenerationsDto = AncestryGenerationsDto.builder()
+                .ascending(ancestryGenerations.ascending())
+                .descending(ancestryGenerations.descending())
+                .build();
 
         return PersonDto.builder()
                 .sex(person.getSex())
@@ -78,7 +90,8 @@ public class PersonMapper {
                                 obfuscateLiving && (person.isAlive() || parent.isAlive())))
                         .toList())
                 .spouses(spouses)
-                .ancestryCountries(ancestryCountriesResolver.apply(person))
+                .ancestryCountries(ancestryCountries)
+                .ancestryGenerations(ancestryGenerationsDto)
                 .build();
     }
 
