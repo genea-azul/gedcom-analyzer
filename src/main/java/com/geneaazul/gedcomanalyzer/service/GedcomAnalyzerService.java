@@ -434,4 +434,15 @@ public class GedcomAnalyzerService {
         return List.copyOf(results);
     }
 
+    /**
+     *
+     */
+    public EnrichedGedcom extractSubGedcom(EnrichedPerson person) {
+        Gedcom subGedcom = person.getGedcom().getGedcom();
+        String subGedcomName = person.getSurname()
+                .map(surname -> surname + "-tree")
+                .orElse("sub-gedcom");
+        return EnrichedGedcom.of(subGedcom, subGedcomName, person.getProperties());
+    }
+
 }
