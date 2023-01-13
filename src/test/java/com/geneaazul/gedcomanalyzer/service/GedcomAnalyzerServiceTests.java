@@ -34,8 +34,7 @@ public class GedcomAnalyzerServiceTests {
     @Test
     public void smokeTest() {
 
-        EnrichedGedcom gedcom = gedcomHolder.getGedcom()
-                .orElseThrow();
+        EnrichedGedcom gedcom = gedcomHolder.getGedcom();
 
         gedcom.analyzeCustomEventFactsAndTagExtensions();
 

@@ -22,7 +22,7 @@ public class SearchUtils {
     private static final String[] NAME_REPLACEMENT_SPECIAL_CHARS = new String[]{ "", "", "", "", " " };
     private static final Pattern NAME_MULTIPLE_SPACES_PATTERN = Pattern.compile("  +");
 
-    private static final Pattern SURNAME_COMMON_SUFFIX_PATTERN = Pattern.compile("^([a-z]|de|di|la|lo|mc|mac|ahets|saint|sainte) +(.*)$");
+    private static final Pattern SURNAME_COMMON_SUFFIX_PATTERN = Pattern.compile("^([a-z]|de|del|di|la|lo|mc|mac|ahets|saint|sainte) +(.*)$");
     private static final Pattern SURNAME_DOUBLE_LETTERS_PATTERN = Pattern.compile("([a-z])\\1+");
     private static final Pattern SURNAME_VOWELS_ENDING_PATTERN = Pattern.compile("[aeiou]+$");
     private static final String SURNAME_VOWELS_ENDING_REPLACEMENT = "_";

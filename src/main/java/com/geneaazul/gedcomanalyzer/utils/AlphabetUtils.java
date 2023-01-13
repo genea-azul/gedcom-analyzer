@@ -19,7 +19,7 @@ public class AlphabetUtils {
     private static final Transliterator RUSSIAN_TO_LATIN_TRANS = Transliterator.getInstance(RUSSIAN_TO_LATIN_ID);
 
     /**
-     * TODO - this is a not a thread-safe implementation
+     * TODO - this is a not thread-safe implementation
      */
     public static String convertAnyToLatin(@Nullable String str) {
         if (StringUtils.isBlank(str)) {
