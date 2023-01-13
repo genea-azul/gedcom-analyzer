@@ -1,5 +1,6 @@
 package com.geneaazul.gedcomanalyzer.service;
 
+import com.geneaazul.gedcomanalyzer.mapper.GedcomMapper;
 import com.geneaazul.gedcomanalyzer.mapper.PersonMapper;
 import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
@@ -7,9 +8,11 @@ import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResults;
 import com.geneaazul.gedcomanalyzer.model.Reference;
 import com.geneaazul.gedcomanalyzer.model.dto.GedcomAnalysisDto;
+import com.geneaazul.gedcomanalyzer.model.dto.GedcomMetadataDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateDto;
 import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
+import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.DateUtils;
 import com.geneaazul.gedcomanalyzer.utils.EnumCollectionUtils;
 import com.geneaazul.gedcomanalyzer.utils.FamilyUtils;
@@ -54,7 +57,14 @@ import lombok.extern.slf4j.Slf4j;
 public class GedcomAnalyzerService {
 
     private final SearchService searchService;
+    private final GedcomHolder gedcomHolder;
     private final PersonMapper personMapper;
+    private final GedcomMapper gedcomMapper;
+
+    public GedcomMetadataDto getGedcomMetadata() {
+        EnrichedGedcom gedcom = gedcomHolder.getGedcom();
+        return gedcomMapper.toGedcomMetadataDto(gedcom);
+    }
 
     public GedcomAnalysisDto analyze(EnrichedGedcom gedcom) {
         log.info("Analyze gedcom: {}", gedcom.getGedcomName());

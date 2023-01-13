@@ -78,6 +78,21 @@ $(document).ready(function() {
 });
 
 $(document).ready(function() {
+    $.ajax({
+        type: "GET",
+        url: "/api/gedcom-analyzer/metadata",
+        contentType: "application/json",
+        success: function(data) {
+            $("#persons-count-container")
+                .html(data.personsCount);
+        },
+        error: function(xhr) {
+            console.log(xhr);
+        }
+    });
+});
+
+$(document).ready(function() {
     $("#searchBtn").on("click", function() {
         $("#searchBtn").prop("disabled", true);
         var resultComponent = $("#searchResultCard div.card-body");

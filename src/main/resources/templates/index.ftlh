@@ -9,8 +9,13 @@
   </head>
 
   <body class="container-fluid">
-    <div class="h4 mb-0">Genea Azul - Buscador de personas</div>
-    <div class="mt-0 small">Versi&oacute;n 0.7.1 (en desarrollo)</div>
+    <div class="h5 mb-0">Genea Azul - Buscador de personas</div>
+    <div class="d-flex mt-0 small">
+      <div class="me-1">Versi&oacute;n: 0.7.2 - Personas en el &aacute;rbol:</div>
+      <div id="persons-count-container">
+        <span class="spinner-border spinner-border-sm" role="status"></span>
+      </div>
+    </div>
     <div class="mt-3 mb-3">Todos los campos son opcionales, para obtener un mejor resultado complet&aacute; la mayor cantidad de datos posibles.</div>
 
     <div class="row">

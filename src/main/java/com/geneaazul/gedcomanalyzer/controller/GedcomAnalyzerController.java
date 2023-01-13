@@ -2,6 +2,7 @@ package com.geneaazul.gedcomanalyzer.controller;
 
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.dto.GedcomAnalysisDto;
+import com.geneaazul.gedcomanalyzer.model.dto.GedcomMetadataDto;
 import com.geneaazul.gedcomanalyzer.service.GedcomAnalyzerService;
 import com.geneaazul.gedcomanalyzer.service.GedcomParsingService;
 
@@ -28,6 +29,11 @@ public class GedcomAnalyzerController {
     @GetMapping
     public void analyzeGedcom() {
         // Used for health check
+    }
+
+    @GetMapping("/metadata")
+    public GedcomMetadataDto getGedcomAnalyzerVersion() {
+        return gedcomAnalyzerService.getGedcomMetadata();
     }
 
     @PostMapping

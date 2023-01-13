@@ -72,8 +72,7 @@ public class FamilyService {
 
     public SearchFamilyResultDto search(SearchFamilyDto searchFamilyDto) {
 
-        EnrichedGedcom gedcom = gedcomHolder.getGedcom()
-                .orElseThrow(() -> new IllegalStateException("Server is starting, please try again."));
+        EnrichedGedcom gedcom = gedcomHolder.getGedcom();
 
         List<EnrichedPerson> result = new ArrayList<>();
 
