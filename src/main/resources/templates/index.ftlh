@@ -11,7 +11,7 @@
   <body class="container-fluid">
     <div class="h5 mb-0">Genea Azul - Buscador de personas</div>
     <div class="d-flex mt-0 small">
-      <div class="me-1">Versi&oacute;n: 0.7.2 - Personas en el &aacute;rbol:</div>
+      <div class="me-1">Versi&oacute;n: 0.7.3 - Personas en el &aacute;rbol:</div>
       <div id="persons-count-container">
         <span class="spinner-border spinner-border-sm" role="status"></span>
       </div>
@@ -29,10 +29,10 @@
               <div class="card-body">
                 <span class="small text-secondary">Sexo:</span>
                 <div class="btn-group btn-group-sm" role="group" aria-label="Sexo">
-                  <input type="radio" class="btn-check" name="individualSex" id="individualSexM" value="M" autocomplete="off" />
-                  <label class="btn btn-outline-secondary" for="individualSexM">Hombre</label>
                   <input type="radio" class="btn-check" name="individualSex" id="individualSexF" value="F" autocomplete="off" checked="checked" />
                   <label class="btn btn-outline-danger" for="individualSexF">Mujer</label>
+                  <input type="radio" class="btn-check" name="individualSex" id="individualSexM" value="M" autocomplete="off" />
+                  <label class="btn btn-outline-secondary" for="individualSexM">Hombre</label>
                 </div>
                 <div class="form-floating mt-1">
                   <input type="text" class="form-control" id="individualGivenName" />
