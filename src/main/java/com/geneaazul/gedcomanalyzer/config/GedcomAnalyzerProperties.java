@@ -56,7 +56,7 @@ public class GedcomAnalyzerProperties {
     private Period matchByMonthMaxPeriod = Period.ofMonths(4);
     private Period matchByYearMaxPeriod = Period.ofYears(3);
 
-    private Map<NameAndSex, String> normalizedNamesMap;
+    private Map<NameAndSex, String> normalizedGivenNamesMap;
     private Map<String, String> normalizedSurnamesMap;
 
     @Getter(AccessLevel.NONE)
@@ -86,24 +86,24 @@ public class GedcomAnalyzerProperties {
         this.childMinDateOfBirth = now.minusYears(childMaxAge);
         this.childMinDateOfDeath = now.minusYears(childMaxAge);
 
-        Map<NameAndSex, String> m = invertNamesMap(nameNormalizedM, SexType.M);
-        Map<NameAndSex, String> f = invertNamesMap(nameNormalizedF, SexType.F);
+        Map<NameAndSex, String> m = invertGivenNamesMap(nameNormalizedM, SexType.M);
+        Map<NameAndSex, String> f = invertGivenNamesMap(nameNormalizedF, SexType.F);
         m.putAll(f);
 
         Map<String, String> s = invertSurnamesMap(surnameNormalized);
 
-        this.normalizedNamesMap = Map.copyOf(m);
+        this.normalizedGivenNamesMap = Map.copyOf(m);
         this.normalizedSurnamesMap = Map.copyOf(s);
     }
 
-    private Map<NameAndSex, String> invertNamesMap(Map<String, List<String>> normalizedNames, SexType sex) {
-        return normalizedNames
+    private Map<NameAndSex, String> invertGivenNamesMap(Map<String, List<String>> normalizedGivenNames, SexType sex) {
+        return normalizedGivenNames
                 .entrySet()
                 .stream()
                 .flatMap(entry -> entry
                         .getValue()
                         .stream()
-                        .map(name -> new NameAndSex(name, sex))
+                        .map(givenName -> new NameAndSex(givenName, sex))
                         .map(nameAndSex -> Map.entry(nameAndSex, entry.getKey())))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }

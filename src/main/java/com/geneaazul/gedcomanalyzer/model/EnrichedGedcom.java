@@ -25,9 +25,9 @@ public class EnrichedGedcom {
 
     // Indexes
     private final Map<String, EnrichedPerson> peopleByIdIndex;
-    private final Map<NameAndSex, List<EnrichedPerson>> peopleBySurnameMainWordForSearchAndSexIndex;
-    private final Map<NameSexYear, List<EnrichedPerson>> peopleBySurnameMainWordForSearchAndSexAndYearOfBirthIndex;
-    private final Map<NameSexYear, List<EnrichedPerson>> peopleBySurnameMainWordForSearchAndSexAndYearOfDeathIndex;
+    private final Map<NameAndSex, List<EnrichedPerson>> peopleByNormalizedSurnameMainWordAndSexIndex;
+    private final Map<NameSexYear, List<EnrichedPerson>> peopleByNormalizedSurnameMainWordAndSexAndYearOfBirthIndex;
+    private final Map<NameSexYear, List<EnrichedPerson>> peopleByNormalizedSurnameMainWordAndSexAndYearOfDeathIndex;
 
     private EnrichedGedcom(Gedcom gedcom, String gedcomName, GedcomAnalyzerProperties properties) {
         this.gedcom = gedcom;
@@ -40,19 +40,23 @@ public class EnrichedGedcom {
                 .stream()
                 .collect(Collectors.toMap(EnrichedPerson::getId, Function.identity()));
 
-        this.peopleBySurnameMainWordForSearchAndSexIndex = this.people
+        this.peopleByNormalizedSurnameMainWordAndSexIndex = this.people
                 .stream()
-                .filter(person -> person.getSurnameMainWordForSearch().isPresent())
+                .filter(person -> person.getSurname().isPresent())
                 .filter(person -> person.getSex() != SexType.U)
-                .collect(Collectors.groupingBy(person -> new NameAndSex(person.getSurnameMainWordForSearch().get(), person.getSex())));
+                .collect(Collectors.groupingBy(person -> new NameAndSex(person.getSurname().get().normalizedMainWord(), person.getSex())));
 
-        this.peopleBySurnameMainWordForSearchAndSexAndYearOfBirthIndex = buildNameSexYearIndex(
-                person -> person.getSurnameMainWordForSearch().orElse(null),
+        this.peopleByNormalizedSurnameMainWordAndSexAndYearOfBirthIndex = buildNameSexYearIndex(
+                person -> person.getSurname()
+                        .map(Surname::normalizedMainWord)
+                        .orElse(null),
                 EnrichedPerson::getSex,
                 person -> person.getDateOfBirth().orElse(null));
 
-        this.peopleBySurnameMainWordForSearchAndSexAndYearOfDeathIndex = buildNameSexYearIndex(
-                person -> person.getSurnameMainWordForSearch().orElse(null),
+        this.peopleByNormalizedSurnameMainWordAndSexAndYearOfDeathIndex = buildNameSexYearIndex(
+                person -> person.getSurname()
+                        .map(Surname::normalizedMainWord)
+                        .orElse(null),
                 EnrichedPerson::getSex,
                 person -> person.getDateOfDeath().orElse(null));
     }
@@ -81,16 +85,22 @@ public class EnrichedGedcom {
         return peopleByIdIndex.get(id);
     }
 
-    public List<EnrichedPerson> getPersonsBySurnameMainWordAndSex(String surnameMainWord, SexType sex) {
-        return peopleBySurnameMainWordForSearchAndSexIndex.getOrDefault(new NameAndSex(surnameMainWord, sex), List.of());
+    public List<EnrichedPerson> getPersonsBySurnameMainWordAndSex(Surname surname, SexType sex) {
+        NameAndSex nameAndSex = new NameAndSex(surname.normalizedMainWord(), sex);
+        List<EnrichedPerson> persons = peopleByNormalizedSurnameMainWordAndSexIndex.getOrDefault(nameAndSex, List.of());
+        return getPersonsMatchingSurname(surname, persons);
     }
 
-    public List<EnrichedPerson> getPersonsBySurnameMainWordAndSexAndYearOfBirthIndex(String surnameMainWord, SexType sex, Year yearOfBirth) {
-        return peopleBySurnameMainWordForSearchAndSexAndYearOfBirthIndex.getOrDefault(new NameSexYear(surnameMainWord, sex, yearOfBirth), List.of());
+    public List<EnrichedPerson> getPersonsBySurnameMainWordAndSexAndYearOfBirthIndex(Surname surname, SexType sex, Year yearOfBirth) {
+        NameSexYear nameSexYear = new NameSexYear(surname.normalizedMainWord(), sex, yearOfBirth);
+        List<EnrichedPerson> persons = peopleByNormalizedSurnameMainWordAndSexAndYearOfBirthIndex.getOrDefault(nameSexYear, List.of());
+        return getPersonsMatchingSurname(surname, persons);
     }
 
-    public List<EnrichedPerson> getPersonsBySurnameMainWordAndSexAndYearOfDeathIndex(String surnameMainWord, SexType sex, Year yearOfDeath) {
-        return peopleBySurnameMainWordForSearchAndSexAndYearOfDeathIndex.getOrDefault(new NameSexYear(surnameMainWord, sex, yearOfDeath), List.of());
+    public List<EnrichedPerson> getPersonsBySurnameMainWordAndSexAndYearOfDeathIndex(Surname surname, SexType sex, Year yearOfDeath) {
+        NameSexYear nameSexYear = new NameSexYear(surname.normalizedMainWord(), sex, yearOfDeath);
+        List<EnrichedPerson> persons = peopleByNormalizedSurnameMainWordAndSexAndYearOfDeathIndex.getOrDefault(nameSexYear, List.of());
+        return getPersonsMatchingSurname(surname, persons);
     }
 
     private Map<NameSexYear, List<EnrichedPerson>> buildNameSexYearIndex(
@@ -120,6 +130,13 @@ public class EnrichedGedcom {
                 .collect(Collectors.groupingBy(
                         pair -> new NameSexYear(nameMapper.apply(pair.getLeft()), sexMapper.apply(pair.getLeft()), pair.getRight()),
                         Collectors.mapping(Pair::getLeft, Collectors.toList())));
+    }
+
+    private List<EnrichedPerson> getPersonsMatchingSurname(Surname surname, List<EnrichedPerson> persons) {
+        return persons
+                .stream()
+                .filter(person -> surname.matches(person.getSurname().orElse(null)))
+                .toList();
     }
 
     public void analyzeCustomEventFactsAndTagExtensions() {

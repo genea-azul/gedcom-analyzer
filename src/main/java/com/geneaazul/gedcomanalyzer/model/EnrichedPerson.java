@@ -35,7 +35,8 @@ public class EnrichedPerson {
 
     private final String id;
     private final SexType sex;
-    private final Optional<String> surname;
+    private final Optional<GivenName> givenName;
+    private final Optional<Surname> surname;
     private final String displayName;
     private final Optional<String> aka;
     private final Optional<Date> dateOfBirth;
@@ -45,9 +46,6 @@ public class EnrichedPerson {
     private final Optional<Age> age;
 
     // Search values
-    private final Optional<GivenName> givenNameForSearch;
-    private final Optional<String> surnameForSearch;
-    private final Optional<String> surnameMainWordForSearch;
     private final Optional<String> placeOfBirthForSearch;
     private final Optional<String> countryOfBirthForSearch;
 
@@ -69,7 +67,8 @@ public class EnrichedPerson {
 
         id = person.getId();
         sex = PersonUtils.getSex(person);
-        surname = PersonUtils.getSurname(person);
+        givenName = PersonUtils.getNormalizedGivenName(person, sex, properties.getNormalizedGivenNamesMap());
+        surname = PersonUtils.getNormalizedSurnameMainWord(person, properties.getNormalizedSurnamesMap());
         displayName = PersonUtils.getDisplayName(person);
         aka = PersonUtils.getAka(person)
                 .filter(akaName -> !akaName.equals(displayName));
@@ -80,9 +79,6 @@ public class EnrichedPerson {
         age = Age.of(dateOfBirth, dateOfDeath
                 .or(() -> isAlive ? Optional.of(Date.now(properties.getZoneId())) : Optional.empty()));
 
-        givenNameForSearch = PersonUtils.getNormalizedGivenNameForSearch(person, properties.getNormalizedNamesMap());
-        surnameForSearch = PersonUtils.getSurnameForSearch(person);
-        surnameMainWordForSearch = PersonUtils.getSurnameMainWordForSearch(person, properties.getNormalizedSurnamesMap());
         placeOfBirthForSearch = placeOfBirth
                 .map(PlaceUtils::removeLastParenthesis);
         countryOfBirthForSearch = placeOfBirthForSearch
@@ -162,64 +158,38 @@ public class EnrichedPerson {
         return this.sex != SexType.U && this.sex == other.sex;
     }
 
-    public boolean matchesGivenName(EnrichedPerson other) {
-        return this.givenNameForSearch.isPresent()
-                && other.givenNameForSearch.isPresent()
-                && this.givenNameForSearch.get().matches(other.givenNameForSearch.get());
+    public boolean matchesGivenNameAndSurname(EnrichedPerson other) {
+        return matchesGivenNameAndSurname(GivenNameAndSurname.of(other.givenName, other.surname));
     }
 
-    public boolean matchesSurname(EnrichedPerson other) {
-        return this.surnameMainWordForSearch.isPresent()
-                && other.surnameMainWordForSearch.isPresent()
-                && this.surnameMainWordForSearch.get().equals(other.surnameMainWordForSearch.get());
+    public boolean matchesGivenNameAndSurname(GivenNameAndSurname givenNameAndSurname) {
+        return GivenNameAndSurname.of(this.givenName, this.surname).matches(givenNameAndSurname);
     }
 
     public boolean matchesParents(EnrichedPerson other) {
-        return matchesPersons(this.getParents(), other.getParents(), true);
+        return matchesPersonsBySexAndName(this.getParents(), other.getParents(), true);
     }
 
     public boolean matchesSpouses(EnrichedPerson other) {
-        return matchesPersons(this.getSpouses(), other.getSpouses(), false);
+        return matchesPersonsBySexAndName(this.getSpouses(), other.getSpouses(), false);
     }
 
-    private static boolean matchesPersons(List<EnrichedPerson> persons1, List<EnrichedPerson> persons2, boolean isAllMatch) {
-        if (isAllMatch && persons1.size() > persons2.size()) {
+    private static boolean matchesPersonsBySexAndName(List<EnrichedPerson> persons1, List<EnrichedPerson> persons2, boolean isAllMatch) {
+        if (persons1.isEmpty() || persons2.isEmpty() || isAllMatch && persons1.size() > persons2.size()) {
             return false;
         }
 
-        List<Pair<GivenName, String>> givenAndSurnamePairs2 = persons2
+        Predicate<EnrichedPerson> matcher = person1 -> persons2
                 .stream()
-                .map(person -> Pair.of(person.givenNameForSearch, person.surnameMainWordForSearch))
-                .filter(pair -> pair.getLeft().isPresent() && pair.getRight().isPresent())
-                .map(pair -> Pair.of(pair.getLeft().get(), pair.getRight().get()))
-                .toList();
-
-        if (isAllMatch && persons1.size() > givenAndSurnamePairs2.size()) {
-            return false;
-        }
-
-        List<Pair<GivenName, String>> givenAndSurnamePairs1 = persons1
-                .stream()
-                .map(person -> Pair.of(person.givenNameForSearch, person.surnameMainWordForSearch))
-                .filter(pair -> pair.getLeft().isPresent() && pair.getRight().isPresent())
-                .map(pair -> Pair.of(pair.getLeft().get(), pair.getRight().get()))
-                .toList();
-
-        if (givenAndSurnamePairs1.isEmpty() || isAllMatch && persons1.size() > givenAndSurnamePairs1.size()) {
-            return false;
-        }
-
-        Predicate<Pair<GivenName, String>> matcher = pair -> givenAndSurnamePairs2
-                .stream()
-                .anyMatch(otherPair
-                        -> pair.getRight().equals(otherPair.getRight())
-                        && pair.getLeft().matches(otherPair.getLeft()));
+                .anyMatch(person2
+                        -> person1.equalsSex(person2)
+                        && person1.matchesGivenNameAndSurname(person2));
 
         return isAllMatch
-                ? givenAndSurnamePairs1
+                ? persons1
                         .stream()
                         .allMatch(matcher)
-                : givenAndSurnamePairs1
+                : persons1
                         .stream()
                         .anyMatch(matcher);
     }

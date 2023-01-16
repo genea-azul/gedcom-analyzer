@@ -4,6 +4,7 @@ import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.NameAndSex;
+import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
 import org.apache.commons.lang3.ObjectUtils;
@@ -125,23 +126,18 @@ public class PersonUtils {
                 .map(StringUtils::trimToNull);
     }
 
-    public static Optional<String> getGivenNameForSearch(Person person) {
-        return getGivenName(person)
-                .map(SearchUtils::simplifyName);
-    }
-
-    public static Optional<GivenName> getNormalizedGivenNameForSearch(Person person, Map<NameAndSex, String> normalizedNamesMap) {
-        return getGivenNameForSearch(person)
-                .map(name -> SearchUtils.normalizeName(name, PersonUtils.getSex(person), normalizedNamesMap))
-                .map(GivenName::of);
-    }
-
-    public static Optional<GivenName> getNormalizedGivenNameForSearch(
-            @Nullable String givenName, SexType sex, Map<NameAndSex, String> normalizedNamesMap) {
+    public static Optional<GivenName> getNormalizedGivenName(
+            @Nullable String givenName, SexType sex, Map<NameAndSex, String> normalizedGivenNamesMap) {
         return Optional.ofNullable(givenName)
                 .map(SearchUtils::simplifyName)
-                .map(name -> SearchUtils.normalizeName(name, sex, normalizedNamesMap))
-                .map(GivenName::of);
+                .map(simplifiedGivenName -> SearchUtils.normalizeGivenName(simplifiedGivenName, sex, normalizedGivenNamesMap))
+                .map(normalized -> GivenName.of(givenName, normalized));
+    }
+
+    public static Optional<GivenName> getNormalizedGivenName(
+            Person person, SexType sex, Map<NameAndSex, String> normalizedGivenNamesMap) {
+        Optional<String> givenName = getGivenName(person);
+        return getNormalizedGivenName(givenName.orElse(null), sex, normalizedGivenNamesMap);
     }
 
     /**
@@ -155,20 +151,21 @@ public class PersonUtils {
                 .map(StringUtils::trimToNull);
     }
 
-    public static Optional<String> getSurnameForSearch(Person person) {
-        return getSurname(person)
-                .map(SearchUtils::simplifyName);
-    }
-
-    public static Optional<String> getSurnameMainWordForSearch(Person person, Map<String, String> normalizedSurnamesMap) {
-        return getSurnameForSearch(person)
-                .map(surname -> SearchUtils.normalizeSurname(surname, normalizedSurnamesMap));
-    }
-
-    public static Optional<String> getSurnameMainWordForSearch(String surname, Map<String, String> normalizedSurnamesMap) {
+    public static Optional<Surname> getNormalizedSurnameMainWord(
+            @Nullable String surname, Map<String, String> normalizedSurnamesMap) {
         return Optional.ofNullable(surname)
                 .map(SearchUtils::simplifyName)
-                .map(s -> SearchUtils.normalizeSurname(s, normalizedSurnamesMap));
+                .map(SearchUtils::simplifySurnameToMainWord)
+                .map(simplifiedMainWord -> {
+                    String normalizedMainWord = SearchUtils.normalizeSurnameMainWord(simplifiedMainWord, normalizedSurnamesMap);
+                    return Surname.of(surname, simplifiedMainWord, normalizedMainWord);
+                });
+    }
+
+    public static Optional<Surname> getNormalizedSurnameMainWord(
+            Person person, Map<String, String> normalizedSurnamesMap) {
+        Optional<String> surname = getSurname(person);
+        return getNormalizedSurnameMainWord(surname.orElse(null), normalizedSurnamesMap);
     }
 
     /**
@@ -341,6 +338,7 @@ public class PersonUtils {
             boolean condition) {
         return condition
                 ? person.getSurname()
+                .map(Surname::value)
                 .map(surname -> PRIVATE_NAME + " " + surname)
                 .orElse(PRIVATE_NAME)
                 : person.getDisplayName();

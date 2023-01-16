@@ -3,6 +3,7 @@ package com.geneaazul.gedcomanalyzer.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
+import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
 import org.folg.gedcom.model.EventFact;
 import org.folg.gedcom.model.Name;
@@ -22,90 +23,93 @@ public class SearchUtilsTests {
     private GedcomAnalyzerProperties properties;
 
     @Test
-    public void testGetNormalizedGivenNameForSearch() {
+    public void testGetNormalizedGivenName() {
         Name name = new Name();
-        name.setGiven(" ? d'  (YíçbjéjizAEU) - Domenico ");
         name.setSurname("Smith");
-
-        EventFact sexEventFact = new EventFact();
-        sexEventFact.setTag("SEX");
-        sexEventFact.setValue("M");
-
         Person person = new Person();
         person.addName(name);
-        person.addEventFact(sexEventFact);
 
-        assertThat(PersonUtils.getNormalizedGivenNameForSearch(person, properties.getNormalizedNamesMap()))
+        name.setGiven(" ? d'  (YíçbjéjizAEU) - Domenico ");
+        assertThat(PersonUtils.getNormalizedGivenName(person, SexType.M, properties.getNormalizedGivenNamesMap()))
                 .get()
                 .satisfies(givenName -> {
-                    assertThat(givenName.getName()).isEqualTo("d yicbjejizaeu domingo");
-                    assertThat(givenName.getWordsCount()).isEqualTo(3);
-                    assertThat(givenName.getSearchPattern().toString()).isEqualTo("^(?=.*\\bd\\b)(?=.*\\byicbjejizaeu\\b)(?=.*\\bdomingo\\b).*$");
+                    assertThat(givenName.value()).isEqualTo("? d'  (YíçbjéjizAEU) - Domenico");
+                    assertThat(givenName.normalized()).isEqualTo("d yicbjejizaeu domingo");
+                    assertThat(givenName.wordsCount()).isEqualTo(3);
+                    assertThat(givenName.searchPattern().toString()).isEqualTo("^(?=.*\\bd\\b)(?=.*\\byicbjejizaeu\\b)(?=.*\\bdomingo\\b).*$");
+                });
+
+        name.setGiven("Валянціна");
+        assertThat(PersonUtils.getNormalizedGivenName(person, SexType.F, properties.getNormalizedGivenNamesMap()))
+                .get()
+                .satisfies(givenName -> {
+                    assertThat(givenName.value()).isEqualTo("Валянціна");
+                    assertThat(givenName.normalized()).isEqualTo("valentina");
+                    assertThat(givenName.wordsCount()).isEqualTo(1);
+                    assertThat(givenName.searchPattern().toString()).isEqualTo("\\bvalentina\\b");
                 });
     }
 
     @Test
-    public void testGetSurnameForSearch() {
-        Name name = new Name();
-        name.setGiven("Domenico");
-        name.setSurname(" ? d'  (YíçbjéjizAEU) - Smith ");
-
-        Person person = new Person();
-        person.addName(name);
-
-        assertThat(PersonUtils.getSurnameForSearch(person))
-                .contains("d yicbjejizaeu smith");
-    }
-
-    @Test
-    public void testGetSurnameMainWordForSearch() {
-        Name name = new Name();
-        name.setGiven("Domenico");
-        name.setSurname("Dí YannijébeZçlli Rago");
-
-        Person person = new Person();
-        person.addName(name);
-
-        assertThat(PersonUtils.getSurnameMainWordForSearch(person, properties.getNormalizedSurnamesMap()))
-                .contains("dianigevescl_");
-    }
-
-    @Test
-    public void testGetSurnameMainWordForSearchUsingProperties() {
+    public void testGetNormalizedSurnameMainWord() {
         Name name = new Name();
         name.setGiven("?");
         Person person = new Person();
         person.addName(name);
 
+        name.setSurname("Dí YannijébeZçlli Rago");
+        assertThat(PersonUtils.getNormalizedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("Dí YannijébeZçlli Rago");
+                    assertThat(surname.simplifiedMainWord()).isEqualTo("dianigevescli");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("dianigevescl_");
+                });
+
         name.setSurname("La Camera");
-        assertThat(PersonUtils.getSurnameForSearch(person))
-                .contains("la camera");
-        assertThat(PersonUtils.getSurnameMainWordForSearch(person, properties.getNormalizedSurnamesMap()))
-                .contains("lacamar_");
+        assertThat(PersonUtils.getNormalizedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("La Camera");
+                    assertThat(surname.simplifiedMainWord()).isEqualTo("lacamera");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("lacamar_");
+                });
 
         name.setSurname("Mac Cabe");
-        assertThat(PersonUtils.getSurnameForSearch(person))
-                .contains("mac cabe");
-        assertThat(PersonUtils.getSurnameMainWordForSearch(person, properties.getNormalizedSurnamesMap()))
-                .contains("mcav_");
+        assertThat(PersonUtils.getNormalizedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("Mac Cabe");
+                    assertThat(surname.simplifiedMainWord()).isEqualTo("macave");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("mcav_");
+                });
 
         name.setSurname("Sainte-Cluque");
-        assertThat(PersonUtils.getSurnameForSearch(person))
-                .contains("sainte cluque");
-        assertThat(PersonUtils.getSurnameMainWordForSearch(person, properties.getNormalizedSurnamesMap()))
-                .contains("saintecluq_");
+        assertThat(PersonUtils.getNormalizedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("Sainte-Cluque");
+                    assertThat(surname.simplifiedMainWord()).isEqualTo("saintecluque");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("saintecluq_");
+                });
 
         name.setSurname("Bebedé");
-        assertThat(PersonUtils.getSurnameForSearch(person))
-                .contains("bebede");
-        assertThat(PersonUtils.getSurnameMainWordForSearch(person, properties.getNormalizedSurnamesMap()))
-                .contains("vegveder");
+        assertThat(PersonUtils.getNormalizedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("Bebedé");
+                    assertThat(surname.simplifiedMainWord()).isEqualTo("vevede");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("vegveder");
+                });
 
         name.setSurname("De Paula");
-        assertThat(PersonUtils.getSurnameForSearch(person))
-                .contains("de paula");
-        assertThat(PersonUtils.getSurnameMainWordForSearch(person, properties.getNormalizedSurnamesMap()))
-                .contains("depaol_");
+        assertThat(PersonUtils.getNormalizedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("De Paula");
+                    assertThat(surname.simplifiedMainWord()).isEqualTo("depaula");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("depaol_");
+                });
     }
 
 }

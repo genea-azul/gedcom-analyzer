@@ -7,6 +7,7 @@ import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResults;
 import com.geneaazul.gedcomanalyzer.model.Reference;
+import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.model.dto.GedcomAnalysisDto;
 import com.geneaazul.gedcomanalyzer.model.dto.GedcomMetadataDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
@@ -301,6 +302,7 @@ public class GedcomAnalyzerService {
                             visitedPersons,
                             0,
                             p -> p.getSurname()
+                                    .map(Surname::value)
                                     .orElse("Undefined"));
                     Map<String, Integer> cardinality = CollectionUtils.getCardinalityMap(surnames);
                     return Map.entry(
@@ -450,6 +452,7 @@ public class GedcomAnalyzerService {
     public EnrichedGedcom extractSubGedcom(EnrichedPerson person) {
         Gedcom subGedcom = person.getGedcom().getGedcom();
         String subGedcomName = person.getSurname()
+                .map(Surname::value)
                 .map(surname -> surname + "-tree")
                 .orElse("sub-gedcom");
         return EnrichedGedcom.of(subGedcom, subGedcomName, person.getProperties());

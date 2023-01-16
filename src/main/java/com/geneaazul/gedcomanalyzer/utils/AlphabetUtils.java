@@ -18,6 +18,12 @@ public class AlphabetUtils {
     private static final Transliterator GREEK_TO_LATIN_TRANS = Transliterator.getInstance(GREEK_TO_LATIN_ID);
     private static final Transliterator RUSSIAN_TO_LATIN_TRANS = Transliterator.getInstance(RUSSIAN_TO_LATIN_ID);
 
+    /*
+     * і (U+0456) -> i
+     */
+    private static final String[] SPECIAL_CHARS_SEARCH = new String[]{ "і" };
+    private static final String[] SPECIAL_CHARS_REPLACEMENT = new String[]{ "i" };
+
     /**
      * TODO - this is a not thread-safe implementation
      */
@@ -31,7 +37,8 @@ public class AlphabetUtils {
         }
         str = ARABIC_TO_LATIN_TRANS.transform(str);
         str = GREEK_TO_LATIN_TRANS.transform(str);
-        return RUSSIAN_TO_LATIN_TRANS.transform(str);
+        str = RUSSIAN_TO_LATIN_TRANS.transform(str);
+        return StringUtils.replaceEach(str, SPECIAL_CHARS_SEARCH, SPECIAL_CHARS_REPLACEMENT);
     }
 
 }
