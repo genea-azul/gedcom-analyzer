@@ -6,25 +6,16 @@ import java.util.Arrays;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import lombok.Getter;
-import lombok.ToString;
+public record GivenName(
+        String value,
+        String normalized,
+        int wordsCount,
+        Pattern searchPattern) {
 
-@Getter
-@ToString(onlyExplicitlyIncluded = true)
-public class GivenName {
+    public static GivenName of(String value, String normalized) {
 
-    @ToString.Include
-    private final String name;
-
-    @ToString.Include
-    private final int wordsCount;
-
-    private final Pattern searchPattern;
-
-    public GivenName(String name) {
-        this.name = name;
-
-        String[] words = StringUtils.splitByWholeSeparator(name, " ");
+        // Use normalized value to generate the matching regex
+        String[] words = StringUtils.splitByWholeSeparator(normalized, " ");
         String regex;
 
         if (words.length == 1) {
@@ -35,12 +26,7 @@ public class GivenName {
                     .collect(Collectors.joining("", "^", ".*$"));
         }
 
-        this.wordsCount = words.length;
-        this.searchPattern = Pattern.compile(regex);
-    }
-
-    public static GivenName of(String name) {
-        return new GivenName(name);
+        return new GivenName(value, normalized, words.length, Pattern.compile(regex));
     }
 
     public boolean matches(GivenName other) {
@@ -49,13 +35,13 @@ public class GivenName {
         }
 
         if (this.wordsCount == 1 && other.wordsCount == 1) {
-            return this.name.equals(other.name);
+            return this.normalized.equals(other.normalized);
         }
 
         if (this.wordsCount <= other.wordsCount) {
-            return this.searchPattern.matcher(other.name).find();
+            return this.searchPattern.matcher(other.normalized).find();
         } else {
-            return other.searchPattern.matcher(this.name).find();
+            return other.searchPattern.matcher(this.normalized).find();
         }
     }
 
