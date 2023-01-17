@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
-import org.folg.gedcom.model.EventFact;
 import org.folg.gedcom.model.Name;
 import org.folg.gedcom.model.Person;
 import org.junit.jupiter.api.Test;
@@ -37,6 +36,26 @@ public class SearchUtilsTests {
                     assertThat(givenName.normalized()).isEqualTo("d yicbjejizaeu domingo");
                     assertThat(givenName.wordsCount()).isEqualTo(3);
                     assertThat(givenName.searchPattern().toString()).isEqualTo("^(?=.*\\bd\\b)(?=.*\\byicbjejizaeu\\b)(?=.*\\bdomingo\\b).*$");
+                });
+
+        name.setGiven("Francescantonio");
+        assertThat(PersonUtils.getNormalizedGivenName(person, SexType.M, properties.getNormalizedGivenNamesMap()))
+                .get()
+                .satisfies(givenName -> {
+                    assertThat(givenName.value()).isEqualTo("Francescantonio");
+                    assertThat(givenName.normalized()).isEqualTo("francisco antonio");
+                    assertThat(givenName.wordsCount()).isEqualTo(2);
+                    assertThat(givenName.searchPattern().toString()).isEqualTo("^(?=.*\\bfrancisco\\b)(?=.*\\bantonio\\b).*$");
+                });
+
+        name.setGiven("Elizabeth");
+        assertThat(PersonUtils.getNormalizedGivenName(person, SexType.F, properties.getNormalizedGivenNamesMap()))
+                .get()
+                .satisfies(givenName -> {
+                    assertThat(givenName.value()).isEqualTo("Elizabeth");
+                    assertThat(givenName.normalized()).isEqualTo("elisa isabel");
+                    assertThat(givenName.wordsCount()).isEqualTo(2);
+                    assertThat(givenName.searchPattern().toString()).isEqualTo("^(?=.*\\belisa\\b)(?=.*\\bisabel\\b).*$");
                 });
 
         name.setGiven("Валянціна");

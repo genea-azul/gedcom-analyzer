@@ -7,8 +7,10 @@ import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -21,6 +23,8 @@ public class SearchUtils {
     private static final String[] NAME_SEARCH_SPECIAL_CHARS = new String[]{ "?", "(", ")", "'", "-" };
     private static final String[] NAME_REPLACEMENT_SPECIAL_CHARS = new String[]{ "", "", "", "", " " };
     private static final Pattern NAME_MULTIPLE_SPACES_PATTERN = Pattern.compile("  +");
+
+    private static final Pattern NORMALIZED_NAME_SEPARATOR_PATTERN = Pattern.compile("-");
 
     private static final Pattern SURNAME_COMMON_SUFFIX_PATTERN = Pattern.compile("^([a-z]|de|del|di|la|lo|mc|mac|ahets|saint|sainte) +(.*)$");
     private static final Pattern SURNAME_DOUBLE_LETTERS_PATTERN = Pattern.compile("([a-z])\\1+");
@@ -85,6 +89,41 @@ public class SearchUtils {
                 .map(normalizedSurnamesMap::get)
                 .orElse(surname);
         return surname;
+    }
+
+    public static Map<NameAndSex, String> invertGivenNamesMap(
+            Map<String, List<String>> normalizedMascGivenNames,
+            Map<String, List<String>> normalizedFemGivenNames) {
+
+        Map<NameAndSex, String> m = invertNamesMap(normalizedMascGivenNames, givenName -> new NameAndSex(givenName, SexType.M));
+        Map<NameAndSex, String> f = invertNamesMap(normalizedFemGivenNames, givenName -> new NameAndSex(givenName, SexType.F));
+        m.putAll(f);
+
+        return Map.copyOf(m);
+    }
+
+    public static Map<String, String> invertSurnamesMap(
+            Map<String, List<String>> normalizedSurnames) {
+
+        Map<String, String> inverted = invertNamesMap(normalizedSurnames, Function.identity());
+
+        return Map.copyOf(inverted);
+    }
+
+    private static <T> Map<T, String> invertNamesMap(
+            Map<String, List<String>> names,
+            Function<String, T> mapper) {
+
+        return names
+                .entrySet()
+                .stream()
+                .map(entry -> Map.entry(RegExUtils.replaceAll(entry.getKey(), NORMALIZED_NAME_SEPARATOR_PATTERN, " "), entry.getValue()))
+                .flatMap(entry -> entry
+                        .getValue()
+                        .stream()
+                        .map(mapper)
+                        .map(value -> Map.entry(value, entry.getKey())))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
 }

@@ -1,7 +1,7 @@
 package com.geneaazul.gedcomanalyzer.config;
 
 import com.geneaazul.gedcomanalyzer.model.NameAndSex;
-import com.geneaazul.gedcomanalyzer.model.dto.SexType;
+import com.geneaazul.gedcomanalyzer.utils.SearchUtils;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -12,7 +12,6 @@ import java.time.Period;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
@@ -86,37 +85,8 @@ public class GedcomAnalyzerProperties {
         this.childMinDateOfBirth = now.minusYears(childMaxAge);
         this.childMinDateOfDeath = now.minusYears(childMaxAge);
 
-        Map<NameAndSex, String> m = invertGivenNamesMap(nameNormalizedM, SexType.M);
-        Map<NameAndSex, String> f = invertGivenNamesMap(nameNormalizedF, SexType.F);
-        m.putAll(f);
-
-        Map<String, String> s = invertSurnamesMap(surnameNormalized);
-
-        this.normalizedGivenNamesMap = Map.copyOf(m);
-        this.normalizedSurnamesMap = Map.copyOf(s);
-    }
-
-    private Map<NameAndSex, String> invertGivenNamesMap(Map<String, List<String>> normalizedGivenNames, SexType sex) {
-        return normalizedGivenNames
-                .entrySet()
-                .stream()
-                .flatMap(entry -> entry
-                        .getValue()
-                        .stream()
-                        .map(givenName -> new NameAndSex(givenName, sex))
-                        .map(nameAndSex -> Map.entry(nameAndSex, entry.getKey())))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
-
-    private Map<String, String> invertSurnamesMap(Map<String, List<String>> normalizedSurnames) {
-        return normalizedSurnames
-                .entrySet()
-                .stream()
-                .flatMap(entry -> entry
-                        .getValue()
-                        .stream()
-                        .map(surname -> Map.entry(surname, entry.getKey())))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        this.normalizedGivenNamesMap = SearchUtils.invertGivenNamesMap(nameNormalizedM, nameNormalizedF);
+        this.normalizedSurnamesMap = SearchUtils.invertSurnamesMap(surnameNormalized);
     }
 
 }
