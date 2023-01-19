@@ -3,6 +3,7 @@ package com.geneaazul.gedcomanalyzer.service;
 import com.geneaazul.gedcomanalyzer.model.AncestryGenerations;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -36,6 +37,7 @@ public class PersonService {
             Set<String> visitedPersons,
             int level) {
 
+        // Corner case: parents are cousins -> skip visiting a person twice
         if (visitedPersons.contains(person.getId())) {
             return Set.of();
         }
@@ -67,22 +69,21 @@ public class PersonService {
     }
 
     public AncestryGenerations getAncestryGenerations(EnrichedPerson person) {
-
-        Set<String> visitedPersons = new HashSet<>();
-
-        int ascendingGenerations = getAncestryGenerations(person, visitedPersons, EnrichedPerson::getParents, 0);
-        int descendingGenerations = getAncestryGenerations(person, visitedPersons, EnrichedPerson::getChildren, 0);
-
+        int ascendingGenerations = getAncestryGenerations(person, new HashSet<>(), EnrichedPerson::getParents, 0, 0);
+        int descendingGenerations = getAncestryGenerations(person, new HashSet<>(), EnrichedPerson::getChildren, 0, 0);
         return AncestryGenerations.of(ascendingGenerations, descendingGenerations);
     }
 
-    private static Integer getAncestryGenerations(
+    private static int getAncestryGenerations(
             EnrichedPerson person,
             Set<String> visitedPersons,
             Function<EnrichedPerson, List<EnrichedPerson>> relativesResolver,
-            int level) {
+            int level,
+            int maxLevel) {
 
-        if (level > 0 && visitedPersons.contains(person.getId())) {
+        // Corner case: parents are cousins -> skip visiting
+        // Corner case: parent is cousin of spouse's parent -> visit higher distance
+        if (visitedPersons.contains(person.getId()) && level <= maxLevel) {
             return level;
         }
 
@@ -93,14 +94,24 @@ public class PersonService {
             return level;
         }
 
+        MutableInt maxLevelHolder = new MutableInt(maxLevel);
+
         return relativesResolver
                 .apply(person)
                 .stream()
-                .map(parent -> getAncestryGenerations(
-                        parent,
-                        visitedPersons,
-                        relativesResolver,
-                        level + 1))
+                .map(parent -> {
+                    int generations = getAncestryGenerations(
+                            parent,
+                            visitedPersons,
+                            relativesResolver,
+                            level + 1,
+                            maxLevelHolder.getValue());
+
+                    int newMaxLevel = Math.max(maxLevelHolder.getValue(), generations);
+                    maxLevelHolder.setValue(newMaxLevel);
+
+                    return generations;
+                })
                 .reduce(Integer::max)
                 .orElse(level);
     }
