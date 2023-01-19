@@ -5,6 +5,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.GedcomAnalysisDto;
 import com.geneaazul.gedcomanalyzer.model.dto.GedcomMetadataDto;
 import com.geneaazul.gedcomanalyzer.service.GedcomAnalyzerService;
 import com.geneaazul.gedcomanalyzer.service.GedcomParsingService;
+import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,6 +26,7 @@ public class GedcomAnalyzerController {
 
     private final GedcomParsingService gedcomParsingService;
     private final GedcomAnalyzerService gedcomAnalyzerService;
+    private final GedcomHolder gedcomHolder;
 
     @GetMapping
     public void analyzeGedcom() {
@@ -32,7 +34,13 @@ public class GedcomAnalyzerController {
     }
 
     @GetMapping("/metadata")
-    public GedcomMetadataDto getGedcomAnalyzerVersion() {
+    public GedcomMetadataDto getGedcomMetadata() {
+        return gedcomAnalyzerService.getGedcomMetadata();
+    }
+
+    @GetMapping("/reload")
+    public GedcomMetadataDto reloadAndGetGedcomMetadata() {
+        gedcomHolder.reloadFromStorage();
         return gedcomAnalyzerService.getGedcomMetadata();
     }
 
