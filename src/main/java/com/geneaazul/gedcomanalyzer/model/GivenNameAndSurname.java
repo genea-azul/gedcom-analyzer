@@ -14,6 +14,10 @@ public record GivenNameAndSurname(@Nullable GivenName givenName, @Nullable Surna
         return givenName == null || surname == null;
     }
 
+    public boolean areAllValuesNotEmpty() {
+        return givenName != null && surname != null;
+    }
+
     public static GivenNameAndSurname of(
             @Nullable String givenName,
             @Nullable String surname,
