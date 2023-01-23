@@ -3,7 +3,7 @@ instance_class: B4
 basic_scaling:
   idle_timeout: 3600s
   max_instances: 1
-entrypoint: java -jar -Dspring.profiles.active=prod gedcom-analyzer-0.7.6-SNAPSHOT.jar
+entrypoint: java -jar -Dspring.profiles.active=prod gedcom-analyzer-0.7.7-SNAPSHOT.jar
 env_variables:
   CLOUD_SQL_INSTANCE: ""
   CLOUD_SQL_USER: ""

@@ -57,7 +57,7 @@ public class GedcomAnalyzerServiceTests {
 
         System.out.println("\nfindPersonsBySurnameAndSpouseSurname:");
         searchService
-                .findPersonsBySurnameAndSpouseSurname("Re", null, true, gedcom.getPeople())
+                .findPersonsBySurnameAndSpouseSurname("Diéguez", "Pérez", false, gedcom.getPeople())
                 .forEach(System.out::println);
 
         System.out.println("\nfindAlivePersonsTooOldOrWithFamilyMembersTooOld:");

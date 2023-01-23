@@ -25,7 +25,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import jakarta.annotation.Nullable;
@@ -263,15 +265,17 @@ public class SearchService {
         return findPersonsByNameAndAnyRelative(
                 givenNameAndSurnameSupplier,
                 personsSupplier,
-                List::of,
-                ep -> List.of());
+                Optional::empty,
+                ep -> List.of(),
+                false);
     }
 
     private List<EnrichedPerson> findPersonsByNameAndAnyRelative(
             Supplier<GivenNameAndSurname> personGivenNameAndSurnameToCompareSupplier,
             Function<Surname, List<EnrichedPerson>> personsSupplier,
-            Supplier<List<GivenNameAndSurname>> relativesGivenNameAndSurnamesToCompareSupplier,
-            Function<EnrichedPerson, List<EnrichedPerson>> relativesSupplier) {
+            Supplier<Optional<List<GivenNameAndSurname>>> relativesGivenNameAndSurnamesToCompareSupplier,
+            Function<EnrichedPerson, List<EnrichedPerson>> relativesSupplier,
+            boolean isAllRelativesGivenNameAndSurnamesToCompareMatch) {
 
         GivenNameAndSurname personGivenNameAndSurnameToCompare = personGivenNameAndSurnameToCompareSupplier.get();
         if (personGivenNameAndSurnameToCompare.isAnyValueEmpty()) {
@@ -283,24 +287,41 @@ public class SearchService {
             return persons;
         }
 
-        List<GivenNameAndSurname> relativesGivenNameAndSurnamesToCompare = relativesGivenNameAndSurnamesToCompareSupplier.get();
-        if (!relativesGivenNameAndSurnamesToCompare.isEmpty()
-                && relativesGivenNameAndSurnamesToCompare
-                        .stream()
-                        .allMatch(GivenNameAndSurname::isAnyValueEmpty)) {
+        Optional<List<GivenNameAndSurname>> relativesGivenNameAndSurnamesToCompare = relativesGivenNameAndSurnamesToCompareSupplier.get();
+
+        if (relativesGivenNameAndSurnamesToCompare.isEmpty()) {
+            return persons
+                    .stream()
+                    .filter(person -> person.matchesGivenNameAndSurname(personGivenNameAndSurnameToCompare))
+                    .toList();
+        }
+
+        List<GivenNameAndSurname> validRelativesGivenNameAndSurnamesToCompare = relativesGivenNameAndSurnamesToCompare
+                .get()
+                .stream()
+                .filter(GivenNameAndSurname::areAllValuesNotEmpty)
+                .toList();
+
+        if (validRelativesGivenNameAndSurnamesToCompare.isEmpty()) {
             return List.of();
         }
+
+        BiPredicate<GivenNameAndSurname, List<EnrichedPerson>> givenNameAndSurnameMatcher = (givenNameAndSurnameSearch, personsToMatch) -> personsToMatch
+                .stream()
+                .anyMatch(personToMatch -> personToMatch.matchesGivenNameAndSurname(givenNameAndSurnameSearch));
+
+        Predicate<List<EnrichedPerson>> relativesMatcher = isAllRelativesGivenNameAndSurnamesToCompareMatch
+                ? relativesToMatch -> validRelativesGivenNameAndSurnamesToCompare
+                        .stream()
+                        .allMatch(givenNameAndSurnameSearch -> givenNameAndSurnameMatcher.test(givenNameAndSurnameSearch, relativesToMatch))
+                : relativesToMatch -> validRelativesGivenNameAndSurnamesToCompare
+                        .stream()
+                        .anyMatch(givenNameAndSurnameSearch -> givenNameAndSurnameMatcher.test(givenNameAndSurnameSearch, relativesToMatch));
 
         return persons
                 .stream()
                 .filter(person -> person.matchesGivenNameAndSurname(personGivenNameAndSurnameToCompare))
-                .filter(person -> relativesGivenNameAndSurnamesToCompare.isEmpty()
-                        || relativesSupplier
-                                .apply(person)
-                                .stream()
-                                .anyMatch(relative -> relativesGivenNameAndSurnamesToCompare
-                                        .stream()
-                                        .anyMatch(relative::matchesGivenNameAndSurname)))
+                .filter(person -> relativesMatcher.test(relativesSupplier.apply(person)))
                 .toList();
     }
 
@@ -358,10 +379,11 @@ public class SearchService {
         return findPersonsByNameAndAnyRelative(
                 () -> GivenNameAndSurname.of(personGivenName, personSurname, personSex, properties),
                 surname-> gedcom.getPersonsBySurnameMainWordAndSex(surname, personSex),
-                () -> List.of(
+                () -> Optional.of(List.of(
                         GivenNameAndSurname.of(parent1GivenName, parent1Surname, parent1Sex, properties),
-                        GivenNameAndSurname.of(parent2GivenName, parent2Surname, parent2Sex, properties)),
-                EnrichedPerson::getParents);
+                        GivenNameAndSurname.of(parent2GivenName, parent2Surname, parent2Sex, properties))),
+                EnrichedPerson::getParents,
+                true);
     }
 
     public List<EnrichedPerson> findPersonsByNameAndSpouseName(
@@ -375,9 +397,10 @@ public class SearchService {
         return findPersonsByNameAndAnyRelative(
                 () -> GivenNameAndSurname.of(personGivenName, personSurname, personSex, properties),
                 surname -> gedcom.getPersonsBySurnameMainWordAndSex(surname, personSex),
-                () -> List.of(
-                        GivenNameAndSurname.of(spouseGivenName, spouseSurname, spouseSex, properties)),
-                EnrichedPerson::getSpouses);
+                () -> Optional.of(List.of(
+                        GivenNameAndSurname.of(spouseGivenName, spouseSurname, spouseSex, properties))),
+                EnrichedPerson::getSpouses,
+                false);
     }
 
     public List<EnrichedPerson> findPersonsBySurname(

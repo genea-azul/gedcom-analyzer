@@ -129,6 +129,24 @@ public class SearchUtilsTests {
                     assertThat(surname.simplifiedMainWord()).isEqualTo("depaula");
                     assertThat(surname.normalizedMainWord()).isEqualTo("depaol_");
                 });
+
+        name.setSurname("Ippolito");
+        assertThat(PersonUtils.getNormalizedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("Ippolito");
+                    assertThat(surname.simplifiedMainWord()).isEqualTo("ipolito");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("hipolit_");
+                });
+
+        name.setSurname("Viciconte");
+        assertThat(PersonUtils.getNormalizedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("Viciconte");
+                    assertThat(surname.simplifiedMainWord()).isEqualTo("viciconte");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("vicecont_");
+                });
     }
 
 }
