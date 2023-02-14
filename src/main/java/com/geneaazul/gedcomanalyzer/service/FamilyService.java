@@ -1,5 +1,6 @@
 package com.geneaazul.gedcomanalyzer.service;
 
+import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.domain.SearchFamily;
 import com.geneaazul.gedcomanalyzer.mapper.ObfuscationType;
 import com.geneaazul.gedcomanalyzer.mapper.PersonMapper;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -45,10 +47,11 @@ public class FamilyService {
     private final SearchFamilyRepository searchFamilyRepository;
     private final SearchFamilyMapper searchFamilyMapper;
     private final PersonMapper personMapper;
+    private final GedcomAnalyzerProperties properties;
 
     @Transactional
-    public Optional<Long> persistSearch(SearchFamilyDto searchFamilyDto) {
-        return Optional.ofNullable(searchFamilyMapper.toSearchFamilyEntity(searchFamilyDto))
+    public Optional<Long> persistSearch(SearchFamilyDto searchFamilyDto, @Nullable String clientIpAddress) {
+        return Optional.ofNullable(searchFamilyMapper.toSearchFamilyEntity(searchFamilyDto, clientIpAddress))
                 .map(searchFamilyRepository::save)
                 .map(SearchFamily::getId);
     }
@@ -68,6 +71,19 @@ public class FamilyService {
                 .findAll(pageable)
                 .map(searchFamilyMapper::toSearchFamilyDetailsDto)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isAllowedSearch(@Nullable String clientIpAddress) {
+        if (clientIpAddress == null) {
+            return true;
+        }
+
+        OffsetDateTime createDateTo = OffsetDateTime.now();
+        OffsetDateTime createDateFrom = createDateTo.minusHours(properties.getMaxClientRequestsHoursThreshold());
+
+        int clientRequests = searchFamilyRepository.countByClientIpAddressAndCreateDateBetween(clientIpAddress, createDateFrom, createDateTo);
+        return clientRequests < properties.getMaxClientRequestsCountThreshold();
     }
 
     public SearchFamilyResultDto search(SearchFamilyDto searchFamilyDto) {

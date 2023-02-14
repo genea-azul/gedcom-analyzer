@@ -32,6 +32,9 @@ public class GedcomAnalyzerProperties {
     private String googleStorageBucketName;
     private String googleStorageGedcomBlobName;
 
+    private int maxClientRequestsCountThreshold = 12;
+    private int maxClientRequestsHoursThreshold = 1;
+
     private boolean deleteUploadedGedcom = false;
     private boolean storeFamilySearch = true;
 
