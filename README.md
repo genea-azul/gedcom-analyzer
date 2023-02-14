@@ -36,7 +36,7 @@ export CLOUD_SQL_PASS=""
 ./mvnw clean package -DskipTests
 
 # Run Java app
-java -jar -Dspring.profiles.active=prod target/gedcom-analyzer-0.7.7-SNAPSHOT.jar
+java -jar -Dspring.profiles.active=prod target/gedcom-analyzer-0.7.8-SNAPSHOT.jar
 ```
 
 ### Deploy appengine to Google Cloud
@@ -46,7 +46,7 @@ java -jar -Dspring.profiles.active=prod target/gedcom-analyzer-0.7.7-SNAPSHOT.ja
 export GOOGLE_APPLICATION_CREDENTIALS=~/develop/google-cloud-credentials.json
 
 # Deploy appengine to Google Cloud
-./mvnw clean package appengine:deploy -Dapp.deploy.projectId=symbolic-object-373203 -Dapp.deploy.version=v1 -DskipTests
+./mvnw clean package appengine:deploy -Dapp.deploy.projectId=<projectId> -Dapp.deploy.version=v1 -DskipTests
 
 # Read server logs
 gcloud app logs tail -s default
