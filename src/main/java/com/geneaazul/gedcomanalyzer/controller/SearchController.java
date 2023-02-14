@@ -5,6 +5,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDetailsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyResultDto;
 import com.geneaazul.gedcomanalyzer.service.FamilyService;
+import com.geneaazul.gedcomanalyzer.utils.InetAddressUtils;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -28,11 +30,19 @@ public class SearchController {
     private final GedcomAnalyzerProperties properties;
 
     @PostMapping("/family")
-    public SearchFamilyResultDto searchFamily(@Valid @RequestBody SearchFamilyDto searchFamilyDto) {
+    public SearchFamilyResultDto searchFamily(@Valid @RequestBody SearchFamilyDto searchFamilyDto, HttpServletRequest request) {
+        String clientIpAddress = InetAddressUtils.getRemoteAddress(request);
+
+        if (!familyService.isAllowedSearch(clientIpAddress)) {
+            return SearchFamilyResultDto.builder()
+                    .errors(List.of("TOO-MANY-REQUESTS"))
+                    .build();
+        }
+
         Optional<Long> searchId = Optional.empty();
 
         if (properties.isStoreFamilySearch()) {
-            searchId = familyService.persistSearch(searchFamilyDto);
+            searchId = familyService.persistSearch(searchFamilyDto, clientIpAddress);
         }
 
         SearchFamilyResultDto searchFamilyResult = familyService.search(searchFamilyDto);

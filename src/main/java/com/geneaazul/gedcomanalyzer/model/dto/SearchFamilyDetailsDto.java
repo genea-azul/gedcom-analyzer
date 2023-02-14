@@ -46,5 +46,7 @@ public class SearchFamilyDetailsDto {
     private String contact;
     @ToString.Include
     private OffsetDateTime createDate;
+    @ToString.Include
+    private String clientIpAddress;
 
 }

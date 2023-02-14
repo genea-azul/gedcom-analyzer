@@ -123,6 +123,8 @@ public class SearchFamily {
     private String contact;
     @ToString.Include
     private Boolean isMatch;
+    @ToString.Include
+    private String clientIpAddress;
 
     @PrePersist
     protected void onCreate() {

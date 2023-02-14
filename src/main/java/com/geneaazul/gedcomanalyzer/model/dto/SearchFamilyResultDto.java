@@ -19,9 +19,15 @@ import lombok.ToString;
 public class SearchFamilyResultDto {
 
     @ToString.Include
-    private List<PersonDto> people;
+    @Builder.Default
+    private List<PersonDto> people = List.of();
 
     @ToString.Include
-    private Integer potentialResults;
+    @Builder.Default
+    private Integer potentialResults = 0;
+
+    @ToString.Include
+    @Builder.Default
+    private List<String> errors = List.of();
 
 }

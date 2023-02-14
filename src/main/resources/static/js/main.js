@@ -185,7 +185,12 @@ $(document).ready(function() {
                 });
 
                 if (data.people.length == 0) {
-                    if (!data.potentialResults) {
+                    if (data.errors.length > 0) {
+                        resultComponent.html("<p>Se produjo un error en la b&uacute;squeda. \u2639</p>");
+                        data.errors.forEach((errorCode, index) => {
+                            resultComponent.append(displayErrorCodeInSpanish(errorCode));
+                        });
+                    } else if (!data.potentialResults) {
                         if (isMissingSurname(searchFamilyRequest)) {
                             resultComponent.html("<p>No se encontraron resultados. Por favor ingres&aacute; un apellido.</p>");
                         } else {
@@ -495,4 +500,11 @@ var displayDateInSpanish = function(date) {
     date = date.replaceAll("DEC", "dic de");
 
     return date;
+};
+
+var displayErrorCodeInSpanish = function(errorCode) {
+    if (errorCode == "TOO-MANY-REQUESTS") {
+        return "<p>Realizaste demasiadas consultas en la &uacute;ltima hora, por favor esper&aacute; unos minutos o contactanos en redes sociales: <b>@genea.azul</b></p>";
+    }
+    return errorCode;
 };

@@ -22,7 +22,7 @@ public class SearchFamilyMapper {
     private final SearchPersonMapper searchPersonMapper;
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public SearchFamily toSearchFamilyEntity(SearchFamilyDto searchFamilyDto) {
+    public SearchFamily toSearchFamilyEntity(SearchFamilyDto searchFamilyDto, String clientIpAddress) {
         if (isEmpty(searchFamilyDto)) {
             return null;
         }
@@ -38,6 +38,7 @@ public class SearchFamilyMapper {
                 .maternalGrandfather(searchPersonMapper.toSearchPersonEntity(searchFamilyDto.getMaternalGrandfather()))
                 .maternalGrandmother(searchPersonMapper.toSearchPersonEntity(searchFamilyDto.getMaternalGrandmother()))
                 .contact(searchFamilyDto.getContact())
+                .clientIpAddress(clientIpAddress)
                 .build();
     }
 
@@ -58,6 +59,7 @@ public class SearchFamilyMapper {
                 .isMatch(searchFamily.getIsMatch())
                 .contact(searchFamily.getContact())
                 .createDate(searchFamily.getCreateDate())
+                .clientIpAddress(searchFamily.getClientIpAddress())
                 .build();
     }
 
