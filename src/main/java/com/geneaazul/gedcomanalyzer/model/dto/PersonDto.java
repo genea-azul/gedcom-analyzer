@@ -37,5 +37,7 @@ public class PersonDto {
     private List<String> ancestryCountries;
     @ToString.Include
     private AncestryGenerationsDto ancestryGenerations;
+    @ToString.Include
+    private Integer numberOfPeopleInTree;
 
 }

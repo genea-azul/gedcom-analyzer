@@ -32,17 +32,28 @@ public class PersonMapper {
     }
 
     public PersonDto toPersonDto(EnrichedPerson person) {
-        return toPersonDto(person, ObfuscationType.NONE, ep -> List.of(), ep -> AncestryGenerations.empty());
+        return toPersonDto(
+                person,
+                ObfuscationType.NONE,
+                ep -> List.of(),
+                ep -> AncestryGenerations.empty(),
+                ep -> null);
     }
 
     public List<PersonDto> toPersonDto(
             Collection<EnrichedPerson> persons,
             ObfuscationType obfuscationType,
             Function<EnrichedPerson, List<String>> ancestryCountriesResolver,
-            Function<EnrichedPerson, AncestryGenerations> ancestryGenerationsResolver) {
+            Function<EnrichedPerson, AncestryGenerations> ancestryGenerationsResolver,
+            Function<EnrichedPerson, Integer> numberOfPeopleInTreeResolver) {
         return persons
                 .stream()
-                .map(person -> toPersonDto(person, obfuscationType, ancestryCountriesResolver, ancestryGenerationsResolver))
+                .map(person -> toPersonDto(
+                        person,
+                        obfuscationType,
+                        ancestryCountriesResolver,
+                        ancestryGenerationsResolver,
+                        numberOfPeopleInTreeResolver))
                 .toList();
     }
 
@@ -50,7 +61,8 @@ public class PersonMapper {
             EnrichedPerson person,
             ObfuscationType obfuscationType,
             Function<EnrichedPerson, List<String>> ancestryCountriesResolver,
-            Function<EnrichedPerson, AncestryGenerations> ancestryGenerationsResolver) {
+            Function<EnrichedPerson, AncestryGenerations> ancestryGenerationsResolver,
+            Function<EnrichedPerson, Integer> numberOfPeopleInTreeResolver) {
 
         boolean obfuscateLiving = obfuscationType != ObfuscationType.NONE;
         boolean obfuscateName = obfuscateLiving && obfuscationType != ObfuscationType.SKIP_MAIN_PERSON_NAME;
@@ -62,6 +74,7 @@ public class PersonMapper {
 
         List<String> ancestryCountries = ancestryCountriesResolver.apply(person);
         AncestryGenerations ancestryGenerations = ancestryGenerationsResolver.apply(person);
+        Integer numberOfPeopleInTree = numberOfPeopleInTreeResolver.apply(person);
 
         AncestryGenerationsDto ancestryGenerationsDto = AncestryGenerationsDto.builder()
                 .ascending(ancestryGenerations.ascending())
@@ -92,6 +105,7 @@ public class PersonMapper {
                 .spouses(spouses)
                 .ancestryCountries(ancestryCountries)
                 .ancestryGenerations(ancestryGenerationsDto)
+                .numberOfPeopleInTree(numberOfPeopleInTree)
                 .build();
     }
 
