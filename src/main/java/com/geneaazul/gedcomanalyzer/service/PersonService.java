@@ -2,8 +2,11 @@ package com.geneaazul.gedcomanalyzer.service;
 
 import com.geneaazul.gedcomanalyzer.model.AncestryGenerations;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
 
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.commons.lang3.tuple.Triple;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -11,7 +14,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -19,17 +24,20 @@ import lombok.RequiredArgsConstructor;
 public class PersonService {
 
     public List<String> getAncestryCountries(EnrichedPerson person) {
+        if (person.getAncestryCountries() == null) {
+            Set<String> visitedPersons = new HashSet<>();
+            List<String> ancestryCountries = person
+                    .getParents()
+                    .stream()
+                    .map(parent -> getAncestryCountries(parent, visitedPersons, 0))
+                    .flatMap(Set::stream)
+                    .distinct()
+                    .sorted()
+                    .toList();
+            person.setAncestryCountries(ancestryCountries);
+        }
 
-        Set<String> visitedPersons = new HashSet<>();
-
-        return person
-                .getParents()
-                .stream()
-                .map(parent -> getAncestryCountries(parent, visitedPersons, 0))
-                .flatMap(Set::stream)
-                .distinct()
-                .sorted()
-                .toList();
+        return person.getAncestryCountries();
     }
 
     private static Set<String> getAncestryCountries(
@@ -69,9 +77,13 @@ public class PersonService {
     }
 
     public AncestryGenerations getAncestryGenerations(EnrichedPerson person) {
-        int ascendingGenerations = getAncestryGenerations(person, new HashSet<>(), EnrichedPerson::getParents, 0, 0);
-        int descendingGenerations = getAncestryGenerations(person, new HashSet<>(), EnrichedPerson::getChildren, 0, 0);
-        return AncestryGenerations.of(ascendingGenerations, descendingGenerations);
+        if (person.getAncestryGenerations() == null) {
+            int ascendingGenerations = getAncestryGenerations(person, new HashSet<>(), EnrichedPerson::getParents, 0, 0);
+            int descendingGenerations = getAncestryGenerations(person, new HashSet<>(), EnrichedPerson::getChildren, 0, 0);
+            person.setAncestryGenerations(AncestryGenerations.of(ascendingGenerations, descendingGenerations));
+        }
+
+        return person.getAncestryGenerations();
     }
 
     private static int getAncestryGenerations(
@@ -114,6 +126,69 @@ public class PersonService {
                 })
                 .reduce(Integer::max)
                 .orElse(level);
+    }
+
+    public int getNumberOfPeopleInTree(EnrichedPerson person) {
+        if (person.getNumberOfPeopleInTree() == null) {
+            int numberOfPeopleInTree = getNumberOfPeopleInTree(person, new HashSet<>(), null, Sort.Direction.ASC, 0);
+            person.setNumberOfPeopleInTree(numberOfPeopleInTree);
+        }
+
+        return person.getNumberOfPeopleInTree();
+    }
+
+    private static int getNumberOfPeopleInTree(
+            EnrichedPerson person,
+            Set<String> visitedPersons,
+            ReferenceType referenceType,
+            Sort.Direction direction,
+            int level) {
+
+        boolean visited = visitedPersons.contains(person.getId());
+        if (visited && !(referenceType == ReferenceType.CHILD && direction == Sort.Direction.ASC)) {
+            return 0;
+        }
+
+        visitedPersons.add(person.getId());
+
+        if (level == 32) {
+            // If max level or recursion is reached, stop the search
+            return 0;
+        }
+
+        int numberOfPeopleInTree = resolveRelatives(person, direction)
+                .mapToInt(relativeAndDirection -> getNumberOfPeopleInTree(
+                        relativeAndDirection.getLeft(),
+                        visitedPersons,
+                        relativeAndDirection.getMiddle(),
+                        relativeAndDirection.getRight(),
+                        level + 1))
+                .sum();
+
+        return numberOfPeopleInTree + (visited ? 0 : 1);
+    }
+
+    private static Stream<Triple<EnrichedPerson, ReferenceType, Sort.Direction>> resolveRelatives(
+            EnrichedPerson person,
+            @Nullable Sort.Direction direction) {
+
+        if (direction == null) {
+            return Stream.of();
+        }
+
+        Stream<Triple<List<EnrichedPerson>, ReferenceType, Sort.Direction>> relativesAndDirections = Sort.Direction.ASC == direction
+                ? Stream.of(
+                        Triple.of(person.getParents(), ReferenceType.CHILD, Sort.Direction.ASC),
+                        Triple.of(person.getSpouses(), ReferenceType.SPOUSE, null),
+                        Triple.of(person.getChildren(), ReferenceType.PARENT, Sort.Direction.DESC))
+                : Stream.of(
+                        Triple.of(person.getSpouses(), ReferenceType.SPOUSE, null),
+                        Triple.of(person.getChildren(), ReferenceType.PARENT, Sort.Direction.DESC));
+
+        return relativesAndDirections
+                .flatMap(triple -> triple.getLeft()
+                        .stream()
+                        .map(relative -> Triple.of(relative, triple.getMiddle(), triple.getRight())));
     }
 
 }

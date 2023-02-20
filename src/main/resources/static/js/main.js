@@ -409,24 +409,35 @@ var getPersonComponent = function(person, index) {
                 .append(spouses));
     }
 
-    if (person.ancestryGenerations != null
-           && (person.ancestryGenerations.ascending > 0 || person.ancestryGenerations.descending > 0)) {
-        var generations = $("<ul>")
+    var hasAncestryGenerations = person.ancestryGenerations != null
+            && (person.ancestryGenerations.ascending > 0 || person.ancestryGenerations.descending > 0);
+    var hasNumberOfPeopleInTree = person.numberOfPeopleInTree != null;
+
+    if (hasAncestryGenerations || hasNumberOfPeopleInTree) {
+        var treeInfo = $("<ul>")
             .addClass("mb-0");
 
-        generations.append(
-            $("<li>")
-                .html("Ascendencia: " + getCardinal(person.ancestryGenerations.ascending, "generaci&oacute;n", "generaciones")));
+        if (hasAncestryGenerations) {
+            treeInfo.append(
+                $("<li>")
+                    .html("Ascendencia: " + getCardinal(person.ancestryGenerations.ascending, "generaci&oacute;n", "generaciones")));
 
-        generations.append(
-            $("<li>")
-                .html("Descendencia: " + getCardinal(person.ancestryGenerations.descending, "generaci&oacute;n", "generaciones")));
+            treeInfo.append(
+                $("<li>")
+                    .html("Descendencia: " + getCardinal(person.ancestryGenerations.descending, "generaci&oacute;n", "generaciones")));
+        }
+
+        if (hasNumberOfPeopleInTree) {
+            treeInfo.append(
+                $("<li>")
+                    .html("Cantidad de familiares: " + person.numberOfPeopleInTree));
+        }
 
         cardBody.append(
             $("<div>")
                 .addClass("mt-1")
                 .html("Informaci&oacute;n en el &aacute;rbol: ")
-                .append(generations));
+                .append(treeInfo));
     }
 
     if (person.ancestryCountries.length > 0) {

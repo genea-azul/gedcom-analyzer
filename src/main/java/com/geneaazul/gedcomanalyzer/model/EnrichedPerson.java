@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 
 import jakarta.annotation.Nullable;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType"})
@@ -59,6 +60,14 @@ public class EnrichedPerson {
     private List<EnrichedPerson> siblings;
     private List<EnrichedPerson> spouses;
     private List<EnrichedPerson> children;
+
+    // Transient properties
+    @Setter
+    private List<String> ancestryCountries;
+    @Setter
+    private AncestryGenerations ancestryGenerations;
+    @Setter
+    private Integer numberOfPeopleInTree;
 
     private EnrichedPerson(Person person, EnrichedGedcom gedcom) {
         this.person = person;
