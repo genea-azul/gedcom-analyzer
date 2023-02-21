@@ -1,6 +1,7 @@
 package com.geneaazul.gedcomanalyzer.service;
 
 import com.geneaazul.gedcomanalyzer.model.AncestryGenerations;
+import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
 
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -130,14 +132,25 @@ public class PersonService {
 
     public int getNumberOfPeopleInTree(EnrichedPerson person) {
         if (person.getNumberOfPeopleInTree() == null) {
-            int numberOfPeopleInTree = getNumberOfPeopleInTree(person, new HashSet<>(), null, Sort.Direction.ASC, 0);
-            person.setNumberOfPeopleInTree(numberOfPeopleInTree);
+            Set<String> visitedPersons = new HashSet<>();
+            traversePeopleInTree(person, visitedPersons, null, Sort.Direction.ASC, 0);
+            person.setNumberOfPeopleInTree(visitedPersons.size());
         }
 
         return person.getNumberOfPeopleInTree();
     }
 
-    private static int getNumberOfPeopleInTree(
+    public List<EnrichedPerson> getPeopleInTree(EnrichedPerson person) {
+        Set<String> visitedPersons = new LinkedHashSet<>();
+        traversePeopleInTree(person, visitedPersons, null, Sort.Direction.ASC, 0);
+        EnrichedGedcom gedcom = person.getGedcom();
+        return visitedPersons
+                .stream()
+                .map(gedcom::getPersonById)
+                .toList();
+    }
+
+    private static void traversePeopleInTree(
             EnrichedPerson person,
             Set<String> visitedPersons,
             ReferenceType referenceType,
@@ -146,26 +159,23 @@ public class PersonService {
 
         boolean visited = visitedPersons.contains(person.getId());
         if (visited && !(referenceType == ReferenceType.CHILD && direction == Sort.Direction.ASC)) {
-            return 0;
+            return;
         }
 
         visitedPersons.add(person.getId());
 
         if (level == 32) {
             // If max level or recursion is reached, stop the search
-            return 0;
+            return;
         }
 
-        int numberOfPeopleInTree = resolveRelatives(person, direction)
-                .mapToInt(relativeAndDirection -> getNumberOfPeopleInTree(
+        resolveRelatives(person, direction)
+                .forEach(relativeAndDirection -> traversePeopleInTree(
                         relativeAndDirection.getLeft(),
                         visitedPersons,
                         relativeAndDirection.getMiddle(),
                         relativeAndDirection.getRight(),
-                        level + 1))
-                .sum();
-
-        return numberOfPeopleInTree + (visited ? 0 : 1);
+                        level + 1));
     }
 
     private static Stream<Triple<EnrichedPerson, ReferenceType, Sort.Direction>> resolveRelatives(

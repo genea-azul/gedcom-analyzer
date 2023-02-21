@@ -44,18 +44,18 @@ public class EnrichedGedcom {
                 .stream()
                 .filter(person -> person.getSurname().isPresent())
                 .filter(person -> person.getSex() != SexType.U)
-                .collect(Collectors.groupingBy(person -> new NameAndSex(person.getSurname().get().normalizedMainWord(), person.getSex())));
+                .collect(Collectors.groupingBy(person -> new NameAndSex(person.getSurname().get().shortenedMainWord(), person.getSex())));
 
         this.peopleByNormalizedSurnameMainWordAndSexAndYearOfBirthIndex = buildNameSexYearIndex(
                 person -> person.getSurname()
-                        .map(Surname::normalizedMainWord)
+                        .map(Surname::shortenedMainWord)
                         .orElse(null),
                 EnrichedPerson::getSex,
                 person -> person.getDateOfBirth().orElse(null));
 
         this.peopleByNormalizedSurnameMainWordAndSexAndYearOfDeathIndex = buildNameSexYearIndex(
                 person -> person.getSurname()
-                        .map(Surname::normalizedMainWord)
+                        .map(Surname::shortenedMainWord)
                         .orElse(null),
                 EnrichedPerson::getSex,
                 person -> person.getDateOfDeath().orElse(null));
@@ -86,19 +86,19 @@ public class EnrichedGedcom {
     }
 
     public List<EnrichedPerson> getPersonsBySurnameMainWordAndSex(Surname surname, SexType sex) {
-        NameAndSex nameAndSex = new NameAndSex(surname.normalizedMainWord(), sex);
+        NameAndSex nameAndSex = new NameAndSex(surname.shortenedMainWord(), sex);
         List<EnrichedPerson> persons = peopleByNormalizedSurnameMainWordAndSexIndex.getOrDefault(nameAndSex, List.of());
         return getPersonsMatchingSurname(surname, persons);
     }
 
     public List<EnrichedPerson> getPersonsBySurnameMainWordAndSexAndYearOfBirthIndex(Surname surname, SexType sex, Year yearOfBirth) {
-        NameSexYear nameSexYear = new NameSexYear(surname.normalizedMainWord(), sex, yearOfBirth);
+        NameSexYear nameSexYear = new NameSexYear(surname.shortenedMainWord(), sex, yearOfBirth);
         List<EnrichedPerson> persons = peopleByNormalizedSurnameMainWordAndSexAndYearOfBirthIndex.getOrDefault(nameSexYear, List.of());
         return getPersonsMatchingSurname(surname, persons);
     }
 
     public List<EnrichedPerson> getPersonsBySurnameMainWordAndSexAndYearOfDeathIndex(Surname surname, SexType sex, Year yearOfDeath) {
-        NameSexYear nameSexYear = new NameSexYear(surname.normalizedMainWord(), sex, yearOfDeath);
+        NameSexYear nameSexYear = new NameSexYear(surname.shortenedMainWord(), sex, yearOfDeath);
         List<EnrichedPerson> persons = peopleByNormalizedSurnameMainWordAndSexAndYearOfDeathIndex.getOrDefault(nameSexYear, List.of());
         return getPersonsMatchingSurname(surname, persons);
     }

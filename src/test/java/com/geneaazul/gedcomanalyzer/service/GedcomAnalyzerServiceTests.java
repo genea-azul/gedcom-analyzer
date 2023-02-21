@@ -30,6 +30,8 @@ public class GedcomAnalyzerServiceTests {
     private GedcomAnalyzerService gedcomAnalyzerService;
     @Autowired
     private SearchService searchService;
+    @Autowired
+    private PersonService personService;
 
     @Test
     public void smokeTest() {
@@ -131,6 +133,14 @@ public class GedcomAnalyzerServiceTests {
                                 System.out.println(StringUtils.leftPad(String.valueOf(score), 2) + " - " + compare);
                             });
                 });
+
+        System.out.println("\ngetNumberOfPeopleInTree:");
+        System.out.println(personService.getNumberOfPeopleInTree(gedcom.getPersonById("I4")));
+
+        System.out.println("\ngetPeopleInTree:");
+        personService
+                .getPeopleInTree(gedcom.getPersonById("I4"))
+                .forEach(System.out::println);
     }
 
 }

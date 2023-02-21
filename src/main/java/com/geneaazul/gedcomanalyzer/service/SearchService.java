@@ -410,7 +410,7 @@ public class SearchService {
         if (ObjectUtils.anyNull(surname, sex)) {
             return List.of();
         }
-        return PersonUtils.getNormalizedSurnameMainWord(surname, properties.getNormalizedSurnamesMap())
+        return PersonUtils.getShortenedSurnameMainWord(surname, properties.getNormalizedSurnamesMap())
                 .map(s -> gedcom.getPersonsBySurnameMainWordAndSex(s, sex))
                 .orElseGet(List::of);
     }
@@ -423,7 +423,7 @@ public class SearchService {
         if (ObjectUtils.anyNull(surname, sex, yearOfBirth)) {
             return List.of();
         }
-        return PersonUtils.getNormalizedSurnameMainWord(surname, properties.getNormalizedSurnamesMap())
+        return PersonUtils.getShortenedSurnameMainWord(surname, properties.getNormalizedSurnamesMap())
                 .map(s -> gedcom.getPersonsBySurnameMainWordAndSexAndYearOfBirthIndex(s, sex, Year.of(yearOfBirth)))
                 .orElseGet(List::of);
     }
@@ -436,7 +436,7 @@ public class SearchService {
         if (ObjectUtils.anyNull(surname, sex, yearOfDeath)) {
             return List.of();
         }
-        return PersonUtils.getNormalizedSurnameMainWord(surname, properties.getNormalizedSurnamesMap())
+        return PersonUtils.getShortenedSurnameMainWord(surname, properties.getNormalizedSurnamesMap())
                 .map(s -> gedcom.getPersonsBySurnameMainWordAndSexAndYearOfDeathIndex(s, sex, Year.of(yearOfDeath)))
                 .orElseGet(List::of);
     }
