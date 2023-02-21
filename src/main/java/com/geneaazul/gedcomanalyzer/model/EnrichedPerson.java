@@ -77,7 +77,7 @@ public class EnrichedPerson {
         id = person.getId();
         sex = PersonUtils.getSex(person);
         givenName = PersonUtils.getNormalizedGivenName(person, sex, properties.getNormalizedGivenNamesMap());
-        surname = PersonUtils.getNormalizedSurnameMainWord(person, properties.getNormalizedSurnamesMap());
+        surname = PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap());
         displayName = PersonUtils.getDisplayName(person);
         aka = PersonUtils.getAka(person)
                 .filter(akaName -> !akaName.equals(displayName));

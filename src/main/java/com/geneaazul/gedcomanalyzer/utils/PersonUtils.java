@@ -151,21 +151,21 @@ public class PersonUtils {
                 .map(StringUtils::trimToNull);
     }
 
-    public static Optional<Surname> getNormalizedSurnameMainWord(
+    public static Optional<Surname> getShortenedSurnameMainWord(
             @Nullable String surname, Map<String, String> normalizedSurnamesMap) {
         return Optional.ofNullable(surname)
                 .map(SearchUtils::simplifyName)
-                .map(SearchUtils::simplifySurnameToMainWord)
-                .map(simplifiedMainWord -> {
-                    String normalizedMainWord = SearchUtils.normalizeSurnameMainWord(simplifiedMainWord, normalizedSurnamesMap);
-                    return Surname.of(surname, simplifiedMainWord, normalizedMainWord);
+                .map(simplifiedSurname -> SearchUtils.normalizeSurnameToMainWord(simplifiedSurname, normalizedSurnamesMap))
+                .map(normalizedMainWord -> {
+                    String shortenedMainWord = SearchUtils.shortenSurnameMainWord(normalizedMainWord);
+                    return Surname.of(surname, normalizedMainWord, shortenedMainWord);
                 });
     }
 
-    public static Optional<Surname> getNormalizedSurnameMainWord(
+    public static Optional<Surname> getShortenedSurnameMainWord(
             Person person, Map<String, String> normalizedSurnamesMap) {
         Optional<String> surname = getSurname(person);
-        return getNormalizedSurnameMainWord(surname.orElse(null), normalizedSurnamesMap);
+        return getShortenedSurnameMainWord(surname.orElse(null), normalizedSurnamesMap);
     }
 
     /**

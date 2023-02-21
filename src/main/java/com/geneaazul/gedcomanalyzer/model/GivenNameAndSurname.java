@@ -24,10 +24,10 @@ public record GivenNameAndSurname(@Nullable GivenName givenName, @Nullable Surna
             @Nullable SexType sex,
             GedcomAnalyzerProperties properties) {
         Optional<GivenName> normalizedGivenName = PersonUtils.getNormalizedGivenName(givenName, sex, properties.getNormalizedGivenNamesMap());
-        Optional<Surname> normalizedSurname = PersonUtils.getNormalizedSurnameMainWord(surname, properties.getNormalizedSurnamesMap());
+        Optional<Surname> shortenedSurname = PersonUtils.getShortenedSurnameMainWord(surname, properties.getNormalizedSurnamesMap());
         return new GivenNameAndSurname(
                 normalizedGivenName.orElse(null),
-                normalizedSurname.orElse(null));
+                shortenedSurname.orElse(null));
     }
 
     public static GivenNameAndSurname of(

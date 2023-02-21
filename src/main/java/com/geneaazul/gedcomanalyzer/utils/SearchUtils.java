@@ -68,27 +68,27 @@ public class SearchUtils {
      *  diyannibelli rago  ->  diyannibelli        (consider only first word)
      *       diyannivelli  ->  diiannivelli        (replace b with v, replace y with i)
      *       diiannivelli  ->  dianiveli           (remove repeated letters)
+     *          dianiveli  ->  ciamiveli           (get optional replacement from NORMALIZED_SURNAMES_MAP)
      */
-    public static String simplifySurnameToMainWord(@Nullable String surname) {
+    public static String normalizeSurnameToMainWord(
+            @Nullable String surname,
+            Map<String, String> normalizedSurnamesMap) {
         surname = RegExUtils.replaceAll(surname, SURNAME_COMMON_SUFFIX_PATTERN, "$1$2");
         surname = StringUtils.substringBefore(surname, " ");
         surname = StringUtils.replaceEach(surname, SURNAME_SEARCH_CHARS, SURNAME_REPLACEMENT_CHARS);
         surname = RegExUtils.replaceAll(surname, SURNAME_DOUBLE_LETTERS_PATTERN, "$1");
-        return surname;
-    }
-
-    /**
-     *          dianiveli  ->  dianivel_           (replace last vowels with a _)
-     *          dianivel_  ->  ciamivel_           (get optional replacement from NORMALIZED_SURNAMES_MAP)
-     */
-    public static String normalizeSurnameMainWord(
-            @Nullable String surname,
-            Map<String, String> normalizedSurnamesMap) {
-        surname = RegExUtils.replaceAll(surname, SURNAME_VOWELS_ENDING_PATTERN, SURNAME_VOWELS_ENDING_REPLACEMENT);
         surname = Optional.ofNullable(surname)
                 .map(normalizedSurnamesMap::get)
                 .orElse(surname);
         return surname;
+    }
+
+    /**
+     *          ciamiveli  ->  ciamivel_           (replace last vowels with a _)
+     */
+    public static String shortenSurnameMainWord(@Nullable String surnameMainWord) {
+        surnameMainWord = RegExUtils.replaceAll(surnameMainWord, SURNAME_VOWELS_ENDING_PATTERN, SURNAME_VOWELS_ENDING_REPLACEMENT);
+        return surnameMainWord;
     }
 
     public static Map<NameAndSex, String> invertGivenNamesMap(

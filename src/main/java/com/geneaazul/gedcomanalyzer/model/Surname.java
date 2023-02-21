@@ -2,11 +2,11 @@ package com.geneaazul.gedcomanalyzer.model;
 
 public record Surname(
         String value,
-        String simplifiedMainWord,
-        String normalizedMainWord) {
+        String normalizedMainWord,
+        String shortenedMainWord) {
 
-    public static Surname of(String value, String simplifiedMainWord, String normalizedMainWord) {
-        return new Surname(value, simplifiedMainWord, normalizedMainWord);
+    public static Surname of(String value, String normalizedMainWord, String shortenedMainWord) {
+        return new Surname(value, normalizedMainWord, shortenedMainWord);
     }
 
     public boolean matches(Surname other) {
@@ -14,19 +14,19 @@ public record Surname(
             return false;
         }
 
-        if (!this.normalizedMainWord.equals(other.normalizedMainWord)) {
+        if (!this.shortenedMainWord.equals(other.shortenedMainWord)) {
             return false;
         }
 
-        if (isAmbiguousNormalized(this.normalizedMainWord)) {
-            return this.simplifiedMainWord.equals(other.simplifiedMainWord);
+        if (isAmbiguousShortened(this.shortenedMainWord)) {
+            return this.normalizedMainWord.equals(other.normalizedMainWord);
         }
 
         return true;
     }
 
-    private boolean isAmbiguousNormalized(String normalized) {
-        return normalized.length() <= 3 && normalized.endsWith("_");
+    private boolean isAmbiguousShortened(String shortened) {
+        return shortened.length() <= 3 && shortened.endsWith("_");
     }
 
 }
