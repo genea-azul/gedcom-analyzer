@@ -14,8 +14,10 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -32,23 +34,31 @@ import lombok.ToString;
 @Builder
 @ToString(onlyExplicitlyIncluded = true)
 @Entity
+@Table(indexes = {
+        @Index(name = "search_family_client_ip_address_idx", columnList = "clientIpAddress")
+})
 public class SearchFamily {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @ToString.Include
     private Long id;
+
     @Column(nullable = false, updatable = false)
     private OffsetDateTime createDate;
+
     @Column(nullable = false)
     private OffsetDateTime updateDate;
+
     @Column(nullable = false)
     @Version
     @Builder.Default
     private Integer version = 0;
+
     @ToString.Include
     @Enumerated(EnumType.STRING)
     private SexType individualSex;
+
     @Embedded
     @AttributeOverrides({
             @AttributeOverride(name = "givenName", column = @Column(name = "individual_given_name")),
@@ -59,6 +69,7 @@ public class SearchFamily {
     })
     @ToString.Include
     private SearchPerson individual;
+
     @Embedded
     @AttributeOverrides({
             @AttributeOverride(name = "givenName", column = @Column(name = "father_given_name")),
@@ -69,6 +80,7 @@ public class SearchFamily {
     })
     @ToString.Include
     private SearchPerson father;
+
     @Embedded
     @AttributeOverrides({
             @AttributeOverride(name = "givenName", column = @Column(name = "mother_given_name")),
@@ -79,6 +91,7 @@ public class SearchFamily {
     })
     @ToString.Include
     private SearchPerson mother;
+
     @Embedded
     @AttributeOverrides({
             @AttributeOverride(name = "givenName", column = @Column(name = "paternal_grandfather_given_name")),
@@ -89,6 +102,7 @@ public class SearchFamily {
     })
     @ToString.Include
     private SearchPerson paternalGrandfather;
+
     @Embedded
     @AttributeOverrides({
             @AttributeOverride(name = "givenName", column = @Column(name = "paternal_grandmother_given_name")),
@@ -99,6 +113,7 @@ public class SearchFamily {
     })
     @ToString.Include
     private SearchPerson paternalGrandmother;
+
     @Embedded
     @AttributeOverrides({
             @AttributeOverride(name = "givenName", column = @Column(name = "maternal_grandfather_given_name")),
@@ -109,6 +124,7 @@ public class SearchFamily {
     })
     @ToString.Include
     private SearchPerson maternalGrandfather;
+
     @Embedded
     @AttributeOverrides({
             @AttributeOverride(name = "givenName", column = @Column(name = "maternal_grandmother_given_name")),
@@ -119,10 +135,13 @@ public class SearchFamily {
     })
     @ToString.Include
     private SearchPerson maternalGrandmother;
+
     @ToString.Include
     private String contact;
+
     @ToString.Include
     private Boolean isMatch;
+
     @ToString.Include
     private String clientIpAddress;
 

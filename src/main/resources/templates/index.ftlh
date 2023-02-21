@@ -11,7 +11,7 @@
   <body class="container-fluid">
     <div class="h5 mb-0">Genea Azul - Buscador de personas</div>
     <div class="d-flex mt-0 small">
-      <div class="me-1">Versi&oacute;n: 0.8.1 - Personas en el &aacute;rbol:</div>
+      <div class="me-1">Versi&oacute;n: 0.8.2 - Personas en el &aacute;rbol:</div>
       <div id="persons-count-container">
         <span class="spinner-border spinner-border-sm" role="status"></span>
       </div>
