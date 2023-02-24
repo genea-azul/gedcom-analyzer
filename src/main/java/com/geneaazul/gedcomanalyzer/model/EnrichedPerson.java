@@ -68,6 +68,8 @@ public class EnrichedPerson {
     private AncestryGenerations ancestryGenerations;
     @Setter
     private Integer numberOfPeopleInTree;
+    @Setter
+    private Optional<Pair<String, Relationship>> maxDistantRelationship;
 
     private EnrichedPerson(Person person, EnrichedGedcom gedcom) {
         this.person = person;

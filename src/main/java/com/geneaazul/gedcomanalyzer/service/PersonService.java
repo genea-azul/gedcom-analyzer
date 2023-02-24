@@ -3,17 +3,22 @@ package com.geneaazul.gedcomanalyzer.service;
 import com.geneaazul.gedcomanalyzer.model.AncestryGenerations;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
-import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
+import com.geneaazul.gedcomanalyzer.model.Relationship;
 
 import org.apache.commons.lang3.mutable.MutableInt;
-import org.apache.commons.lang3.tuple.Triple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -130,55 +135,153 @@ public class PersonService {
                 .orElse(level);
     }
 
-    public int getNumberOfPeopleInTree(EnrichedPerson person) {
+    public Integer getNumberOfPeopleInTree(EnrichedPerson person) {
         if (person.getNumberOfPeopleInTree() == null) {
-            Set<String> visitedPersons = new HashSet<>();
-            traversePeopleInTree(person, visitedPersons, null, Sort.Direction.ASC, 0);
-            person.setNumberOfPeopleInTree(visitedPersons.size());
+            setNumberOfPeopleInTreeAndMaxDistantRelationship(person);
         }
 
         return person.getNumberOfPeopleInTree();
     }
 
-    public List<EnrichedPerson> getPeopleInTree(EnrichedPerson person) {
-        Set<String> visitedPersons = new LinkedHashSet<>();
-        traversePeopleInTree(person, visitedPersons, null, Sort.Direction.ASC, 0);
+    public Pair<String, Relationship> getMaxDistantRelationship(EnrichedPerson person) {
+        if (person.getMaxDistantRelationship() == null) {
+            setNumberOfPeopleInTreeAndMaxDistantRelationship(person);
+        }
+
+        return person
+                .getMaxDistantRelationship()
+                .orElse(null);
+    }
+
+    public void setNumberOfPeopleInTreeAndMaxDistantRelationship(EnrichedPerson person) {
+        Map<String, Set<Relationship>> visitedPersons = new LinkedHashMap<>();
+        traversePeopleInTree(person, null, visitedPersons, Sort.Direction.ASC, Relationship.empty());
+
+        Optional<Pair<String, Relationship>> maxDistantRelationship = visitedPersons
+                .entrySet()
+                .stream()
+                .filter(entry -> !entry.getKey().equals(person.getId()))
+                .map(entry -> Pair.of(entry.getKey(), entry.getValue().iterator().next()))
+                .filter(pair -> !pair.getRight().isSpouse())
+                .reduce((p1, p2) -> p1.getRight().compareTo(p2.getRight()) >= 0 ? p1 : p2);
+
+        person.setNumberOfPeopleInTree(visitedPersons.size());
+        person.setMaxDistantRelationship(maxDistantRelationship);
+    }
+
+    public List<Pair<EnrichedPerson, Set<Relationship>>> getPeopleInTree(EnrichedPerson person) {
+        Map<String, Set<Relationship>> visitedPersons = new LinkedHashMap<>();
+        traversePeopleInTree(person, null, visitedPersons, Sort.Direction.ASC, Relationship.empty());
         EnrichedGedcom gedcom = person.getGedcom();
         return visitedPersons
+                .entrySet()
                 .stream()
-                .map(gedcom::getPersonById)
+                .map(entry -> Pair.of(gedcom.getPersonById(entry.getKey()), entry.getValue()))
                 .toList();
     }
 
     private static void traversePeopleInTree(
             EnrichedPerson person,
-            Set<String> visitedPersons,
-            ReferenceType referenceType,
-            Sort.Direction direction,
-            int level) {
+            @Nullable String previousPersonId,
+            Map<String, Set<Relationship>> visitedPersons,
+            @Nullable Sort.Direction direction,
+            Relationship relationship) {
 
-        boolean visited = visitedPersons.contains(person.getId());
-        if (visited && !(referenceType == ReferenceType.CHILD && direction == Sort.Direction.ASC)) {
-            return;
+        boolean visited = visitedPersons.containsKey(person.getId());
+        if (visited) {
+            if (containsRelationship(visitedPersons.get(person.getId()), relationship)) {
+                return;
+            }
+            if (relationship.isSpouse() && containsSomeNotSpouse(visitedPersons.get(person.getId()))) {
+                return;
+            }
         }
 
-        visitedPersons.add(person.getId());
+        visitedPersons.merge(
+                person.getId(),
+                Set.of(relationship),
+                PersonService::mergeToTreeSet);
 
-        if (level == 32) {
+        if (relationship.getDistance() == 32) {
             // If max level or recursion is reached, stop the search
             return;
         }
 
         resolveRelatives(person, direction)
+                .filter(relativeAndDirection -> !relativeAndDirection.getLeft().getId().equals(previousPersonId))
                 .forEach(relativeAndDirection -> traversePeopleInTree(
                         relativeAndDirection.getLeft(),
+                        person.getId(),
                         visitedPersons,
-                        relativeAndDirection.getMiddle(),
                         relativeAndDirection.getRight(),
-                        level + 1));
+                        relationship.increase(
+                                relativeAndDirection.getRight(),
+                                isSetHalf(direction, relativeAndDirection.getRight(), previousPersonId, relativeAndDirection.getLeft()),
+                                person.getId())));
     }
 
-    private static Stream<Triple<EnrichedPerson, ReferenceType, Sort.Direction>> resolveRelatives(
+    private static boolean isSetHalf(
+            Sort.Direction currentDirection,
+            Sort.Direction nextDirection,
+            @Nullable String previousPersonId,
+            EnrichedPerson nextPersonToVisit) {
+
+        if (previousPersonId == null || !(currentDirection == Sort.Direction.ASC && nextDirection == Sort.Direction.DESC)) {
+            return false;
+        }
+
+        EnrichedPerson previousPerson = nextPersonToVisit.getGedcom().getPersonById(previousPersonId);
+
+        // TODO consider biological/adopted parents
+        if (previousPerson.getParents().size() != nextPersonToVisit.getParents().size()) {
+            return false;
+        }
+
+        Set<String> parentIds = previousPerson
+                .getParents()
+                .stream()
+                .map(EnrichedPerson::getId)
+                .collect(Collectors.toSet());
+
+        return nextPersonToVisit
+                .getParents()
+                .stream()
+                .map(EnrichedPerson::getId)
+                .anyMatch(personId -> !parentIds.contains(personId));
+    }
+
+    private static Set<Relationship> mergeToTreeSet(Set<Relationship> t1, Set<Relationship> t2) {
+        Assert.isTrue(t2.size() == 1, "Error");
+        Relationship relationship = t2.iterator().next();
+
+        if (!relationship.isSpouse()) {
+            // Clean spouse relationships if there's a new one not-spouse
+            if (t1
+                    .stream()
+                    .anyMatch(Relationship::isSpouse)) {
+                t1 = t1
+                        .stream()
+                        .filter(r -> !r.isSpouse())
+                        .collect(Collectors.toCollection(LinkedHashSet::new));
+            }
+        }
+
+        TreeSet<Relationship> result = new TreeSet<>(t1);
+        result.add(relationship);
+        return result;
+    }
+
+    private static boolean containsRelationship(Set<Relationship> relationships, Relationship relationship) {
+        return relationships.contains(relationship);
+    }
+
+    private static boolean containsSomeNotSpouse(Set<Relationship> relationships) {
+        return relationships
+                .stream()
+                .anyMatch(relationship -> !relationship.isSpouse());
+    }
+
+    private static Stream<Pair<EnrichedPerson, Sort.Direction>> resolveRelatives(
             EnrichedPerson person,
             @Nullable Sort.Direction direction) {
 
@@ -186,19 +289,19 @@ public class PersonService {
             return Stream.of();
         }
 
-        Stream<Triple<List<EnrichedPerson>, ReferenceType, Sort.Direction>> relativesAndDirections = Sort.Direction.ASC == direction
+        Stream<Pair<List<EnrichedPerson>, Sort.Direction>> relativesAndDirections = Sort.Direction.ASC == direction
                 ? Stream.of(
-                        Triple.of(person.getParents(), ReferenceType.CHILD, Sort.Direction.ASC),
-                        Triple.of(person.getSpouses(), ReferenceType.SPOUSE, null),
-                        Triple.of(person.getChildren(), ReferenceType.PARENT, Sort.Direction.DESC))
+                        Pair.of(person.getParents(), Sort.Direction.ASC),
+                        Pair.of(person.getSpouses(), null),
+                        Pair.of(person.getChildren(), Sort.Direction.DESC))
                 : Stream.of(
-                        Triple.of(person.getSpouses(), ReferenceType.SPOUSE, null),
-                        Triple.of(person.getChildren(), ReferenceType.PARENT, Sort.Direction.DESC));
+                        Pair.of(person.getSpouses(), null),
+                        Pair.of(person.getChildren(), Sort.Direction.DESC));
 
         return relativesAndDirections
-                .flatMap(triple -> triple.getLeft()
+                .flatMap(pair -> pair.getLeft()
                         .stream()
-                        .map(relative -> Triple.of(relative, triple.getMiddle(), triple.getRight())));
+                        .map(relative -> Pair.of(relative, pair.getRight())));
     }
 
 }

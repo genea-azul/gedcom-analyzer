@@ -39,5 +39,7 @@ public class PersonDto {
     private AncestryGenerationsDto ancestryGenerations;
     @ToString.Include
     private Integer numberOfPeopleInTree;
+    @ToString.Include
+    private RelationshipDto maxDistantRelationship;
 
 }

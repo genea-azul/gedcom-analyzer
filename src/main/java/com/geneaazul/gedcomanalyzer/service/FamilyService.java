@@ -257,7 +257,8 @@ public class FamilyService {
                 ObfuscationType.SKIP_MAIN_PERSON_NAME,
                 personService::getAncestryCountries,
                 personService::getAncestryGenerations,
-                personService::getNumberOfPeopleInTree);
+                personService::getNumberOfPeopleInTree,
+                personService::getMaxDistantRelationship);
 
         return SearchFamilyResultDto.builder()
                 .people(people)

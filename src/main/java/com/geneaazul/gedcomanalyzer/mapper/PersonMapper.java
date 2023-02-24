@@ -5,10 +5,12 @@ import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResult;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResults;
+import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.dto.AncestryGenerationsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateCompareDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateDto;
+import com.geneaazul.gedcomanalyzer.model.dto.RelationshipDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SpouseWithChildrenDto;
 import com.geneaazul.gedcomanalyzer.utils.DateUtils;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
@@ -21,8 +23,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class PersonMapper {
+
+    private final RelationshipMapper relationshipMapper;
 
     public List<PersonDto> toPersonDto(Collection<EnrichedPerson> persons) {
         return persons
@@ -37,6 +44,7 @@ public class PersonMapper {
                 ObfuscationType.NONE,
                 ep -> List.of(),
                 ep -> AncestryGenerations.empty(),
+                ep -> null,
                 ep -> null);
     }
 
@@ -45,7 +53,8 @@ public class PersonMapper {
             ObfuscationType obfuscationType,
             Function<EnrichedPerson, List<String>> ancestryCountriesResolver,
             Function<EnrichedPerson, AncestryGenerations> ancestryGenerationsResolver,
-            Function<EnrichedPerson, Integer> numberOfPeopleInTreeResolver) {
+            Function<EnrichedPerson, Integer> numberOfPeopleInTreeResolver,
+            Function<EnrichedPerson, Pair<String, Relationship>> maxDistantRelationshipResolver) {
         return persons
                 .stream()
                 .map(person -> toPersonDto(
@@ -53,7 +62,8 @@ public class PersonMapper {
                         obfuscationType,
                         ancestryCountriesResolver,
                         ancestryGenerationsResolver,
-                        numberOfPeopleInTreeResolver))
+                        numberOfPeopleInTreeResolver,
+                        maxDistantRelationshipResolver))
                 .toList();
     }
 
@@ -62,7 +72,8 @@ public class PersonMapper {
             ObfuscationType obfuscationType,
             Function<EnrichedPerson, List<String>> ancestryCountriesResolver,
             Function<EnrichedPerson, AncestryGenerations> ancestryGenerationsResolver,
-            Function<EnrichedPerson, Integer> numberOfPeopleInTreeResolver) {
+            Function<EnrichedPerson, Integer> numberOfPeopleInTreeResolver,
+            Function<EnrichedPerson, Pair<String, Relationship>> maxDistantRelationshipResolver) {
 
         boolean obfuscateLiving = obfuscationType != ObfuscationType.NONE;
         boolean obfuscateName = obfuscateLiving && obfuscationType != ObfuscationType.SKIP_MAIN_PERSON_NAME;
@@ -75,11 +86,18 @@ public class PersonMapper {
         List<String> ancestryCountries = ancestryCountriesResolver.apply(person);
         AncestryGenerations ancestryGenerations = ancestryGenerationsResolver.apply(person);
         Integer numberOfPeopleInTree = numberOfPeopleInTreeResolver.apply(person);
+        Pair<String, Relationship> maxDistantRelationship = maxDistantRelationshipResolver.apply(person);
 
         AncestryGenerationsDto ancestryGenerationsDto = AncestryGenerationsDto.builder()
                 .ascending(ancestryGenerations.ascending())
                 .descending(ancestryGenerations.descending())
                 .build();
+
+        RelationshipDto maxDistantRelationshipDto = relationshipMapper.toRelationshipDto(
+                maxDistantRelationship.getLeft(),
+                maxDistantRelationship.getRight(),
+                person.getGedcom(),
+                relationshipPerson -> obfuscateLiving && (person.isAlive() || relationshipPerson.isAlive()));
 
         return PersonDto.builder()
                 .sex(person.getSex())
@@ -106,6 +124,7 @@ public class PersonMapper {
                 .ancestryCountries(ancestryCountries)
                 .ancestryGenerations(ancestryGenerationsDto)
                 .numberOfPeopleInTree(numberOfPeopleInTree)
+                .maxDistantRelationship(maxDistantRelationshipDto)
                 .build();
     }
 

@@ -412,8 +412,9 @@ var getPersonComponent = function(person, index) {
     var hasAncestryGenerations = person.ancestryGenerations != null
             && (person.ancestryGenerations.ascending > 0 || person.ancestryGenerations.descending > 0);
     var hasNumberOfPeopleInTree = person.numberOfPeopleInTree != null;
+    var hasMaxDistantRelationship = person.maxDistantRelationship != null;
 
-    if (hasAncestryGenerations || hasNumberOfPeopleInTree) {
+    if (hasAncestryGenerations || hasNumberOfPeopleInTree || hasMaxDistantRelationship) {
         var treeInfo = $("<ul>")
             .addClass("mb-0");
 
@@ -430,7 +431,23 @@ var getPersonComponent = function(person, index) {
         if (hasNumberOfPeopleInTree) {
             treeInfo.append(
                 $("<li>")
-                    .html("Cantidad de familiares: " + person.numberOfPeopleInTree));
+                    .html("Cantidad de familiares: <b>" + person.numberOfPeopleInTree + "</b>"));
+        }
+
+        if (hasMaxDistantRelationship) {
+            treeInfo
+                .append(
+                    $("<li>")
+                        .html("Relaci&oacute;n m&aacute;s distante:"))
+                .append(
+                    $("<ul>")
+                        .addClass("mb-0")
+                        .append(
+                            $("<li>")
+                                .html(displayRelationshipInSpanish(person.maxDistantRelationship)))
+                        .append(
+                            $("<li>")
+                                .html(displayNameInSpanish(person.maxDistantRelationship.personName))));
         }
 
         cardBody.append(
@@ -461,7 +478,7 @@ var getPersonComponent = function(person, index) {
 };
 
 var getCardinal = function(num, singular, plural) {
-    return "" + num + " " + (num == 1 ? singular : plural);
+    return "<b>" + num + "</b> " + (num == 1 ? singular : plural);
 }
 
 var displayNameInSpanish = function(name) {
@@ -511,6 +528,187 @@ var displayDateInSpanish = function(date) {
     date = date.replaceAll("DEC", "dic de");
 
     return date;
+};
+
+// Spouses are not considered
+var displayRelationshipInSpanish = function(relationship) {
+    if (relationship.referenceType == "SELF") {
+        return "<b>esta persona</b>";
+    }
+
+    if (relationship.referenceType == "PARENT") {
+        if (relationship.generation == 1) {
+            return relationship.personSex == "M" ? "padre" : "madre";
+        }
+
+        var sexSuffix = (relationship.personSex == "M" ? "o" : "a");
+        var gradeSuffix = getGradeSuffixInSpanish(relationship.generation - 4, sexSuffix);
+
+        var relationshipName;
+        if (relationship.generation == 2) {
+            relationshipName = "abuel" + sexSuffix;
+        } else if (relationship.generation == 3) {
+            relationshipName = "bisabuel" + sexSuffix;
+        } else if (relationship.generation == 4) {
+            relationshipName = "tatarabuel" + sexSuffix;
+        } else {
+            relationshipName = "trastatarabuel" + sexSuffix;
+        }
+
+        var or = "";
+        if (relationship.generation >= 6) {
+            or = "<br>&nbsp; (ancestro directo de " + relationship.generation + " gener.)";
+        }
+
+        return "<b>" + relationshipName + gradeSuffix + "</b>" + or;
+    }
+
+    if (relationship.referenceType == "CHILD") {
+        var sexSuffix = (relationship.personSex == "M" ? "o" : "a");
+        var gradeSuffix = getGradeSuffixInSpanish(relationship.generation - 4, sexSuffix);
+
+        var relationshipName;
+        if (relationship.generation == 1) {
+            relationshipName = "hij" + sexSuffix;
+        } else if (relationship.generation == 2) {
+            relationshipName = "niet" + sexSuffix;
+        } else if (relationship.generation == 3) {
+            relationshipName = "bisniet" + sexSuffix;
+        } else if (relationship.generation == 4) {
+            relationshipName = "tataraniet" + sexSuffix;
+        } else {
+            relationshipName = "trastataraniet" + sexSuffix;
+        }
+
+        var or = "";
+        if (relationship.generation >= 6) {
+            or = "<br>&nbsp; (descendiente direct" + sexSuffix + " de " + relationship.generation + " gener.)";
+        }
+
+        return "<b>" + relationshipName + gradeSuffix + "</b>" + or;
+    }
+
+    if (relationship.referenceType == "SIBLING") {
+        var halfPrefix = relationship.isHalf ? "medio-" : "";
+        var sexSuffix = (relationship.personSex == "M" ? "o" : "a");
+
+        var relationshipName = "prim" + sexSuffix;
+        return "<b>" + halfPrefix + relationshipName + "</b>";
+    }
+
+    if (relationship.referenceType == "COUSIN") {
+        var halfPrefix = relationship.isHalf ? "medio-" : "";
+        var sexSuffix = (relationship.personSex == "M" ? "o" : "a");
+        var gradeSuffix = getGradeSuffixInSpanish(relationship.grade, sexSuffix);
+
+        var relationshipName = "prim" + sexSuffix;
+        return "<b>" + halfPrefix + relationshipName + gradeSuffix + "</b>";
+    }
+
+    if (relationship.referenceType == "PIBLING") {
+        var halfPrefix = relationship.isHalf ? "medio-" : "";
+        var sexSuffix = (relationship.personSex == "M" ? "o" : "a");
+        var gradeSuffix = getGradeSuffixInSpanish(relationship.grade, sexSuffix);
+
+        var relationshipName1 = "t&iacute;" + sexSuffix + (relationship.generation > 1 ? "-" : "");
+        var relationshipName2;
+
+        if (relationship.generation == 1) {
+            relationshipName2 = "";
+        } else if (relationship.generation == 2) {
+            relationshipName2 = "abuel" + sexSuffix;
+        } else if (relationship.generation == 3) {
+            relationshipName2 = "bisabuel" + sexSuffix;
+        } else if (relationship.generation == 4) {
+            relationshipName2 = "tatarabuel" + sexSuffix;
+        } else {
+            relationshipName2 = "trastatarabuel" + sexSuffix;
+        }
+
+        var or = "";
+        if (relationship.generation == 1 && relationship.grade >= 2 || relationship.generation >= 2) {
+            var relationshipNameOr1 = (relationshipName2 == "") ? "padre/madre" : relationshipName2.substring(0, relationshipName2.length - 1) + "o/a";
+            var relationshipNameOr2;
+            if (relationship.grade == 1) {
+                relationshipNameOr2 = "herman" + sexSuffix;
+            } else {
+                relationshipNameOr2 = "prim" + sexSuffix;
+            }
+            var gradeSuffixOr = getGradeSuffixInSpanish(relationship.grade - 1, sexSuffix);
+            or = "<br>&nbsp; (" + halfPrefix + relationshipNameOr2 + gradeSuffixOr + " de " + relationshipNameOr1 + ")";
+        }
+
+        return "<b>" + halfPrefix + relationshipName1 + relationshipName2 + gradeSuffix + "</b>" + or;
+    }
+
+    if (relationship.referenceType == "NIBLING") {
+        var halfPrefix = relationship.isHalf ? "medio-" : "";
+        var sexSuffix = (relationship.personSex == "M" ? "o" : "a");
+        var gradeSuffix = getGradeSuffixInSpanish(relationship.grade, sexSuffix);
+
+        var relationshipName1 = "sobrin" + sexSuffix + (relationship.generation > 1 ? "-" : "");
+        var relationshipName2;
+
+        if (relationship.generation == 1) {
+            relationshipName2 = "";
+        } else if (relationship.generation == 2) {
+            relationshipName2 = "niet" + sexSuffix;
+        } else if (relationship.generation == 3) {
+            relationshipName2 = "bisniet" + sexSuffix;
+        } else if (relationship.generation == 4) {
+            relationshipName2 = "tataraniet" + sexSuffix;
+        } else {
+            relationshipName2 = "trastataraniet" + sexSuffix;
+        }
+
+        var or = "";
+        if (relationship.generation == 1 && relationship.grade >= 2 || relationship.generation >= 2) {
+            var relationshipNameOr1 = (relationshipName2 == "") ? "hij" + sexSuffix : relationshipName2;
+            var relationshipNameOr2;
+            if (relationship.grade == 1) {
+                relationshipNameOr2 = "hermano/a";
+            } else {
+                relationshipNameOr2 = "primo/a";
+            }
+            var gradeSuffixOr = getGradeSuffixInSpanish(relationship.grade - 1, "o/a");
+            or = "<br>&nbsp; (" + relationshipNameOr1 + " de " + halfPrefix + relationshipNameOr2 + gradeSuffixOr + ")";
+        }
+
+        return "<b>" + halfPrefix + relationshipName1 + relationshipName2 + gradeSuffix + "</b>" + or;
+    }
+
+    return "<b>familiar</b>";
+}
+
+var getGradeSuffixInSpanish = function(grade, sexSuffix) {
+    if (grade <= 1) {
+        return ""
+    }
+    if (grade == 2) {
+        return " segund" + sexSuffix;
+    }
+    if (grade == 3) {
+        return " tercer" + sexSuffix;
+    }
+    if (grade == 4) {
+        return " cuart" + sexSuffix;
+    }
+    if (grade == 5) {
+        return " quint" + sexSuffix;
+    }
+    if (grade == 6) {
+        return " sext" + sexSuffix;
+    }
+    if (grade == 7) {
+        return " s&eacute;ptim" + sexSuffix;
+    }
+    if (grade == 8) {
+        return " octav" + sexSuffix;
+    }
+    if (grade == 9) {
+        return " noven" + sexSuffix;
+    }
+    return " de " + grade + "&deg; grado";
 };
 
 var displayErrorCodeInSpanish = function(errorCode) {
