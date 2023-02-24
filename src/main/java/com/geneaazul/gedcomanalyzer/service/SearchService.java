@@ -43,7 +43,7 @@ public class SearchService {
 
     public List<EnrichedPerson> findPersonsBySurnameAndSpouseSurname(String personSurname, String spouseSurname, boolean exactMatch, List<EnrichedPerson> people) {
         String personSurnameStr = SearchUtils.simplifyName(personSurname);
-        String spouseSurnameStr = spouseSurname != null ? SearchUtils.simplifyName(spouseSurname) : null;
+        String spouseSurnameStr = SearchUtils.simplifyName(spouseSurname);
 
         return people
                 .stream()
@@ -55,6 +55,23 @@ public class SearchService {
                         .map(EnrichedPerson::getSurname)
                         .flatMap(Optional::stream)
                         .anyMatch(surname -> exactMatch ? surname.value().equals(spouseSurnameStr) : surname.value().contains(spouseSurnameStr)))
+                .toList();
+    }
+
+    public List<EnrichedPerson> findPersonsBySurnameAndSpouseGivenName(String personSurname, String spouseGivenName, boolean exactMatch, List<EnrichedPerson> people) {
+        String personSurnameStr = SearchUtils.simplifyName(personSurname);
+        String spouseGivenNameStr = SearchUtils.simplifyName(spouseGivenName);
+
+        return people
+                .stream()
+                .filter(person -> person.getSurname()
+                        .map(surname -> exactMatch ? surname.value().equals(personSurnameStr) : surname.value().contains(personSurnameStr))
+                        .orElse(false))
+                .filter(person -> spouseGivenNameStr == null || person.getSpouses()
+                        .stream()
+                        .map(EnrichedPerson::getGivenName)
+                        .flatMap(Optional::stream)
+                        .anyMatch(givenName -> exactMatch ? givenName.value().equals(spouseGivenNameStr) : givenName.value().contains(spouseGivenNameStr)))
                 .toList();
     }
 
@@ -127,6 +144,17 @@ public class SearchService {
         return people
                 .stream()
                 .filter(person -> !person.getTagExtensions().isEmpty())
+                .toList();
+    }
+
+    public List<EnrichedPerson> findPersonsWithNoCountryButParentsWithCountry(List<EnrichedPerson> people) {
+        return people
+                .stream()
+                .filter(person -> person.getCountryOfBirthForSearch().isEmpty()
+                        && !person.getParents().isEmpty()
+                        && person.getParents()
+                                .stream()
+                                .allMatch(parent -> parent.getCountryOfBirthForSearch().isPresent()))
                 .toList();
     }
 

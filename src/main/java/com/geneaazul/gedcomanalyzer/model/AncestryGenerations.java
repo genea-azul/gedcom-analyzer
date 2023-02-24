@@ -1,8 +1,8 @@
 package com.geneaazul.gedcomanalyzer.model;
 
-public record AncestryGenerations(Integer ascending, Integer descending) {
+public record AncestryGenerations(int ascending, int descending) {
 
-    public static AncestryGenerations of(Integer ascending, Integer descending) {
+    public static AncestryGenerations of(int ascending, int descending) {
         return new AncestryGenerations(ascending, descending);
     }
 

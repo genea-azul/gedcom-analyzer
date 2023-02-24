@@ -338,9 +338,9 @@ public class PersonUtils {
             boolean condition) {
         return condition
                 ? person.getSurname()
-                .map(Surname::value)
-                .map(surname -> PRIVATE_NAME + " " + surname)
-                .orElse(PRIVATE_NAME)
+                        .map(Surname::value)
+                        .map(surname -> PRIVATE_NAME + " " + surname)
+                        .orElse(PRIVATE_NAME)
                 : person.getDisplayName();
     }
 

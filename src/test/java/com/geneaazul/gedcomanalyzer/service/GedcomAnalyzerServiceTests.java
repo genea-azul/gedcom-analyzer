@@ -50,6 +50,11 @@ public class GedcomAnalyzerServiceTests {
                 .findPersonsWithTagExtensions(gedcom.getPeople())
                 .forEach(person -> System.out.println(person.getDisplayName() + ": " + person.getTagExtensions()));
 
+        System.out.println("\nfindPersonsWithNoCountryButParentsWithCountry:");
+        searchService
+                .findPersonsWithNoCountryButParentsWithCountry(gedcom.getPeople())
+                .forEach(System.out::println);
+
         System.out.println("\ngetMostFrequentSurnamesByOrphanTree:");
         List<EnrichedPerson> persons1 = gedcomAnalyzerService
                 .getInitialPersonOfOrphanTrees(gedcom);
@@ -60,6 +65,11 @@ public class GedcomAnalyzerServiceTests {
         System.out.println("\nfindPersonsBySurnameAndSpouseSurname:");
         searchService
                 .findPersonsBySurnameAndSpouseSurname("Diéguez", "Pérez", false, gedcom.getPeople())
+                .forEach(System.out::println);
+
+        System.out.println("\nfindPersonsBySurnameAndSpouseGivenName:");
+        searchService
+                .findPersonsBySurnameAndSpouseGivenName("Zaffora", "Maria", false, gedcom.getPeople())
                 .forEach(System.out::println);
 
         System.out.println("\nfindAlivePersonsTooOldOrWithFamilyMembersTooOld:");
@@ -137,10 +147,18 @@ public class GedcomAnalyzerServiceTests {
         System.out.println("\ngetNumberOfPeopleInTree:");
         System.out.println(personService.getNumberOfPeopleInTree(gedcom.getPersonById("I4")));
 
-        System.out.println("\ngetPeopleInTree:");
+        /*System.out.println("\ngetPeopleInTree:");
         personService
                 .getPeopleInTree(gedcom.getPersonById("I4"))
-                .forEach(System.out::println);
+                .forEach(pair -> System.out.println(
+                        StringUtils.rightPad(pair.getRight()
+                                .stream()
+                                .map(Relationship::toString)
+                                .collect(Collectors.joining(", ")), 32)
+                        + "  --  "
+                        + pair.getLeft()));*/
+
+        //personService.setNumberOfPeopleInTreeAndMaxDistantRelationship(gedcom.getPersonById("I4"));
     }
 
 }
