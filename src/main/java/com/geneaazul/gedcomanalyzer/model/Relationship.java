@@ -1,7 +1,10 @@
 package com.geneaazul.gedcomanalyzer.model;
 
-import org.apache.commons.lang3.StringUtils;
+import com.geneaazul.gedcomanalyzer.utils.SortedSetComparator;
+
 import org.springframework.data.domain.Sort;
+
+import java.util.SortedSet;
 
 import jakarta.annotation.Nullable;
 
@@ -10,10 +13,20 @@ public record Relationship(
         int distanceToAncestor2,
         boolean isSpouse,
         boolean isHalf,
-        @Nullable String relatedPersonId) implements Comparable<Relationship> {
+        @Nullable SortedSet<String> relatedPersonIds) implements Comparable<Relationship> {
 
-    public static Relationship of(int ascending, int descending, boolean isSpouse, boolean isHalf, @Nullable String relatedPersonId) {
-        return new Relationship(ascending, descending, isSpouse, isHalf, relatedPersonId);
+    public static Relationship of(
+            int ascending,
+            int descending,
+            boolean isSpouse,
+            boolean isHalf,
+            @Nullable SortedSet<String> relatedPersonIds) {
+        return new Relationship(
+                ascending,
+                descending,
+                isSpouse,
+                isHalf,
+                relatedPersonIds);
     }
 
     public static Relationship empty() {
@@ -30,17 +43,24 @@ public record Relationship(
         return Integer.compare(distance1, distance2);
     }
 
-    public Relationship increase(Sort.Direction direction, boolean isSetHalf, @Nullable String relatedPersonId) {
+    public Relationship increase(Sort.Direction direction, boolean isSetHalf, @Nullable SortedSet<String> relatedPersonIds) {
         if (isSpouse || isHalf && direction == Sort.Direction.ASC || isHalf && isSetHalf) {
             throw new UnsupportedOperationException();
         }
         if (direction == Sort.Direction.ASC) {
-            return Relationship.of(distanceToAncestor1 + 1, distanceToAncestor2, false, false, relatedPersonId);
+            return Relationship.of(distanceToAncestor1 + 1, distanceToAncestor2, false, false, relatedPersonIds);
         }
         if (direction == Sort.Direction.DESC) {
-            return Relationship.of(distanceToAncestor1, distanceToAncestor2 + 1, false, isHalf || isSetHalf, relatedPersonId);
+            return Relationship.of(distanceToAncestor1, distanceToAncestor2 + 1, false, isHalf || isSetHalf, relatedPersonIds);
         }
-        return Relationship.of(distanceToAncestor1, distanceToAncestor2, true, isHalf, relatedPersonId);
+        return Relationship.of(distanceToAncestor1, distanceToAncestor2, true, isHalf, relatedPersonIds);
+    }
+
+    public boolean isSpouseOf(Relationship other) {
+        return this.distanceToAncestor1 == other.distanceToAncestor1
+                && this.distanceToAncestor2 == other.distanceToAncestor2
+                && this.isSpouse != other.isSpouse
+                && this.isHalf == other.isHalf;
     }
 
     @Override
@@ -49,19 +69,17 @@ public record Relationship(
         if (compareDistance != 0) {
             return compareDistance;
         }
-        if (!this.isSpouse && other.isSpouse) {
-            return -1;
+        int compareIsSpouse = Boolean.compare(this.isSpouse, other.isSpouse);
+        if (compareIsSpouse != 0) {
+            return compareIsSpouse;
         }
-        if (this.isSpouse && !other.isSpouse) {
-            return 1;
+        int compareIsHalf = Boolean.compare(this.isHalf, other.isHalf);
+        if (compareIsHalf != 0) {
+            return compareIsHalf;
         }
-        if (!this.isHalf && other.isHalf) {
-            return -1;
-        }
-        if (this.isHalf && !other.isHalf) {
-            return 1;
-        }
-        return StringUtils.compare(this.relatedPersonId, other.relatedPersonId);
+        return SORTED_SET_COMPARATOR.compare(this.relatedPersonIds, other.relatedPersonIds);
     }
+
+    private static final SortedSetComparator<String> SORTED_SET_COMPARATOR = new SortedSetComparator<>();
 
 }

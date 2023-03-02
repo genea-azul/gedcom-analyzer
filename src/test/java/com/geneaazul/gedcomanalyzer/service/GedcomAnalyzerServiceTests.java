@@ -1,8 +1,10 @@
 package com.geneaazul.gedcomanalyzer.service;
 
+import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
 import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.dto.RelationshipDto;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.DateUtils.AstrologicalSign;
 
@@ -18,6 +20,7 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @SpringBootTest
 @EnableConfigurationProperties
@@ -32,6 +35,8 @@ public class GedcomAnalyzerServiceTests {
     private SearchService searchService;
     @Autowired
     private PersonService personService;
+    @Autowired
+    private RelationshipMapper relationshipMapper;
 
     @Test
     public void smokeTest() {
@@ -144,21 +149,22 @@ public class GedcomAnalyzerServiceTests {
                             });
                 });
 
-        System.out.println("\ngetNumberOfPeopleInTree:");
+        System.out.println("\ngetNumberOfPeopleInTree and getMaxDistantRelationship:");
         System.out.println(personService.getNumberOfPeopleInTree(gedcom.getPersonById("I4")));
+        System.out.println(personService.getMaxDistantRelationship(gedcom.getPersonById("I4")));
 
-        /*System.out.println("\ngetPeopleInTree:");
+        System.out.println("\ngetPeopleInTree:");
         personService
                 .getPeopleInTree(gedcom.getPersonById("I4"))
                 .forEach(pair -> System.out.println(
                         StringUtils.rightPad(pair.getRight()
+                                .getRelationships()
                                 .stream()
-                                .map(Relationship::toString)
-                                .collect(Collectors.joining(", ")), 32)
+                                .map(relationship -> relationshipMapper.toRelationshipDto(pair.getLeft().getId(), relationship, gedcom, ep -> false))
+                                .map(RelationshipDto::toString)
+                                .collect(Collectors.joining(", ")), 160)
                         + "  --  "
-                        + pair.getLeft()));*/
-
-        //personService.setNumberOfPeopleInTreeAndMaxDistantRelationship(gedcom.getPersonById("I4"));
+                        + pair.getLeft()));
     }
 
 }
