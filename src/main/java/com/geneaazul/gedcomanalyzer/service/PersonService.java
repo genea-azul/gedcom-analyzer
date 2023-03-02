@@ -4,30 +4,28 @@ import com.geneaazul.gedcomanalyzer.model.AncestryGenerations;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
+import com.geneaazul.gedcomanalyzer.model.Relationships;
 
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import jakarta.annotation.Nullable;
-import lombok.RequiredArgsConstructor;
 
 @Service
-@RequiredArgsConstructor
 public class PersonService {
 
     public List<String> getAncestryCountries(EnrichedPerson person) {
@@ -153,54 +151,81 @@ public class PersonService {
                 .orElse(null);
     }
 
-    public void setNumberOfPeopleInTreeAndMaxDistantRelationship(EnrichedPerson person) {
-        Map<String, Set<Relationship>> visitedPersons = new LinkedHashMap<>();
-        traversePeopleInTree(person, null, visitedPersons, Sort.Direction.ASC, Relationship.empty());
+    private void setNumberOfPeopleInTreeAndMaxDistantRelationship(EnrichedPerson person) {
+        Map<String, Relationships> visitedPersons = new LinkedHashMap<>();
+        traversePeopleInTree(
+                person,
+                null,
+                visitedPersons,
+                Sort.Direction.ASC,
+                Relationship.empty(),
+                Relationships.RelationshipPriority.CLOSEST_SKIPPING_SPOUSE_WHEN_EXISTS_ANY_NON_SPOUSE);
 
-        Optional<Pair<String, Relationship>> maxDistantRelationship = visitedPersons
-                .entrySet()
+        Optional<Pair<String, Relationship>> maxDistantRelationshipNonSpouse = visitedPersons
+                .values()
                 .stream()
-                .filter(entry -> !entry.getKey().equals(person.getId()))
-                .map(entry -> Pair.of(entry.getKey(), entry.getValue().iterator().next()))
-                .filter(pair -> !pair.getRight().isSpouse())
+                .filter(relationships -> !relationships.getPersonId().equals(person.getId()))
+                .map(relationships -> Pair.of(relationships.getPersonId(), relationships.getFirstNonSpouseRelationship()))
+                .filter(pair -> pair.getRight().isPresent())
+                .map(pair -> Pair.of(pair.getLeft(), pair.getRight().get()))
                 .reduce((p1, p2) -> p1.getRight().compareTo(p2.getRight()) >= 0 ? p1 : p2);
 
         person.setNumberOfPeopleInTree(visitedPersons.size());
-        person.setMaxDistantRelationship(maxDistantRelationship);
+        person.setMaxDistantRelationship(maxDistantRelationshipNonSpouse);
     }
 
-    public List<Pair<EnrichedPerson, Set<Relationship>>> getPeopleInTree(EnrichedPerson person) {
-        Map<String, Set<Relationship>> visitedPersons = new LinkedHashMap<>();
-        traversePeopleInTree(person, null, visitedPersons, Sort.Direction.ASC, Relationship.empty());
+    public List<Pair<EnrichedPerson, Relationships>> getPeopleInTree(EnrichedPerson person) {
+        Map<String, Relationships> visitedPersons = new LinkedHashMap<>();
+        traversePeopleInTree(
+                person,
+                null,
+                visitedPersons,
+                Sort.Direction.ASC,
+                Relationship.empty(),
+                Relationships.RelationshipPriority.SKIP_SPOUSE_WHEN_EXISTS_NON_SPOUSE_OF);
         EnrichedGedcom gedcom = person.getGedcom();
         return visitedPersons
-                .entrySet()
+                .values()
                 .stream()
-                .map(entry -> Pair.of(gedcom.getPersonById(entry.getKey()), entry.getValue()))
+                .map(relationships -> Pair.of(gedcom.getPersonById(relationships.getPersonId()), relationships))
                 .toList();
     }
 
     private static void traversePeopleInTree(
             EnrichedPerson person,
             @Nullable String previousPersonId,
-            Map<String, Set<Relationship>> visitedPersons,
+            Map<String, Relationships> visitedPersons,
             @Nullable Sort.Direction direction,
-            Relationship relationship) {
+            Relationship relationship,
+            Relationships.RelationshipPriority relationshipPriority) {
 
         boolean visited = visitedPersons.containsKey(person.getId());
         if (visited) {
-            if (containsRelationship(visitedPersons.get(person.getId()), relationship)) {
+            Relationships relationships = visitedPersons.get(person.getId());
+            if (relationships.contains(relationship)) {
                 return;
             }
-            if (relationship.isSpouse() && containsSomeNotSpouse(visitedPersons.get(person.getId()))) {
-                return;
+            if (relationship.isSpouse()) {
+                if (relationshipPriority.isSkipSpouseWhenAnyNonSpouse() && relationships.isContainsNotSpouse()) {
+                    return;
+                }
+                if (relationshipPriority.isSkipSpouseWhenNonSpouseOf() && relationships.containsSpouseOf(relationship)) {
+                    return;
+                }
+            }
+            if (relationshipPriority == Relationships.RelationshipPriority.CLOSEST_SKIPPING_SPOUSE_WHEN_EXISTS_ANY_NON_SPOUSE) {
+                if ((!relationship.isSpouse() && relationships.isContainsNotSpouse()
+                        || relationship.isSpouse() && !relationships.isContainsNotSpouse())
+                        && relationship.compareTo(relationships.getRelationships().first()) >= 0) {
+                    return;
+                }
             }
         }
 
         visitedPersons.merge(
                 person.getId(),
-                Set.of(relationship),
-                PersonService::mergeToTreeSet);
+                Relationships.of(person.getId(), relationship),
+                (r1, r2) -> r1.merge(r2, relationshipPriority));
 
         if (relationship.getDistance() == 32) {
             // If max level or recursion is reached, stop the search
@@ -208,16 +233,17 @@ public class PersonService {
         }
 
         resolveRelatives(person, direction)
-                .filter(relativeAndDirection -> !relativeAndDirection.getLeft().getId().equals(previousPersonId))
+                .filter(relativeAndDirection -> !relativeAndDirection.person.getId().equals(previousPersonId))
                 .forEach(relativeAndDirection -> traversePeopleInTree(
-                        relativeAndDirection.getLeft(),
+                        relativeAndDirection.person,
                         person.getId(),
                         visitedPersons,
-                        relativeAndDirection.getRight(),
+                        relativeAndDirection.direction,
                         relationship.increase(
-                                relativeAndDirection.getRight(),
-                                isSetHalf(direction, relativeAndDirection.getRight(), previousPersonId, relativeAndDirection.getLeft()),
-                                person.getId())));
+                                relativeAndDirection.direction,
+                                isSetHalf(direction, relativeAndDirection.direction, previousPersonId, relativeAndDirection.person),
+                                relativeAndDirection.relatedPersonIds),
+                        relationshipPriority));
     }
 
     private static boolean isSetHalf(
@@ -250,38 +276,7 @@ public class PersonService {
                 .anyMatch(personId -> !parentIds.contains(personId));
     }
 
-    private static Set<Relationship> mergeToTreeSet(Set<Relationship> t1, Set<Relationship> t2) {
-        Assert.isTrue(t2.size() == 1, "Error");
-        Relationship relationship = t2.iterator().next();
-
-        if (!relationship.isSpouse()) {
-            // Clean spouse relationships if there's a new one not-spouse
-            if (t1
-                    .stream()
-                    .anyMatch(Relationship::isSpouse)) {
-                t1 = t1
-                        .stream()
-                        .filter(r -> !r.isSpouse())
-                        .collect(Collectors.toCollection(LinkedHashSet::new));
-            }
-        }
-
-        TreeSet<Relationship> result = new TreeSet<>(t1);
-        result.add(relationship);
-        return result;
-    }
-
-    private static boolean containsRelationship(Set<Relationship> relationships, Relationship relationship) {
-        return relationships.contains(relationship);
-    }
-
-    private static boolean containsSomeNotSpouse(Set<Relationship> relationships) {
-        return relationships
-                .stream()
-                .anyMatch(relationship -> !relationship.isSpouse());
-    }
-
-    private static Stream<Pair<EnrichedPerson, Sort.Direction>> resolveRelatives(
+    private static Stream<A> resolveRelatives(
             EnrichedPerson person,
             @Nullable Sort.Direction direction) {
 
@@ -289,19 +284,77 @@ public class PersonService {
             return Stream.of();
         }
 
-        Stream<Pair<List<EnrichedPerson>, Sort.Direction>> relativesAndDirections = Sort.Direction.ASC == direction
-                ? Stream.of(
-                        Pair.of(person.getParents(), Sort.Direction.ASC),
-                        Pair.of(person.getSpouses(), null),
-                        Pair.of(person.getChildren(), Sort.Direction.DESC))
-                : Stream.of(
-                        Pair.of(person.getSpouses(), null),
-                        Pair.of(person.getChildren(), Sort.Direction.DESC));
+        Stream<B> relativesAndDirections = Stream.concat(
+                Stream.of(
+                        B.of(person.getSpouses(), null, newTreeSet(person.getId()))),
+                person
+                        .getSpousesWithChildren()
+                        .stream()
+                        .map(pair -> B.of(
+                                pair.getRight(),
+                                Sort.Direction.DESC,
+                                pair.getLeft()
+                                        .map(spouse -> newTreeSet(person.getId(), spouse.getId()))
+                                        .orElseGet(() -> newTreeSet(person.getId())))));
+
+        if (direction == Sort.Direction.ASC) {
+            relativesAndDirections = Stream.concat(
+                    Stream.of(
+                            B.of(person.getParents(), Sort.Direction.ASC, newTreeSet(person.getId()))),
+                    relativesAndDirections);
+        }
 
         return relativesAndDirections
-                .flatMap(pair -> pair.getLeft()
+                .flatMap(b -> b.persons
                         .stream()
-                        .map(relative -> Pair.of(relative, pair.getRight())));
+                        .map(relative -> A.of(relative, b.direction, b.relatedPersonIds)));
+    }
+
+    private static <E extends Comparable<E>> TreeSet<E> newTreeSet(E elem) {
+        TreeSet<E> set = new TreeSet<>();
+        set.add(elem);
+        return set;
+    }
+
+    private static <E extends Comparable<E>> TreeSet<E> newTreeSet(E elem1, E elem2) {
+        TreeSet<E> set = new TreeSet<>();
+        set.add(elem1);
+        set.add(elem2);
+        return set;
+    }
+
+    private record A(
+            EnrichedPerson person,
+            @Nullable Sort.Direction direction,
+            @Nullable SortedSet<String> relatedPersonIds) {
+
+        public static A of(
+                EnrichedPerson person,
+                @Nullable Sort.Direction direction,
+                @Nullable SortedSet<String> relatedPersonIds) {
+            return new A(
+                    person,
+                    direction,
+                    relatedPersonIds);
+        }
+
+    }
+
+    private record B(
+            List<EnrichedPerson> persons,
+            @Nullable Sort.Direction direction,
+            @Nullable SortedSet<String> relatedPersonIds) {
+
+        public static B of(
+                List<EnrichedPerson> persons,
+                @Nullable Sort.Direction direction,
+                @Nullable SortedSet<String> relatedPersonIds) {
+            return new B(
+                    persons,
+                    direction,
+                    relatedPersonIds);
+        }
+
     }
 
 }

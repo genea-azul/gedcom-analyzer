@@ -1,3 +1,7 @@
 .form-floating > label {
     width: 110% !important;
 }
+
+.card .card .card-body {
+    border-radius: var(--bs-card-inner-border-radius);
+}
