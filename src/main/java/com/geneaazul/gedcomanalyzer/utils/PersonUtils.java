@@ -34,9 +34,9 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class PersonUtils {
 
-    private static final String PRIVATE_NAME = "<private>";
-    private static final String NO_NAME = "<no name>";
-    private static final String NO_SPOUSE = "<no spouse>";
+    public static final String PRIVATE_NAME = "<private>";
+    public static final String NO_NAME = "<no name>";
+    public static final String NO_SPOUSE = "<no spouse>";
 
     /**
      * Tags taken from EventFact class.
@@ -45,6 +45,7 @@ public class PersonUtils {
     public static final Set<String> BAPTISM_TAGS = Set.of("BAP", "BAPM", "BAPT", "BAPTISM");
     public static final Set<String> CHRISTENING_TAGS = Set.of("CHR", "CHRISTENING");
     public static final Set<String> DEATH_TAGS = Set.of("DEAT", "DEATH");
+    public static final Set<String> BURIAL_TAGS = Set.of("BURI", "BURIAL");
     public static final Set<String> SEX_TAGS = Set.of("SEX");
     public static final Set<String> EVENT_TAGS = Set.of("EVEN", "EVENT");
 
@@ -112,7 +113,8 @@ public class PersonUtils {
     }
 
     private static String trimAndAppend(String str, String append) {
-        return StringUtils.isEmpty(str) ? append : str + " " + append.trim();
+        append = append.trim();
+        return StringUtils.isEmpty(str) ? append : str + " " + append;
     }
 
     /**
@@ -214,6 +216,10 @@ public class PersonUtils {
                 .stream()
                 .filter(eventFact -> DEATH_TAGS.contains(eventFact.getTag()))
                 .findFirst()
+                .or(() -> person.getEventsFacts()
+                        .stream()
+                        .filter(eventFact -> BURIAL_TAGS.contains(eventFact.getTag()))
+                        .findFirst())
                 .map(EventFact::getDate)
                 .map(StringUtils::trimToNull);
     }
@@ -230,6 +236,19 @@ public class PersonUtils {
                 .or(() -> person.getEventsFacts()
                         .stream()
                         .filter(eventFact -> CHRISTENING_TAGS.contains(eventFact.getTag()))
+                        .findFirst())
+                .map(EventFact::getPlace)
+                .map(StringUtils::trimToNull);
+    }
+
+    public static Optional<String> getPlaceOfDeath(Person person) {
+        return person.getEventsFacts()
+                .stream()
+                .filter(eventFact -> DEATH_TAGS.contains(eventFact.getTag()))
+                .findFirst()
+                .or(() -> person.getEventsFacts()
+                        .stream()
+                        .filter(eventFact -> BURIAL_TAGS.contains(eventFact.getTag()))
                         .findFirst())
                 .map(EventFact::getPlace)
                 .map(StringUtils::trimToNull);

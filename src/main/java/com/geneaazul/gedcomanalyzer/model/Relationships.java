@@ -74,14 +74,22 @@ public class Relationships {
         Assert.isTrue(t2.size() == 1, "Error");
         Relationship relationship = t2.iterator().next();
 
+        Set<Relationship> relationships = t1;
+
+        if (relationshipPriority == Relationships.RelationshipPriority.CLOSEST_SKIPPING_SPOUSE_WHEN_EXISTS_ANY_NON_SPOUSE
+                && !relationships.isEmpty()) {
+            relationships = Set.of();
+        }
+
         if (!relationship.isSpouse()
+                && !relationships.isEmpty()
                 && (relationshipPriority.isSkipSpouseWhenAnyNonSpouse() || relationshipPriority.isSkipSpouseWhenNonSpouseOf())) {
-            if (t1
+            if (relationships
                     .stream()
                     .anyMatch(r
                             -> relationshipPriority.isSkipSpouseWhenAnyNonSpouse() && r.isSpouse()
                             || relationshipPriority.isSkipSpouseWhenNonSpouseOf() && r.isSpouse() && r.isSpouseOf(relationship))) {
-                t1 = t1
+                relationships = relationships
                         .stream()
                         .filter(r
                                 -> relationshipPriority.isSkipSpouseWhenAnyNonSpouse() && !r.isSpouse()
@@ -90,7 +98,7 @@ public class Relationships {
             }
         }
 
-        TreeSet<Relationship> result = new TreeSet<>(t1);
+        TreeSet<Relationship> result = new TreeSet<>(relationships);
         result.add(relationship);
         return result;
     }

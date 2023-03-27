@@ -160,19 +160,21 @@ public class GedcomAnalyzerService {
     private static ReferenceType resolveSpouseReferenceType(ReferenceType referenceType, List<EventFact> eventsFacts) {
         return eventsFacts
                 .stream()
-                .filter(event -> FamilyUtils.DIVORCE_TAGS.contains(event.getTag()))
+                .filter(event -> FamilyUtils.DIVORCE_TAGS.contains(event.getTag()) && event.getValue().equals("Y")
+                        || FamilyUtils.EVENT_TAGS.contains(event.getTag()) && FamilyUtils.SEPARATION_EVENT_TYPES.contains(event.getType()))
                 .findFirst()
-                .filter(event -> event.getValue().equals("Y"))
-                .map(event -> referenceType == ReferenceType.WIFE ? ReferenceType.DIV_WIFE : ReferenceType.DIV_HUSB)
+                .map(event -> referenceType == ReferenceType.WIFE ? ReferenceType.FORMER_WIFE : ReferenceType.FORMER_HUSB)
                 .orElse(referenceType);
     }
 
     private static ReferenceType resolveChildReferenceType(String relationshipType) {
-        if ("Adopted".equalsIgnoreCase(relationshipType)) {
-            return ReferenceType.ADOPTED_CHILD;
-        }
-        if ("Foster".equalsIgnoreCase(relationshipType)) {
-            return ReferenceType.FOSTER_CHILD;
+        if (relationshipType != null) {
+            if (FamilyUtils.ADOPTED_CHILD_RELATIONSHIP_TYPES.contains(relationshipType)) {
+                return ReferenceType.ADOPTED_CHILD;
+            }
+            if (FamilyUtils.FOSTER_CHILD_RELATIONSHIP_TYPES.contains(relationshipType)) {
+                return ReferenceType.FOSTER_CHILD;
+            }
         }
         return ReferenceType.CHILD;
     }

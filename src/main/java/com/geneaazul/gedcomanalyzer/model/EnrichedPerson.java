@@ -43,6 +43,7 @@ public class EnrichedPerson {
     private final Optional<Date> dateOfBirth;
     private final Optional<Date> dateOfDeath;
     private final Optional<String> placeOfBirth;
+    private final Optional<String> placeOfDeath;
     private final boolean isAlive;
     private final Optional<Age> age;
 
@@ -86,6 +87,7 @@ public class EnrichedPerson {
         dateOfBirth = PersonUtils.getDateOfBirth(person).flatMap(Date::parse);
         dateOfDeath = PersonUtils.getDateOfDeath(person).flatMap(Date::parse);
         placeOfBirth = PersonUtils.getPlaceOfBirth(person);
+        placeOfDeath = PersonUtils.getPlaceOfDeath(person);
         isAlive = PersonUtils.isAlive(person);
         age = Age.of(dateOfBirth, dateOfDeath
                 .or(() -> isAlive ? Optional.of(Date.now(properties.getZoneId())) : Optional.empty()));
@@ -292,6 +294,8 @@ public class EnrichedPerson {
                 + " - " + StringUtils.rightPad(displayName, 36)
                 + " - " + StringUtils.leftPad(dateOfBirth.map(Date::format).orElse(""), 11)
                 + " - " + StringUtils.leftPad(dateOfDeath.map(Date::format).orElse(""), 11)
+                + " - " + StringUtils.rightPad(placeOfBirth.map(place -> StringUtils.substring(place, 0, 36)).orElse(""), 36)
+                + " - " + StringUtils.rightPad(placeOfDeath.map(place -> StringUtils.substring(place, 0, 36)).orElse(""), 36)
                 + " - " + StringUtils.rightPad(parents
                         .stream()
                         .map(EnrichedPerson::getDisplayName)
@@ -300,7 +304,7 @@ public class EnrichedPerson {
                         .stream()
                         .map(spouseCountPair -> spouseCountPair.getLeft()
                                 .map(EnrichedPerson::getDisplayName)
-                                .orElse("<no spouse>") + " (" + spouseCountPair.getRight().size() + ")")
+                                .orElse(PersonUtils.NO_SPOUSE) + " (" + spouseCountPair.getRight().size() + ")")
                         .collect(Collectors.joining(", "));
     }
 
