@@ -10,7 +10,6 @@ import com.geneaazul.gedcomanalyzer.model.dto.AncestryGenerationsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateCompareDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateDto;
-import com.geneaazul.gedcomanalyzer.model.dto.RelationshipDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SpouseWithChildrenDto;
 import com.geneaazul.gedcomanalyzer.utils.DateUtils;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
@@ -45,7 +44,7 @@ public class PersonMapper {
                 ep -> List.of(),
                 ep -> AncestryGenerations.empty(),
                 ep -> null,
-                ep -> null);
+                ep -> Optional.empty());
     }
 
     public List<PersonDto> toPersonDto(
@@ -54,7 +53,7 @@ public class PersonMapper {
             Function<EnrichedPerson, List<String>> ancestryCountriesResolver,
             Function<EnrichedPerson, AncestryGenerations> ancestryGenerationsResolver,
             Function<EnrichedPerson, Integer> numberOfPeopleInTreeResolver,
-            Function<EnrichedPerson, Pair<String, Relationship>> maxDistantRelationshipResolver) {
+            Function<EnrichedPerson, Optional<Pair<String, Relationship>>> maxDistantRelationshipResolver) {
         return persons
                 .stream()
                 .map(person -> toPersonDto(
@@ -73,7 +72,7 @@ public class PersonMapper {
             Function<EnrichedPerson, List<String>> ancestryCountriesResolver,
             Function<EnrichedPerson, AncestryGenerations> ancestryGenerationsResolver,
             Function<EnrichedPerson, Integer> numberOfPeopleInTreeResolver,
-            Function<EnrichedPerson, Pair<String, Relationship>> maxDistantRelationshipResolver) {
+            Function<EnrichedPerson, Optional<Pair<String, Relationship>>> maxDistantRelationshipResolver) {
 
         boolean obfuscateLiving = obfuscationType != ObfuscationType.NONE;
         boolean obfuscateName = obfuscateLiving && obfuscationType != ObfuscationType.SKIP_MAIN_PERSON_NAME;
@@ -86,18 +85,12 @@ public class PersonMapper {
         List<String> ancestryCountries = ancestryCountriesResolver.apply(person);
         AncestryGenerations ancestryGenerations = ancestryGenerationsResolver.apply(person);
         Integer numberOfPeopleInTree = numberOfPeopleInTreeResolver.apply(person);
-        Pair<String, Relationship> maxDistantRelationship = maxDistantRelationshipResolver.apply(person);
+        Optional<Pair<String, Relationship>> maybeMaxDistantRelationship = maxDistantRelationshipResolver.apply(person);
 
         AncestryGenerationsDto ancestryGenerationsDto = AncestryGenerationsDto.builder()
                 .ascending(ancestryGenerations.ascending())
                 .descending(ancestryGenerations.descending())
                 .build();
-
-        RelationshipDto maxDistantRelationshipDto = relationshipMapper.toRelationshipDto(
-                maxDistantRelationship.getLeft(),
-                maxDistantRelationship.getRight(),
-                person.getGedcom(),
-                relationshipPerson -> obfuscateLiving && (person.isAlive() || relationshipPerson.isAlive()));
 
         return PersonDto.builder()
                 .sex(person.getSex())
@@ -124,7 +117,13 @@ public class PersonMapper {
                 .ancestryCountries(ancestryCountries)
                 .ancestryGenerations(ancestryGenerationsDto)
                 .numberOfPeopleInTree(numberOfPeopleInTree)
-                .maxDistantRelationship(maxDistantRelationshipDto)
+                .maxDistantRelationship(maybeMaxDistantRelationship
+                        .map(maxDistantRelationship -> relationshipMapper.toRelationshipDto(
+                                maxDistantRelationship.getLeft(),
+                                maxDistantRelationship.getRight(),
+                                person.getGedcom(),
+                                relationshipPerson -> obfuscateLiving && (person.isAlive() || relationshipPerson.isAlive())))
+                        .orElse(null))
                 .build();
     }
 

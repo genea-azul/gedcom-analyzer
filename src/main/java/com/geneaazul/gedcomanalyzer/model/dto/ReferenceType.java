@@ -6,9 +6,9 @@ public enum ReferenceType {
     SELF,
     PARENT,
     HUSB,
-    DIV_HUSB,
+    FORMER_HUSB,
     WIFE,
-    DIV_WIFE,
+    FORMER_WIFE,
     SPOUSE,
     SIBLING,
     NIBLING, // niece, nephew

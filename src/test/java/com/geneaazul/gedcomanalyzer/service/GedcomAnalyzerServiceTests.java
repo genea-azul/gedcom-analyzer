@@ -157,12 +157,12 @@ public class GedcomAnalyzerServiceTests {
         personService
                 .getPeopleInTree(gedcom.getPersonById("I4"))
                 .forEach(pair -> System.out.println(
-                        StringUtils.rightPad(pair.getRight()
+                        pair.getRight()
                                 .getRelationships()
                                 .stream()
                                 .map(relationship -> relationshipMapper.toRelationshipDto(pair.getLeft().getId(), relationship, gedcom, ep -> false))
                                 .map(RelationshipDto::toString)
-                                .collect(Collectors.joining(", ")), 160)
+                                .collect(Collectors.joining(", "))
                         + "  --  "
                         + pair.getLeft()));
     }

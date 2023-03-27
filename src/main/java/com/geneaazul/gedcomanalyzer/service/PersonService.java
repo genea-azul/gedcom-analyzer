@@ -141,14 +141,12 @@ public class PersonService {
         return person.getNumberOfPeopleInTree();
     }
 
-    public Pair<String, Relationship> getMaxDistantRelationship(EnrichedPerson person) {
+    public Optional<Pair<String, Relationship>> getMaxDistantRelationship(EnrichedPerson person) {
         if (person.getMaxDistantRelationship() == null) {
             setNumberOfPeopleInTreeAndMaxDistantRelationship(person);
         }
 
-        return person
-                .getMaxDistantRelationship()
-                .orElse(null);
+        return person.getMaxDistantRelationship();
     }
 
     private void setNumberOfPeopleInTreeAndMaxDistantRelationship(EnrichedPerson person) {
@@ -182,7 +180,7 @@ public class PersonService {
                 visitedPersons,
                 Sort.Direction.ASC,
                 Relationship.empty(),
-                Relationships.RelationshipPriority.SKIP_SPOUSE_WHEN_EXISTS_NON_SPOUSE_OF);
+                Relationships.RelationshipPriority.CLOSEST_SKIPPING_SPOUSE_WHEN_EXISTS_ANY_NON_SPOUSE);
         EnrichedGedcom gedcom = person.getGedcom();
         return visitedPersons
                 .values()

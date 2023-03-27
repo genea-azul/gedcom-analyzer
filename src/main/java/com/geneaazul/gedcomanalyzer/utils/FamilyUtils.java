@@ -16,6 +16,9 @@ public class FamilyUtils {
      */
     public static final Set<String> DIVORCE_TAGS = Set.of("DIV", "DIVF", "DIVORCE", "_DIV");
     public static final Set<String> EVENT_TAGS = Set.of("EVEN", "EVENT");
+    public static final Set<String> SEPARATION_EVENT_TYPES = Set.of("Separation", "SEPARATION");
+    public static final Set<String> ADOPTED_CHILD_RELATIONSHIP_TYPES = Set.of("Adopted", "ADOPTED");
+    public static final Set<String> FOSTER_CHILD_RELATIONSHIP_TYPES = Set.of("Foster", "FOSTER");
 
     public static List<EventFact> getCustomEventFacts(Family family) {
         return family.getEventsFacts()
