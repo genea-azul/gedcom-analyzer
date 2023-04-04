@@ -17,6 +17,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.time.Month;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -114,12 +115,17 @@ public class GedcomAnalyzerServiceTests {
                 .findPersonsByPlaceOfBirth("Latina, Lazio, Italia", null, null, gedcom.getPeople())
                 .forEach(System.out::println);
 
+        System.out.println("\nfindPersonsByMonthAndDayOfDeath:");
+        searchService
+                .findPersonsByMonthAndDayOfDeath(Month.APRIL, 2, null, gedcom.getPeople())
+                .forEach(System.out::println);
+
         System.out.println("\ngetAstrologicalSignsCardinalityByPlaceOfBirth:");
-        List<EnrichedPerson> persons = searchService
+        List<EnrichedPerson> personsByPlaceOfBirth = searchService
                 .findPersonsByPlaceOfBirth("Azul, Buenos Aires, Argentina", null, null, gedcom.getPeople());
-        Pair<Optional<EnrichedPerson>, Optional<EnrichedPerson>> minMaxDateOfBirth = gedcomAnalyzerService.getMinMaxFullDateOfBirth(persons);
-        Map<AstrologicalSign, Integer> cardinality = gedcomAnalyzerService.getAstrologicalSignsCardinality(persons, true);
-        int astrologicalSignsCount = cardinality.values().stream().reduce(0, Integer::sum);
+        Pair<Optional<EnrichedPerson>, Optional<EnrichedPerson>> minMaxDateOfBirth = gedcomAnalyzerService.getMinMaxFullDateOfBirth(personsByPlaceOfBirth);
+        Map<AstrologicalSign, Integer> astrologicalSignsCardinality = gedcomAnalyzerService.getAstrologicalSignsCardinality(personsByPlaceOfBirth, true);
+        int astrologicalSignsCount = astrologicalSignsCardinality.values().stream().reduce(0, Integer::sum);
         System.out.println(
                 minMaxDateOfBirth
                         .getLeft()
@@ -131,8 +137,28 @@ public class GedcomAnalyzerServiceTests {
                         .map(person -> person.getDateOfBirth().map(Date::format).orElse("") + " (" + person.getDisplayName() + ")")
                         .orElse("")
                 + ": " + astrologicalSignsCount + " births");
-        cardinality
+        astrologicalSignsCardinality
                 .forEach(((astrologicalSign, count) -> System.out.printf("%s\t%.2f%%\t%d%n", astrologicalSign, (double) count / astrologicalSignsCount * 100, count)));
+
+        System.out.println("\ngetMonthOfDeathCardinalityByPlaceOfDeath:");
+        List<EnrichedPerson> personsByPlaceOfDeath = searchService
+                .findPersonsByPlaceOfDeath("Azul, Buenos Aires, Argentina", null, gedcom.getPeople());
+        Pair<Optional<EnrichedPerson>, Optional<EnrichedPerson>> minMaxDateOfDeath = gedcomAnalyzerService.getMinMaxFullDateOfDeath(personsByPlaceOfDeath);
+        Map<Month, Integer> monthsOfDeathCardinality = gedcomAnalyzerService.getMonthsOfDeathCardinality(personsByPlaceOfDeath);
+        int monthsCount = monthsOfDeathCardinality.values().stream().reduce(0, Integer::sum);
+        System.out.println(
+                minMaxDateOfDeath
+                        .getLeft()
+                        .map(person -> person.getDateOfDeath().map(Date::format).orElse("") + " (" + person.getDisplayName() + ")")
+                        .orElse("")
+                + " to "
+                + minMaxDateOfDeath
+                        .getRight()
+                        .map(person -> person.getDateOfDeath().map(Date::format).orElse("") + " (" + person.getDisplayName() + ")")
+                        .orElse("")
+                + ": " + monthsCount + " deaths");
+        monthsOfDeathCardinality
+                .forEach(((month, count) -> System.out.printf("%s\t%.2f%%\t%d%n", month, (double) count / monthsCount * 100, count)));
 
         System.out.println("\nfindDuplicatedPersons:");
         searchService
