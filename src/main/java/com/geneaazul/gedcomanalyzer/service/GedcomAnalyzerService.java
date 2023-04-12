@@ -34,6 +34,7 @@ import org.folg.gedcom.model.SpouseRef;
 import org.folg.gedcom.model.Visitor;
 import org.springframework.stereotype.Service;
 
+import java.time.Month;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -386,6 +387,22 @@ public class GedcomAnalyzerService {
     /**
      * .
      */
+    public Map<Month, Integer> getMonthsOfDeathCardinality(List<EnrichedPerson> people) {
+
+        List<Month> monthsOfDeath = people
+                .stream()
+                .flatMap(person -> person.getDateOfDeath()
+                        .filter(dod -> !dod.isOnlyYearDate())
+                        .map(Date::getMonth)
+                        .stream())
+                .toList();
+
+        return EnumCollectionUtils.getCardinalityMap(monthsOfDeath, Month.class);
+    }
+
+    /**
+     * .
+     */
     public Pair<Optional<EnrichedPerson>, Optional<EnrichedPerson>> getMinMaxFullDateOfBirth(List<EnrichedPerson> people) {
 
         List<EnrichedPerson> peopleWithFullDateOfBirth = people
@@ -403,6 +420,28 @@ public class GedcomAnalyzerService {
                 .reduce((p1, p2) -> p2.getDateOfBirth().get().isBefore(p1.getDateOfBirth().get().toLocalDate()) ? p1 : p2);
 
         return Pair.of(minDateOfBirth, maxDateOfBirth);
+    }
+
+    /**
+     * .
+     */
+    public Pair<Optional<EnrichedPerson>, Optional<EnrichedPerson>> getMinMaxFullDateOfDeath(List<EnrichedPerson> people) {
+
+        List<EnrichedPerson> peopleWithFullDateOfDeath = people
+                .stream()
+                .filter(person -> person.getDateOfDeath().isPresent())
+                .filter(person -> person.getDateOfDeath().get().isFullDate())
+                .toList();
+
+        Optional<EnrichedPerson> minDateOfDeath = peopleWithFullDateOfDeath
+                .stream()
+                .reduce((p1, p2) -> p1.getDateOfDeath().get().isBefore(p2.getDateOfDeath().get().toLocalDate()) ? p1 : p2);
+
+        Optional<EnrichedPerson> maxDateOfDeath = peopleWithFullDateOfDeath
+                .stream()
+                .reduce((p1, p2) -> p2.getDateOfDeath().get().isBefore(p1.getDateOfDeath().get().toLocalDate()) ? p1 : p2);
+
+        return Pair.of(minDateOfDeath, maxDateOfDeath);
     }
 
     /**

@@ -18,6 +18,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.Month;
 import java.time.Year;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -78,13 +79,42 @@ public class SearchService {
     /**
      * .
      */
+    public List<EnrichedPerson> findPersonsByMonthAndDayOfDeath(Month month, int day, SexType sex, List<EnrichedPerson> people) {
+        return people
+                .stream()
+                .filter(person -> !person.isAlive())
+                .filter(person -> sex == null || sex == person.getSex())
+                .filter(person -> person.getDateOfDeath()
+                        .filter(Date::isFullDate)
+                        .map(dob -> dob.getMonth() == month && dob.getDay() == day)
+                        .orElse(false))
+                .toList();
+    }
+
+    /**
+     * .
+     */
     public List<EnrichedPerson> findPersonsByPlaceOfBirth(String placeOfBirth, Boolean isAlive, SexType sex, List<EnrichedPerson> people) {
         return people
                 .stream()
-                .filter(person -> isAlive == null || isAlive.equals(person.isAlive()))
+                .filter(person -> isAlive == null || isAlive == person.isAlive())
                 .filter(person -> sex == null || sex == person.getSex())
                 .filter(person -> person.getPlaceOfBirthForSearch()
                         .map(pob -> pob.endsWith(placeOfBirth))
+                        .orElse(false))
+                .toList();
+    }
+
+    /**
+     * .
+     */
+    public List<EnrichedPerson> findPersonsByPlaceOfDeath(String placeOfDeath, SexType sex, List<EnrichedPerson> people) {
+        return people
+                .stream()
+                .filter(person -> !person.isAlive())
+                .filter(person -> sex == null || sex == person.getSex())
+                .filter(person -> person.getPlaceOfBirthForSearch()
+                        .map(pod -> pod.endsWith(placeOfDeath))
                         .orElse(false))
                 .toList();
     }
