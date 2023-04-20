@@ -105,7 +105,8 @@ $(document).ready(function() {
                 "sex": trimToNull($("input[type=radio][name=individualSex]:checked").val()),
                 "isAlive": $("#individualIsAlive").prop("checked"),
                 "yearOfBirth": toNumber($("#individualYearOfBirth").val()),
-                "yearOfDeath": toNumber($("#individualYearOfDeath:enabled").val())
+                "yearOfDeath": toNumber($("#individualYearOfDeath:enabled").val()),
+                "placeOfBirth": trimToNull($("#individualPlaceOfBirth").val())
             },
             "father": {
                 "givenName": trimToNull($("#fatherGivenName").val()),
@@ -113,7 +114,8 @@ $(document).ready(function() {
                 "sex": "M",
                 "isAlive": $("#fatherIsAlive").prop("checked"),
                 "yearOfBirth": toNumber($("#fatherYearOfBirth").val()),
-                "yearOfDeath": toNumber($("#fatherYearOfDeath:enabled").val())
+                "yearOfDeath": toNumber($("#fatherYearOfDeath:enabled").val()),
+                "placeOfBirth": trimToNull($("#fatherPlaceOfBirth").val())
             },
             "mother": {
                 "givenName": trimToNull($("#motherGivenName").val()),
@@ -121,7 +123,8 @@ $(document).ready(function() {
                 "sex": "F",
                 "isAlive": $("#motherIsAlive").prop("checked"),
                 "yearOfBirth": toNumber($("#motherYearOfBirth").val()),
-                "yearOfDeath": toNumber($("#motherYearOfDeath:enabled").val())
+                "yearOfDeath": toNumber($("#motherYearOfDeath:enabled").val()),
+                "placeOfBirth": trimToNull($("#motherPlaceOfBirth").val())
             },
             "paternalGrandfather": {
                 "givenName": trimToNull($("#paternalGrandfatherGivenName").val()),
@@ -129,7 +132,8 @@ $(document).ready(function() {
                 "sex": "M",
                 "isAlive": $("#paternalGrandfatherIsAlive").prop("checked"),
                 "yearOfBirth": toNumber($("#paternalGrandfatherYearOfBirth").val()),
-                "yearOfDeath": toNumber($("#paternalGrandfatherYearOfDeath:enabled").val())
+                "yearOfDeath": toNumber($("#paternalGrandfatherYearOfDeath:enabled").val()),
+                "placeOfBirth": trimToNull($("#paternalGrandfatherPlaceOfBirth").val())
             },
             "paternalGrandmother": {
                 "givenName": trimToNull($("#paternalGrandmotherGivenName").val()),
@@ -137,7 +141,8 @@ $(document).ready(function() {
                 "sex": "F",
                 "isAlive": $("#paternalGrandmotherIsAlive").prop("checked"),
                 "yearOfBirth": toNumber($("#paternalGrandmotherYearOfBirth").val()),
-                "yearOfDeath": toNumber($("#paternalGrandmotherYearOfDeath:enabled").val())
+                "yearOfDeath": toNumber($("#paternalGrandmotherYearOfDeath:enabled").val()),
+                "placeOfBirth": trimToNull($("#paternalGrandmotherPlaceOfBirth").val())
             },
             "maternalGrandfather": {
                 "givenName": trimToNull($("#maternalGrandfatherGivenName").val()),
@@ -145,7 +150,8 @@ $(document).ready(function() {
                 "sex": "M",
                 "isAlive": $("#maternalGrandfatherIsAlive").prop("checked"),
                 "yearOfBirth": toNumber($("#maternalGrandfatherYearOfBirth").val()),
-                "yearOfDeath": toNumber($("#maternalGrandfatherYearOfDeath:enabled").val())
+                "yearOfDeath": toNumber($("#maternalGrandfatherYearOfDeath:enabled").val()),
+                "placeOfBirth": trimToNull($("#maternalGrandfatherPlaceOfBirth").val())
             },
             "maternalGrandmother": {
                 "givenName": trimToNull($("#maternalGrandmotherGivenName").val()),
@@ -153,7 +159,8 @@ $(document).ready(function() {
                 "sex": "F",
                 "isAlive": $("#maternalGrandmotherIsAlive").prop("checked"),
                 "yearOfBirth": toNumber($("#maternalGrandmotherYearOfBirth").val()),
-                "yearOfDeath": toNumber($("#maternalGrandmotherYearOfDeath:enabled").val())
+                "yearOfDeath": toNumber($("#maternalGrandmotherYearOfDeath:enabled").val()),
+                "placeOfBirth": trimToNull($("#maternalGrandmotherPlaceOfBirth").val())
             },
             "contact": trimToNull($("#individualContact").val())
         };

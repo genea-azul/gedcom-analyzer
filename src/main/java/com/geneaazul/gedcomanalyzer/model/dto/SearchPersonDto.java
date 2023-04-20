@@ -37,5 +37,8 @@ public class SearchPersonDto {
     @Max(2050)
     @ToString.Include
     private Integer yearOfDeath;
+    @Size(max = 80)
+    @ToString.Include
+    private String placeOfBirth;
 
 }
