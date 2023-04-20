@@ -65,7 +65,8 @@ public class SearchFamily {
             @AttributeOverride(name = "surname", column = @Column(name = "individual_surname")),
             @AttributeOverride(name = "isAlive", column = @Column(name = "individual_is_alive")),
             @AttributeOverride(name = "yearOfBirth", column = @Column(name = "individual_year_of_birth")),
-            @AttributeOverride(name = "yearOfDeath", column = @Column(name = "individual_year_of_death"))
+            @AttributeOverride(name = "yearOfDeath", column = @Column(name = "individual_year_of_death")),
+            @AttributeOverride(name = "placeOfBirth", column = @Column(name = "individual_place_of_birth"))
     })
     @ToString.Include
     private SearchPerson individual;
@@ -76,7 +77,8 @@ public class SearchFamily {
             @AttributeOverride(name = "surname", column = @Column(name = "father_surname")),
             @AttributeOverride(name = "isAlive", column = @Column(name = "father_is_alive")),
             @AttributeOverride(name = "yearOfBirth", column = @Column(name = "father_year_of_birth")),
-            @AttributeOverride(name = "yearOfDeath", column = @Column(name = "father_year_of_death"))
+            @AttributeOverride(name = "yearOfDeath", column = @Column(name = "father_year_of_death")),
+            @AttributeOverride(name = "placeOfBirth", column = @Column(name = "father_place_of_birth"))
     })
     @ToString.Include
     private SearchPerson father;
@@ -87,7 +89,8 @@ public class SearchFamily {
             @AttributeOverride(name = "surname", column = @Column(name = "mother_surname")),
             @AttributeOverride(name = "isAlive", column = @Column(name = "mother_is_alive")),
             @AttributeOverride(name = "yearOfBirth", column = @Column(name = "mother_year_of_birth")),
-            @AttributeOverride(name = "yearOfDeath", column = @Column(name = "mother_year_of_death"))
+            @AttributeOverride(name = "yearOfDeath", column = @Column(name = "mother_year_of_death")),
+            @AttributeOverride(name = "placeOfBirth", column = @Column(name = "mother_place_of_birth"))
     })
     @ToString.Include
     private SearchPerson mother;
@@ -98,7 +101,8 @@ public class SearchFamily {
             @AttributeOverride(name = "surname", column = @Column(name = "paternal_grandfather_surname")),
             @AttributeOverride(name = "isAlive", column = @Column(name = "paternal_grandfather_is_alive")),
             @AttributeOverride(name = "yearOfBirth", column = @Column(name = "paternal_grandfather_year_of_birth")),
-            @AttributeOverride(name = "yearOfDeath", column = @Column(name = "paternal_grandfather_year_of_death"))
+            @AttributeOverride(name = "yearOfDeath", column = @Column(name = "paternal_grandfather_year_of_death")),
+            @AttributeOverride(name = "placeOfBirth", column = @Column(name = "paternal_grandfather_place_of_birth"))
     })
     @ToString.Include
     private SearchPerson paternalGrandfather;
@@ -109,7 +113,8 @@ public class SearchFamily {
             @AttributeOverride(name = "surname", column = @Column(name = "paternal_grandmother_surname")),
             @AttributeOverride(name = "isAlive", column = @Column(name = "paternal_grandmother_is_alive")),
             @AttributeOverride(name = "yearOfBirth", column = @Column(name = "paternal_grandmother_year_of_birth")),
-            @AttributeOverride(name = "yearOfDeath", column = @Column(name = "paternal_grandmother_year_of_death"))
+            @AttributeOverride(name = "yearOfDeath", column = @Column(name = "paternal_grandmother_year_of_death")),
+            @AttributeOverride(name = "placeOfBirth", column = @Column(name = "paternal_grandmother_place_of_birth"))
     })
     @ToString.Include
     private SearchPerson paternalGrandmother;
@@ -120,7 +125,8 @@ public class SearchFamily {
             @AttributeOverride(name = "surname", column = @Column(name = "maternal_grandfather_surname")),
             @AttributeOverride(name = "isAlive", column = @Column(name = "maternal_grandfather_is_alive")),
             @AttributeOverride(name = "yearOfBirth", column = @Column(name = "maternal_grandfather_year_of_birth")),
-            @AttributeOverride(name = "yearOfDeath", column = @Column(name = "maternal_grandfather_year_of_death"))
+            @AttributeOverride(name = "yearOfDeath", column = @Column(name = "maternal_grandfather_year_of_death")),
+            @AttributeOverride(name = "placeOfBirth", column = @Column(name = "maternal_grandfather_place_of_birth"))
     })
     @ToString.Include
     private SearchPerson maternalGrandfather;
@@ -131,7 +137,8 @@ public class SearchFamily {
             @AttributeOverride(name = "surname", column = @Column(name = "maternal_grandmother_surname")),
             @AttributeOverride(name = "isAlive", column = @Column(name = "maternal_grandmother_is_alive")),
             @AttributeOverride(name = "yearOfBirth", column = @Column(name = "maternal_grandmother_year_of_birth")),
-            @AttributeOverride(name = "yearOfDeath", column = @Column(name = "maternal_grandmother_year_of_death"))
+            @AttributeOverride(name = "yearOfDeath", column = @Column(name = "maternal_grandmother_year_of_death")),
+            @AttributeOverride(name = "placeOfBirth", column = @Column(name = "maternal_grandmother_place_of_birth"))
     })
     @ToString.Include
     private SearchPerson maternalGrandmother;

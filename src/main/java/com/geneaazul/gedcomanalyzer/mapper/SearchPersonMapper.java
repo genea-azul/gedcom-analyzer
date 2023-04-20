@@ -26,6 +26,7 @@ public class SearchPersonMapper {
                 .isAlive(searchPersonDto.getIsAlive())
                 .yearOfBirth(searchPersonDto.getYearOfBirth())
                 .yearOfDeath(searchPersonDto.getYearOfDeath())
+                .placeOfBirth(searchPersonDto.getPlaceOfBirth())
                 .build();
     }
 
@@ -41,6 +42,7 @@ public class SearchPersonMapper {
                 .isAlive(searchPerson.getIsAlive())
                 .yearOfBirth(searchPerson.getYearOfBirth())
                 .yearOfDeath(searchPerson.getYearOfDeath())
+                .placeOfBirth(searchPerson.getPlaceOfBirth())
                 .build();
     }
 

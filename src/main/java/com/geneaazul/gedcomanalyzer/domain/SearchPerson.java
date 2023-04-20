@@ -28,5 +28,7 @@ public class SearchPerson {
     private Integer yearOfBirth;
     @ToString.Include
     private Integer yearOfDeath;
+    @ToString.Include
+    private String placeOfBirth;
 
 }

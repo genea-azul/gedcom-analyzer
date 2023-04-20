@@ -184,6 +184,30 @@ public class SearchUtilsTests {
                     Surname notMatching = PersonUtils.getShortenedSurnameMainWord("Gau", properties.getNormalizedSurnamesMap()).orElse(null);
                     assertThat(surname.matches(notMatching)).isFalse();
                 });
+
+        name.setSurname("Montagna");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("Montagna");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("montagna");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("montagn_");
+
+                    Surname matching = PersonUtils.getShortenedSurnameMainWord("Montaño", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(matching)).isTrue();
+                });
+
+        name.setSurname("Castaño");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("Castaño");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("castagno");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("castagn_");
+
+                    Surname matching = PersonUtils.getShortenedSurnameMainWord("Castagna", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(matching)).isTrue();
+                });
     }
 
 }

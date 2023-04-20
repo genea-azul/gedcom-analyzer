@@ -44,6 +44,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                         .sex(SexType.M)
                         .isAlive(Boolean.TRUE)
                         .yearOfBirth(2020)
+                        .placeOfBirth("Azul")
                         .build())
                 .maternalGrandfather(SearchPersonDto.builder()
                         .givenName("Father")
@@ -58,6 +59,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                         .sex(SexType.F)
                         .isAlive(Boolean.FALSE)
                         .yearOfBirth(1985)
+                        .placeOfBirth("Tapalqué")
                         .build())
                 .contact("juan.perez@gmail.com")
                 .build();
