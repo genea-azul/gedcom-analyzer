@@ -18,6 +18,7 @@ import com.geneaazul.gedcomanalyzer.utils.DateUtils;
 import com.geneaazul.gedcomanalyzer.utils.EnumCollectionUtils;
 import com.geneaazul.gedcomanalyzer.utils.FamilyUtils;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
+import com.geneaazul.gedcomanalyzer.utils.SearchUtils;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -349,7 +350,7 @@ public class GedcomAnalyzerService {
     /**
      * .
      */
-    public List<Pair<String, Integer>> getPlacesOfBirthCardinalityGroupedByCountry(List<EnrichedPerson> people, boolean includeEmptyValues) {
+    public List<Pair<String, Integer>> getCountriesOfBirthCardinality(List<EnrichedPerson> people, boolean includeEmptyValues) {
 
         List<String> countriesOfBirth = people
                 .stream()
@@ -366,6 +367,81 @@ public class GedcomAnalyzerService {
                 .sorted(Comparator.<Map.Entry<String, Integer>>comparingInt(Map.Entry::getValue).reversed())
                 .map(entry -> Pair.of(entry.getKey(), entry.getValue()))
                 .toList();
+    }
+
+    /**
+     * .
+     */
+    public List<SurnamesCardinality> getSurnamesCardinalityByPlaceOfBirth(List<EnrichedPerson> people, String placeOfBirth) {
+
+        List<Surname> surnamesByPlaceOfBirth = searchService
+                .findPersonsByPlaceOfBirth(placeOfBirth, null, null, people)
+                .stream()
+                .map(EnrichedPerson::getSurname)
+                .flatMap(Optional::stream)
+                .toList();
+
+        List<String> mainWords = surnamesByPlaceOfBirth
+                .stream()
+                .map(Surname::value)
+                .toList();
+        Map<String, Integer> mainWordsCardinality = CollectionUtils.getCardinalityMap(mainWords);
+
+        List<String> normalizedMainWords = surnamesByPlaceOfBirth
+                .stream()
+                .map(Surname::normalizedMainWord)
+                .toList();
+        Map<String, Integer> normalizedMainWordCardinality = CollectionUtils.getCardinalityMap(normalizedMainWords);
+
+        Map<String, Set<String>> normalizedMainWordsByShortened = surnamesByPlaceOfBirth
+                .stream()
+                .collect(Collectors.groupingBy(Surname::shortenedMainWord, Collectors.mapping(Surname::normalizedMainWord, Collectors.toSet())));
+
+        Map<String, Set<Pair<String, Integer>>> surnamesByNormalized = surnamesByPlaceOfBirth
+                .stream()
+                .collect(Collectors.groupingBy(
+                        Surname::normalizedMainWord,
+                        Collectors.mapping(
+                                surname -> Pair.of(
+                                        surname.value(),
+                                        mainWordsCardinality.get(surname.value())),
+                                Collectors.toSet())));
+
+        return normalizedMainWordCardinality
+                .entrySet()
+                .stream()
+                .sorted(Comparator
+                        .<Map.Entry<String, Integer>>comparingInt(Map.Entry::getValue)
+                        .reversed()
+                        .thenComparing(Map.Entry::getKey))
+                .map(entry -> {
+                    String normalizedMainWord = entry.getKey();
+                    String shortenedMainWord = SearchUtils.shortenSurnameMainWord(normalizedMainWord);
+                    return new SurnamesCardinality(
+                            normalizedMainWord,
+                            entry.getValue(),
+                            surnamesByNormalized.get(entry.getKey())
+                                    .stream()
+                                    .sorted(Comparator
+                                            .<Pair<String, Integer>>comparingInt(Pair::getRight)
+                                            .reversed()
+                                            .thenComparing(Pair::getLeft))
+                                    .toList(),
+                            normalizedMainWordsByShortened.get(shortenedMainWord)
+                                    .stream()
+                                    .filter(related -> !related.equals(normalizedMainWord))
+                                    .sorted()
+                                    .toList());
+                })
+                .toList();
+    }
+
+    public record SurnamesCardinality (
+            String normalizedMainWord,
+            Integer cardinality,
+            List<Pair<String, Integer>> surnamesCardinality,
+            List<String> relatedNormalized) {
+
     }
 
     /**
