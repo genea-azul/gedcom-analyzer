@@ -100,15 +100,29 @@ public class GedcomAnalyzerServiceTests {
                 .filter(pair -> pair.getRight() > 1)
                 .forEach(pair -> System.out.println(pair.getLeft() + " (" + pair.getRight() + ")"));
 
-        System.out.println("\ngetPlacesOfBirthCardinalityByCountry:");
+        System.out.println("\ngetCountriesOfBirthCardinality:");
         gedcomAnalyzerService
-                .getPlacesOfBirthCardinalityGroupedByCountry(gedcom.getPeople(), true)
+                .getCountriesOfBirthCardinality(gedcom.getPeople(), true)
                 .forEach(pair -> System.out.println(pair.getLeft() + " (" + pair.getRight() + ")"));
 
         System.out.println("\ngetAllPlaces:");
         gedcomAnalyzerService
                 .getAllPlaces(gedcom.getGedcom(), true)
                 .forEach(System.out::println);
+
+        System.out.println("\ngetSurnamesCardinalityByPlaceOfBirth:");
+        gedcomAnalyzerService
+                .getSurnamesCardinalityByPlaceOfBirth(gedcom.getPeople(), "Azul, Buenos Aires, Argentina")
+                .stream()
+                .limit(500)
+                .forEach(cardinality -> System.out.println(
+                        cardinality.normalizedMainWord()
+                                + " - " + cardinality.cardinality()
+                                + " - " + cardinality.surnamesCardinality()
+                                        .stream()
+                                        .map(pair -> pair.getLeft() + " (" + pair.getRight() + ")")
+                                        .collect(Collectors.joining(", "))
+                                + " - Related: " + String.join(", ", cardinality.relatedNormalized())));
 
         System.out.println("\nfindPersonsByPlaceOfBirth:");
         searchService
@@ -182,6 +196,8 @@ public class GedcomAnalyzerServiceTests {
         System.out.println("\ngetPeopleInTree:");
         personService
                 .getPeopleInTree(gedcom.getPersonById("I4"))
+                .stream()
+                .limit(500)
                 .forEach(pair -> System.out.println(
                         pair.getRight()
                                 .getRelationships()
