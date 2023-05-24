@@ -36,10 +36,10 @@ public class GedcomHolder {
         throw new IllegalStateException("Server is starting, please try again.");
     }
 
-    public void reloadFromStorage() {
+    public void reloadFromStorage(boolean refreshCachedGedcom) {
         try {
-            EnrichedGedcom gedcom = storageService.getGedcom();
             gedcomQueue.clear();
+            EnrichedGedcom gedcom = storageService.getGedcom(refreshCachedGedcom);
             gedcomQueue.offer(gedcom);
 
             log.info("Gedcom file loaded: {}", storageService.getGedcomName());
@@ -51,7 +51,7 @@ public class GedcomHolder {
 
     @PostConstruct
     public void postConstruct() {
-        gedcomHolderExecutorService.submit(this::reloadFromStorage);
+        gedcomHolderExecutorService.submit(() -> reloadFromStorage(false));
     }
 
     @PreDestroy

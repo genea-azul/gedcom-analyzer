@@ -19,6 +19,9 @@ target/
 *.tar.gz
 *.rar
 
+# Docker files
+.env
+
 # Script files
 bin/
 

@@ -36,7 +36,7 @@ export CLOUD_SQL_PASS=""
 ./mvnw clean package -DskipTests
 
 # Run Java app
-java -jar -Dspring.profiles.active=prod target/gedcom-analyzer-1.0.1-SNAPSHOT.jar
+java -jar -Dspring.profiles.active=prod target/*.jar
 ```
 
 ### Deploy appengine to Google Cloud

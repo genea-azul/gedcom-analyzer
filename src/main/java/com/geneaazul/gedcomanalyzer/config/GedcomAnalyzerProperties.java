@@ -7,6 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.ZoneId;
@@ -29,8 +30,10 @@ public class GedcomAnalyzerProperties {
     private Path tempDir = Path.of("../gedcoms/temp");
     private String tempUploadedGedcomDirPrefix = "gedcomfile_";
     private Path localStorageGedcomPath = Path.of("../gedcoms/genea-azul-full-gedcom.ged");
-    private String googleStorageBucketName;
-    private String googleStorageGedcomBlobName;
+    private String googleApiKey;
+    private String gedcomGoogleDriveFileId;
+    private Duration googleDriveConnectTimeout = Duration.ofMillis(3000);
+    private Duration googleDriveReadTimeout = Duration.ofMillis(3000);
 
     private int maxClientRequestsCountThreshold = 12;
     private int maxClientRequestsHoursThreshold = 1;
