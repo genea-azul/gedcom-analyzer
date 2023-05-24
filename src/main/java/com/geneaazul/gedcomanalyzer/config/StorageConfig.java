@@ -2,7 +2,7 @@ package com.geneaazul.gedcomanalyzer.config;
 
 import com.geneaazul.gedcomanalyzer.service.GedcomParsingService;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
-import com.geneaazul.gedcomanalyzer.service.storage.GoogleCloudStorageService;
+import com.geneaazul.gedcomanalyzer.service.storage.GoogleDriveStorageService;
 import com.geneaazul.gedcomanalyzer.service.storage.LocalStorageService;
 import com.geneaazul.gedcomanalyzer.service.storage.StorageService;
 
@@ -27,11 +27,13 @@ public class StorageConfig {
 
     @Bean
     @Profile("prod")
-    public GoogleCloudStorageService googleCloudStorageService(
+    public GoogleDriveStorageService googleDriveStorageService(
             GedcomParsingService gedcomParsingService,
             GedcomAnalyzerProperties properties) {
-        return new GoogleCloudStorageService(
-                gedcomParsingService,
+        return new GoogleDriveStorageService(
+                new LocalStorageService(
+                        gedcomParsingService,
+                        properties),
                 properties);
     }
 

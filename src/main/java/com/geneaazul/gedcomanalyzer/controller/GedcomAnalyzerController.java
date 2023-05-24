@@ -40,7 +40,7 @@ public class GedcomAnalyzerController {
 
     @GetMapping("/reload")
     public GedcomMetadataDto reloadAndGetGedcomMetadata() {
-        gedcomHolder.reloadFromStorage();
+        gedcomHolder.reloadFromStorage(true);
         return gedcomAnalyzerService.getGedcomMetadata();
     }
 
