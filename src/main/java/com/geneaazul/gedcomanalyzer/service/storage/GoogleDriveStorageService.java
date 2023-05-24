@@ -23,7 +23,9 @@ public class GoogleDriveStorageService implements StorageService {
     @Override
     public EnrichedGedcom getGedcom(boolean refreshCachedGedcom) throws Exception {
 
-        if (refreshCachedGedcom || Files.notExists(properties.getLocalStorageGedcomPath())) {
+        if (refreshCachedGedcom
+                || Files.notExists(properties.getLocalStorageGedcomPath())
+                || Files.size(properties.getLocalStorageGedcomPath()) == 0L) {
             log.info("Downloading Gedcom file from Google Drive with id {}", properties.getGedcomGoogleDriveFileId());
             downloadDriveFileToLocalFile();
         }
