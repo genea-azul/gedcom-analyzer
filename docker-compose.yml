@@ -18,6 +18,7 @@ services:
 
   app:
     container_name: gedcom-analyzer-app
+    image: geneaazul/gedcom-analyzer:latest
     build: .
     depends_on:
       - mysqldb
