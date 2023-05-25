@@ -21,13 +21,24 @@ var toggleYearOfDeath = function(isAliveComponent, yearOfDeathComponent) {
     });
 };
 
-var toggleCardColorBySex = function(cardComponent, sexRadioComponent) {
+var toggleCardColorBySex = function(cardComponent, sexRadioComponent, relatedCardComponent, relatedSexRadioComponent) {
     $("input[type=radio][name=" + sexRadioComponent + "]").on("change", function() {
         var isMale = $(this).val() === "M";
         $(cardComponent).toggleClass("border-secondary", isMale);
         $(cardComponent).toggleClass("border-danger", !isMale);
         $(cardComponent + " div.card-header").toggleClass("text-bg-secondary", isMale);
         $(cardComponent + " div.card-header").toggleClass("text-bg-danger", !isMale);
+
+        if (relatedCardComponent && relatedSexRadioComponent) {
+            var $genderRadio = $("input[type=radio][name=" + relatedSexRadioComponent + "]");
+            $genderRadio.filter("[value=M]").prop("checked", !isMale);
+            $genderRadio.filter("[value=F]").prop("checked", isMale);
+
+            $(relatedCardComponent).toggleClass("border-secondary", !isMale);
+            $(relatedCardComponent).toggleClass("border-danger", isMale);
+            $(relatedCardComponent + " div.card-header").toggleClass("text-bg-secondary", !isMale);
+            $(relatedCardComponent + " div.card-header").toggleClass("text-bg-danger", isMale);
+        }
     });
 };
 
@@ -69,8 +80,10 @@ $(document).ready(function() {
     toggleYearOfDeath("#fatherIsAlive", "#fatherYearOfDeath");
     toggleYearOfDeath("#motherIsAlive", "#motherYearOfDeath");
     toggleYearOfDeath("#individualIsAlive", "#individualYearOfDeath");
-    toggleCardColorBySex("#individualCard", "individualSex");
+    toggleCardColorBySex("#individualCard", "individualSex", "#spouseCard", "spouseSex");
+    toggleCardColorBySex("#spouseCard", "spouseSex");
     toggleContainers("#grandparentsContainerShowBtn", "#grandparentsContainerShowBtnContainer", "#grandparentsContainer");
+    toggleContainers("#spouseContainerShowBtn", "#spouseContainerShowBtnContainer", "#spouseContainer");
 
     $("input[type=number]").on("input", function() {
         maxLengthCheck(this);
@@ -107,6 +120,15 @@ $(document).ready(function() {
                 "yearOfBirth": toNumber($("#individualYearOfBirth").val()),
                 "yearOfDeath": toNumber($("#individualYearOfDeath:enabled").val()),
                 "placeOfBirth": trimToNull($("#individualPlaceOfBirth").val())
+            },
+            "spouse": {
+                "givenName": trimToNull($("#spouseGivenName").val()),
+                "surname": trimToNull($("#spouseSurname").val()),
+                "sex": trimToNull($("input[type=radio][name=spouseSex]:checked").val()),
+                "isAlive": $("#spouseIsAlive").prop("checked"),
+                "yearOfBirth": toNumber($("#spouseYearOfBirth").val()),
+                "yearOfDeath": toNumber($("#spouseYearOfDeath:enabled").val()),
+                "placeOfBirth": trimToNull($("#spousePlaceOfBirth").val())
             },
             "father": {
                 "givenName": trimToNull($("#fatherGivenName").val()),

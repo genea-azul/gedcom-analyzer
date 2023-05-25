@@ -101,6 +101,11 @@ public class FamilyService {
                 .map(StringUtils::trimToNull)
                 .orElse(null);
 
+        String spouseSurname = Optional.ofNullable(searchFamilyDto.getSpouse())
+                .map(SearchPersonDto::getSurname)
+                .map(StringUtils::trimToNull)
+                .orElse(null);
+
         String fatherSurname = Optional.ofNullable(searchFamilyDto.getFather())
                 .map(SearchPersonDto::getSurname)
                 .or(() -> Optional.ofNullable(searchFamilyDto.getPaternalGrandfather())
@@ -146,7 +151,7 @@ public class FamilyService {
                 .orElse(null);
 
         /*
-         * Individual
+         * Individual and spouse
          */
 
         result.addAll(searchPersonByNameAndYearAndParentsNames(
@@ -156,6 +161,18 @@ public class FamilyService {
                 fatherSurname,
                 searchFamilyDto.getMother(),
                 motherSurname,
+                gedcom));
+
+        result.addAll(searchPersonsByNameAndSpouseName(
+                searchFamilyDto.getIndividual(),
+                individualSurname,
+                searchFamilyDto.getSpouse(),
+                spouseSurname,
+                gedcom));
+
+        result.addAll(searchPersonByNameAndYear(
+                searchFamilyDto.getSpouse(),
+                spouseSurname,
                 gedcom));
 
         /*

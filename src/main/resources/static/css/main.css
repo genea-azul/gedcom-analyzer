@@ -5,3 +5,7 @@
 .card .card .card-body {
     border-radius: var(--bs-card-inner-border-radius);
 }
+
+.card-label-max-width {
+    max-width: 145px !important;
+}
