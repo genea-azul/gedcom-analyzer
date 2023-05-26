@@ -2,6 +2,7 @@ package com.geneaazul.gedcomanalyzer.utils;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Optional;
 import java.util.Set;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,11 +18,12 @@ public class InetAddressUtils {
             "localhost");
 
     public static String getRemoteAddress(HttpServletRequest request) {
-        String remoteAddr = StringUtils.trimToNull(request.getHeader("X-FORWARDED-FOR"));
-        if (remoteAddr == null) {
-            remoteAddr = StringUtils.trimToNull(request.getRemoteAddr());
-        }
-        return remoteAddr == null || LOCALHOST_ADDRESSES.contains(remoteAddr) ? null : remoteAddr;
+        return Optional.ofNullable(StringUtils.trimToNull(request.getHeader("X-REAL-IP")))
+                .or(() -> Optional.ofNullable(StringUtils.trimToNull(request.getHeader("X-CLIENT-IP"))))
+                .or(() -> Optional.ofNullable(StringUtils.trimToNull(request.getHeader("X-FORWARDED-FOR"))))
+                .or(() -> Optional.ofNullable(StringUtils.trimToNull(request.getRemoteAddr())))
+                .filter(remoteAddress -> !LOCALHOST_ADDRESSES.contains(remoteAddress))
+                .orElse(null);
     }
 
 }

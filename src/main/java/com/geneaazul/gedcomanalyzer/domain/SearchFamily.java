@@ -71,6 +71,22 @@ public class SearchFamily {
     @ToString.Include
     private SearchPerson individual;
 
+    @ToString.Include
+    @Enumerated(EnumType.STRING)
+    private SexType spouseSex;
+
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "givenName", column = @Column(name = "spouse_given_name")),
+            @AttributeOverride(name = "surname", column = @Column(name = "spouse_surname")),
+            @AttributeOverride(name = "isAlive", column = @Column(name = "spouse_is_alive")),
+            @AttributeOverride(name = "yearOfBirth", column = @Column(name = "spouse_year_of_birth")),
+            @AttributeOverride(name = "yearOfDeath", column = @Column(name = "spouse_year_of_death")),
+            @AttributeOverride(name = "placeOfBirth", column = @Column(name = "spouse_place_of_birth"))
+    })
+    @ToString.Include
+    private SearchPerson spouse;
+
     @Embedded
     @AttributeOverrides({
             @AttributeOverride(name = "givenName", column = @Column(name = "father_given_name")),
