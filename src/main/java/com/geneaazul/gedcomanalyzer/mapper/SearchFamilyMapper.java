@@ -31,6 +31,10 @@ public class SearchFamilyMapper {
                         .map(SearchPersonDto::getSex)
                         .orElse(null))
                 .individual(searchPersonMapper.toSearchPersonEntity(searchFamilyDto.getIndividual()))
+                .spouseSex(Optional.ofNullable(searchFamilyDto.getSpouse())
+                        .map(SearchPersonDto::getSex)
+                        .orElse(null))
+                .spouse(searchPersonMapper.toSearchPersonEntity(searchFamilyDto.getSpouse()))
                 .father(searchPersonMapper.toSearchPersonEntity(searchFamilyDto.getFather()))
                 .mother(searchPersonMapper.toSearchPersonEntity(searchFamilyDto.getMother()))
                 .paternalGrandfather(searchPersonMapper.toSearchPersonEntity(searchFamilyDto.getPaternalGrandfather()))
@@ -50,6 +54,7 @@ public class SearchFamilyMapper {
         return SearchFamilyDetailsDto.builder()
                 .id(searchFamily.getId())
                 .individual(searchPersonMapper.toSearchPersonDto(searchFamily.getIndividual(), searchFamily.getIndividualSex()))
+                .spouse(searchPersonMapper.toSearchPersonDto(searchFamily.getSpouse(), searchFamily.getSpouseSex()))
                 .father(searchPersonMapper.toSearchPersonDto(searchFamily.getFather(), SexType.M))
                 .mother(searchPersonMapper.toSearchPersonDto(searchFamily.getMother(), SexType.F))
                 .paternalGrandfather(searchPersonMapper.toSearchPersonDto(searchFamily.getPaternalGrandfather(), SexType.M))
@@ -66,6 +71,7 @@ public class SearchFamilyMapper {
     public boolean isEmpty(SearchFamilyDto searchFamilyDto) {
         return searchFamilyDto == null
                 || searchPersonMapper.isEmpty(searchFamilyDto.getIndividual())
+                && searchPersonMapper.isEmpty(searchFamilyDto.getSpouse())
                 && searchPersonMapper.isEmpty(searchFamilyDto.getFather())
                 && searchPersonMapper.isEmpty(searchFamilyDto.getMother())
                 && searchPersonMapper.isEmpty(searchFamilyDto.getPaternalGrandfather())

@@ -2,12 +2,6 @@ package com.geneaazul.gedcomanalyzer.model.dto;
 
 import java.time.OffsetDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,6 +22,8 @@ public class SearchFamilyDetailsDto {
     private Long id;
     @ToString.Include
     private SearchPersonDto individual;
+    @ToString.Include
+    private SearchPersonDto spouse;
     @ToString.Include
     private SearchPersonDto father;
     @ToString.Include

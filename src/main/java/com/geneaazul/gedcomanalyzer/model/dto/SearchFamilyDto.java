@@ -23,6 +23,9 @@ public class SearchFamilyDto {
     private SearchPersonDto individual;
     @Valid
     @ToString.Include
+    private SearchPersonDto spouse;
+    @Valid
+    @ToString.Include
     private SearchPersonDto father;
     @Valid
     @ToString.Include
