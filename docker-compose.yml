@@ -24,7 +24,6 @@ services:
       - mysqldb
     restart: on-failure
     ports:
-      - $SPRING_LOCAL_PORT:$SPRING_DOCKER_PORT
       - $SPRING_LOCAL_SECURE_PORT:$SPRING_DOCKER_SECURE_PORT
     environment:
       JAVA_OPTS: '-Xms128m -Xmx256m'
