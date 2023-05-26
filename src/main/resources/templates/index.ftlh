@@ -312,8 +312,12 @@
     </div>
 
     <div class="row mb-3">
-      <div class="col-xl-4">
-        <div class="small mb-3">
+      <div class="col-xl-auto"></div>
+      <div class="col-xl-auto">
+        <div class="small mb-3 contact-label-max-width d-none d-xl-block">
+          Dejanos tu <b>email</b>, <b>Whatsapp</b> o <b>Instagram</b> y nos pondremos en contacto en caso de encontrar personas relacionadas a tu b&uacute;squeda en un futuro.
+        </div>
+        <div class="small mb-3 d-xl-none">
           Dejanos tu <b>email</b>, <b>Whatsapp</b> o <b>Instagram</b> y nos pondremos en contacto en caso de encontrar personas relacionadas a tu b&uacute;squeda en un futuro.
         </div>
         <div class="row justify-content-center align-items-center">
@@ -328,7 +332,7 @@
           </div>
         </div>
       </div>
-      <div class="col-xl-5">
+      <div class="col-xl-auto">
         <div class="card border-dark" id="searchResultCard">
           <div class="card-header text-bg-dark">
             <div>Resultado de la b&uacute;squeda</div>
