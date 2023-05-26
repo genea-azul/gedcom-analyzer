@@ -9,14 +9,15 @@
   </head>
 
   <body class="container-fluid">
-    <div class="h5 mb-0">Genea Azul - Buscador de personas</div>
-    <div class="d-flex mt-0 small">
-      <div class="me-1">Versi&oacute;n: ${projectVersion} - Personas en el &aacute;rbol:</div>
+    <img src="img/genea-azul-logo.png" width="120" height="60" class="rounded float-start me-3" alt="Genea Azul logo">
+    <div class="h5 mt-2 mb-0">Buscador de personas</div>
+    <div class="d-flex small mt-0">
+      <div class="me-1">Personas en el &aacute;rbol:</div>
       <div id="persons-count-container">
         <span class="spinner-border spinner-border-sm" role="status"></span>
       </div>
     </div>
-    <div class="mt-3 mb-3">Todos los campos son opcionales, para obtener un mejor resultado complet&aacute; la mayor cantidad de datos posibles.</div>
+    <div class="small mt-4 mb-3">Todos los campos son opcionales, para obtener un mejor resultado complet&aacute; la mayor cantidad de datos posibles.</div>
 
     <div class="row mb-3">
       <div class="col-xl-auto">
