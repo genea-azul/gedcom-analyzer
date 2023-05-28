@@ -1,5 +1,6 @@
 package com.geneaazul.gedcomanalyzer.model;
 
+import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
@@ -29,7 +30,7 @@ public record GivenName(
         return new GivenName(value, normalized, words.length, Pattern.compile(regex));
     }
 
-    public boolean matches(GivenName other) {
+    public boolean matches(@Nullable GivenName other) {
         if (other == null) {
             return false;
         }

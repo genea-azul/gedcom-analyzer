@@ -43,7 +43,7 @@ public record GivenNameAndSurname(@Nullable GivenName givenName, @Nullable Surna
         return new GivenNameAndSurname(givenName.orElse(null), surname.orElse(null));
     }
 
-    public boolean matches(GivenNameAndSurname other) {
+    public boolean matches(@Nullable GivenNameAndSurname other) {
         if (other == null) {
             return false;
         }

@@ -1,5 +1,7 @@
 package com.geneaazul.gedcomanalyzer.model;
 
+import jakarta.annotation.Nullable;
+
 public record Surname(
         String value,
         String normalizedMainWord,
@@ -9,7 +11,7 @@ public record Surname(
         return new Surname(value, normalizedMainWord, shortenedMainWord);
     }
 
-    public boolean matches(Surname other) {
+    public boolean matches(@Nullable Surname other) {
         if (other == null) {
             return false;
         }

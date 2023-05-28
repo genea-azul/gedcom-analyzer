@@ -1,5 +1,6 @@
 package com.geneaazul.gedcomanalyzer.model;
 
+import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -59,13 +60,13 @@ public class Date implements Comparable<Date> {
     // Only set when month is not null
     private final YearMonth yearMonth;
 
-    private Date(Year year, Month month, Integer day, Operator operator, Date secondary) {
+    private Date(Year year, @Nullable Month month, @Nullable Integer day, @Nullable Operator operator, @Nullable Date secondary) {
         this.year = year;
         this.month = month;
         this.day = day;
         this.operator = operator;
         this.secondary = secondary;
-        this.localDate = day != null ? LocalDate.of(year.getValue(), month, day) : null;
+        this.localDate = day != null && month != null ? LocalDate.of(year.getValue(), month, day) : null;
         this.yearMonth = month != null ? YearMonth.of(year.getValue(), month) : null;
     }
 

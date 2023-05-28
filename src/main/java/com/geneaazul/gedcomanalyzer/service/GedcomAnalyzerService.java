@@ -20,6 +20,7 @@ import com.geneaazul.gedcomanalyzer.utils.FamilyUtils;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 import com.geneaazul.gedcomanalyzer.utils.SearchUtils;
 
+import jakarta.annotation.Nullable;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -169,7 +170,7 @@ public class GedcomAnalyzerService {
                 .orElse(referenceType);
     }
 
-    private static ReferenceType resolveChildReferenceType(String relationshipType) {
+    private static ReferenceType resolveChildReferenceType(@Nullable String relationshipType) {
         if (relationshipType != null) {
             if (FamilyUtils.ADOPTED_CHILD_RELATIONSHIP_TYPES.contains(relationshipType)) {
                 return ReferenceType.ADOPTED_CHILD;

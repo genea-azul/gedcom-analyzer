@@ -280,7 +280,7 @@ public class EnrichedPerson {
         return date1.isCloseToByDay(date2, delta);
     }
 
-    private boolean matchesByMonth(Date date1, Date date2, Period delta) {
+    private boolean matchesByMonth(@Nullable Date date1, @Nullable Date date2, Period delta) {
         if (date1 == null || date2 == null) {
             return false;
         }

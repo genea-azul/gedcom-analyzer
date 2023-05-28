@@ -7,6 +7,8 @@ import com.geneaazul.gedcomanalyzer.service.GedcomAnalyzerService;
 import com.geneaazul.gedcomanalyzer.service.GedcomParsingService;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.xml.sax.SAXParseException;
 
 import java.io.IOException;
+import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,9 +31,19 @@ public class GedcomAnalyzerController {
     private final GedcomAnalyzerService gedcomAnalyzerService;
     private final GedcomHolder gedcomHolder;
 
+    @Value("${spring.profiles.active}")
+    private String activeProfiles;
+
+    @Value("${project.version}")
+    private String projectVersion;
+
     @GetMapping
-    public void analyzeGedcom() {
+    @CrossOrigin
+    public Map<String, String> analyzeGedcom() {
         // Used for health check
+        return Map.of(
+                "env", activeProfiles,
+                "version", projectVersion);
     }
 
     @GetMapping("/metadata")

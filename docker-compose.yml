@@ -5,7 +5,7 @@ services:
   mysqldb:
     container_name: gedcom-analyzer-db
     image: mysql:8
-    restart: unless-stopped
+    restart: always
     ports:
       - $MYSQLDB_LOCAL_PORT:$MYSQLDB_DOCKER_PORT
     environment:

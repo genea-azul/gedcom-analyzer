@@ -42,7 +42,7 @@ public class SearchService {
 
     private final GedcomAnalyzerProperties properties;
 
-    public List<EnrichedPerson> findPersonsBySurnameAndSpouseSurname(String personSurname, String spouseSurname, boolean exactMatch, List<EnrichedPerson> people) {
+    public List<EnrichedPerson> findPersonsBySurnameAndSpouseSurname(String personSurname, @Nullable String spouseSurname, boolean exactMatch, List<EnrichedPerson> people) {
         String personSurnameStr = SearchUtils.simplifyName(personSurname);
         String spouseSurnameStr = SearchUtils.simplifyName(spouseSurname);
 
@@ -59,7 +59,7 @@ public class SearchService {
                 .toList();
     }
 
-    public List<EnrichedPerson> findPersonsBySurnameAndSpouseGivenName(String personSurname, String spouseGivenName, boolean exactMatch, List<EnrichedPerson> people) {
+    public List<EnrichedPerson> findPersonsBySurnameAndSpouseGivenName(String personSurname, @Nullable String spouseGivenName, boolean exactMatch, List<EnrichedPerson> people) {
         String personSurnameStr = SearchUtils.simplifyName(personSurname);
         String spouseGivenNameStr = SearchUtils.simplifyName(spouseGivenName);
 
@@ -396,6 +396,7 @@ public class SearchService {
                 s -> gedcom.getPersonsBySurnameMainWordAndSex(s, sex));
     }
 
+    @SuppressWarnings("DataFlowIssue")
     public List<EnrichedPerson> findPersonsByNameAndYearOfBirth(
             @Nullable String givenName,
             @Nullable String surname,
@@ -410,6 +411,7 @@ public class SearchService {
                 s -> gedcom.getPersonsBySurnameMainWordAndSexAndYearOfBirthIndex(s, sex, Year.of(yearOfBirth)));
     }
 
+    @SuppressWarnings("DataFlowIssue")
     public List<EnrichedPerson> findPersonsByNameAndYearOfDeath(
             @Nullable String givenName,
             @Nullable String surname,
@@ -473,6 +475,7 @@ public class SearchService {
                 .orElseGet(List::of);
     }
 
+    @SuppressWarnings("DataFlowIssue")
     public List<EnrichedPerson> findPersonsBySurnameAndYearOfBirth(
             @Nullable String surname,
             @Nullable SexType sex,
@@ -486,6 +489,7 @@ public class SearchService {
                 .orElseGet(List::of);
     }
 
+    @SuppressWarnings("DataFlowIssue")
     public List<EnrichedPerson> findPersonsBySurnameAndYearOfDeath(
             @Nullable String surname,
             @Nullable SexType sex,

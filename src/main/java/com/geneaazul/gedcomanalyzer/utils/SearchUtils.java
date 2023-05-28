@@ -61,8 +61,7 @@ public class SearchUtils {
         }
         String[] words = StringUtils.splitByWholeSeparator(givenName, " ");
         return Arrays.stream(words)
-                .map(word -> Optional.ofNullable(normalizedGivenNamesMap.get(new NameAndSex(word, sex)))
-                        .orElse(word))
+                .map(word -> normalizedGivenNamesMap.getOrDefault(new NameAndSex(word, sex), word))
                 .collect(Collectors.joining(" "));
     }
 
