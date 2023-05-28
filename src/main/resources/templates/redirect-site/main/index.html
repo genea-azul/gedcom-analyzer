@@ -21,7 +21,7 @@
   <body>
     <div class="container d-flex flex-column align-items-center justify-content-center">
       <img class="img-fluid" src="/img/genea-azul-logo.png" alt="Genea Azul logo" />
-      <div class="invisible" id="spinner-container">
+      <div class="invisible small mt-1" id="spinner-container">
         <div class="spinner-border spinner-border-sm mt-5" role="status"></div>
         Iniciando el servidor, esper&aacute; unos segundos...
       </div>
@@ -31,13 +31,24 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
     <script>
         $(document).ready(function() {
-            var redirectToUrl = "https://geneaazul.ddns.net/r=1";
+            var siteUrl = "https://geneaazul.ddns.net";
+            var healthCheckUrl = siteUrl + "/api/gedcom-analyzer";
+            var redirectUrl = siteUrl + "/?r=main";
             $.ajax({
                 type: "GET",
-                url: redirectToUrl + "/api/gedcom-analyzer",
+                url: healthCheckUrl,
+                timeout: 10000, // in ms
                 contentType: "application/json",
-                complete: function(data) {
-                    window.location.href = redirectToUrl;
+                success: function(data) {
+                    window.location.href = redirectUrl;
+                },
+                error: function(xmlHttpRequest, textStatus, errorThrown) {
+                    $("#spinner-container")
+                        .empty()
+                        .append("<h6>Hubo un problema iniciando el servidor</h6>")
+                        .append("<p>Por favor contactanos as&iacute; lo resolvemos: <a href=\"https://instagram.com/genea.azul\">@genea.azul</a></p>")
+                        .append("<p>Gracias y disculpas.</p>")
+                        .removeClass("invisible");
                 }
             });
         });

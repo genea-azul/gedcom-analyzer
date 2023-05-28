@@ -285,29 +285,33 @@ public class FamilyService {
 
     private List<EnrichedPerson> getPotentialResults(
             @Nullable SearchPersonDto searchPerson,
-            @Nullable String surname,
+            @Nullable String personSurname,
             EnrichedGedcom gedcom) {
-        if (hasSurnameButMissingDates(searchPerson, surname)) {
-            return searchPersonByNameOrSurname(searchPerson, surname, gedcom);
+        if (hasSurnameButMissingDates(searchPerson, personSurname)) {
+            return searchPersonByNameOrSurname(searchPerson, personSurname, gedcom);
         }
-        if (hasAnyDateAndSurnameButMissingGivenName(searchPerson, surname)) {
-            return searchPersonBySurnameAndYear(searchPerson, surname, gedcom);
+        if (hasAnyDateAndSurnameButMissingGivenName(searchPerson, personSurname)) {
+            return searchPersonBySurnameAndYear(searchPerson, personSurname, gedcom);
         }
         return List.of();
     }
 
-    private boolean hasSurnameButMissingDates(SearchPersonDto searchPersonDto, String surname) {
-        return searchPersonDto != null
-                && surname != null
-                && searchPersonDto.getYearOfBirth() == null
-                && searchPersonDto.getYearOfDeath() == null;
+    private boolean hasSurnameButMissingDates(
+            @Nullable SearchPersonDto searchPerson,
+            @Nullable String personSurname) {
+        return searchPerson != null
+                && personSurname != null
+                && searchPerson.getYearOfBirth() == null
+                && searchPerson.getYearOfDeath() == null;
     }
 
-    private boolean hasAnyDateAndSurnameButMissingGivenName(SearchPersonDto searchPersonDto, String surname) {
-        return searchPersonDto != null
-                && surname != null
-                && StringUtils.isBlank(searchPersonDto.getGivenName())
-                && (searchPersonDto.getYearOfBirth() != null || searchPersonDto.getYearOfDeath() != null);
+    private boolean hasAnyDateAndSurnameButMissingGivenName(
+            @Nullable SearchPersonDto searchPerson,
+            @Nullable String personSurname) {
+        return searchPerson != null
+                && personSurname != null
+                && StringUtils.isBlank(searchPerson.getGivenName())
+                && (searchPerson.getYearOfBirth() != null || searchPerson.getYearOfDeath() != null);
     }
 
     private List<EnrichedPerson> searchPersonByNameOrSurname(

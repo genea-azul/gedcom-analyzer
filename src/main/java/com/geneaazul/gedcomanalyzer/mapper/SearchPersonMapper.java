@@ -4,6 +4,7 @@ import com.geneaazul.gedcomanalyzer.domain.SearchPerson;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchPersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
+import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -11,10 +12,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
+import javax.annotation.CheckForNull;
+
 @Component
 @RequiredArgsConstructor
 public class SearchPersonMapper {
 
+    @CheckForNull
     @Transactional(propagation = Propagation.MANDATORY)
     public SearchPerson toSearchPersonEntity(SearchPersonDto searchPersonDto) {
         if (isEmpty(searchPersonDto)) {
@@ -30,8 +34,9 @@ public class SearchPersonMapper {
                 .build();
     }
 
+    @CheckForNull
     @Transactional(propagation = Propagation.MANDATORY)
-    public SearchPersonDto toSearchPersonDto(SearchPerson searchPerson, SexType sex) {
+    public SearchPersonDto toSearchPersonDto(@Nullable SearchPerson searchPerson, SexType sex) {
         if (searchPerson == null) {
             return null;
         }
@@ -46,7 +51,7 @@ public class SearchPersonMapper {
                 .build();
     }
 
-    public boolean isEmpty(SearchPersonDto searchPersonDto) {
+    public boolean isEmpty(@Nullable SearchPersonDto searchPersonDto) {
         return searchPersonDto == null
                 || StringUtils.isBlank(searchPersonDto.getGivenName())
                 && StringUtils.isBlank(searchPersonDto.getSurname())

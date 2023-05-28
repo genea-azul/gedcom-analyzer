@@ -274,6 +274,7 @@ var finalizeSearch = function() {
 
 var personsInRq = [
     "individual",
+    "spouse",
     "father",
     "mother",
     "paternalGrandfather",

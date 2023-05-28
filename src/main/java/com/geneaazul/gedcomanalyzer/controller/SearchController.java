@@ -4,6 +4,7 @@ import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDetailsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyResultDto;
+import com.geneaazul.gedcomanalyzer.service.DockerService;
 import com.geneaazul.gedcomanalyzer.service.FamilyService;
 import com.geneaazul.gedcomanalyzer.utils.InetAddressUtils;
 
@@ -28,9 +29,12 @@ public class SearchController {
 
     private final FamilyService familyService;
     private final GedcomAnalyzerProperties properties;
+    private final DockerService dockerService;
 
     @PostMapping("/family")
     public SearchFamilyResultDto searchFamily(@Valid @RequestBody SearchFamilyDto searchFamilyDto, HttpServletRequest request) {
+        dockerService.startDbContainer();
+
         String clientIpAddress = InetAddressUtils.getRemoteAddress(request);
 
         if (!familyService.isAllowedSearch(clientIpAddress)) {
@@ -58,6 +62,7 @@ public class SearchController {
     public List<SearchFamilyDetailsDto> getLatest(
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "10") int size) {
+        dockerService.startDbContainer();
         return familyService.getLatest(page, size);
     }
 

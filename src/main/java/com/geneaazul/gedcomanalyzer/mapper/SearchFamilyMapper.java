@@ -6,6 +6,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchPersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
+import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -15,12 +16,15 @@ import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 
+import javax.annotation.CheckForNull;
+
 @Component
 @RequiredArgsConstructor
 public class SearchFamilyMapper {
 
     private final SearchPersonMapper searchPersonMapper;
 
+    @CheckForNull
     @Transactional(propagation = Propagation.MANDATORY)
     public SearchFamily toSearchFamilyEntity(SearchFamilyDto searchFamilyDto, String clientIpAddress) {
         if (isEmpty(searchFamilyDto)) {
@@ -46,6 +50,7 @@ public class SearchFamilyMapper {
                 .build();
     }
 
+    @CheckForNull
     @Transactional(propagation = Propagation.MANDATORY)
     public SearchFamilyDetailsDto toSearchFamilyDetailsDto(SearchFamily searchFamily) {
         if (searchFamily == null) {
@@ -68,7 +73,7 @@ public class SearchFamilyMapper {
                 .build();
     }
 
-    public boolean isEmpty(SearchFamilyDto searchFamilyDto) {
+    public boolean isEmpty(@Nullable SearchFamilyDto searchFamilyDto) {
         return searchFamilyDto == null
                 || searchPersonMapper.isEmpty(searchFamilyDto.getIndividual())
                 && searchPersonMapper.isEmpty(searchFamilyDto.getSpouse())
