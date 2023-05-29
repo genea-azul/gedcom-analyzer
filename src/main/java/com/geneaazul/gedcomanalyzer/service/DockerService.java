@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -22,11 +21,11 @@ public class DockerService {
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private final Optional<DockerClient> dockerClient;
 
-    @Value("${docker.dbContainer.name:gedcom-analyzer-db}")
+    @Value("${docker.db-container.name:gedcom-analyzer-db}")
     private String dbContainerName;
 
-    @Value("${docker.dbContainer.maxIdleTime:10m}")
-    private Duration dbContainerMaxIdleTime;
+    @Value("${docker.db-container.max-idle-time:600000}")
+    private long dbContainerMaxIdleTime;
 
     private Instant lastStartDbContainerRequest = null;
 
@@ -83,7 +82,7 @@ public class DockerService {
 
     private boolean isDbContainerIdleTimeExceeded() {
         return lastStartDbContainerRequest == null
-                || lastStartDbContainerRequest.plus(dbContainerMaxIdleTime).isBefore(Instant.now());
+                || lastStartDbContainerRequest.plusMillis(dbContainerMaxIdleTime).isBefore(Instant.now());
     }
 
     private static boolean isContainerStarted(InspectContainerResponse.ContainerState containerState) {

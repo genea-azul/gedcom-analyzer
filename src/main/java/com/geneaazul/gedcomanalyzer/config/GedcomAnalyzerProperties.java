@@ -29,7 +29,7 @@ public class GedcomAnalyzerProperties {
 
     private Path tempDir = Path.of("../gedcoms/temp");
     private String tempUploadedGedcomDirPrefix = "gedcomfile_";
-    private Path localStorageGedcomPath = Path.of("../gedcoms/genea-azul-full-gedcom.ged");
+    private Path gedcomLocalStoragePath = Path.of("../gedcoms/genea-azul-full-gedcom.ged");
     private String googleApiKey;
     private String gedcomGoogleDriveFileId;
     private Duration googleDriveConnectTimeout = Duration.ofMillis(3000);

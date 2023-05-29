@@ -9,10 +9,10 @@ import com.github.dockerjava.transport.DockerHttpClient;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -21,16 +21,13 @@ import java.time.Duration;
 
 @Configuration
 @EnableScheduling
-@Profile({"prod", "docker"})
+@ConditionalOnProperty(name = "docker.enabled", havingValue = "true")
 @RequiredArgsConstructor
 public class DockerConfig {
 
-    private static final long DB_CONTAINER_STOP_WHEN_IDLE_FIXED_RATE = 2  * 60 * 1000;
-    private static final long DB_CONTAINER_STOP_WHEN_IDLE_INITIAL_DELAY = 5 * 60 * 1000;
-
     private final ApplicationContext applicationContext;
 
-    @Value("${docker.hostUri:tcp://host.docker.internal:2375}")
+    @Value("${docker.host-uri:tcp://host.docker.internal:2375}")
     private String dockerHostUri;
 
     @Bean
@@ -60,7 +57,9 @@ public class DockerConfig {
                 .close();
     }
 
-    @Scheduled(fixedRate = DB_CONTAINER_STOP_WHEN_IDLE_FIXED_RATE, initialDelay = DB_CONTAINER_STOP_WHEN_IDLE_INITIAL_DELAY)
+    @Scheduled(
+            fixedRateString = "${docker.db-container.stop-when-idle.fixed-rate:120000}",
+            initialDelayString = "${docker.db-container.stop-when-idle.initial-delay:360000}")
     public void scheduleDbContainerStopWhenIdle() {
         applicationContext
                 .getBean(DockerService.class)
