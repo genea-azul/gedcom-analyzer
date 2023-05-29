@@ -29,6 +29,7 @@ services:
       JAVA_OPTS: '-Xms128m -Xmx256m'
       SPRING_PROFILES_ACTIVE: 'prod'
       SPRING_APPLICATION_JSON: '{
+        "docker.enabled" : true,
         "spring.datasource.url"  : "jdbc:mysql://mysqldb:$MYSQLDB_DOCKER_PORT/$MYSQLDB_DATABASE",
         "spring.datasource.username" : "$MYSQLDB_USER",
         "spring.datasource.password" : "$MYSQLDB_PASSWORD",
@@ -40,7 +41,7 @@ services:
         "server.ssl.key-alias" : "$SSL_KEY_ALIAS",
         "google-api-key" : "$GOOGLE_API_KEY",
         "gedcom-google-drive-file-id" : "$GEDCOM_GOOGLE_DRIVE_FILE_ID",
-        "local-storage-gedcom-path" : "/tmp/genea-azul-full-gedcom.ged"
+        "gedcom-local-storage-path" : "/tmp/genea-azul-full-gedcom.ged"
       }'
     volumes:
       - app:/tmp
