@@ -26,9 +26,10 @@ public class AppController {
     }
 
     @GetMapping("/search-family/latest")
-    public String searchFamily() {
+    public ModelAndView searchFamily() {
         dockerService.startDbContainer();
-        return "search-family/latest";
+        Map<String, ?> params = Map.of("projectVersion", projectVersion);
+        return new ModelAndView("search-family/latest", params);
     }
 
 }
