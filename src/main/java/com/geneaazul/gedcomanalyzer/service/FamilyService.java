@@ -256,6 +256,7 @@ public class FamilyService {
         if (result.isEmpty()) {
             List<EnrichedPerson> potentialResults = new ArrayList<>();
             potentialResults.addAll(getPotentialResults(searchFamilyDto.getIndividual(), individualSurname, gedcom));
+            potentialResults.addAll(getPotentialResults(searchFamilyDto.getSpouse(), spouseSurname, gedcom));
             potentialResults.addAll(getPotentialResults(searchFamilyDto.getFather(), fatherSurname, gedcom));
             potentialResults.addAll(getPotentialResults(searchFamilyDto.getMother(), motherSurname, gedcom));
             potentialResults.addAll(getPotentialResults(searchFamilyDto.getPaternalGrandfather(), paternalGrandfatherSurname, gedcom));

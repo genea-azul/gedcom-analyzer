@@ -21,7 +21,7 @@ public class RelationshipDto {
     private ReferenceType referenceType;
     private Integer generation;
     private Integer grade;
-    private Boolean isSpouse;
+    private Boolean isInLaw;
     private Boolean isHalf;
 
     @Override
@@ -30,7 +30,7 @@ public class RelationshipDto {
                 + StringUtils.leftPad(referenceType.toString(), 7) + ", "
                 + generation + ", "
                 + grade + ", "
-                + (isSpouse ? " " + isSpouse : isSpouse) + ", "
+                + (isInLaw ? " " + isInLaw : isInLaw) + ", "
                 + (isHalf ? " " + isHalf : isHalf) + "]";
     }
 

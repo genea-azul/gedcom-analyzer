@@ -31,7 +31,7 @@ public class GedcomAnalyzerController {
     private final GedcomAnalyzerService gedcomAnalyzerService;
     private final GedcomHolder gedcomHolder;
 
-    @Value("${spring.profiles.active}")
+    @Value("${spring.profiles.active:}")
     private String activeProfiles;
 
     @Value("${project.version}")

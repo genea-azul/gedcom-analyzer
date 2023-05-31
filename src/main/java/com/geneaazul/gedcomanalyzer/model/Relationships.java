@@ -2,8 +2,10 @@ package com.geneaazul.gedcomanalyzer.model;
 
 import org.springframework.util.Assert;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
@@ -15,9 +17,9 @@ import lombok.RequiredArgsConstructor;
 public class Relationships {
 
     private final String personId;
-    private final TreeSet<Relationship> relationships;
+    private final TreeSet<Relationship> orderedRelationships;
     private final boolean containsDirect;
-    private final boolean containsNotSpouse;
+    private final boolean containsNotInLaw;
 
     public static Relationships of(
             String personId,
@@ -26,38 +28,41 @@ public class Relationships {
                 personId,
                 newTreeSet(relationship),
                 isDirectRelationship(relationship),
-                !relationship.isSpouse());
+                !relationship.isInLaw());
     }
 
     public Relationships merge(
             Relationships other,
-            RelationshipPriority relationshipPriority) {
+            VisitedRelationshipTraversalStrategy traversalStrategy) {
         Assert.isTrue(this.personId.equals(other.personId), "Person ID must equal");
-        TreeSet<Relationship> treeSet = mergeWithNonSpousePriority(this.relationships, other.relationships, relationshipPriority);
+        TreeSet<Relationship> treeSet = mergeWithTraversalStrategy(this.orderedRelationships, other.orderedRelationships, traversalStrategy);
         return new Relationships(
                 this.personId,
                 treeSet,
                 this.containsDirect || other.containsDirect,
-                this.containsNotSpouse || other.containsNotSpouse);
+                this.containsNotInLaw || other.containsNotInLaw);
     }
 
     public boolean contains(Relationship relationship) {
-        return relationships.contains(relationship);
+        return orderedRelationships.contains(relationship);
     }
 
-    public boolean containsSpouseOf(Relationship relationship) {
-        return relationships
+    public boolean containsInLawOf(Relationship relationship) {
+        return orderedRelationships
                 .stream()
-                .anyMatch(relationship::isSpouseOf);
+                .anyMatch(relationship::isInLawOf);
     }
 
-    public Optional<Relationship> getFirstNonSpouseRelationship() {
-        if (!containsNotSpouse) {
-            return Optional.empty();
-        }
-        return relationships
+    public Optional<Relationship> findFirst() {
+        return orderedRelationships
                 .stream()
-                .filter(relationship -> !relationship.isSpouse())
+                .findFirst();
+    }
+
+    public Optional<Relationship> findFirstNotInLaw() {
+        return orderedRelationships
+                .stream()
+                .filter(relationship -> !relationship.isInLaw())
                 .findFirst();
     }
 
@@ -67,39 +72,44 @@ public class Relationships {
         return set;
     }
 
-    private static TreeSet<Relationship> mergeWithNonSpousePriority(
-            Set<Relationship> t1,
-            Set<Relationship> t2,
-            RelationshipPriority relationshipPriority) {
+    /**
+     * Merges the given relationships, it assumes the relationship in the 2nd argument is valid for merging.
+     * - if 'closest distance', it is assumed the 2nd argument has a shorter distance
+     * - if the 2nd argument is a 'in-law' relationship, it is assumed it matches the relationship rules in 1st argument
+     * - if the 2nd argument is not a 'in-law' relationship, all the non-matching relationships in 1st argument will be discarded
+     */
+    private static TreeSet<Relationship> mergeWithTraversalStrategy(
+            SortedSet<Relationship> t1,
+            SortedSet<Relationship> t2,
+            VisitedRelationshipTraversalStrategy traversalStrategy) {
         Assert.isTrue(t2.size() == 1, "Error");
-        Relationship relationship = t2.iterator().next();
 
-        Set<Relationship> relationships = t1;
+        Collection<Relationship> relationships = t1;
+        Relationship toMergeRelationship = t2.iterator().next();
 
-        if (relationshipPriority == Relationships.RelationshipPriority.CLOSEST_SKIPPING_SPOUSE_WHEN_EXISTS_ANY_NON_SPOUSE
-                && !relationships.isEmpty()) {
-            relationships = Set.of();
+        if (traversalStrategy.isClosestDistance() && !relationships.isEmpty()) {
+            relationships = List.of();
         }
 
-        if (!relationship.isSpouse()
+        if (!toMergeRelationship.isInLaw()
                 && !relationships.isEmpty()
-                && (relationshipPriority.isSkipSpouseWhenAnyNonSpouse() || relationshipPriority.isSkipSpouseWhenNonSpouseOf())) {
+                && (traversalStrategy.isSkipInLawWhenAnyDistanceNonInLaw() || traversalStrategy.isSkipInLawWhenSameDistanceNotInLaw())) {
             if (relationships
                     .stream()
                     .anyMatch(r
-                            -> relationshipPriority.isSkipSpouseWhenAnyNonSpouse() && r.isSpouse()
-                            || relationshipPriority.isSkipSpouseWhenNonSpouseOf() && r.isSpouse() && r.isSpouseOf(relationship))) {
+                            -> traversalStrategy.isSkipInLawWhenAnyDistanceNonInLaw() && r.isInLaw()
+                            || traversalStrategy.isSkipInLawWhenSameDistanceNotInLaw() && r.isInLaw() && r.isInLawOf(toMergeRelationship))) {
                 relationships = relationships
                         .stream()
                         .filter(r
-                                -> relationshipPriority.isSkipSpouseWhenAnyNonSpouse() && !r.isSpouse()
-                                || relationshipPriority.isSkipSpouseWhenNonSpouseOf() && (!r.isSpouse() || !r.isSpouseOf(relationship)))
-                        .collect(Collectors.toSet());
+                                -> traversalStrategy.isSkipInLawWhenAnyDistanceNonInLaw() && !r.isInLaw()
+                                || traversalStrategy.isSkipInLawWhenSameDistanceNotInLaw() && !(r.isInLaw() && r.isInLawOf(toMergeRelationship)))
+                        .collect(Collectors.toList());
             }
         }
 
         TreeSet<Relationship> result = new TreeSet<>(relationships);
-        result.add(relationship);
+        result.add(toMergeRelationship);
         return result;
     }
 
@@ -107,15 +117,20 @@ public class Relationships {
         return relationship.distanceToAncestor1() == 0 || relationship.distanceToAncestor2() == 0;
     }
 
+    /**
+     *
+     */
     @Getter
     @RequiredArgsConstructor
-    public enum RelationshipPriority {
-        SKIP_SPOUSE_WHEN_EXISTS_NON_SPOUSE_OF(false, true),
-        SKIP_ALL_SPOUSE_WHEN_EXISTS_ANY_NON_SPOUSE(true, false),
-        CLOSEST_SKIPPING_SPOUSE_WHEN_EXISTS_ANY_NON_SPOUSE(true, false);
+    public enum VisitedRelationshipTraversalStrategy {
+        INCLUDE_ALL(false, false, false),
+        SKIP_IN_LAW_WHEN_EXISTS_SAME_DIST_NOT_IN_LAW(true, false, false),
+        SKIP_IN_LAW_WHEN_EXISTS_ANY_DIST_NOT_IN_LAW(false, true, false),
+        CLOSEST_SKIPPING_IN_LAW_WHEN_EXISTS_ANY_NOT_IN_LAW(false, true, true);
 
-        private final boolean skipSpouseWhenAnyNonSpouse;
-        private final boolean skipSpouseWhenNonSpouseOf;
+        private final boolean skipInLawWhenSameDistanceNotInLaw;
+        private final boolean skipInLawWhenAnyDistanceNonInLaw;
+        private final boolean closestDistance;
 
     }
 

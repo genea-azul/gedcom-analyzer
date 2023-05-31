@@ -37,7 +37,9 @@ public class RelationshipMapper {
         } else if (relationship.distanceToAncestor1() == relationship.distanceToAncestor2()) {
             generation = 0;
             grade = relationship.distanceToAncestor1() - 1;
-            referenceType = grade < 0 ? ReferenceType.SELF : (grade == 0 ? ReferenceType.SIBLING : ReferenceType.COUSIN);
+            referenceType = grade < 0
+                    ? (relationship.isInLaw() ? ReferenceType.SPOUSE : ReferenceType.SELF)
+                    : (grade == 0 ? ReferenceType.SIBLING : ReferenceType.COUSIN);
         } else {
             generation = relationship.distanceToAncestor2() - relationship.distanceToAncestor1();
             grade = relationship.distanceToAncestor1();
@@ -52,7 +54,7 @@ public class RelationshipMapper {
                 .referenceType(referenceType)
                 .generation(generation)
                 .grade(grade)
-                .isSpouse(relationship.isSpouse())
+                .isInLaw(relationship.isInLaw())
                 .isHalf(relationship.isHalf())
                 .build();
     }

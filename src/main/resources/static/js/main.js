@@ -461,7 +461,7 @@ var getPersonComponent = function(person, index) {
         if (hasNumberOfPeopleInTree) {
             treeInfo.append(
                 $("<li>")
-                    .html("Cantidad de familiares: <b>" + person.numberOfPeopleInTree + "</b>"));
+                    .html("Cantidad de familiares: <b>" + (person.numberOfPeopleInTree - 1) + "</b>"));
         }
 
         if (hasMaxDistantRelationship) {
@@ -560,10 +560,13 @@ var displayDateInSpanish = function(date) {
     return date;
 };
 
-// Spouses are not considered
 var displayRelationshipInSpanish = function(relationship) {
     if (relationship.referenceType == "SELF") {
         return "<b>esta persona</b>";
+    }
+
+    if (relationship.referenceType == "SPOUSE") {
+        return "<b>pareja</b>";
     }
 
     if (relationship.referenceType == "PARENT") {

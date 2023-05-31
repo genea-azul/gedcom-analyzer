@@ -11,20 +11,20 @@ import jakarta.annotation.Nullable;
 public record Relationship(
         int distanceToAncestor1,
         int distanceToAncestor2,
-        boolean isSpouse,
+        boolean isInLaw,
         boolean isHalf,
         @Nullable SortedSet<String> relatedPersonIds) implements Comparable<Relationship> {
 
     public static Relationship of(
             int ascending,
             int descending,
-            boolean isSpouse,
+            boolean isInLaw,
             boolean isHalf,
             @Nullable SortedSet<String> relatedPersonIds) {
         return new Relationship(
                 ascending,
                 descending,
-                isSpouse,
+                isInLaw,
                 isHalf,
                 relatedPersonIds);
     }
@@ -34,7 +34,7 @@ public record Relationship(
     }
 
     public int getDistance() {
-        return distanceToAncestor1 + distanceToAncestor2 + (isSpouse ? 1 : 0);
+        return distanceToAncestor1 + distanceToAncestor2 + (isInLaw ? 1 : 0);
     }
 
     public int compareDistance(Relationship other) {
@@ -44,7 +44,7 @@ public record Relationship(
     }
 
     public Relationship increase(Sort.Direction direction, boolean isSetHalf, @Nullable SortedSet<String> relatedPersonIds) {
-        if (isSpouse || isHalf && direction == Sort.Direction.ASC || isHalf && isSetHalf) {
+        if (isInLaw || isHalf && direction == Sort.Direction.ASC || isHalf && isSetHalf) {
             throw new UnsupportedOperationException();
         }
         if (direction == Sort.Direction.ASC) {
@@ -56,10 +56,10 @@ public record Relationship(
         return Relationship.of(distanceToAncestor1, distanceToAncestor2, true, isHalf, relatedPersonIds);
     }
 
-    public boolean isSpouseOf(Relationship other) {
+    public boolean isInLawOf(Relationship other) {
         return this.distanceToAncestor1 == other.distanceToAncestor1
                 && this.distanceToAncestor2 == other.distanceToAncestor2
-                && this.isSpouse != other.isSpouse
+                && this.isInLaw != other.isInLaw
                 && this.isHalf == other.isHalf;
     }
 
@@ -69,9 +69,9 @@ public record Relationship(
         if (compareDistance != 0) {
             return compareDistance;
         }
-        int compareIsSpouse = Boolean.compare(this.isSpouse, other.isSpouse);
-        if (compareIsSpouse != 0) {
-            return compareIsSpouse;
+        int compareIsInLaw = Boolean.compare(this.isInLaw, other.isInLaw);
+        if (compareIsInLaw != 0) {
+            return compareIsInLaw;
         }
         int compareIsHalf = Boolean.compare(this.isHalf, other.isHalf);
         if (compareIsHalf != 0) {

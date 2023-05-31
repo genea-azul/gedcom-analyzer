@@ -157,19 +157,19 @@ public class PersonService {
                 visitedPersons,
                 Sort.Direction.ASC,
                 Relationship.empty(),
-                Relationships.RelationshipPriority.CLOSEST_SKIPPING_SPOUSE_WHEN_EXISTS_ANY_NON_SPOUSE);
+                Relationships.VisitedRelationshipTraversalStrategy.CLOSEST_SKIPPING_IN_LAW_WHEN_EXISTS_ANY_NOT_IN_LAW);
 
-        Optional<Pair<String, Relationship>> maxDistantRelationshipNonSpouse = visitedPersons
+        Optional<Pair<String, Relationship>> maxDistantRelationship = visitedPersons
                 .values()
                 .stream()
                 .filter(relationships -> !relationships.getPersonId().equals(person.getId()))
-                .map(relationships -> Pair.of(relationships.getPersonId(), relationships.getFirstNonSpouseRelationship()))
+                .map(relationships -> Pair.of(relationships.getPersonId(), relationships.findFirst()))
                 .filter(pair -> pair.getRight().isPresent())
                 .map(pair -> Pair.of(pair.getLeft(), pair.getRight().get()))
                 .reduce((p1, p2) -> p1.getRight().compareTo(p2.getRight()) >= 0 ? p1 : p2);
 
         person.setNumberOfPeopleInTree(visitedPersons.size());
-        person.setMaxDistantRelationship(maxDistantRelationshipNonSpouse);
+        person.setMaxDistantRelationship(maxDistantRelationship);
     }
 
     public List<Pair<EnrichedPerson, Relationships>> getPeopleInTree(EnrichedPerson person) {
@@ -180,7 +180,7 @@ public class PersonService {
                 visitedPersons,
                 Sort.Direction.ASC,
                 Relationship.empty(),
-                Relationships.RelationshipPriority.CLOSEST_SKIPPING_SPOUSE_WHEN_EXISTS_ANY_NON_SPOUSE);
+                Relationships.VisitedRelationshipTraversalStrategy.CLOSEST_SKIPPING_IN_LAW_WHEN_EXISTS_ANY_NOT_IN_LAW);
         EnrichedGedcom gedcom = person.getGedcom();
         return visitedPersons
                 .values()
@@ -194,27 +194,39 @@ public class PersonService {
             @Nullable String previousPersonId,
             Map<String, Relationships> visitedPersons,
             @Nullable Sort.Direction direction,
-            Relationship relationship,
-            Relationships.RelationshipPriority relationshipPriority) {
+            Relationship toVisitRelationship,
+            Relationships.VisitedRelationshipTraversalStrategy visitedRelationshipTraversalStrategy) {
 
         boolean visited = visitedPersons.containsKey(person.getId());
         if (visited) {
-            Relationships relationships = visitedPersons.get(person.getId());
-            if (relationships.contains(relationship)) {
+            // Idempotency check for visited person
+            Relationships visitedRelationships = visitedPersons.get(person.getId());
+            if (visitedRelationships.contains(toVisitRelationship)) {
                 return;
             }
-            if (relationship.isSpouse()) {
-                if (relationshipPriority.isSkipSpouseWhenAnyNonSpouse() && relationships.isContainsNotSpouse()) {
+
+            // Check traversal strategies for visited in-law relationship
+            if (toVisitRelationship.isInLaw()) {
+                if (visitedRelationshipTraversalStrategy.isSkipInLawWhenSameDistanceNotInLaw() && visitedRelationships.containsInLawOf(toVisitRelationship)) {
+                    // The visited in-law relationship appears also as not in-law (with the same distance)
                     return;
                 }
-                if (relationshipPriority.isSkipSpouseWhenNonSpouseOf() && relationships.containsSpouseOf(relationship)) {
+                if (visitedRelationshipTraversalStrategy.isSkipInLawWhenAnyDistanceNonInLaw() && visitedRelationships.isContainsNotInLaw()) {
+                    // The visited in-law relationship appears also as not in-law (with any distance)
                     return;
                 }
             }
-            if (relationshipPriority == Relationships.RelationshipPriority.CLOSEST_SKIPPING_SPOUSE_WHEN_EXISTS_ANY_NON_SPOUSE) {
-                if ((!relationship.isSpouse() && relationships.isContainsNotSpouse()
-                        || relationship.isSpouse() && !relationships.isContainsNotSpouse())
-                        && relationship.compareTo(relationships.getRelationships().first()) >= 0) {
+
+            // Check traversal strategies for visited closest distance relationship
+            if (visitedRelationshipTraversalStrategy.isClosestDistance()) {
+                if (visitedRelationshipTraversalStrategy.isSkipInLawWhenSameDistanceNotInLaw()
+                        && (toVisitRelationship.isInLaw() || !visitedRelationships.containsInLawOf(toVisitRelationship))
+                        && toVisitRelationship.compareTo(visitedRelationships.getOrderedRelationships().first()) >= 0) {
+                    return;
+                }
+                if (visitedRelationshipTraversalStrategy.isSkipInLawWhenAnyDistanceNonInLaw()
+                        && (toVisitRelationship.isInLaw() || visitedRelationships.isContainsNotInLaw())
+                        && toVisitRelationship.compareTo(visitedRelationships.getOrderedRelationships().first()) >= 0) {
                     return;
                 }
             }
@@ -222,26 +234,25 @@ public class PersonService {
 
         visitedPersons.merge(
                 person.getId(),
-                Relationships.of(person.getId(), relationship),
-                (r1, r2) -> r1.merge(r2, relationshipPriority));
+                Relationships.of(person.getId(), toVisitRelationship),
+                (r1, r2) -> r1.merge(r2, visitedRelationshipTraversalStrategy));
 
-        if (relationship.getDistance() == 32) {
+        if (toVisitRelationship.getDistance() == 32) {
             // If max level or recursion is reached, stop the search
             return;
         }
 
-        resolveRelatives(person, direction)
-                .filter(relativeAndDirection -> !relativeAndDirection.person.getId().equals(previousPersonId))
+        resolveRelativesToTraverse(person, direction, previousPersonId)
                 .forEach(relativeAndDirection -> traversePeopleInTree(
                         relativeAndDirection.person,
                         person.getId(),
                         visitedPersons,
                         relativeAndDirection.direction,
-                        relationship.increase(
+                        toVisitRelationship.increase(
                                 relativeAndDirection.direction,
                                 isSetHalf(direction, relativeAndDirection.direction, previousPersonId, relativeAndDirection.person),
                                 relativeAndDirection.relatedPersonIds),
-                        relationshipPriority));
+                        visitedRelationshipTraversalStrategy));
     }
 
     private static boolean isSetHalf(
@@ -274,9 +285,33 @@ public class PersonService {
                 .anyMatch(personId -> !parentIds.contains(personId));
     }
 
-    private static Stream<A> resolveRelatives(
+    /**
+     * <p>Returns the next relatives to visit based on the current direction.</p>
+     * <ul>
+     *     <li>Direction ASC: when traversing the tree in ASC direction all relatives are considered
+     *         <ul>
+     *             <li>Previous visited person: a child</li>
+     *             <li>Next directions to visit: ASC (parents), DESC (children), null (spouses)</li>
+     *         </ul>
+     *     </li>
+     *     <li>Direction DESC: when traversing the tree in DESC direction only spouses and children are considered
+     *         <ul>
+     *             <li>Previous visited person: a parent</li>
+     *             <li>Next directions to visit: DESC (children), null (spouses)</li>
+     *         </ul>
+     *     </li>
+     *     <li>Direction null: when traversing the tree in null direction no relatives are considered
+     *         <ul>
+     *             <li>Previous visited person: a spouse</li>
+     *             <li>Next directions to visit: -</li>
+     *         </ul>
+     *     </li>
+     * </ul>
+     */
+    private static Stream<A> resolveRelativesToTraverse(
             EnrichedPerson person,
-            @Nullable Sort.Direction direction) {
+            @Nullable Sort.Direction direction,
+            @Nullable String previousPersonId) {
 
         if (direction == null) {
             return Stream.of();
@@ -291,6 +326,7 @@ public class PersonService {
                         .map(pair -> B.of(
                                 pair.getRight(),
                                 Sort.Direction.DESC,
+                                // when traversing children, both parents will be considered the related persons
                                 pair.getLeft()
                                         .map(spouse -> newTreeSet(person.getId(), spouse.getId()))
                                         .orElseGet(() -> newTreeSet(person.getId())))));
@@ -305,6 +341,7 @@ public class PersonService {
         return relativesAndDirections
                 .flatMap(b -> b.persons
                         .stream()
+                        .filter(relative -> !relative.getId().equals(previousPersonId))
                         .map(relative -> A.of(relative, b.direction, b.relatedPersonIds)));
     }
 
