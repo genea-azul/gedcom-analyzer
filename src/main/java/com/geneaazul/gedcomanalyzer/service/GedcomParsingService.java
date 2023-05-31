@@ -54,7 +54,11 @@ public class GedcomParsingService {
         Path gedcomDirPath = null;
 
         try {
+            // Make sure temp dir exists
+            Files.createDirectories(properties.getTempDir());
+            // Create a new directory inside the temp dir
             gedcomDirPath = Files.createTempDirectory(properties.getTempDir(), properties.getTempUploadedGedcomDirPrefix());
+
             Path gedcomPath = uploadAndDecompress(gedcomDirPath, gedcomFile);
             Gedcom gedcom = parseGedcom(gedcomPath.toFile());
             return EnrichedGedcom.of(gedcom, gedcomFile.getOriginalFilename(), properties);
