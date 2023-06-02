@@ -49,7 +49,8 @@ public class EnrichedPerson {
 
     // Search values
     private final Optional<String> placeOfBirthForSearch;
-    private final Optional<String> countryOfBirthForSearch;
+    private final Optional<String> countryOfBirth;
+    private final Optional<String> countryOfDeath;
 
     // Custom event facts and tag extensions
     private List<EventFact> customEventFacts;
@@ -61,6 +62,8 @@ public class EnrichedPerson {
     private List<EnrichedPerson> siblings;
     private List<EnrichedPerson> spouses;
     private List<EnrichedPerson> children;
+    private List<String> countriesOfMarriage = List.of();
+    private List<Date> datesOfMarriage = List.of();
 
     // Transient properties
     @Setter
@@ -94,7 +97,10 @@ public class EnrichedPerson {
 
         placeOfBirthForSearch = placeOfBirth
                 .map(PlaceUtils::removeLastParenthesis);
-        countryOfBirthForSearch = placeOfBirthForSearch
+        countryOfBirth = placeOfBirthForSearch
+                .map(PlaceUtils::getCountry);
+        countryOfDeath = placeOfBirth
+                .map(PlaceUtils::removeLastParenthesis)
                 .map(PlaceUtils::getCountry);
     }
 

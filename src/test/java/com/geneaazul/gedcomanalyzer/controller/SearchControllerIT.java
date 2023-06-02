@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.geneaazul.gedcomanalyzer.domain.SearchFamily;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchPersonDto;
+import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
 import org.junit.jupiter.api.Test;
@@ -22,9 +23,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class SearchControllerIT extends AbstractControllerIT {
 
     @Autowired
@@ -70,12 +75,15 @@ public class SearchControllerIT extends AbstractControllerIT {
                 .when(searchFamilyRepository)
                 .save(any());
 
-        mvc.perform(post("/api/search/family")
+        MvcResult result = mvc.perform(post("/api/search/family")
                         .content(objectMapper.writeValueAsBytes(searchFamilyDto))
                         .contentType(MediaType.APPLICATION_JSON)
                         .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.people", hasSize(2)));
+                .andExpect(jsonPath("$.people", hasSize(2)))
+                .andReturn();
+
+        log.info("Response: {}", result.getResponse().getContentAsString());
     }
 
     @Test
@@ -91,10 +99,36 @@ public class SearchControllerIT extends AbstractControllerIT {
                 .when(searchFamilyRepository)
                 .findAll(any(Pageable.class));
 
-        mvc.perform(get("/api/search/family/latest?page=0&size=5")
+        MvcResult result = mvc.perform(get("/api/search/family/latest?page=0&size=5")
                         .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)));
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andReturn();
+
+        log.info("Response: {}", result.getResponse().getContentAsString());
+    }
+
+    @Test
+    public void testSearchSurnames() throws Exception {
+        ObjectMapper objectMapper = mapperBuilder.build();
+
+        SearchSurnamesDto searchSurnamesDto = SearchSurnamesDto.builder()
+                .surnames(List.of(
+                        "Family1",
+                        "Family2",
+                        "family1",
+                        "Other Surname"))
+                .build();
+
+        MvcResult result = mvc.perform(post("/api/search/surnames")
+                        .content(objectMapper.writeValueAsBytes(searchSurnamesDto))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.surnames", hasSize(3)))
+                .andReturn();
+
+        log.info("Response: {}", result.getResponse().getContentAsString());
     }
 
 }

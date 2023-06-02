@@ -355,7 +355,7 @@ public class GedcomAnalyzerService {
 
         List<String> countriesOfBirth = people
                 .stream()
-                .map(EnrichedPerson::getCountryOfBirthForSearch)
+                .map(EnrichedPerson::getCountryOfBirth)
                 .map(countryOfBirth -> countryOfBirth.or(() -> includeEmptyValues ? Optional.of("<no country>") : Optional.empty()))
                 .flatMap(Optional::stream)
                 .toList();

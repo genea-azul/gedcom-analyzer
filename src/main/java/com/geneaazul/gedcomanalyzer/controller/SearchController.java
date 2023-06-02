@@ -4,8 +4,11 @@ import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDetailsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyResultDto;
+import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesDto;
+import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesResultDto;
 import com.geneaazul.gedcomanalyzer.service.DockerService;
 import com.geneaazul.gedcomanalyzer.service.FamilyService;
+import com.geneaazul.gedcomanalyzer.service.SurnameService;
 import com.geneaazul.gedcomanalyzer.utils.InetAddressUtils;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 public class SearchController {
 
     private final FamilyService familyService;
+    private final SurnameService surnameService;
     private final GedcomAnalyzerProperties properties;
     private final DockerService dockerService;
 
@@ -64,6 +68,20 @@ public class SearchController {
             @RequestParam(name = "size", defaultValue = "10") int size) {
         dockerService.startDbContainer();
         return familyService.getLatest(page, size);
+    }
+
+    @PostMapping("/surnames")
+    public SearchSurnamesResultDto searchSurnames(@Valid @RequestBody SearchSurnamesDto searchSurnamesDto, HttpServletRequest request) {
+        dockerService.startDbContainer();
+
+        String clientIpAddress = InetAddressUtils.getRemoteAddress(request);
+
+        if (!familyService.isAllowedSearch(clientIpAddress)) {
+            return SearchSurnamesResultDto.builder()
+                    .build();
+        }
+
+        return surnameService.search(searchSurnamesDto);
     }
 
 }

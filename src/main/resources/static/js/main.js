@@ -108,8 +108,10 @@ $(document).ready(function() {
 $(document).ready(function() {
     $("#searchBtn").on("click", function() {
         $("#searchBtn").prop("disabled", true);
-        var resultComponent = $("#searchResultCard div.card-body");
-        resultComponent.html("<p>Buscando...</p>");
+
+        var resultComponentLocator = "#searchResultCard div.card-body";
+        var $resultComponent = $(resultComponentLocator)
+            .html("<p>Buscando...</p>");
 
         var searchFamilyRequest = {
             "individual": {
@@ -191,7 +193,7 @@ $(document).ready(function() {
 
         if (isRequestEmpty(searchFamilyRequest)) {
             var errorMsg = "<p><b>Error:</b> Llen&aacute; por lo menos un dato.</p>";
-            resultComponent.html(
+            $resultComponent.html(
                 $("<div>")
                     .html(errorMsg));
             finalizeSearch();
@@ -206,70 +208,134 @@ $(document).ready(function() {
             data: JSON.stringify(searchFamilyRequest),
             success: function(data) {
                 // remove the "searching.." message
-                resultComponent.empty();
+                $resultComponent.empty();
 
                 data.people.forEach((person, index) => {
-                    var personComponent = getPersonComponent(person, index);
-                    resultComponent.append(personComponent);
+                    var $personComponent = getPersonComponent(person, index);
+                    $resultComponent.append($personComponent);
                 });
 
                 if (data.people.length == 0) {
                     if (data.errors.length > 0) {
-                        resultComponent.html("<p>Se produjo un error en la b&uacute;squeda. \u2639</p>");
+                        $resultComponent.html("<p>⚠️ Se produjo un error en la b&uacute;squeda. ⚠️</p>");
                         data.errors.forEach((errorCode, index) => {
-                            resultComponent.append(displayErrorCodeInSpanish(errorCode));
+                            $resultComponent.append(displayErrorCodeInSpanish(errorCode));
                         });
                     } else if (!data.potentialResults) {
-                        if (isMissingSurname(searchFamilyRequest)) {
-                            resultComponent.html("<p>No se encontraron resultados. Por favor ingres&aacute; un apellido.</p>");
+                        if (getSurnamesInRequest(searchFamilyRequest).length == 0) {
+                            $resultComponent.html("<p>⚠️ No se encontraron resultados. Por favor ingres&aacute; un apellido. ⚠️</p>");
                         } else {
-                            resultComponent
-                                .html("<p>No se encontraron resultados. \u2639</p>")
-                                .append("<p>Refin&aacute; la b&uacute;squeda agregando fechas o completando nombres de padres y parejas.</p>");
+                            $resultComponent
+                                .html("<p>🔎 No se encontraron resultados. 🔍</p>")
+                                .append("<p>Edit&aacute; la b&uacute;squeda agregando fechas o completando nombres de padres y parejas.</p>")
+                                .append("<p>Verific&aacute; que el sexo de la persona est&eacute; bien seleccionado.</p>");
                         }
                     } else {
-                        resultComponent
-                            .html("<p>La b&uacute;squeda es ambigua.</p>")
+                        $resultComponent
+                            .html("<p>⚠️ La b&uacute;squeda es ambigua. ⚠️</p>")
                             .append("<p>Refin&aacute; la b&uacute;squeda agregando fechas o completando nombres de padres y parejas.</p>")
                             .append("<p><b>Potenciales resultados:</b> " + data.potentialResults + "</p>");
                     }
                 }
-            },
-            error: function(xhr) {
-                console.log(xhr);
-                resultComponent.html("Error!");
 
-                // Get error details
-                try {
-                    var errorMsg;
-                    if (xhr.status >= 500 && xhr.status < 600) {
-                        errorMsg = "<p><b>Error:</b> El servidor se est&aacute; reiniciando, intent&aacute; de nuevo.</p>";
-                    } else if (xhr.status == 0) {
-                        errorMsg = "<p><b>Error:</b> El servidor est&aacute; ca&iacute;do, intent&aacute; de nuevo.</p>";
-                    } else {
-                        errorMsg = "<p><b>Error:</b> " + xhr.responseJSON.message + "</p>";
-                    }
+                var surnamesInRequest = getSurnamesInRequest(searchFamilyRequest);
 
-                    resultComponent.html(
+                // append surnames info
+                if (surnamesInRequest.length > 0) {
+                    $resultComponent.append(
                         $("<div>")
-                            .html(errorMsg));
+                            .addClass("card border-dark mt-4 ms-1 me-1 mb-1")
+                            .attr("id", "searchSurnamesResultCard")
+                            .append(
+                                $("<div>")
+                                    .addClass("card-header text-bg-dark")
+                                    .html("Informaci&oacute;n de apellidos"))
+                            .append(
+                                $("<div>")
+                                    .addClass("card-body overflow-auto")
+                                    .html(
+                                        $("<span>")
+                                            .addClass("spinner-border spinner-border-sm")
+                                            .attr("role", "status"))));
 
-                } catch (ex) {
-                    console.log(ex);
+                    finalizeSearch(function() {
+                        setTimeout(function() {
+                            searchSurnames(surnamesInRequest);
+                        }, 1500);
+                    });
+                } else {
+                    finalizeSearch();
                 }
             },
-            complete: function() {
+            error: function(xhr) {
+                handleError(xhr, resultComponentLocator);
                 finalizeSearch();
             }
         });
     });
 });
 
-var finalizeSearch = function() {
-    $("#searchBtn").prop("disabled", false);
-    $("html, body").animate({
-        scrollTop: $("#searchResultCard").offset().top
-    }, 600);
+var finalizeSearch = function(callback = function() {}) {
+    $("html, body")
+        .animate({ scrollTop: $("#searchResultCard").offset().top }, 600)
+        .promise()
+        .done(function () {
+            callback();
+            $("#searchBtn").prop("disabled", false);
+        });
+};
+
+var searchSurnames = function(surnames) {
+    var surnamesComponentLocator = "#searchSurnamesResultCard div.card-body";
+    var $surnamesComponent = $(surnamesComponentLocator);
+
+    var searchSurnamesRequest = {
+        "surnames": surnames
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "/api/search/surnames",
+        dataType: "json",
+        contentType: "application/json",
+        data: JSON.stringify(searchSurnamesRequest),
+        success: function(data) {
+            // remove the spinner
+            $surnamesComponent.empty();
+
+            data.surnames.forEach((searchSurnameResult, index) => {
+                var $surnameComponent = getSurnameComponent(searchSurnameResult, index);
+                $surnamesComponent.append($surnameComponent);
+            });
+        },
+        error: function(xhr) {
+            handleError(xhr, surnamesComponentLocator);
+        }
+    });
+};
+
+var handleError = function(xhr, componentLocator) {
+    var $component = $(componentLocator)
+        .html("Error!");
+
+    // Get error details
+    try {
+        var errorMsg;
+        if (xhr.status >= 500 && xhr.status < 600) {
+            errorMsg = "<p><b>Error:</b> El servidor se est&aacute; reiniciando, intent&aacute; de nuevo.</p>";
+        } else if (xhr.status == 0) {
+            errorMsg = "<p><b>Error:</b> El servidor est&aacute; ca&iacute;do, intent&aacute; de nuevo.</p>";
+        } else {
+            errorMsg = "<p><b>Error:</b> " + xhr.responseJSON.message + "</p>";
+        }
+
+        $component.html(
+            $("<div>")
+                .html(errorMsg));
+
+    } catch (ex) {
+        console.log(ex);
+    }
 };
 
 var personsInRq = [
@@ -316,127 +382,127 @@ var isRequestEmpty = function(searchFamilyRequest) {
     return true;
 };
 
-var isMissingSurname = function(searchFamilyRequest) {
+var getSurnamesInRequest = function(searchFamilyRequest) {
+    var surnames = [];
     for (var person of personsInRq) {
         if (!!searchFamilyRequest[person] && !!searchFamilyRequest[person].surname) {
-            return false;
+            if ($.inArray(searchFamilyRequest[person].surname, surnames) == -1) {
+                surnames.push(searchFamilyRequest[person].surname);
+            }
         }
     }
-    return true;
+    return surnames;
 };
 
 var getPersonComponent = function(person, index) {
-    var card = $("<div>").addClass("card");
+    var $card = $("<div>").addClass("card");
 
     if (index > 0) {
-        card.addClass("mt-2");
+        $card.addClass("mt-2");
     }
-
-    var cardBody = $("<div>").addClass("card-body small");
 
     if (person.sex == "M") {
-        card.addClass("border-secondary");
-        cardBody.addClass("text-bg-secondary");
+        $card.addClass("border-secondary text-bg-secondary");
     } else if (person.sex == "F") {
-        card.addClass("border-danger");
-        cardBody.addClass("text-bg-danger");
+        $card.addClass("border-danger text-bg-danger");
     } else {
-        card.addClass("border-light");
-        cardBody.addClass("text-bg-light");
+        $card.addClass("border-light text-bg-light");
     }
 
-    cardBody.append(
+    var $cardBody = $("<div>").addClass("card-body small");
+
+    $cardBody.append(
         $("<div>")
             .addClass(person.aka == null ? "h6" : "h6 mb-0")
             .html(displayNameInSpanish(person.name)));
 
     if (person.aka != null) {
-        cardBody.append(
+        $cardBody.append(
             $("<div>")
                 .addClass("small mb-2")
                 .html(displayNameInSpanish(person.aka)));
     }
 
-    var birthDeath = $("<div>")
+    var $birthDeath = $("<div>")
         .addClass("mt-1");
 
     if (person.dateOfBirth != null) {
-        birthDeath.html("n. " + displayDateInSpanish(person.dateOfBirth));
+        $birthDeath.html("n. " + displayDateInSpanish(person.dateOfBirth));
     } else if (person.dateOfDeath != null) {
-        birthDeath.html("?");
+        $birthDeath.html("?");
     }
 
     if (person.dateOfDeath != null) {
-        birthDeath.append(" - f. " + displayDateInSpanish(person.dateOfDeath));
+        $birthDeath.append(" - f. " + displayDateInSpanish(person.dateOfDeath));
     } else {
         if (person.dateOfBirth != null) {
-            birthDeath.append(" - ");
+            $birthDeath.append(" - ");
         }
         if (person.isAlive) {
-            birthDeath.append("Vive");
+            $birthDeath.append("Vive");
         } else {
-            birthDeath.append(person.sex == "F" ? "Fallecida" : "Fallecido");
+            $birthDeath.append(person.sex == "F" ? "Fallecida" : "Fallecido");
         }
     }
 
-    cardBody.append(birthDeath);
+    $cardBody.append($birthDeath);
 
     if (person.placeOfBirth != null) {
-        cardBody.append(
+        $cardBody.append(
             $("<div>")
                 .addClass("mt-1")
                 .html("Pa&iacute;s de nacimiento: " + person.placeOfBirth));
     }
 
     if (person.parents.length > 0) {
-        var parents = $("<ul>")
+        var $parents = $("<ul>")
             .addClass("mb-0");
 
         person.parents.forEach((parentName, index) => {
-            parents.append(
+            $parents.append(
                 $("<li>")
                     .html(
                         $("<b>")
                             .html(displayNameInSpanish(parentName))));
         });
 
-        cardBody.append(
+        $cardBody.append(
             $("<div>")
                 .addClass("mt-1")
                 .html("Padres: ")
-                .append(parents));
+                .append($parents));
     }
 
     if (person.spouses.length > 0) {
-        var spouses = $("<ul>")
+        var $spouses = $("<ul>")
             .addClass("mb-0");
 
         person.spouses.forEach((spouseWithChildren, index) => {
-            spouses.append(
+            $spouses.append(
                 $("<li>")
                     .html(
                         $("<b>")
                             .html(displayNameInSpanish(spouseWithChildren.name))));
 
             if (spouseWithChildren.children.length > 0) {
-                var children = $("<ul>")
+                var $children = $("<ul>")
                     .addClass("mb-0");
 
                 spouseWithChildren.children.forEach((childName, index) => {
-                    children.append(
+                    $children.append(
                         $("<li>")
                             .html(displayNameInSpanish(childName)));
                 });
 
-                spouses.append(children);
+                $spouses.append($children);
             }
         });
 
-        cardBody.append(
+        $cardBody.append(
             $("<div>")
                 .addClass("mt-1")
                 .html("Parejas: ")
-                .append(spouses));
+                .append($spouses));
     }
 
     var hasAncestryGenerations = person.ancestryGenerations != null
@@ -445,27 +511,27 @@ var getPersonComponent = function(person, index) {
     var hasMaxDistantRelationship = person.maxDistantRelationship != null;
 
     if (hasAncestryGenerations || hasNumberOfPeopleInTree || hasMaxDistantRelationship) {
-        var treeInfo = $("<ul>")
+        var $treeInfo = $("<ul>")
             .addClass("mb-0");
 
         if (hasAncestryGenerations) {
-            treeInfo.append(
+            $treeInfo.append(
                 $("<li>")
                     .html("Ascendencia: " + getCardinal(person.ancestryGenerations.ascending, "generaci&oacute;n", "generaciones")));
 
-            treeInfo.append(
+            $treeInfo.append(
                 $("<li>")
                     .html("Descendencia: " + getCardinal(person.ancestryGenerations.descending, "generaci&oacute;n", "generaciones")));
         }
 
         if (hasNumberOfPeopleInTree) {
-            treeInfo.append(
+            $treeInfo.append(
                 $("<li>")
                     .html("Cantidad de familiares: <b>" + (person.numberOfPeopleInTree - 1) + "</b>"));
         }
 
         if (hasMaxDistantRelationship) {
-            treeInfo
+            $treeInfo
                 .append(
                     $("<li>")
                         .html("Relaci&oacute;n m&aacute;s distante:"))
@@ -480,31 +546,97 @@ var getPersonComponent = function(person, index) {
                                 .html(displayNameInSpanish(person.maxDistantRelationship.personName))));
         }
 
-        cardBody.append(
+        $cardBody.append(
             $("<div>")
                 .addClass("mt-1")
                 .html("Informaci&oacute;n en el &aacute;rbol: ")
-                .append(treeInfo));
+                .append($treeInfo));
     }
 
     if (person.ancestryCountries.length > 0) {
-        var countries = $("<ul>")
+        var $countries = $("<ul>")
             .addClass("mb-0");
 
         person.ancestryCountries.forEach((countryName, index) => {
-            countries.append(
+            $countries.append(
                 $("<li>")
                     .html(countryName));
         });
 
-        cardBody.append(
+        $cardBody.append(
             $("<div>")
                 .addClass("mt-1")
                 .html("Pa&iacute;ses en su ascendencia: ")
-                .append(countries));
+                .append($countries));
     }
 
-    return card.html(cardBody);
+    return $card.html($cardBody);
+};
+
+var getSurnameComponent = function(searchSurnameResult, index) {
+    var $card = $("<div>")
+        .addClass("card border-default text-bg-light");
+
+    if (index > 0) {
+        $card.addClass("mt-2");
+    }
+
+    var $cardHeader = $("<div>")
+        .addClass("card-header")
+        .html(searchSurnameResult.surname);
+
+    var $cardBody = $("<div>")
+        .addClass("card-body small");
+
+    if (searchSurnameResult.variants.length > 0) {
+        var $variants = $("<ul>")
+            .addClass("mb-0");
+
+        searchSurnameResult.variants.forEach((surnameVariant, index) => {
+            $variants.append(
+                $("<li>")
+                    .html(surnameVariant));
+        });
+
+        $cardBody.append(
+            $("<div>")
+                .addClass("mt-1")
+                .html("Variantes: ")
+                .append($variants));
+    }
+
+    $cardBody.append(
+        $("<div>")
+            .addClass("mt-1")
+            .html("Cantidad de personas: " + searchSurnameResult.frequency));
+
+    if (searchSurnameResult.countries.length > 0) {
+        var $countries = $("<ul>")
+            .addClass("mb-0");
+
+        searchSurnameResult.countries.forEach((countryName, index) => {
+            $countries.append(
+                $("<li>")
+                    .html(countryName));
+        });
+
+        $cardBody.append(
+            $("<div>")
+                .addClass("mt-1")
+                .html("Pa&iacute;ses: ")
+                .append($countries));
+    }
+
+    if (searchSurnameResult.firstSeenYear != null && searchSurnameResult.lastSeenYear != null) {
+          $cardBody.append(
+              $("<div>")
+                  .addClass("mt-1")
+                  .html("Rango de a&ntilde;os de eventos: " + searchSurnameResult.firstSeenYear + "-" + searchSurnameResult.lastSeenYear));
+    }
+
+    return $card
+        .append($cardHeader)
+        .append($cardBody);
 };
 
 var getCardinal = function(num, singular, plural) {

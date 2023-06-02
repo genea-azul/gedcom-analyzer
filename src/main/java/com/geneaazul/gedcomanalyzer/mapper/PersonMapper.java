@@ -102,7 +102,7 @@ public class PersonMapper {
                 .dateOfBirth(person.getDateOfBirth()
                         .map(date -> DateUtils.obfuscateDate(date, obfuscateLiving && person.isAlive()))
                         .orElse(null))
-                .placeOfBirth(person.getCountryOfBirthForSearch()
+                .placeOfBirth(person.getCountryOfBirth()
                         .orElse(null))
                 .dateOfDeath(person.getDateOfDeath()
                         .map(Date::format)

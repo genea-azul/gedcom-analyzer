@@ -59,7 +59,7 @@ public class PersonService {
 
         if (level == 20) {
             // If max level or recursion is reached, stop the search
-            return person.getCountryOfBirthForSearch()
+            return person.getCountryOfBirth()
                     .map(Set::of)
                     .orElseGet(Set::of);
         }
@@ -75,7 +75,7 @@ public class PersonService {
                 .collect(Collectors.toSet());
 
         // Add person's country to the set of ancestry countries
-        person.getCountryOfBirthForSearch()
+        person.getCountryOfBirth()
                 .ifPresent(ancestryCountries::add);
 
         return ancestryCountries;

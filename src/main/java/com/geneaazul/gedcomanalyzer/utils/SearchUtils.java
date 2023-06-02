@@ -20,16 +20,16 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class SearchUtils {
 
-    private static final String[] NAME_SEARCH_SPECIAL_CHARS = new String[]{ "?", "(", ")", "'", "-" };
-    private static final String[] NAME_REPLACEMENT_SPECIAL_CHARS = new String[]{ "", "", "", "", " " };
+    private static final String[] NAME_SEARCH_SPECIAL_CHARS = new String[]{ "?", "(", ")", "'", ".", "-" };
+    private static final String[] NAME_REPLACEMENT_SPECIAL_CHARS = new String[]{ "", "", "", "", "", " " };
     private static final Pattern NAME_MULTIPLE_SPACES_PATTERN = Pattern.compile("  +");
 
     private static final Pattern NORMALIZED_NAME_SEPARATOR_PATTERN = Pattern.compile("-");
 
     private static final Pattern SURNAME_COMMON_CONNECTOR_PATTERN =
-            Pattern.compile("^([^ ]*)(?: (de)| (la))+ (.+)$");
+            Pattern.compile("^([^ ]+)(?: (de|la))+ (.+)$");
     private static final Pattern SURNAME_COMMON_PREFIX_PATTERN =
-            Pattern.compile("^([a-z]|de|del|di|della|dall|la|le|lo|mc|mac|ahets|saint|sainte|von) +(.*)$");
+            Pattern.compile("^([a-z]|de|del|di|della|dall|das|dos|du|la|le|lo|mc|mac|ahets|saint|sainte|van|von) +(.*)$");
     private static final Pattern SURNAME_DOUBLE_LETTERS_PATTERN = Pattern.compile("([a-z])\\1+");
     private static final Pattern SURNAME_VOWELS_ENDING_PATTERN = Pattern.compile("[aeiou]+$");
     private static final String SURNAME_VOWELS_ENDING_REPLACEMENT = "_";
@@ -76,15 +76,14 @@ public class SearchUtils {
     public static String normalizeSurnameToMainWord(
             @Nullable String surname,
             Map<String, String> normalizedSurnamesMap) {
-        surname = RegExUtils.replaceAll(surname, SURNAME_COMMON_CONNECTOR_PATTERN, "$1$2$3$4");
+        surname = RegExUtils.replaceAll(surname, SURNAME_COMMON_CONNECTOR_PATTERN, "$1$2$3");
         surname = RegExUtils.replaceAll(surname, SURNAME_COMMON_PREFIX_PATTERN, "$1$2");
         surname = StringUtils.substringBefore(surname, " ");
         surname = StringUtils.replaceEach(surname, SURNAME_SEARCH_CHARS, SURNAME_REPLACEMENT_CHARS);
         surname = RegExUtils.replaceAll(surname, SURNAME_DOUBLE_LETTERS_PATTERN, "$1");
-        surname = Optional.ofNullable(surname)
+        return Optional.ofNullable(surname)
                 .map(normalizedSurnamesMap::get)
                 .orElse(surname);
-        return surname;
     }
 
     /**
