@@ -104,7 +104,6 @@ public class SurnameService {
     private List<String> getSurnameVariants(
             Surname surname,
             List<EnrichedPerson> persons) {
-        System.out.println(surname);
         return persons
                 .stream()
                 .map(EnrichedPerson::getSurname)
