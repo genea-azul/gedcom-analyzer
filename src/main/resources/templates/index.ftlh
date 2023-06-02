@@ -9,7 +9,7 @@
   </head>
 
   <body class="container-fluid">
-    <img src="img/genea-azul-logo.png?v${projectVersion}" width="120" height="60" class="rounded float-start me-3" alt="Genea Azul logo">
+    <img src="img/genea-azul-logo.png?v${projectVersion}" width="120" height="60" class="rounded float-start me-3" alt="Genea Azul logo" />
     <div class="h5 mt-2 mb-0">Buscador de personas</div>
     <div class="d-flex small mt-0">
       <div class="me-1">Personas en el &aacute;rbol:</div>

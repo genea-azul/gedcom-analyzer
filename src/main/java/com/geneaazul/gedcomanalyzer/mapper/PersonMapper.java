@@ -53,7 +53,7 @@ public class PersonMapper {
             Function<EnrichedPerson, List<String>> ancestryCountriesResolver,
             Function<EnrichedPerson, AncestryGenerations> ancestryGenerationsResolver,
             Function<EnrichedPerson, Integer> numberOfPeopleInTreeResolver,
-            Function<EnrichedPerson, Optional<Pair<String, Relationship>>> maxDistantRelationshipResolver) {
+            Function<EnrichedPerson, Optional<Pair<EnrichedPerson, Relationship>>> maxDistantRelationshipResolver) {
         return persons
                 .stream()
                 .map(person -> toPersonDto(
@@ -72,7 +72,7 @@ public class PersonMapper {
             Function<EnrichedPerson, List<String>> ancestryCountriesResolver,
             Function<EnrichedPerson, AncestryGenerations> ancestryGenerationsResolver,
             Function<EnrichedPerson, Integer> numberOfPeopleInTreeResolver,
-            Function<EnrichedPerson, Optional<Pair<String, Relationship>>> maxDistantRelationshipResolver) {
+            Function<EnrichedPerson, Optional<Pair<EnrichedPerson, Relationship>>> maxDistantRelationshipResolver) {
 
         boolean obfuscateLiving = obfuscationType != ObfuscationType.NONE;
         boolean obfuscateName = obfuscateLiving && obfuscationType != ObfuscationType.SKIP_MAIN_PERSON_NAME;
@@ -85,7 +85,7 @@ public class PersonMapper {
         List<String> ancestryCountries = ancestryCountriesResolver.apply(person);
         AncestryGenerations ancestryGenerations = ancestryGenerationsResolver.apply(person);
         Integer numberOfPeopleInTree = numberOfPeopleInTreeResolver.apply(person);
-        Optional<Pair<String, Relationship>> maybeMaxDistantRelationship = maxDistantRelationshipResolver.apply(person);
+        Optional<Pair<EnrichedPerson, Relationship>> maybeMaxDistantRelationship = maxDistantRelationshipResolver.apply(person);
 
         AncestryGenerationsDto ancestryGenerationsDto = AncestryGenerationsDto.builder()
                 .ascending(ancestryGenerations.ascending())
@@ -121,7 +121,6 @@ public class PersonMapper {
                         .map(maxDistantRelationship -> relationshipMapper.toRelationshipDto(
                                 maxDistantRelationship.getLeft(),
                                 maxDistantRelationship.getRight(),
-                                person.getGedcom(),
                                 relationshipPerson -> obfuscateLiving && (person.isAlive() || relationshipPerson.isAlive())))
                         .orElse(null))
                 .build();

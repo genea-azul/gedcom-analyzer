@@ -1,6 +1,5 @@
 package com.geneaazul.gedcomanalyzer.mapper;
 
-import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
@@ -17,12 +16,11 @@ import jakarta.annotation.Nullable;
 public class RelationshipMapper {
 
     public RelationshipDto toRelationshipDto(
-            @Nullable String personId,
+            @Nullable EnrichedPerson person,
             @Nullable Relationship relationship,
-            EnrichedGedcom gedcom,
             Predicate<EnrichedPerson> obfuscatePredicate) {
 
-        if (personId == null || relationship == null) {
+        if (person == null || relationship == null) {
             return null;
         }
 
@@ -45,8 +43,6 @@ public class RelationshipMapper {
             grade = relationship.distanceToAncestor1();
             referenceType = grade == 0 ? ReferenceType.CHILD : ReferenceType.NIBLING;
         }
-
-        EnrichedPerson person = gedcom.getPersonById(personId);
 
         return RelationshipDto.builder()
                 .personSex(person.getSex())

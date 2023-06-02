@@ -141,7 +141,7 @@ public class PersonService {
         return person.getNumberOfPeopleInTree();
     }
 
-    public Optional<Pair<String, Relationship>> getMaxDistantRelationship(EnrichedPerson person) {
+    public Optional<Pair<EnrichedPerson, Relationship>> getMaxDistantRelationship(EnrichedPerson person) {
         if (person.getMaxDistantRelationship() == null) {
             setNumberOfPeopleInTreeAndMaxDistantRelationship(person);
         }
@@ -159,14 +159,16 @@ public class PersonService {
                 Relationship.empty(),
                 Relationships.VisitedRelationshipTraversalStrategy.CLOSEST_SKIPPING_IN_LAW_WHEN_EXISTS_ANY_NOT_IN_LAW);
 
-        Optional<Pair<String, Relationship>> maxDistantRelationship = visitedPersons
+        EnrichedGedcom gedcom = person.getGedcom();
+        Optional<Pair<EnrichedPerson, Relationship>> maxDistantRelationship = visitedPersons
                 .values()
                 .stream()
                 .filter(relationships -> !relationships.getPersonId().equals(person.getId()))
                 .map(relationships -> Pair.of(relationships.getPersonId(), relationships.findFirst()))
                 .filter(pair -> pair.getRight().isPresent())
                 .map(pair -> Pair.of(pair.getLeft(), pair.getRight().get()))
-                .reduce((p1, p2) -> p1.getRight().compareTo(p2.getRight()) >= 0 ? p1 : p2);
+                .reduce((p1, p2) -> p1.getRight().compareTo(p2.getRight()) >= 0 ? p1 : p2)
+                .map(pair -> Pair.of(gedcom.getPersonById(pair.getLeft()), pair.getRight()));
 
         person.setNumberOfPeopleInTree(visitedPersons.size());
         person.setMaxDistantRelationship(maxDistantRelationship);
@@ -181,6 +183,7 @@ public class PersonService {
                 Sort.Direction.ASC,
                 Relationship.empty(),
                 Relationships.VisitedRelationshipTraversalStrategy.CLOSEST_SKIPPING_IN_LAW_WHEN_EXISTS_ANY_NOT_IN_LAW);
+
         EnrichedGedcom gedcom = person.getGedcom();
         return visitedPersons
                 .values()

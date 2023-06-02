@@ -30,6 +30,7 @@ import lombok.Setter;
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType"})
 public class EnrichedPerson {
 
+    // Constructor properties
     private final Person person;
     private final EnrichedGedcom gedcom;
     private final GedcomAnalyzerProperties properties;
@@ -73,7 +74,7 @@ public class EnrichedPerson {
     @Setter
     private Integer numberOfPeopleInTree;
     @Setter
-    private Optional<Pair<String, Relationship>> maxDistantRelationship;
+    private Optional<Pair<EnrichedPerson, Relationship>> maxDistantRelationship;
 
     private EnrichedPerson(Person person, EnrichedGedcom gedcom) {
         this.person = person;
@@ -82,7 +83,7 @@ public class EnrichedPerson {
 
         id = person.getId();
         sex = PersonUtils.getSex(person);
-        givenName = PersonUtils.getNormalizedGivenName(person, sex, properties.getNormalizedGivenNamesMap());
+        givenName = PersonUtils.getNormalizedGivenName(person, properties.getNormalizedGivenNamesMap());
         surname = PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap());
         displayName = PersonUtils.getDisplayName(person);
         aka = PersonUtils.getAka(person)

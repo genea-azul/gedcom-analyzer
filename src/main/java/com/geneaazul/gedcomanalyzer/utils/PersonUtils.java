@@ -129,7 +129,9 @@ public class PersonUtils {
     }
 
     public static Optional<GivenName> getNormalizedGivenName(
-            @Nullable String givenName, SexType sex, Map<NameAndSex, String> normalizedGivenNamesMap) {
+            @Nullable String givenName,
+            @Nullable SexType sex,
+            Map<NameAndSex, String> normalizedGivenNamesMap) {
         return Optional.ofNullable(givenName)
                 .map(SearchUtils::simplifyName)
                 .map(simplifiedGivenName -> SearchUtils.normalizeGivenName(simplifiedGivenName, sex, normalizedGivenNamesMap))
@@ -137,9 +139,14 @@ public class PersonUtils {
     }
 
     public static Optional<GivenName> getNormalizedGivenName(
-            Person person, SexType sex, Map<NameAndSex, String> normalizedGivenNamesMap) {
+            Person person,
+            Map<NameAndSex, String> normalizedGivenNamesMap) {
         Optional<String> givenName = getGivenName(person);
-        return getNormalizedGivenName(givenName.orElse(null), sex, normalizedGivenNamesMap);
+        SexType sex = PersonUtils.getSex(person);
+        return getNormalizedGivenName(
+                givenName.orElse(null),
+                sex,
+                normalizedGivenNamesMap);
     }
 
     /**
@@ -154,7 +161,8 @@ public class PersonUtils {
     }
 
     public static Optional<Surname> getShortenedSurnameMainWord(
-            @Nullable String surname, Map<String, String> normalizedSurnamesMap) {
+            @Nullable String surname,
+            Map<String, String> normalizedSurnamesMap) {
         return Optional.ofNullable(surname)
                 .map(SearchUtils::simplifyName)
                 .map(simplifiedSurname -> SearchUtils.normalizeSurnameToMainWord(simplifiedSurname, normalizedSurnamesMap))
@@ -165,7 +173,8 @@ public class PersonUtils {
     }
 
     public static Optional<Surname> getShortenedSurnameMainWord(
-            Person person, Map<String, String> normalizedSurnamesMap) {
+            Person person,
+            Map<String, String> normalizedSurnamesMap) {
         Optional<String> surname = getSurname(person);
         return getShortenedSurnameMainWord(surname.orElse(null), normalizedSurnamesMap);
     }

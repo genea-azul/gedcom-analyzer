@@ -14,6 +14,8 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import javax.annotation.CheckForNull;
+
 import jakarta.annotation.Nullable;
 import lombok.experimental.UtilityClass;
 
@@ -39,6 +41,7 @@ public class SearchUtils {
     /**
      * For givenName and surname.
      */
+    @CheckForNull
     public static String simplifyName(@Nullable String name) {
         name = AlphabetUtils.convertAnyToLatin(name);
         name = StringUtils.stripAccents(name);
@@ -49,6 +52,7 @@ public class SearchUtils {
         return name;
     }
 
+    @CheckForNull
     public static String normalizeGivenName(
             @Nullable String givenName,
             @Nullable SexType sex,
@@ -73,6 +77,7 @@ public class SearchUtils {
      *       diiannivelli  ->  dianiveli             (remove repeated letters)
      *          dianiveli  ->  ciamiveli             (get optional replacement from NORMALIZED_SURNAMES_MAP)
      */
+    @CheckForNull
     public static String normalizeSurnameToMainWord(
             @Nullable String surname,
             Map<String, String> normalizedSurnamesMap) {
@@ -89,9 +94,9 @@ public class SearchUtils {
     /**
      *          ciamiveli  ->  ciamivel_           (replace last vowels with a _)
      */
+    @CheckForNull
     public static String shortenSurnameMainWord(@Nullable String surnameMainWord) {
-        surnameMainWord = RegExUtils.replaceAll(surnameMainWord, SURNAME_VOWELS_ENDING_PATTERN, SURNAME_VOWELS_ENDING_REPLACEMENT);
-        return surnameMainWord;
+        return RegExUtils.replaceAll(surnameMainWord, SURNAME_VOWELS_ENDING_PATTERN, SURNAME_VOWELS_ENDING_REPLACEMENT);
     }
 
     public static Map<NameAndSex, String> invertGivenNamesMap(

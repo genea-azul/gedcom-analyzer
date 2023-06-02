@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.Surname;
-import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
+import org.folg.gedcom.model.EventFact;
 import org.folg.gedcom.model.Name;
 import org.folg.gedcom.model.Person;
 import org.junit.jupiter.api.Test;
@@ -26,11 +26,15 @@ public class SearchUtilsTests {
     public void testGetNormalizedGivenName() {
         Name name = new Name();
         name.setSurname("Smith");
+        EventFact sex = new EventFact();
+        sex.setTag("SEX");
         Person person = new Person();
         person.addName(name);
+        person.addEventFact(sex);
 
         name.setGiven(" ? d'  (YíçbjéjizAEU) - Domenico ");
-        assertThat(PersonUtils.getNormalizedGivenName(person, SexType.M, properties.getNormalizedGivenNamesMap()))
+        sex.setValue("M");
+        assertThat(PersonUtils.getNormalizedGivenName(person, properties.getNormalizedGivenNamesMap()))
                 .get()
                 .satisfies(givenName -> {
                     assertThat(givenName.value()).isEqualTo("? d'  (YíçbjéjizAEU) - Domenico");
@@ -40,7 +44,8 @@ public class SearchUtilsTests {
                 });
 
         name.setGiven("Francescantonio");
-        assertThat(PersonUtils.getNormalizedGivenName(person, SexType.M, properties.getNormalizedGivenNamesMap()))
+        sex.setValue("M");
+        assertThat(PersonUtils.getNormalizedGivenName(person, properties.getNormalizedGivenNamesMap()))
                 .get()
                 .satisfies(givenName -> {
                     assertThat(givenName.value()).isEqualTo("Francescantonio");
@@ -50,7 +55,8 @@ public class SearchUtilsTests {
                 });
 
         name.setGiven("Elizabeth");
-        assertThat(PersonUtils.getNormalizedGivenName(person, SexType.F, properties.getNormalizedGivenNamesMap()))
+        sex.setValue("F");
+        assertThat(PersonUtils.getNormalizedGivenName(person, properties.getNormalizedGivenNamesMap()))
                 .get()
                 .satisfies(givenName -> {
                     assertThat(givenName.value()).isEqualTo("Elizabeth");
@@ -60,7 +66,8 @@ public class SearchUtilsTests {
                 });
 
         name.setGiven("Валянціна");
-        assertThat(PersonUtils.getNormalizedGivenName(person, SexType.F, properties.getNormalizedGivenNamesMap()))
+        sex.setValue("F");
+        assertThat(PersonUtils.getNormalizedGivenName(person, properties.getNormalizedGivenNamesMap()))
                 .get()
                 .satisfies(givenName -> {
                     assertThat(givenName.value()).isEqualTo("Валянціна");
