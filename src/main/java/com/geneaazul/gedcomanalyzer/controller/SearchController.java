@@ -4,6 +4,7 @@ import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDetailsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyResultDto;
+import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnameResultDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesResultDto;
 import com.geneaazul.gedcomanalyzer.service.DockerService;
@@ -24,7 +25,9 @@ import java.util.Optional;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/search")
 @RequiredArgsConstructor
@@ -55,6 +58,13 @@ public class SearchController {
 
         SearchFamilyResultDto searchFamilyResult = familyService.search(searchFamilyDto);
 
+        log.info("Search family [ id={}, peopleInResult={}, potentialResults={}, errors={}, httpRequestId={} ]",
+                searchId.orElse(null),
+                searchFamilyResult.getPeople().size(),
+                searchFamilyResult.getPotentialResults(),
+                searchFamilyResult.getErrors().size(),
+                request.getRequestId());
+
         searchId
                 .filter(id -> properties.isStoreFamilySearch())
                 .ifPresent(id -> familyService.updateSearch(id, searchFamilyResult.getPeople().size() > 0));
@@ -81,7 +91,17 @@ public class SearchController {
                     .build();
         }
 
-        return surnameService.search(searchSurnamesDto);
+        SearchSurnamesResultDto searchSurnamesResult = surnameService.search(searchSurnamesDto);
+
+        log.info("Search surnames [ surnamesInResult={}, totalFrequency={}, httpRequestId={} ]",
+                searchSurnamesResult.getSurnames().size(),
+                searchSurnamesResult.getSurnames()
+                        .stream()
+                        .mapToInt(SearchSurnameResultDto::getFrequency)
+                        .sum(),
+                request.getRequestId());
+
+        return searchSurnamesResult;
     }
 
 }
