@@ -11,14 +11,20 @@ import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
 @Getter
 @RequiredArgsConstructor(staticName = "of")
+@ToString(onlyExplicitlyIncluded = true)
 public class Relationships {
 
+    @ToString.Include
     private final String personId;
+    @ToString.Include
     private final TreeSet<Relationship> orderedRelationships;
+    @ToString.Include
     private final boolean containsDirect;
+    @ToString.Include
     private final boolean containsNotInLaw;
 
     public static Relationships of(

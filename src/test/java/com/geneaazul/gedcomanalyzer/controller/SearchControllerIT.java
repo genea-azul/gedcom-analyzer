@@ -75,7 +75,8 @@ public class SearchControllerIT extends AbstractControllerIT {
                 .when(searchFamilyRepository)
                 .save(any());
 
-        MvcResult result = mvc.perform(post("/api/search/family")
+        String url = "/api/search/family";
+        MvcResult result = mvc.perform(post(url)
                         .content(objectMapper.writeValueAsBytes(searchFamilyDto))
                         .contentType(MediaType.APPLICATION_JSON)
                         .with(csrf()))
@@ -83,7 +84,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                 .andExpect(jsonPath("$.people", hasSize(2)))
                 .andReturn();
 
-        log.info("Response: {}", result.getResponse().getContentAsString());
+        log.info(url + " response: {}", result.getResponse().getContentAsString());
     }
 
     @Test
@@ -99,13 +100,14 @@ public class SearchControllerIT extends AbstractControllerIT {
                 .when(searchFamilyRepository)
                 .findAll(any(Pageable.class));
 
-        MvcResult result = mvc.perform(get("/api/search/family/latest?page=0&size=5")
+        String url = "/api/search/family/latest?page=0&size=5";
+        MvcResult result = mvc.perform(get(url)
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andReturn();
 
-        log.info("Response: {}", result.getResponse().getContentAsString());
+        log.info(url + " response: {}", result.getResponse().getContentAsString());
     }
 
     @Test
@@ -120,7 +122,8 @@ public class SearchControllerIT extends AbstractControllerIT {
                         "Other Surname"))
                 .build();
 
-        MvcResult result = mvc.perform(post("/api/search/surnames")
+        String url = "/api/search/surnames";
+        MvcResult result = mvc.perform(post(url)
                         .content(objectMapper.writeValueAsBytes(searchSurnamesDto))
                         .contentType(MediaType.APPLICATION_JSON)
                         .with(csrf()))
@@ -128,7 +131,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                 .andExpect(jsonPath("$.surnames", hasSize(3)))
                 .andReturn();
 
-        log.info("Response: {}", result.getResponse().getContentAsString());
+        log.info(url + " response: {}", result.getResponse().getContentAsString());
     }
 
 }

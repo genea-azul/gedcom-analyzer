@@ -22,6 +22,7 @@ public class RelationshipDto {
     private Integer generation;
     private Integer grade;
     private Boolean isInLaw;
+    private SexType spouseSex;
     private Boolean isHalf;
 
     @Override

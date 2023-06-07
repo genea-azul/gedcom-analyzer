@@ -4,10 +4,14 @@ import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.NameAndSex;
+import com.geneaazul.gedcomanalyzer.model.SpouseWithChildren;
 import com.geneaazul.gedcomanalyzer.model.Surname;
+import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
+import org.apache.commons.collections4.ComparatorUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folg.gedcom.model.EventFact;
@@ -15,6 +19,7 @@ import org.folg.gedcom.model.ExtensionContainer;
 import org.folg.gedcom.model.Gedcom;
 import org.folg.gedcom.model.GedcomTag;
 import org.folg.gedcom.model.Name;
+import org.folg.gedcom.model.ParentFamilyRef;
 import org.folg.gedcom.model.Person;
 
 import java.util.Collection;
@@ -294,15 +299,27 @@ public class PersonUtils {
                 .toList();
     }
 
-    public static List<Person> getParents(Person person, Gedcom gedcom) {
+    public static List<Pair<Person, ReferenceType>> getParentsWithReference(Person person, Gedcom gedcom) {
         return person
-                .getParentFamilies(gedcom)
+                .getParentFamilyRefs()
                 .stream()
-                .flatMap(family -> Stream
+                .sorted(ComparatorUtils.transformedComparator(Comparator.nullsFirst(Comparator.naturalOrder()), ParentFamilyRef::getRelationshipType))
+                .flatMap(familyRef -> Stream
                         .of(
-                                family.getHusbands(gedcom),
-                                family.getWives(gedcom))
-                        .flatMap(List::stream))
+                                familyRef
+                                        .getFamily(gedcom)
+                                        .getHusbands(gedcom),
+                                familyRef
+                                        .getFamily(gedcom)
+                                        .getWives(gedcom))
+                        .flatMap(List::stream)
+                        .map(parent -> Pair.of(
+                                parent,
+                                Optional.ofNullable(familyRef.getRelationshipType())
+                                        .map(PersonUtils::resolveParentReferenceType)
+                                        .orElse(null))))
+                // A parent could be repeated when it has biological and adopted relationship with a child
+                .filter(StreamUtils.distinctByKey(pair -> pair.getLeft().getId()))
                 .toList();
     }
 
@@ -313,6 +330,8 @@ public class PersonUtils {
                 .map(family -> family.getChildren(gedcom))
                 .flatMap(List::stream)
                 .filter(sibling -> !sibling.getId().equals(person.getId()))
+                // A sibling could be repeated when it has biological and adopted relationship
+                .filter(StreamUtils.distinctByKey(Person::getId))
                 .toList();
     }
 
@@ -329,27 +348,84 @@ public class PersonUtils {
                 .toList();
     }
 
-    public static List<Pair<Optional<Person>, List<Person>>> getSpousesWithChildren(Person person, Gedcom gedcom) {
+    public static List<SpouseWithChildren> getSpousesWithChildren(Person person, Gedcom gedcom) {
         return person
                 .getSpouseFamilies(gedcom)
                 .stream()
-                .map(family -> Stream
-                        .of(
-                                family.getHusbands(gedcom),
-                                family.getWives(gedcom))
-                        .flatMap(List::stream)
-                        .map(spouse -> spouse.getId().equals(person.getId()) ? Optional.<Person>empty() : Optional.of(spouse))
-                        .map(spouse -> Pair.of(spouse, family.getChildren(gedcom)))
-                        .toList())
+                .map(family -> {
+                    List<Pair<Person, ReferenceType>> children = family
+                            .getChildren(gedcom)
+                            .stream()
+                            .map(child -> Pair.of(
+                                    child,
+                                    child
+                                            .getParentFamilyRefs()
+                                            .stream()
+                                            .filter(parentFamilyRef -> parentFamilyRef.getRef().equals(family.getId()))
+                                            .findFirst()
+                                            .map(ParentFamilyRef::getRelationshipType)
+                                            .map(PersonUtils::resolveChildReferenceType)
+                                            .orElse(null)))
+                            .toList();
+                    Optional<Date> dateOfPartners = FamilyUtils.getDateOfPartners(family).flatMap(Date::parse);
+                    Optional<Date> dateOfSeparation = FamilyUtils.getDateOfSeparation(family).flatMap(Date::parse);
+                    Optional<String> placeOfPartners = FamilyUtils.getPlaceOfPartners(family);
+                    Optional<String> placeOfSeparation = FamilyUtils.getPlaceOfSeparation(family);
+                    return Stream
+                            .of(
+                                    family.getHusbands(gedcom),
+                                    family.getWives(gedcom))
+                            .flatMap(List::stream)
+                            .map(spouse -> spouse.getId().equals(person.getId())
+                                    ? Optional.<Person>empty()
+                                    : Optional.of(spouse))
+                            .map(spouse -> SpouseWithChildren.of(
+                                    spouse,
+                                    children,
+                                    dateOfPartners,
+                                    dateOfSeparation,
+                                    placeOfPartners,
+                                    placeOfSeparation))
+                            .toList();
+                })
                 // Keep current person as spouse (empty optional) if it is a uni-parental family
                 .map(spouses -> spouses.size() == 1
                         ? spouses
                         : spouses
                                 .stream()
-                                .filter(spouseCountPair -> spouseCountPair.getLeft().isPresent())
+                                .filter(spouseWithChildren -> spouseWithChildren.getSpouse().isPresent())
                                 .toList())
                 .flatMap(List::stream)
+                // A spouse should not be repeated.. but just in case..
+                .filter(StreamUtils.distinctByKey(spouseWithChildren -> spouseWithChildren
+                        .getSpouse()
+                        .map(Person::getId)
+                        .orElseGet(() -> String.valueOf(RandomUtils.nextInt()))))
                 .toList();
+    }
+
+    private static ReferenceType resolveChildReferenceType(@Nullable String relationshipType) {
+        if (relationshipType != null) {
+            if (FamilyUtils.ADOPTED_CHILD_RELATIONSHIP_TYPES.contains(relationshipType)) {
+                return ReferenceType.ADOPTED_CHILD;
+            }
+            if (FamilyUtils.FOSTER_CHILD_RELATIONSHIP_TYPES.contains(relationshipType)) {
+                return ReferenceType.FOSTER_CHILD;
+            }
+        }
+        return ReferenceType.CHILD;
+    }
+
+    private static ReferenceType resolveParentReferenceType(@Nullable String relationshipType) {
+        if (relationshipType != null) {
+            if (FamilyUtils.ADOPTED_CHILD_RELATIONSHIP_TYPES.contains(relationshipType)) {
+                return ReferenceType.ADOPTIVE_PARENT;
+            }
+            if (FamilyUtils.FOSTER_CHILD_RELATIONSHIP_TYPES.contains(relationshipType)) {
+                return ReferenceType.FOSTER_PARENT;
+            }
+        }
+        return ReferenceType.PARENT;
     }
 
     public static List<Person> getChildren(Person person, Gedcom gedcom) {
@@ -358,6 +434,8 @@ public class PersonUtils {
                 .stream()
                 .map(family -> family.getChildren(gedcom))
                 .flatMap(List::stream)
+                // A child could be repeated when it has biological and adopted relationship with a parent
+                .filter(StreamUtils.distinctByKey(Person::getId))
                 .toList();
     }
 
@@ -381,20 +459,21 @@ public class PersonUtils {
                 .orElse(NO_SPOUSE);
     }
 
-    public static final Comparator<EnrichedPerson> DATES_COMPARATOR = (p1, p2) -> {
-        Date dob1 = p1.getDateOfBirth().orElse(null);
-        Date dob2 = p2.getDateOfBirth().orElse(null);
-        int cmp = ObjectUtils.compare(dob1, dob2, true);
-        if (cmp != 0) {
-            return cmp;
-        }
-        Date dod1 = p1.getDateOfDeath().orElse(null);
-        Date dod2 = p2.getDateOfDeath().orElse(null);
-        cmp = ObjectUtils.compare(dod1, dod2, true);
-        if (cmp != 0) {
-            return cmp;
-        }
-        return p1.getId().compareTo(p2.getId());
-    };
+    public static final Comparator<EnrichedPerson> DATES_COMPARATOR = Comparator
+            .nullsLast((p1, p2) -> {
+                Date dob1 = p1.getDateOfBirth().orElse(null);
+                Date dob2 = p2.getDateOfBirth().orElse(null);
+                int cmp = ObjectUtils.compare(dob1, dob2, true);
+                if (cmp != 0) {
+                    return cmp;
+                }
+                Date dod1 = p1.getDateOfDeath().orElse(null);
+                Date dod2 = p2.getDateOfDeath().orElse(null);
+                cmp = ObjectUtils.compare(dod1, dod2, true);
+                if (cmp != 0) {
+                    return cmp;
+                }
+                return p1.getId().compareTo(p2.getId());
+            });
 
 }

@@ -4,10 +4,13 @@ import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
 import com.geneaazul.gedcomanalyzer.model.dto.RelationshipDto;
+import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import jakarta.annotation.Nullable;
@@ -44,6 +47,20 @@ public class RelationshipMapper {
             referenceType = grade == 0 ? ReferenceType.CHILD : ReferenceType.NIBLING;
         }
 
+        SexType spouseSex = null;
+        if (relationship.isInLaw()) {
+            Integer relatedPersons = Optional
+                    .ofNullable(relationship.relatedPersonIds())
+                    .map(Set::size)
+                    .orElse(0);
+            if (relatedPersons == 1) {
+                spouseSex = person
+                        .getGedcom()
+                        .getPersonById(relationship.relatedPersonIds().first())
+                        .getSex();
+            }
+        }
+
         return RelationshipDto.builder()
                 .personSex(person.getSex())
                 .personName(PersonUtils.obfuscateName(person, obfuscatePredicate.test(person)))
@@ -51,6 +68,7 @@ public class RelationshipMapper {
                 .generation(generation)
                 .grade(grade)
                 .isInLaw(relationship.isInLaw())
+                .spouseSex(spouseSex)
                 .isHalf(relationship.isHalf())
                 .build();
     }

@@ -32,7 +32,7 @@ public class PersonDto {
     private String placeOfBirth;
     @ToString.Include
     private String dateOfDeath;
-    private List<String> parents;
+    private List<PersonWithReferenceDto> parents;
     private List<SpouseWithChildrenDto> spouses;
     private List<String> ancestryCountries;
     @ToString.Include

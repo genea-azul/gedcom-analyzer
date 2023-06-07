@@ -167,7 +167,7 @@ public class PersonService {
                 .map(relationships -> Pair.of(relationships.getPersonId(), relationships.findFirst()))
                 .filter(pair -> pair.getRight().isPresent())
                 .map(pair -> Pair.of(pair.getLeft(), pair.getRight().get()))
-                .reduce((p1, p2) -> p1.getRight().compareTo(p2.getRight()) >= 0 ? p1 : p2)
+                .reduce((p1, p2) -> p1.getRight().compareToWithNotInLawNotIsHalfPriority(p2.getRight()) >= 0 ? p1 : p2)
                 .map(pair -> Pair.of(gedcom.getPersonById(pair.getLeft()), pair.getRight()));
 
         person.setNumberOfPeopleInTree(visitedPersons.size());
@@ -326,18 +326,21 @@ public class PersonService {
                 person
                         .getSpousesWithChildren()
                         .stream()
-                        .map(pair -> B.of(
-                                pair.getRight(),
+                        .map(spouseWithChildren -> B.of(
+                                spouseWithChildren.getChildren(),
                                 Sort.Direction.DESC,
                                 // when traversing children, both parents will be considered the related persons
-                                pair.getLeft()
+                                spouseWithChildren.getSpouse()
                                         .map(spouse -> newTreeSet(person.getId(), spouse.getId()))
                                         .orElseGet(() -> newTreeSet(person.getId())))));
 
         if (direction == Sort.Direction.ASC) {
             relativesAndDirections = Stream.concat(
                     Stream.of(
-                            B.of(person.getParents(), Sort.Direction.ASC, newTreeSet(person.getId()))),
+                            B.of(
+                                    person.getParents(),
+                                    Sort.Direction.ASC,
+                                    newTreeSet(person.getId()))),
                     relativesAndDirections);
         }
 

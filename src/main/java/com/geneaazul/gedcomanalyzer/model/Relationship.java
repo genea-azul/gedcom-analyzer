@@ -65,17 +65,39 @@ public record Relationship(
 
     @Override
     public int compareTo(Relationship other) {
+        // min distance -> is lower priority
         int compareDistance = compareDistance(other);
         if (compareDistance != 0) {
             return compareDistance;
         }
+        // not in-law -> is lower priority
         int compareIsInLaw = Boolean.compare(this.isInLaw, other.isInLaw);
         if (compareIsInLaw != 0) {
             return compareIsInLaw;
         }
+        // not is-half -> is lower priority
         int compareIsHalf = Boolean.compare(this.isHalf, other.isHalf);
         if (compareIsHalf != 0) {
             return compareIsHalf;
+        }
+        return SORTED_SET_COMPARATOR.compare(this.relatedPersonIds, other.relatedPersonIds);
+    }
+
+    public int compareToWithNotInLawNotIsHalfPriority(Relationship other) {
+        // min distance -> is lower priority
+        int compareDistance = compareDistance(other);
+        if (compareDistance != 0) {
+            return compareDistance;
+        }
+        // not in-law -> is higher priority
+        int compareIsInLaw = Boolean.compare(this.isInLaw, other.isInLaw);
+        if (compareIsInLaw != 0) {
+            return Math.negateExact(compareIsInLaw);
+        }
+        // not is-half -> is higher priority
+        int compareIsHalf = Boolean.compare(this.isHalf, other.isHalf);
+        if (compareIsHalf != 0) {
+            return Math.negateExact(compareIsHalf);
         }
         return SORTED_SET_COMPARATOR.compare(this.relatedPersonIds, other.relatedPersonIds);
     }

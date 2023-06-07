@@ -2,11 +2,13 @@ package com.geneaazul.gedcomanalyzer.mapper;
 
 import com.geneaazul.gedcomanalyzer.model.AncestryGenerations;
 import com.geneaazul.gedcomanalyzer.model.Date;
+import com.geneaazul.gedcomanalyzer.model.EnrichedSpouseWithChildren;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResult;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResults;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.dto.AncestryGenerationsDto;
+import com.geneaazul.gedcomanalyzer.model.dto.PersonWithReferenceDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateCompareDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateDto;
@@ -107,11 +109,15 @@ public class PersonMapper {
                 .dateOfDeath(person.getDateOfDeath()
                         .map(Date::format)
                         .orElse(null))
-                .parents(person.getParents()
+                .parents(person.getParentsWithReference()
                         .stream()
-                        .map(parent -> PersonUtils.obfuscateName(
-                                parent,
-                                obfuscateLiving && (person.isAlive() || parent.isAlive())))
+                        .map(parentWithReference -> PersonWithReferenceDto.builder()
+                                .name(PersonUtils.obfuscateName(
+                                        parentWithReference.getPerson(),
+                                        obfuscateLiving && (person.isAlive() || parentWithReference.getPerson().isAlive())))
+                                .sex(parentWithReference.getPerson().getSex())
+                                .referenceType(parentWithReference.getReferenceType().orElse(null))
+                                .build())
                         .toList())
                 .spouses(spouses)
                 .ancestryCountries(ancestryCountries)
@@ -127,33 +133,37 @@ public class PersonMapper {
     }
 
     public List<SpouseWithChildrenDto> toSpouseWithChildrenDto(
-            Collection<Pair<Optional<EnrichedPerson>, List<EnrichedPerson>>> spouseChildrenPairs,
+            List<EnrichedSpouseWithChildren> spousesWithChildren,
             boolean obfuscateLiving,
             boolean mainPersonIsAlive) {
-        return spouseChildrenPairs
+        return spousesWithChildren
                 .stream()
-                .map(pair -> toSpouseWithChildrenDto(pair, obfuscateLiving, mainPersonIsAlive))
+                .map(spouseWithChildren -> toSpouseWithChildrenDto(spouseWithChildren, obfuscateLiving, mainPersonIsAlive))
                 .toList();
     }
 
     public SpouseWithChildrenDto toSpouseWithChildrenDto(
-            Pair<Optional<EnrichedPerson>, List<EnrichedPerson>> spouseChildrenPair,
+            EnrichedSpouseWithChildren spouseWithChildren,
             boolean obfuscateLiving,
             boolean mainPersonIsAlive) {
 
-        boolean spouseIsAlive = spouseChildrenPair.getLeft()
+        boolean spouseIsAlive = spouseWithChildren.getSpouse()
                 .map(EnrichedPerson::isAlive)
                 .orElse(false);
 
         return SpouseWithChildrenDto.builder()
                 .name(PersonUtils.obfuscateSpouseName(
-                        spouseChildrenPair.getLeft(),
+                        spouseWithChildren.getSpouse(),
                         spouse -> obfuscateLiving && (mainPersonIsAlive || spouse.isAlive())))
-                .children(spouseChildrenPair.getRight()
+                .children(spouseWithChildren.getChildrenWithReference()
                         .stream()
-                        .map(child -> PersonUtils.obfuscateName(
-                                child,
-                                obfuscateLiving && (mainPersonIsAlive || spouseIsAlive || child.isAlive())))
+                        .map(childWithReference -> PersonWithReferenceDto.builder()
+                                .name(PersonUtils.obfuscateName(
+                                        childWithReference.getPerson(),
+                                        obfuscateLiving && (mainPersonIsAlive || spouseIsAlive || childWithReference.getPerson().isAlive())))
+                                .sex(childWithReference.getPerson().getSex())
+                                .referenceType(childWithReference.getReferenceType().orElse(null))
+                                .build())
                         .toList())
                 .build();
     }

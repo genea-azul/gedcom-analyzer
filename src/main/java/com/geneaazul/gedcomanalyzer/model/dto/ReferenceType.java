@@ -5,6 +5,8 @@ public enum ReferenceType {
     FAMILY,
     SELF,
     PARENT,
+    ADOPTIVE_PARENT,
+    FOSTER_PARENT,
     HUSB,
     FORMER_HUSB,
     WIFE,

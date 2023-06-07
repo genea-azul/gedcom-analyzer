@@ -10,6 +10,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesResultDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
+import com.geneaazul.gedcomanalyzer.utils.StreamUtils;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -20,10 +21,6 @@ import java.util.IntSummaryStatistics;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -46,7 +43,7 @@ public class SurnameService {
                 .map(surname -> PersonUtils
                         .getShortenedSurnameMainWord(surname, normalizedSurnamesMap))
                 .flatMap(Optional::stream)
-                .filter(distinctByKey(Surname::shortenedMainWord))
+                .filter(StreamUtils.distinctByKey(Surname::shortenedMainWord))
                 .map(surname -> {
                     List<EnrichedPerson> persons = searchPersonsBySurname(surname, gedcom);
 
@@ -61,8 +58,13 @@ public class SurnameService {
                                                     person.getCountryOfDeath())
                                             .flatMap(Optional::stream),
                                     person
-                                            .getCountriesOfMarriage()
-                                            .stream()))
+                                            .getSpousesWithChildren()
+                                            .stream()
+                                            .flatMap(spouseWithChildren -> Stream
+                                                    .of(
+                                                            spouseWithChildren.getCountryOfPartners(),
+                                                            spouseWithChildren.getCountryOfSeparation()))
+                                            .flatMap(Optional::stream)))
                             .distinct()
                             .sorted()
                             .toList();
@@ -76,8 +78,13 @@ public class SurnameService {
                                                     person.getDateOfDeath())
                                             .flatMap(Optional::stream),
                                     person
-                                            .getDatesOfMarriage()
-                                            .stream()))
+                                            .getSpousesWithChildren()
+                                            .stream()
+                                            .flatMap(spouseWithChildren -> Stream
+                                                    .of(
+                                                            spouseWithChildren.getDateOfPartners(),
+                                                            spouseWithChildren.getDateOfSeparation()))
+                                            .flatMap(Optional::stream)))
                             .map(Date::getYear)
                             .collect(Collectors.summarizingInt(Year::getValue));;
 
@@ -135,11 +142,6 @@ public class SurnameService {
                 .map(sex -> gedcom.getPersonsBySurnameMainWordAndSex(surname, sex))
                 .flatMap(List::stream)
                 .toList();
-    }
-
-    private static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
-        final Set<Object> seen = ConcurrentHashMap.newKeySet();
-        return t -> seen.add(keyExtractor.apply(t));
     }
 
     private boolean isValidMinMax(Integer integer) {
