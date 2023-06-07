@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.Surname;
-import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
+import org.folg.gedcom.model.EventFact;
 import org.folg.gedcom.model.Name;
 import org.folg.gedcom.model.Person;
 import org.junit.jupiter.api.Test;
@@ -26,11 +26,15 @@ public class SearchUtilsTests {
     public void testGetNormalizedGivenName() {
         Name name = new Name();
         name.setSurname("Smith");
+        EventFact sex = new EventFact();
+        sex.setTag("SEX");
         Person person = new Person();
         person.addName(name);
+        person.addEventFact(sex);
 
         name.setGiven(" ? d'  (YíçbjéjizAEU) - Domenico ");
-        assertThat(PersonUtils.getNormalizedGivenName(person, SexType.M, properties.getNormalizedGivenNamesMap()))
+        sex.setValue("M");
+        assertThat(PersonUtils.getNormalizedGivenName(person, properties.getNormalizedGivenNamesMap()))
                 .get()
                 .satisfies(givenName -> {
                     assertThat(givenName.value()).isEqualTo("? d'  (YíçbjéjizAEU) - Domenico");
@@ -40,7 +44,8 @@ public class SearchUtilsTests {
                 });
 
         name.setGiven("Francescantonio");
-        assertThat(PersonUtils.getNormalizedGivenName(person, SexType.M, properties.getNormalizedGivenNamesMap()))
+        sex.setValue("M");
+        assertThat(PersonUtils.getNormalizedGivenName(person, properties.getNormalizedGivenNamesMap()))
                 .get()
                 .satisfies(givenName -> {
                     assertThat(givenName.value()).isEqualTo("Francescantonio");
@@ -50,7 +55,8 @@ public class SearchUtilsTests {
                 });
 
         name.setGiven("Elizabeth");
-        assertThat(PersonUtils.getNormalizedGivenName(person, SexType.F, properties.getNormalizedGivenNamesMap()))
+        sex.setValue("F");
+        assertThat(PersonUtils.getNormalizedGivenName(person, properties.getNormalizedGivenNamesMap()))
                 .get()
                 .satisfies(givenName -> {
                     assertThat(givenName.value()).isEqualTo("Elizabeth");
@@ -60,7 +66,8 @@ public class SearchUtilsTests {
                 });
 
         name.setGiven("Валянціна");
-        assertThat(PersonUtils.getNormalizedGivenName(person, SexType.F, properties.getNormalizedGivenNamesMap()))
+        sex.setValue("F");
+        assertThat(PersonUtils.getNormalizedGivenName(person, properties.getNormalizedGivenNamesMap()))
                 .get()
                 .satisfies(givenName -> {
                     assertThat(givenName.value()).isEqualTo("Валянціна");
@@ -115,10 +122,22 @@ public class SearchUtilsTests {
                 .get()
                 .satisfies(surname -> {
                     assertThat(surname.value()).isEqualTo("Sainte-Cluque");
-                    assertThat(surname.normalizedMainWord()).isEqualTo("saintecluque");
-                    assertThat(surname.shortenedMainWord()).isEqualTo("saintecluq_");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("sainteclucue");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("saintecluc_");
 
                     Surname matching = PersonUtils.getShortenedSurnameMainWord("Saintecluque", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(matching)).isTrue();
+                });
+
+        name.setSurname("Ahetxetcheberry");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("Ahetxetcheberry");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("ahetsetcheveri");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("ahetsetchever_");
+
+                    Surname matching = PersonUtils.getShortenedSurnameMainWord("Ahets Etcheberry", properties.getNormalizedSurnamesMap()).orElse(null);
                     assertThat(surname.matches(matching)).isTrue();
                 });
 
@@ -209,23 +228,23 @@ public class SearchUtilsTests {
                     assertThat(surname.matches(matching)).isTrue();
                 });
 
-        name.setSurname("Pérez de la Cruz");
+        name.setSurname("Pérez de la Cruz Molina");
         assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
                 .get()
                 .satisfies(surname -> {
-                    assertThat(surname.value()).isEqualTo("Pérez de la Cruz");
-                    assertThat(surname.normalizedMainWord()).isEqualTo("peresdelacrus");
-                    assertThat(surname.shortenedMainWord()).isEqualTo("peresdelacrus");
+                    assertThat(surname.value()).isEqualTo("Pérez de la Cruz Molina");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("pereslacrus");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("pereslacrus");
 
                     Surname matching = PersonUtils.getShortenedSurnameMainWord("Pérez", properties.getNormalizedSurnamesMap()).orElse(null);
                     assertThat(surname.matches(matching)).isFalse();
                 });
 
-        name.setSurname("Pérez de Villarreal");
+        name.setSurname("Pérez de Villarreal García");
         assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
                 .get()
                 .satisfies(surname -> {
-                    assertThat(surname.value()).isEqualTo("Pérez de Villarreal");
+                    assertThat(surname.value()).isEqualTo("Pérez de Villarreal García");
                     assertThat(surname.normalizedMainWord()).isEqualTo("peresdevilareal");
                     assertThat(surname.shortenedMainWord()).isEqualTo("peresdevilareal");
 
@@ -233,15 +252,27 @@ public class SearchUtilsTests {
                     assertThat(surname.matches(matching)).isFalse();
                 });
 
-        name.setSurname("De la Rosa");
+        name.setSurname("De la Rosa Fernández");
         assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
                 .get()
                 .satisfies(surname -> {
-                    assertThat(surname.value()).isEqualTo("De la Rosa");
+                    assertThat(surname.value()).isEqualTo("De la Rosa Fernández");
                     assertThat(surname.normalizedMainWord()).isEqualTo("delarosa");
                     assertThat(surname.shortenedMainWord()).isEqualTo("delaros_");
 
                     Surname matching = PersonUtils.getShortenedSurnameMainWord("Rosa", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(matching)).isFalse();
+                });
+
+        name.setSurname("B. y Miñana González");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("B. y Miñana González");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("vi");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("v_");
+
+                    Surname matching = PersonUtils.getShortenedSurnameMainWord("B", properties.getNormalizedSurnamesMap()).orElse(null);
                     assertThat(surname.matches(matching)).isFalse();
                 });
     }

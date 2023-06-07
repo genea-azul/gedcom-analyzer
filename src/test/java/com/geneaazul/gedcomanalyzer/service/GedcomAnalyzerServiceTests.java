@@ -200,9 +200,9 @@ public class GedcomAnalyzerServiceTests {
                 .limit(500)
                 .forEach(pair -> System.out.println(
                         pair.getRight()
-                                .getRelationships()
+                                .getOrderedRelationships()
                                 .stream()
-                                .map(relationship -> relationshipMapper.toRelationshipDto(pair.getLeft().getId(), relationship, gedcom, ep -> false))
+                                .map(relationship -> relationshipMapper.toRelationshipDto(pair.getLeft(), relationship, ep -> false))
                                 .map(RelationshipDto::toString)
                                 .collect(Collectors.joining(", "))
                         + "  --  "

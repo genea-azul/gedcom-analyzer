@@ -5,11 +5,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous" />
-    <link rel="stylesheet" href="/css/main.css?4f476a" />
+    <link rel="stylesheet" href="/css/main.css?v${projectVersion}" />
   </head>
 
   <body class="container-fluid">
-    <img src="img/genea-azul-logo.png?4f476a" width="120" height="60" class="rounded float-start me-3" alt="Genea Azul logo">
+    <img src="img/genea-azul-logo.png?v${projectVersion}" width="120" height="60" class="rounded float-start me-3" alt="Genea Azul logo" />
     <div class="h5 mt-2 mb-0">Buscador de personas</div>
     <div class="d-flex small mt-0">
       <div class="me-1">Personas en el &aacute;rbol:</div>
@@ -313,12 +313,9 @@
     </div>
 
     <div class="row mb-3">
-      <div class="col-xl-auto"></div>
-      <div class="col-xl-auto">
-        <div class="small mb-3 contact-label-max-width d-none d-xl-block">
-          Dejanos tu <b>email</b>, <b>Whatsapp</b> o <b>Instagram</b> y nos pondremos en contacto en caso de encontrar personas relacionadas a tu b&uacute;squeda en un futuro.
-        </div>
-        <div class="small mb-3 d-xl-none">
+      <div class="col-xl-auto col-xxl-auto"></div>
+      <div class="col-xl-5 col-xxl-4">
+        <div class="small mb-3 text-center">
           Dejanos tu <b>email</b>, <b>Whatsapp</b> o <b>Instagram</b> y nos pondremos en contacto en caso de encontrar personas relacionadas a tu b&uacute;squeda en un futuro.
         </div>
         <div class="row justify-content-center align-items-center">
@@ -333,7 +330,7 @@
           </div>
         </div>
       </div>
-      <div class="col-xl-auto">
+      <div class="col-xl-5 col-xxl-4">
         <div class="card border-dark" id="searchResultCard">
           <div class="card-header text-bg-dark">
             <div>Resultado de la b&uacute;squeda</div>
@@ -348,7 +345,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js" integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.0/dist/jquery.min.js"></script>
-    <script src="js/main.js?4f476a"></script>
+    <script src="js/main.js?v${projectVersion}"></script>
   </body>
 
 </html>

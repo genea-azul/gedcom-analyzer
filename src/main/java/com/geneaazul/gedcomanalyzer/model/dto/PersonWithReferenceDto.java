@@ -1,7 +1,5 @@
 package com.geneaazul.gedcomanalyzer.model.dto;
 
-import java.util.List;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,11 +14,13 @@ import lombok.ToString;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @ToString(onlyExplicitlyIncluded = true)
-public class SpouseWithChildrenDto {
+public class PersonWithReferenceDto {
 
     @ToString.Include
     private String name;
     @ToString.Include
-    private List<PersonWithReferenceDto> children;
+    private SexType sex;
+    @ToString.Include
+    private ReferenceType referenceType;
 
 }

@@ -16,11 +16,10 @@ import lombok.ToString;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @ToString(onlyExplicitlyIncluded = true)
-public class SpouseWithChildrenDto {
+public class SearchSurnamesResultDto {
 
     @ToString.Include
-    private String name;
-    @ToString.Include
-    private List<PersonWithReferenceDto> children;
+    @Builder.Default
+    private List<SearchSurnameResultDto> surnames = List.of();
 
 }

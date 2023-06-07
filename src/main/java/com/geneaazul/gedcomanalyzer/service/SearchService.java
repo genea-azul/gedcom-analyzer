@@ -180,11 +180,11 @@ public class SearchService {
     public List<EnrichedPerson> findPersonsWithNoCountryButParentsWithCountry(List<EnrichedPerson> people) {
         return people
                 .stream()
-                .filter(person -> person.getCountryOfBirthForSearch().isEmpty()
+                .filter(person -> person.getCountryOfBirth().isEmpty()
                         && !person.getParents().isEmpty()
                         && person.getParents()
                                 .stream()
-                                .allMatch(parent -> parent.getCountryOfBirthForSearch().isPresent()))
+                                .allMatch(parent -> parent.getCountryOfBirth().isPresent()))
                 .toList();
     }
 

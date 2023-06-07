@@ -14,6 +14,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyResultDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchPersonDto;
 import com.geneaazul.gedcomanalyzer.repository.SearchFamilyRepository;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
+import com.geneaazul.gedcomanalyzer.utils.StreamUtils;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.PageRequest;
@@ -26,10 +27,6 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import jakarta.annotation.Nullable;
@@ -248,7 +245,7 @@ public class FamilyService {
 
         result = result
                 .stream()
-                .filter(distinctByKey(EnrichedPerson::getId))
+                .filter(StreamUtils.distinctByKey(EnrichedPerson::getId))
                 .toList();
 
         Integer potentialResultsCount = null;
@@ -256,6 +253,7 @@ public class FamilyService {
         if (result.isEmpty()) {
             List<EnrichedPerson> potentialResults = new ArrayList<>();
             potentialResults.addAll(getPotentialResults(searchFamilyDto.getIndividual(), individualSurname, gedcom));
+            potentialResults.addAll(getPotentialResults(searchFamilyDto.getSpouse(), spouseSurname, gedcom));
             potentialResults.addAll(getPotentialResults(searchFamilyDto.getFather(), fatherSurname, gedcom));
             potentialResults.addAll(getPotentialResults(searchFamilyDto.getMother(), motherSurname, gedcom));
             potentialResults.addAll(getPotentialResults(searchFamilyDto.getPaternalGrandfather(), paternalGrandfatherSurname, gedcom));
@@ -265,7 +263,7 @@ public class FamilyService {
 
             potentialResultsCount = (int) potentialResults
                     .stream()
-                    .filter(distinctByKey(EnrichedPerson::getId))
+                    .filter(StreamUtils.distinctByKey(EnrichedPerson::getId))
                     .count();
         }
 
@@ -486,11 +484,6 @@ public class FamilyService {
                         spousesResult2)
                 .flatMap(List::stream)
                 .toList();
-    }
-
-    private static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
-        final Set<Object> seen = ConcurrentHashMap.newKeySet();
-        return t -> seen.add(keyExtractor.apply(t));
     }
 
 }
