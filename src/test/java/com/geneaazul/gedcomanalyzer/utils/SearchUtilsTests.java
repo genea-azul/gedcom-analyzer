@@ -122,10 +122,22 @@ public class SearchUtilsTests {
                 .get()
                 .satisfies(surname -> {
                     assertThat(surname.value()).isEqualTo("Sainte-Cluque");
-                    assertThat(surname.normalizedMainWord()).isEqualTo("saintecluque");
-                    assertThat(surname.shortenedMainWord()).isEqualTo("saintecluq_");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("sainteclucue");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("saintecluc_");
 
                     Surname matching = PersonUtils.getShortenedSurnameMainWord("Saintecluque", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(matching)).isTrue();
+                });
+
+        name.setSurname("Ahetxetcheberry");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("Ahetxetcheberry");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("ahetsetcheveri");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("ahetsetchever_");
+
+                    Surname matching = PersonUtils.getShortenedSurnameMainWord("Ahets Etcheberry", properties.getNormalizedSurnamesMap()).orElse(null);
                     assertThat(surname.matches(matching)).isTrue();
                 });
 

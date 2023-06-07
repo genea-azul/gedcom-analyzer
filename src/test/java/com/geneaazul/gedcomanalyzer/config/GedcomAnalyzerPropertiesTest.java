@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static com.geneaazul.gedcomanalyzer.utils.EntryStreamTestUtils.assertEqualMappingKey;
+import static com.geneaazul.gedcomanalyzer.utils.EntryStreamTestUtils.assertNotEqualMappingKey;
 import static com.geneaazul.gedcomanalyzer.utils.EntryStreamUtils.*;
 
 @SpringBootTest
@@ -29,6 +30,7 @@ public class GedcomAnalyzerPropertiesTest {
         properties.getNormalizedGivenNamesMap()
                 .entrySet()
                 .stream()
+                .peek(entry -> assertNotEqualMappingKey(entry, NameAndSex::name))
                 .flatMap(entry -> Stream.of(
                         entry.getKey(),
                         new NameAndSex(entry.getValue(), entry.getKey().sex())))
@@ -41,6 +43,11 @@ public class GedcomAnalyzerPropertiesTest {
 
     @Test
     public void testPropertySurnameNormalizedMap() {
+
+        properties.getNormalizedSurnamesMap()
+                .entrySet()
+                .forEach(EntryStreamTestUtils::assertNotEqualKeyValue);
+
         Stream.concat(
                 properties.getNormalizedSurnamesMap()
                         .keySet()

@@ -35,8 +35,8 @@ public class SearchUtils {
     private static final Pattern SURNAME_DOUBLE_LETTERS_PATTERN = Pattern.compile("([a-z])\\1+");
     private static final Pattern SURNAME_VOWELS_ENDING_PATTERN = Pattern.compile("[aeiou]+$");
     private static final String SURNAME_VOWELS_ENDING_REPLACEMENT = "_";
-    private static final String[] SURNAME_SEARCH_CHARS = new String[]{ "b", "ç", "je", "ji", "k", "y", "z" };
-    private static final String[] SURNAME_REPLACEMENT_CHARS = new String[]{ "v", "c", "ge", "gi", "c", "i", "s" };
+    private static final String[] SURNAME_SEARCH_CHARS = new String[]{ "b", "ç", "je", "ji", "k", "q", "y", "z" };
+    private static final String[] SURNAME_REPLACEMENT_CHARS = new String[]{ "v", "c", "ge", "gi", "c", "c", "i", "s" };
 
     /**
      * For givenName and surname.
