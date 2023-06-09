@@ -9,8 +9,11 @@ import org.folg.gedcom.model.Gedcom;
 import java.time.Year;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import javax.annotation.CheckForNull;
 
 import lombok.Getter;
 
@@ -25,6 +28,7 @@ public class EnrichedGedcom {
 
     // Indexes
     private final Map<String, EnrichedPerson> peopleByIdIndex;
+    private final Map<UUID, EnrichedPerson> peopleByUuidIndex;
     private final Map<NameAndSex, List<EnrichedPerson>> peopleByNormalizedSurnameMainWordAndSexIndex;
     private final Map<NameSexYear, List<EnrichedPerson>> peopleByNormalizedSurnameMainWordAndSexAndYearOfBirthIndex;
     private final Map<NameSexYear, List<EnrichedPerson>> peopleByNormalizedSurnameMainWordAndSexAndYearOfDeathIndex;
@@ -39,6 +43,10 @@ public class EnrichedGedcom {
         this.peopleByIdIndex = this.people
                 .stream()
                 .collect(Collectors.toMap(EnrichedPerson::getId, Function.identity()));
+
+        this.peopleByUuidIndex = this.people
+                .stream()
+                .collect(Collectors.toMap(EnrichedPerson::getUuid, Function.identity()));
 
         this.peopleByNormalizedSurnameMainWordAndSexIndex = this.people
                 .stream()
@@ -81,8 +89,14 @@ public class EnrichedGedcom {
         return enrichedPeople;
     }
 
+    @CheckForNull
     public EnrichedPerson getPersonById(String id) {
         return peopleByIdIndex.get(id);
+    }
+
+    @CheckForNull
+    public EnrichedPerson getPersonByUuid(UUID uuid) {
+        return peopleByUuidIndex.get(uuid);
     }
 
     public List<EnrichedPerson> getPersonsBySurnameMainWordAndSex(Surname surname, SexType sex) {

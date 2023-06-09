@@ -2,21 +2,20 @@ package com.geneaazul.gedcomanalyzer.mapper;
 
 import com.geneaazul.gedcomanalyzer.model.AncestryGenerations;
 import com.geneaazul.gedcomanalyzer.model.Date;
-import com.geneaazul.gedcomanalyzer.model.EnrichedSpouseWithChildren;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.EnrichedSpouseWithChildren;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResult;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResults;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.dto.AncestryGenerationsDto;
-import com.geneaazul.gedcomanalyzer.model.dto.PersonWithReferenceDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateCompareDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateDto;
+import com.geneaazul.gedcomanalyzer.model.dto.PersonWithReferenceDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SpouseWithChildrenDto;
 import com.geneaazul.gedcomanalyzer.utils.DateUtils;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -55,7 +54,7 @@ public class PersonMapper {
             Function<EnrichedPerson, List<String>> ancestryCountriesResolver,
             Function<EnrichedPerson, AncestryGenerations> ancestryGenerationsResolver,
             Function<EnrichedPerson, Integer> numberOfPeopleInTreeResolver,
-            Function<EnrichedPerson, Optional<Pair<EnrichedPerson, Relationship>>> maxDistantRelationshipResolver) {
+            Function<EnrichedPerson, Optional<Relationship>> maxDistantRelationshipResolver) {
         return persons
                 .stream()
                 .map(person -> toPersonDto(
@@ -74,7 +73,7 @@ public class PersonMapper {
             Function<EnrichedPerson, List<String>> ancestryCountriesResolver,
             Function<EnrichedPerson, AncestryGenerations> ancestryGenerationsResolver,
             Function<EnrichedPerson, Integer> numberOfPeopleInTreeResolver,
-            Function<EnrichedPerson, Optional<Pair<EnrichedPerson, Relationship>>> maxDistantRelationshipResolver) {
+            Function<EnrichedPerson, Optional<Relationship>> maxDistantRelationshipResolver) {
 
         boolean obfuscateLiving = obfuscationType != ObfuscationType.NONE;
         boolean obfuscateName = obfuscateLiving && obfuscationType != ObfuscationType.SKIP_MAIN_PERSON_NAME;
@@ -87,7 +86,7 @@ public class PersonMapper {
         List<String> ancestryCountries = ancestryCountriesResolver.apply(person);
         AncestryGenerations ancestryGenerations = ancestryGenerationsResolver.apply(person);
         Integer numberOfPeopleInTree = numberOfPeopleInTreeResolver.apply(person);
-        Optional<Pair<EnrichedPerson, Relationship>> maybeMaxDistantRelationship = maxDistantRelationshipResolver.apply(person);
+        Optional<Relationship> maybeMaxDistantRelationship = maxDistantRelationshipResolver.apply(person);
 
         AncestryGenerationsDto ancestryGenerationsDto = AncestryGenerationsDto.builder()
                 .ascending(ancestryGenerations.ascending())
@@ -95,6 +94,7 @@ public class PersonMapper {
                 .build();
 
         return PersonDto.builder()
+                .uuid(person.getUuid())
                 .sex(person.getSex())
                 .isAlive(person.isAlive())
                 .name(PersonUtils.obfuscateName(person, obfuscateName && person.isAlive()))
@@ -125,9 +125,8 @@ public class PersonMapper {
                 .numberOfPeopleInTree(numberOfPeopleInTree)
                 .maxDistantRelationship(maybeMaxDistantRelationship
                         .map(maxDistantRelationship -> relationshipMapper.toRelationshipDto(
-                                maxDistantRelationship.getLeft(),
-                                maxDistantRelationship.getRight(),
-                                relationshipPerson -> obfuscateLiving && (person.isAlive() || relationshipPerson.isAlive())))
+                                maxDistantRelationship,
+                                obfuscateLiving && (person.isAlive() || maxDistantRelationship.person().isAlive())))
                         .orElse(null))
                 .build();
     }

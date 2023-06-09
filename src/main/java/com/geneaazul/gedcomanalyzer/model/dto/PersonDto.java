@@ -1,6 +1,7 @@
 package com.geneaazul.gedcomanalyzer.model.dto;
 
 import java.util.List;
+import java.util.UUID;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -18,6 +19,8 @@ import lombok.ToString;
 @ToString(onlyExplicitlyIncluded = true)
 public class PersonDto {
 
+    @ToString.Include
+    private UUID uuid;
     @ToString.Include
     private SexType sex;
     @ToString.Include

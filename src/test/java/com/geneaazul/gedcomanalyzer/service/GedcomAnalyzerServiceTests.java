@@ -4,7 +4,6 @@ import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
 import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
-import com.geneaazul.gedcomanalyzer.model.dto.RelationshipDto;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.DateUtils.AstrologicalSign;
 
@@ -195,18 +194,16 @@ public class GedcomAnalyzerServiceTests {
 
         System.out.println("\ngetPeopleInTree:");
         personService
-                .getPeopleInTree(gedcom.getPersonById("I4"))
+                .getPeopleInTree(gedcom.getPersonById("I4"), false)
                 .stream()
+                .sorted()
                 .limit(500)
-                .forEach(pair -> System.out.println(
-                        pair.getRight()
-                                .getOrderedRelationships()
-                                .stream()
-                                .map(relationship -> relationshipMapper.toRelationshipDto(pair.getLeft(), relationship, ep -> false))
-                                .map(RelationshipDto::toString)
-                                .collect(Collectors.joining(", "))
+                .forEach(relationship -> System.out.println(
+                        relationshipMapper
+                                .toRelationshipDto(relationship, false)
+                                .toString()
                         + "  --  "
-                        + pair.getLeft()));
+                        + relationship.person()));
     }
 
 }

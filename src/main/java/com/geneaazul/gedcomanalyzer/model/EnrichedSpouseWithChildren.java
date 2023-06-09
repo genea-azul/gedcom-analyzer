@@ -14,6 +14,7 @@ public class EnrichedSpouseWithChildren {
     private final Optional<EnrichedPerson> spouse;
     private final List<EnrichedPersonWithReference> childrenWithReference;
     private final List<EnrichedPerson> children;
+    private final boolean isSeparated;
     private final Optional<Date> dateOfPartners;
     private final Optional<Date> dateOfSeparation;
     private final Optional<String> placeOfPartners;
@@ -26,6 +27,7 @@ public class EnrichedSpouseWithChildren {
     private EnrichedSpouseWithChildren(
             Optional<EnrichedPerson> spouse,
             List<EnrichedPersonWithReference> childrenWithReference,
+            boolean isSeparated,
             Optional<Date> dateOfPartners,
             Optional<Date> dateOfSeparation,
             Optional<String> placeOfPartners,
@@ -36,6 +38,7 @@ public class EnrichedSpouseWithChildren {
                 .stream()
                 .map(EnrichedPersonWithReference::getPerson)
                 .toList();
+        this.isSeparated = isSeparated;
         this.dateOfPartners = dateOfPartners;
         this.dateOfSeparation = dateOfSeparation;
         this.placeOfPartners = placeOfPartners;
@@ -52,6 +55,7 @@ public class EnrichedSpouseWithChildren {
     public static EnrichedSpouseWithChildren of(
             Optional<EnrichedPerson> spouse,
             List<EnrichedPersonWithReference> childrenWithReference,
+            boolean isSeparated,
             Optional<Date> dateOfPartners,
             Optional<Date> dateOfSeparation,
             Optional<String> placeOfPartners,
@@ -59,6 +63,7 @@ public class EnrichedSpouseWithChildren {
         return new EnrichedSpouseWithChildren(
                 spouse,
                 childrenWithReference,
+                isSeparated,
                 dateOfPartners,
                 dateOfSeparation,
                 placeOfPartners,

@@ -1,14 +1,22 @@
 package com.geneaazul.gedcomanalyzer.model;
 
+import com.geneaazul.gedcomanalyzer.model.dto.TreeSideType;
+import com.geneaazul.gedcomanalyzer.utils.SetUtils;
+
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.util.Assert;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import jakarta.annotation.Nullable;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
@@ -26,27 +34,43 @@ public class Relationships {
     private final boolean containsDirect;
     @ToString.Include
     private final boolean containsNotInLaw;
+    @ToString.Include
+    @Nullable
+    private final Set<TreeSideType> treeSides;
 
-    public static Relationships of(
-            String personId,
-            Relationship relationship) {
+    public static Relationships from(Relationship relationship) {
         return new Relationships(
-                personId,
+                relationship.person().getId(),
                 newTreeSet(relationship),
                 isDirectRelationship(relationship),
-                !relationship.isInLaw());
+                !relationship.isInLaw(),
+                relationship.treeSides());
     }
 
     public Relationships merge(
             Relationships other,
             VisitedRelationshipTraversalStrategy traversalStrategy) {
         Assert.isTrue(this.personId.equals(other.personId), "Person ID must equal");
-        TreeSet<Relationship> treeSet = mergeWithTraversalStrategy(this.orderedRelationships, other.orderedRelationships, traversalStrategy);
+        Pair<TreeSet<Relationship>, Set<TreeSideType>> relationshipsAndTreeSides =
+                mergeWithTraversalStrategy(this.orderedRelationships, other.orderedRelationships, traversalStrategy);
         return new Relationships(
                 this.personId,
-                treeSet,
+                relationshipsAndTreeSides.getLeft(),
                 this.containsDirect || other.containsDirect,
-                this.containsNotInLaw || other.containsNotInLaw);
+                this.containsNotInLaw || other.containsNotInLaw,
+                relationshipsAndTreeSides.getRight());
+    }
+
+    public Relationships mergeTreeSides(Relationships other) {
+        if (SetUtils.containsAll(this.treeSides, other.treeSides)) {
+            return this;
+        }
+        return new Relationships(
+                this.personId,
+                this.orderedRelationships,
+                this.containsDirect,
+                this.containsNotInLaw,
+                SetUtils.merge(this.treeSides, other.treeSides));
     }
 
     public boolean contains(Relationship relationship) {
@@ -59,12 +83,12 @@ public class Relationships {
                 .anyMatch(relationship::isInLawOf);
     }
 
-    public Optional<Relationship> findFirst() {
+    public Relationship findFirst() {
         return orderedRelationships
-                .stream()
-                .findFirst();
+                .first();
     }
 
+    @SuppressWarnings("unused")
     public Optional<Relationship> findFirstNotInLaw() {
         return orderedRelationships
                 .stream()
@@ -84,7 +108,7 @@ public class Relationships {
      * - if the 2nd argument is a 'in-law' relationship, it is assumed it matches the relationship rules in 1st argument
      * - if the 2nd argument is not a 'in-law' relationship, all the non-matching relationships in 1st argument will be discarded
      */
-    private static TreeSet<Relationship> mergeWithTraversalStrategy(
+    private static Pair<TreeSet<Relationship>, Set<TreeSideType>> mergeWithTraversalStrategy(
             SortedSet<Relationship> t1,
             SortedSet<Relationship> t2,
             VisitedRelationshipTraversalStrategy traversalStrategy) {
@@ -92,10 +116,6 @@ public class Relationships {
 
         Collection<Relationship> relationships = t1;
         Relationship toMergeRelationship = t2.iterator().next();
-
-        if (traversalStrategy.isClosestDistance() && !relationships.isEmpty()) {
-            relationships = List.of();
-        }
 
         if (!toMergeRelationship.isInLaw()
                 && !relationships.isEmpty()
@@ -114,13 +134,30 @@ public class Relationships {
             }
         }
 
+        Set<TreeSideType> treeSides = Stream
+                .concat(
+                        relationships
+                                .stream()
+                                .map(Relationship::treeSides)
+                                .filter(Objects::nonNull)
+                                .flatMap(Set::stream),
+                        Stream.ofNullable(
+                                toMergeRelationship.treeSides())
+                                .flatMap(Set::stream))
+                .collect(Collectors.toUnmodifiableSet());
+
+        if (traversalStrategy.isClosestDistance() && !relationships.isEmpty()) {
+            relationships = List.of();
+        }
+
         TreeSet<Relationship> result = new TreeSet<>(relationships);
         result.add(toMergeRelationship);
-        return result;
+
+        return Pair.of(result, treeSides.isEmpty() ? null : treeSides);
     }
 
     private static boolean isDirectRelationship(Relationship relationship) {
-        return relationship.distanceToAncestor1() == 0 || relationship.distanceToAncestor2() == 0;
+        return relationship.distanceToAncestorRootPerson() == 0 || relationship.distanceToAncestorThisPerson() == 0;
     }
 
     /**
