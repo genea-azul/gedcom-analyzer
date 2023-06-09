@@ -39,6 +39,14 @@ public class FamilyUtils {
                 .toList();
     }
 
+    public static boolean isSeparated(Family family) {
+        return family.getEventsFacts()
+                .stream()
+                .anyMatch(eventFact
+                        -> DIVORCE_TAGS.contains(eventFact.getTag()) && eventFact.getValue().equals("Y")
+                        || EVENT_TAGS.contains(eventFact.getTag()) && SEPARATION_EVENT_TYPES.contains(eventFact.getType()));
+    }
+
     public static Optional<String> getDateOfPartners(Family family) {
         return family.getEventsFacts()
                 .stream()

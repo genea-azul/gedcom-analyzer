@@ -67,7 +67,9 @@ public class PersonUtils {
     public static boolean isDead(Person person) {
         return person.getEventsFacts()
                 .stream()
-                .anyMatch(eventFact -> DEATH_TAGS.contains(eventFact.getTag()));
+                .anyMatch(eventFact
+                        -> DEATH_TAGS.contains(eventFact.getTag())
+                        || BURIAL_TAGS.contains(eventFact.getTag()));
     }
 
     public static SexType getSex(Person person) {
@@ -367,6 +369,7 @@ public class PersonUtils {
                                             .map(PersonUtils::resolveChildReferenceType)
                                             .orElse(null)))
                             .toList();
+                    boolean isSeparated = FamilyUtils.isSeparated(family);
                     Optional<Date> dateOfPartners = FamilyUtils.getDateOfPartners(family).flatMap(Date::parse);
                     Optional<Date> dateOfSeparation = FamilyUtils.getDateOfSeparation(family).flatMap(Date::parse);
                     Optional<String> placeOfPartners = FamilyUtils.getPlaceOfPartners(family);
@@ -382,6 +385,7 @@ public class PersonUtils {
                             .map(spouse -> SpouseWithChildren.of(
                                     spouse,
                                     children,
+                                    isSeparated,
                                     dateOfPartners,
                                     dateOfSeparation,
                                     placeOfPartners,

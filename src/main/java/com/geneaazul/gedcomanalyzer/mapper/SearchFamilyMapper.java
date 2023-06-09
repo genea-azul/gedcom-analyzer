@@ -26,7 +26,7 @@ public class SearchFamilyMapper {
 
     @CheckForNull
     @Transactional(propagation = Propagation.MANDATORY)
-    public SearchFamily toSearchFamilyEntity(SearchFamilyDto searchFamilyDto, String clientIpAddress) {
+    public SearchFamily toSearchFamilyEntity(SearchFamilyDto searchFamilyDto, @Nullable String clientIpAddress) {
         if (isEmpty(searchFamilyDto)) {
             return null;
         }

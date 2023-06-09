@@ -19,6 +19,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -37,6 +38,7 @@ public class EnrichedPerson {
     private final GedcomAnalyzerProperties properties;
 
     private final String id;
+    private final UUID uuid;
     private final SexType sex;
     private final Optional<GivenName> givenName;
     private final Optional<Surname> surname;
@@ -75,7 +77,7 @@ public class EnrichedPerson {
     @Setter
     private Integer numberOfPeopleInTree;
     @Setter
-    private Optional<Pair<EnrichedPerson, Relationship>> maxDistantRelationship;
+    private Optional<Relationship> maxDistantRelationship;
 
     private EnrichedPerson(Person person, EnrichedGedcom gedcom) {
         this.person = person;
@@ -83,6 +85,7 @@ public class EnrichedPerson {
         this.properties = gedcom.getProperties();
 
         id = person.getId();
+        uuid = UUID.randomUUID();
         sex = PersonUtils.getSex(person);
         givenName = PersonUtils.getNormalizedGivenName(person, properties.getNormalizedGivenNamesMap());
         surname = PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap());
@@ -168,6 +171,7 @@ public class EnrichedPerson {
                                 spouseWithChildren.getChildren(),
                                 enrichedPeopleIndex,
                                 PersonUtils.DATES_COMPARATOR),
+                        spouseWithChildren.isSeparated(),
                         spouseWithChildren.getDateOfPartners(),
                         spouseWithChildren.getDateOfSeparation(),
                         spouseWithChildren.getPlaceOfPartners(),

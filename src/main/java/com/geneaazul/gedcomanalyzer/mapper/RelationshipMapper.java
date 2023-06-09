@@ -1,17 +1,20 @@
 package com.geneaazul.gedcomanalyzer.mapper;
 
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.EnrichedSpouseWithChildren;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
 import com.geneaazul.gedcomanalyzer.model.dto.RelationshipDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
+import com.geneaazul.gedcomanalyzer.model.dto.TreeSideType;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 
 import jakarta.annotation.Nullable;
 
@@ -19,11 +22,10 @@ import jakarta.annotation.Nullable;
 public class RelationshipMapper {
 
     public RelationshipDto toRelationshipDto(
-            @Nullable EnrichedPerson person,
             @Nullable Relationship relationship,
-            Predicate<EnrichedPerson> obfuscatePredicate) {
+            boolean obfuscateCondition) {
 
-        if (person == null || relationship == null) {
+        if (relationship == null) {
             return null;
         }
 
@@ -31,46 +33,344 @@ public class RelationshipMapper {
         int generation;
         int grade;
 
-        if (relationship.distanceToAncestor1() > relationship.distanceToAncestor2()) {
-            generation = relationship.distanceToAncestor1() - relationship.distanceToAncestor2();
-            grade = relationship.distanceToAncestor2();
+        if (relationship.distanceToAncestorRootPerson() > relationship.distanceToAncestorThisPerson()) {
+            generation = relationship.distanceToAncestorRootPerson() - relationship.distanceToAncestorThisPerson();
+            grade = relationship.distanceToAncestorThisPerson();
             referenceType = grade == 0 ? ReferenceType.PARENT : ReferenceType.PIBLING;
-        } else if (relationship.distanceToAncestor1() == relationship.distanceToAncestor2()) {
+        } else if (relationship.distanceToAncestorRootPerson() == relationship.distanceToAncestorThisPerson()) {
             generation = 0;
-            grade = relationship.distanceToAncestor1() - 1;
+            grade = relationship.distanceToAncestorRootPerson() - 1;
             referenceType = grade < 0
                     ? (relationship.isInLaw() ? ReferenceType.SPOUSE : ReferenceType.SELF)
                     : (grade == 0 ? ReferenceType.SIBLING : ReferenceType.COUSIN);
         } else {
-            generation = relationship.distanceToAncestor2() - relationship.distanceToAncestor1();
-            grade = relationship.distanceToAncestor1();
+            generation = relationship.distanceToAncestorThisPerson() - relationship.distanceToAncestorRootPerson();
+            grade = relationship.distanceToAncestorRootPerson();
             referenceType = grade == 0 ? ReferenceType.CHILD : ReferenceType.NIBLING;
         }
 
         SexType spouseSex = null;
+        boolean isSeparated = false;
         if (relationship.isInLaw()) {
             Integer relatedPersons = Optional
                     .ofNullable(relationship.relatedPersonIds())
-                    .map(Set::size)
+                    .map(List::size)
                     .orElse(0);
             if (relatedPersons == 1) {
-                spouseSex = person
+                String spouseId = relationship.relatedPersonIds().get(0);
+                EnrichedPerson spouse = relationship
+                        .person()
                         .getGedcom()
-                        .getPersonById(relationship.relatedPersonIds().first())
-                        .getSex();
+                        .getPersonById(spouseId);
+                spouseSex = spouse.getSex();
+                isSeparated = relationship
+                    .person()
+                        .getSpousesWithChildren()
+                        .stream()
+                        .filter(spouseWithChildren -> spouseWithChildren
+                                .getSpouse()
+                                .map(EnrichedPerson::getId)
+                                .map(spouseId::equals)
+                                .orElse(false))
+                        .findFirst()
+                        .map(EnrichedSpouseWithChildren::isSeparated)
+                        .orElse(false);
             }
         }
 
         return RelationshipDto.builder()
-                .personSex(person.getSex())
-                .personName(PersonUtils.obfuscateName(person, obfuscatePredicate.test(person)))
+                .personSex(relationship.person().getSex())
+                .personIsAlive(relationship.person().isAlive())
+                .personName(PersonUtils.obfuscateName(relationship.person(), obfuscateCondition))
+                .personCountryOfBirth(relationship
+                        .person()
+                        .getCountryOfBirth()
+                        .orElse(null))
                 .referenceType(referenceType)
                 .generation(generation)
                 .grade(grade)
                 .isInLaw(relationship.isInLaw())
-                .spouseSex(spouseSex)
                 .isHalf(relationship.isHalf())
+                .spouseSex(spouseSex)
+                .isSeparated(isSeparated)
+                .treeSides(relationship.treeSides())
                 .build();
+    }
+
+    public String formatInSpanish(RelationshipDto relationship, int index) {
+        String indexStr = leftPadFixedWidth(String.valueOf(index + 1), 5);
+        String personSex = displaySex(relationship.getPersonSex());
+        String treeSide = displayTreeSide(relationship.getTreeSides());
+        String personIsAlive = relationship.getPersonIsAlive() ? " " : "✝";
+        String personName = rightPadFixedWidth(displayNameInSpanish(relationship.getPersonName()), 48);
+        String personCountryOfBirth = leftPadFixedWidth(relationship.getPersonCountryOfBirth(), 20);
+        String relationshipStr = displayRelationshipInSpanish(relationship);
+        return indexStr + ".  " + personSex + " " + treeSide + " " + personIsAlive + "  " + personName + " " + personCountryOfBirth + " • " + relationshipStr;
+    }
+
+    public String displayNameInSpanish(String name) {
+        // Only the name is private, surname is not obfuscated
+        name = name.replace("<private>", "<nombre privado>");
+        name = name.replace("<no name>", "<nombre desconocido>");
+        return name.replace("<no spouse>", "<sin pareja>");
+    }
+
+    public String displaySex(SexType sex) {
+        switch (sex) {
+            case F -> { return "♀"; }
+            case M -> { return "♂"; }
+            default -> { return " "; }
+        }
+    }
+
+    public String displayTreeSide(@Nullable Set<TreeSideType> treeSides) {
+        if (treeSides == null) {
+            return " ";
+        }
+        if (treeSides.size() == 1) {
+            TreeSideType treeSide = treeSides.stream().findFirst().orElseThrow();
+            switch (treeSide) {
+                case FATHER -> { return "←"; }
+                case MOTHER -> { return "→"; }
+                case DESCENDANT -> { return "↓"; }
+                default -> { return " "; }
+            }
+        }
+        if (treeSides.size() == 2) {
+            if (treeSides.contains(TreeSideType.DESCENDANT)) {
+                if (treeSides.contains(TreeSideType.FATHER)) {
+                    return "↙";
+                }
+                if (treeSides.contains(TreeSideType.MOTHER)) {
+                    return "↘";
+                }
+            } else if (treeSides.containsAll(List.of(TreeSideType.FATHER, TreeSideType.MOTHER))) {
+                return "↔";
+            }
+        } else if (treeSides.size() == 3) {
+            if (treeSides.containsAll(List.of(TreeSideType.DESCENDANT, TreeSideType.FATHER, TreeSideType.MOTHER))) {
+                return "⇊";
+            }
+        }
+        return " ";
+    }
+
+    public String displayRelationshipInSpanish(RelationshipDto relationship) {
+        if (relationship.getReferenceType() == ReferenceType.SELF) {
+            return "persona principal";
+        }
+
+        String separated = (relationship.getIsSeparated() ? "ex-" : "");
+
+        if (relationship.getReferenceType() == ReferenceType.SPOUSE) {
+            return separated + "pareja";
+        }
+
+        String spouse = (relationship.getIsInLaw() ? separated + "pareja de " : "");
+
+        if (relationship.getReferenceType() == ReferenceType.PARENT) {
+            if (relationship.getGeneration() == 1) {
+                if (relationship.getIsInLaw()) {
+                    return relationship.getSpouseSex() == SexType.M ? spouse + "padre" : spouse + "madre";
+                } else {
+                    return relationship.getPersonSex() == SexType.M ? "padre" : "madre";
+                }
+            }
+
+            String sexSuffix = getSexSuffixInSpanish(relationship);
+            String gradeSuffix = getGradeSuffixInSpanish(relationship.getGeneration() - 4, sexSuffix);
+
+            String relationshipName;
+            if (relationship.getGeneration() == 2) {
+                relationshipName = "abuel" + sexSuffix;
+            } else if (relationship.getGeneration() == 3) {
+                relationshipName = "bisabuel" + sexSuffix;
+            } else if (relationship.getGeneration() == 4) {
+                relationshipName = "tatarabuel" + sexSuffix;
+            } else {
+                relationshipName = "trastatarabuel" + sexSuffix;
+            }
+
+            String or = "";
+            if (relationship.getGeneration() >= 6) {
+                or = "  (" + spouse + "ancestro directo de " + relationship.getGeneration() + " generaciones)";
+            }
+
+            return spouse + relationshipName + gradeSuffix + or;
+        }
+
+        if (relationship.getReferenceType() == ReferenceType.CHILD) {
+            if (relationship.getGeneration() == 1 && relationship.getIsInLaw()) {
+                return relationship.getPersonSex() == SexType.M ? separated + "yerno" : separated + "nuera";
+            }
+
+            String sexSuffix = getSexSuffixInSpanish(relationship);
+            String gradeSuffix = getGradeSuffixInSpanish(relationship.getGeneration() - 4, sexSuffix);
+
+            String relationshipName;
+            if (relationship.getGeneration() == 1) {
+                relationshipName = "hij" + sexSuffix;
+            } else if (relationship.getGeneration() == 2) {
+                relationshipName = "niet" + sexSuffix;
+            } else if (relationship.getGeneration() == 3) {
+                relationshipName = "bisniet" + sexSuffix;
+            } else if (relationship.getGeneration() == 4) {
+                relationshipName = "tataraniet" + sexSuffix;
+            } else {
+                relationshipName = "trastataraniet" + sexSuffix;
+            }
+
+            String or = "";
+            if (relationship.getGeneration() >= 6) {
+                or = "  (" + spouse + "descendiente directo de " + relationship.getGeneration() + " generaciones)";
+            }
+
+            return spouse + relationshipName + gradeSuffix + or;
+        }
+
+        if (relationship.getReferenceType() == ReferenceType.SIBLING) {
+            if (relationship.getIsInLaw() && !relationship.getIsHalf()) {
+                return relationship.getPersonSex() == SexType.M ? separated + "cuñado" : separated + "cuñada";
+            }
+
+            String halfPrefix = relationship.getIsHalf() ? "medio-" : "";
+            String sexSuffix = getSexSuffixInSpanish(relationship);
+
+            String relationshipName = "herman" + sexSuffix;
+            return spouse + halfPrefix + relationshipName;
+        }
+
+        if (relationship.getReferenceType() == ReferenceType.COUSIN) {
+            String halfPrefix = relationship.getIsHalf() ? "medio-" : "";
+            String sexSuffix = getSexSuffixInSpanish(relationship);
+            String gradeSuffix = getGradeSuffixInSpanish(relationship.getGrade(), sexSuffix);
+
+            String relationshipName = "prim" + sexSuffix;
+            return spouse + halfPrefix + relationshipName + gradeSuffix;
+        }
+
+        if (relationship.getReferenceType() == ReferenceType.PIBLING) {
+            String halfPrefix = relationship.getIsHalf() ? "medio-" : "";
+            String sexSuffix = getSexSuffixInSpanish(relationship);
+            String gradeSuffix = getGradeSuffixInSpanish(relationship.getGrade(), sexSuffix);
+
+            String relationshipName1 = "tí" + sexSuffix + (relationship.getGeneration() > 1 ? "-" : "");
+            String relationshipName2;
+
+            if (relationship.getGeneration() == 1) {
+                relationshipName2 = "";
+            } else if (relationship.getGeneration() == 2) {
+                relationshipName2 = "abuel" + sexSuffix;
+            } else if (relationship.getGeneration() == 3) {
+                relationshipName2 = "bisabuel" + sexSuffix;
+            } else if (relationship.getGeneration() == 4) {
+                relationshipName2 = "tatarabuel" + sexSuffix;
+            } else {
+                relationshipName2 = "trastatarabuel" + sexSuffix;
+            }
+
+            String or = "";
+            if (relationship.getGeneration() == 1 && relationship.getGrade() >= 2 || relationship.getGeneration() >= 2) {
+                String relationshipNameOr1 = (relationshipName2.isEmpty()) ? "padre/madre" : relationshipName2.substring(0, relationshipName2.length() - 1) + "o/a";
+                String relationshipNameOr2;
+                if (relationship.getGrade() == 1) {
+                    relationshipNameOr2 = "herman" + sexSuffix;
+                } else {
+                    relationshipNameOr2 = "prim" + sexSuffix;
+                }
+                String gradeSuffixOr = getGradeSuffixInSpanish(relationship.getGrade() - 1, sexSuffix);
+                or = "  (" + spouse + halfPrefix + relationshipNameOr2 + gradeSuffixOr + " de " + relationshipNameOr1 + ")";
+            }
+
+            return spouse + halfPrefix + relationshipName1 + relationshipName2 + gradeSuffix + or;
+        }
+
+        if (relationship.getReferenceType() == ReferenceType.NIBLING) {
+            String halfPrefix = relationship.getIsHalf() ? "medio-" : "";
+            String sexSuffix = getSexSuffixInSpanish(relationship);
+            String gradeSuffix = getGradeSuffixInSpanish(relationship.getGrade(), sexSuffix);
+
+            String relationshipName1 = "sobrin" + sexSuffix + (relationship.getGeneration() > 1 ? "-" : "");
+            String relationshipName2;
+
+            if (relationship.getGeneration() == 1) {
+                relationshipName2 = "";
+            } else if (relationship.getGeneration() == 2) {
+                relationshipName2 = "niet" + sexSuffix;
+            } else if (relationship.getGeneration() == 3) {
+                relationshipName2 = "bisniet" + sexSuffix;
+            } else if (relationship.getGeneration() == 4) {
+                relationshipName2 = "tataraniet" + sexSuffix;
+            } else {
+                relationshipName2 = "trastataraniet" + sexSuffix;
+            }
+
+            String or = "";
+            if (relationship.getGeneration() == 1 && relationship.getGrade() >= 2 || relationship.getGeneration() >= 2) {
+                String relationshipNameOr1 = (relationshipName2.isEmpty()) ? "hij" + sexSuffix : relationshipName2;
+                String relationshipNameOr2;
+                if (relationship.getGrade() == 1) {
+                    relationshipNameOr2 = "hermano/a";
+                } else {
+                    relationshipNameOr2 = "primo/a";
+                }
+                String gradeSuffixOr = getGradeSuffixInSpanish(relationship.getGrade() - 1, "o/a");
+                or = "  (" + spouse + relationshipNameOr1 + " de " + halfPrefix + relationshipNameOr2 + gradeSuffixOr + ")";
+            }
+
+            return spouse + halfPrefix + relationshipName1 + relationshipName2 + gradeSuffix + or;
+        }
+
+        return "familiar";
+    }
+
+    private String getSexSuffixInSpanish(RelationshipDto relationship) {
+        if (relationship.getIsInLaw()) {
+            return (relationship.getSpouseSex() == SexType.M ? "o" : "a");
+        } else {
+            return (relationship.getPersonSex() == SexType.M ? "o" : "a");
+        }
+    }
+
+    private String getGradeSuffixInSpanish(int grade, String sexSuffix) {
+        if (grade <= 1) {
+            return "";
+        }
+        if (grade == 2) {
+            return " segund" + sexSuffix;
+        }
+        if (grade == 3) {
+            return " tercer" + sexSuffix;
+        }
+        if (grade == 4) {
+            return " cuart" + sexSuffix;
+        }
+        if (grade == 5) {
+            return " quint" + sexSuffix;
+        }
+        if (grade == 6) {
+            return " sext" + sexSuffix;
+        }
+        if (grade == 7) {
+            return " séptim" + sexSuffix;
+        }
+        if (grade == 8) {
+            return " octav" + sexSuffix;
+        }
+        if (grade == 9) {
+            return " noven" + sexSuffix;
+        }
+        return " de " + grade + "° grado";
+    }
+
+    private static String leftPadFixedWidth(String value, int width) {
+        value = StringUtils.defaultString(value);
+        int start = Math.max(value.length() - width, 0);
+        return StringUtils.leftPad(StringUtils.substring(value, start), width);
+    }
+
+    private static String rightPadFixedWidth(String value, int width) {
+        return StringUtils.rightPad(StringUtils.substring(value, 0, width), width);
     }
 
 }

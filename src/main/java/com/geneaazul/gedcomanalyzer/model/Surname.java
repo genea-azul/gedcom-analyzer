@@ -7,6 +7,8 @@ public record Surname(
         String normalizedMainWord,
         String shortenedMainWord) {
 
+    private static final int MIN_LENGTH_FOR_NOT_AMBIGUOUS = 4;
+
     public static Surname of(String value, String normalizedMainWord, String shortenedMainWord) {
         return new Surname(value, normalizedMainWord, shortenedMainWord);
     }
@@ -28,7 +30,7 @@ public record Surname(
     }
 
     private boolean isAmbiguousShortened(String shortened) {
-        return shortened.length() <= 3 && shortened.endsWith("_");
+        return shortened.length() <= MIN_LENGTH_FOR_NOT_AMBIGUOUS && shortened.endsWith("_");
     }
 
 }

@@ -94,14 +94,21 @@ public class SearchService {
     /**
      * .
      */
-    public List<EnrichedPerson> findPersonsByPlaceOfBirth(String placeOfBirth, Boolean isAlive, SexType sex, List<EnrichedPerson> people) {
+    public List<EnrichedPerson> findPersonsByPlaceOfBirth(
+            @Nullable String placeOfBirth,
+            @Nullable Boolean isAlive,
+            @Nullable SexType sex,
+            List<EnrichedPerson> people) {
         return people
                 .stream()
                 .filter(person -> isAlive == null || isAlive == person.isAlive())
                 .filter(person -> sex == null || sex == person.getSex())
-                .filter(person -> person.getPlaceOfBirthForSearch()
-                        .map(pob -> pob.endsWith(placeOfBirth))
-                        .orElse(false))
+                .filter(person
+                        -> placeOfBirth == null && person.getPlaceOfBirthForSearch().isEmpty()
+                        || placeOfBirth != null && person
+                                .getPlaceOfBirthForSearch()
+                                .map(pob -> pob.endsWith(placeOfBirth))
+                                .orElse(false))
                 .toList();
     }
 

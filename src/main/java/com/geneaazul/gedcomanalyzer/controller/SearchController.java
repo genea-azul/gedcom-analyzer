@@ -1,6 +1,8 @@
 package com.geneaazul.gedcomanalyzer.controller;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
+import com.geneaazul.gedcomanalyzer.model.FamilyTree;
+import com.geneaazul.gedcomanalyzer.model.dto.FamilyTreeDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDetailsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyResultDto;
@@ -9,9 +11,15 @@ import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesResultDto;
 import com.geneaazul.gedcomanalyzer.service.DockerService;
 import com.geneaazul.gedcomanalyzer.service.FamilyService;
+import com.geneaazul.gedcomanalyzer.service.PersonService;
 import com.geneaazul.gedcomanalyzer.service.SurnameService;
 import com.geneaazul.gedcomanalyzer.utils.InetAddressUtils;
 
+import org.springframework.core.io.PathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.util.InMemoryResource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,6 +27,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,6 +45,7 @@ public class SearchController {
 
     private final FamilyService familyService;
     private final SurnameService surnameService;
+    private final PersonService personService;
     private final GedcomAnalyzerProperties properties;
     private final DockerService dockerService;
 
@@ -42,9 +53,11 @@ public class SearchController {
     public SearchFamilyResultDto searchFamily(@Valid @RequestBody SearchFamilyDto searchFamilyDto, HttpServletRequest request) {
         dockerService.startDbContainer();
 
-        String clientIpAddress = InetAddressUtils.getRemoteAddress(request);
+        Optional<String> clientIpAddress = InetAddressUtils.getRemoteAddress(request);
 
-        if (!familyService.isAllowedSearch(clientIpAddress)) {
+        if (!clientIpAddress
+                .map(familyService::isAllowedSearch)
+                .orElse(true)) {
             return SearchFamilyResultDto.builder()
                     .errors(List.of("TOO-MANY-REQUESTS"))
                     .build();
@@ -53,7 +66,7 @@ public class SearchController {
         Optional<Long> searchId = Optional.empty();
 
         if (properties.isStoreFamilySearch()) {
-            searchId = familyService.persistSearch(searchFamilyDto, clientIpAddress);
+            searchId = familyService.persistSearch(searchFamilyDto, clientIpAddress.orElse(null));
         }
 
         SearchFamilyResultDto searchFamilyResult = familyService.search(searchFamilyDto);
@@ -84,9 +97,11 @@ public class SearchController {
     public SearchSurnamesResultDto searchSurnames(@Valid @RequestBody SearchSurnamesDto searchSurnamesDto, HttpServletRequest request) {
         dockerService.startDbContainer();
 
-        String clientIpAddress = InetAddressUtils.getRemoteAddress(request);
+        Optional<String> clientIpAddress = InetAddressUtils.getRemoteAddress(request);
 
-        if (!familyService.isAllowedSearch(clientIpAddress)) {
+        if (!clientIpAddress
+                .map(familyService::isAllowedSearch)
+                .orElse(true)) {
             return SearchSurnamesResultDto.builder()
                     .build();
         }
@@ -102,6 +117,39 @@ public class SearchController {
                 request.getRequestId());
 
         return searchSurnamesResult;
+    }
+
+    @PostMapping("/family-tree/plain")
+    public ResponseEntity<Resource> getPlainFamilyTree(
+            @Valid @RequestBody FamilyTreeDto familyTreeDto,
+            HttpServletRequest request) throws IOException {
+
+        Optional<FamilyTree> maybeFamilyTree = personService.getFamilyTree(familyTreeDto.getPersonUuid(), true);
+
+        if (maybeFamilyTree.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(new InMemoryResource("Invalid person!"));
+        }
+
+        FamilyTree familyTree = maybeFamilyTree.get();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + familyTree.filename());
+        headers.add(HttpHeaders.CONTENT_LANGUAGE, familyTree.locale().toString());
+        headers.add("File-Name", familyTree.filename());
+
+        log.info("Search family tree [ personUuid={}, personId={}, httpRequestId={} ]",
+                familyTreeDto.getPersonUuid(),
+                familyTree.person().getId(),
+                request.getRequestId());
+
+        PathResource resource = new PathResource(familyTree.path());
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentLength(Files.size(familyTree.path()))
+                .contentType(familyTree.mediaType())
+                .body(resource);
     }
 
 }

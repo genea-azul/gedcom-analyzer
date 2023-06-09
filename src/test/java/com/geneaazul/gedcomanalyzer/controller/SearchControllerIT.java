@@ -6,12 +6,15 @@ import static org.mockito.Mockito.doReturn;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.geneaazul.gedcomanalyzer.domain.SearchFamily;
+import com.geneaazul.gedcomanalyzer.model.dto.FamilyTreeDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
+import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyResultDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchPersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
@@ -25,6 +28,7 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
@@ -84,7 +88,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                 .andExpect(jsonPath("$.people", hasSize(2)))
                 .andReturn();
 
-        log.info(url + " response: {}", result.getResponse().getContentAsString());
+        log.info(url + " response: {}", result.getResponse().getContentAsString(StandardCharsets.UTF_8));
     }
 
     @Test
@@ -107,7 +111,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andReturn();
 
-        log.info(url + " response: {}", result.getResponse().getContentAsString());
+        log.info(url + " response: {}", result.getResponse().getContentAsString(StandardCharsets.UTF_8));
     }
 
     @Test
@@ -131,7 +135,56 @@ public class SearchControllerIT extends AbstractControllerIT {
                 .andExpect(jsonPath("$.surnames", hasSize(3)))
                 .andReturn();
 
-        log.info(url + " response: {}", result.getResponse().getContentAsString());
+        log.info(url + " response: {}", result.getResponse().getContentAsString(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testSearchFamilyTree() throws Exception {
+        ObjectMapper objectMapper = mapperBuilder.build();
+
+        SearchFamilyDto searchFamilyDto = SearchFamilyDto.builder()
+                .individual(SearchPersonDto.builder()
+                        .givenName("Father")
+                        .surname("Family1")
+                        .sex(SexType.M)
+                        .isAlive(Boolean.FALSE)
+                        .yearOfBirth(1980)
+                        .build())
+                .build();
+
+        doReturn(SearchFamily.builder()
+                .id(1L)
+                .build())
+                .when(searchFamilyRepository)
+                .save(any());
+
+        String url = "/api/search/family";
+        String searchResult = mvc.perform(post(url)
+                        .content(objectMapper.writeValueAsBytes(searchFamilyDto))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.people", hasSize(1)))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        SearchFamilyResultDto searchFamilyResult = objectMapper.readValue(searchResult, SearchFamilyResultDto.class);
+
+        FamilyTreeDto familyTreeDto = FamilyTreeDto.builder()
+                .personUuid(searchFamilyResult.getPeople().get(0).getUuid())
+                .build();
+
+        url = "/api/search/family-tree/plain";
+        MvcResult result = mvc.perform(post(url)
+                        .content(objectMapper.writeValueAsBytes(familyTreeDto))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.TEXT_PLAIN))
+                .andReturn();
+
+        log.info(url + " response: {}", result.getResponse().getContentAsString(StandardCharsets.UTF_8));
     }
 
 }
