@@ -2,6 +2,7 @@ package com.geneaazul.gedcomanalyzer.mapper;
 
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.EnrichedSpouseWithChildren;
+import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
 import com.geneaazul.gedcomanalyzer.model.dto.RelationshipDto;
@@ -9,7 +10,6 @@ import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.model.dto.TreeSideType;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -62,6 +62,7 @@ public class RelationshipMapper {
                         .person()
                         .getGedcom()
                         .getPersonById(spouseId);
+                //noinspection DataFlowIssue
                 spouseSex = spouse.getSex();
                 isSeparated = relationship
                     .person()
@@ -97,15 +98,21 @@ public class RelationshipMapper {
                 .build();
     }
 
-    public String formatInSpanish(RelationshipDto relationship, int index) {
-        String indexStr = leftPadFixedWidth(String.valueOf(index + 1), 5);
+    public FormattedRelationship formatInSpanish(RelationshipDto relationship, int index, boolean onlySecondaryDescription) {
         String personSex = displaySex(relationship.getPersonSex());
         String treeSide = displayTreeSide(relationship.getTreeSides());
         String personIsAlive = relationship.getPersonIsAlive() ? " " : "✝";
-        String personName = rightPadFixedWidth(displayNameInSpanish(relationship.getPersonName()), 48);
-        String personCountryOfBirth = leftPadFixedWidth(relationship.getPersonCountryOfBirth(), 20);
-        String relationshipStr = displayRelationshipInSpanish(relationship);
-        return indexStr + ".  " + personSex + " " + treeSide + " " + personIsAlive + "  " + personName + " " + personCountryOfBirth + " • " + relationshipStr;
+        String personName = displayNameInSpanish(relationship.getPersonName());
+        String personCountryOfBirth = relationship.getPersonCountryOfBirth();
+        String relationshipStr = displayRelationshipInSpanish(relationship, onlySecondaryDescription);
+        return new FormattedRelationship(
+                String.valueOf(index),
+                personName,
+                personSex,
+                personIsAlive,
+                personCountryOfBirth,
+                treeSide,
+                relationshipStr);
     }
 
     public String displayNameInSpanish(String name) {
@@ -155,7 +162,7 @@ public class RelationshipMapper {
         return " ";
     }
 
-    public String displayRelationshipInSpanish(RelationshipDto relationship) {
+    public String displayRelationshipInSpanish(RelationshipDto relationship, boolean onlySecondaryDescription) {
         if (relationship.getReferenceType() == ReferenceType.SELF) {
             return "persona principal";
         }
@@ -193,7 +200,11 @@ public class RelationshipMapper {
 
             String or = "";
             if (relationship.getGeneration() >= 6) {
-                or = "  (" + spouse + "ancestro directo de " + relationship.getGeneration() + " generaciones)";
+                or = spouse + "ancestro directo de " + relationship.getGeneration() + " generaciones";
+                if (onlySecondaryDescription) {
+                    return or;
+                }
+                or = "  (" + or + ")";
             }
 
             return spouse + relationshipName + gradeSuffix + or;
@@ -222,7 +233,11 @@ public class RelationshipMapper {
 
             String or = "";
             if (relationship.getGeneration() >= 6) {
-                or = "  (" + spouse + "descendiente directo de " + relationship.getGeneration() + " generaciones)";
+                or = spouse + "descendiente directo de " + relationship.getGeneration() + " generaciones";
+                if (onlySecondaryDescription) {
+                    return or;
+                }
+                or = "  (" + or + ")";
             }
 
             return spouse + relationshipName + gradeSuffix + or;
@@ -270,7 +285,8 @@ public class RelationshipMapper {
             }
 
             String or = "";
-            if (relationship.getGeneration() == 1 && relationship.getGrade() >= 2 || relationship.getGeneration() >= 2) {
+            if (relationship.getGeneration() == 1 && relationship.getGrade() >= 2
+                    || relationship.getGeneration() >= 2) {
                 String relationshipNameOr1 = (relationshipName2.isEmpty()) ? "padre/madre" : relationshipName2.substring(0, relationshipName2.length() - 1) + "o/a";
                 String relationshipNameOr2;
                 if (relationship.getGrade() == 1) {
@@ -279,7 +295,11 @@ public class RelationshipMapper {
                     relationshipNameOr2 = "prim" + sexSuffix;
                 }
                 String gradeSuffixOr = getGradeSuffixInSpanish(relationship.getGrade() - 1, sexSuffix);
-                or = "  (" + spouse + halfPrefix + relationshipNameOr2 + gradeSuffixOr + " de " + relationshipNameOr1 + ")";
+                or = spouse + halfPrefix + relationshipNameOr2 + gradeSuffixOr + " de " + relationshipNameOr1;
+                if (onlySecondaryDescription) {
+                    return or;
+                }
+                or = "  (" + or + ")";
             }
 
             return spouse + halfPrefix + relationshipName1 + relationshipName2 + gradeSuffix + or;
@@ -306,7 +326,8 @@ public class RelationshipMapper {
             }
 
             String or = "";
-            if (relationship.getGeneration() == 1 && relationship.getGrade() >= 2 || relationship.getGeneration() >= 2) {
+            if (relationship.getGeneration() == 1 && relationship.getGrade() >= 2
+                    || relationship.getGeneration() >= 2) {
                 String relationshipNameOr1 = (relationshipName2.isEmpty()) ? "hij" + sexSuffix : relationshipName2;
                 String relationshipNameOr2;
                 if (relationship.getGrade() == 1) {
@@ -315,7 +336,11 @@ public class RelationshipMapper {
                     relationshipNameOr2 = "primo/a";
                 }
                 String gradeSuffixOr = getGradeSuffixInSpanish(relationship.getGrade() - 1, "o/a");
-                or = "  (" + spouse + relationshipNameOr1 + " de " + halfPrefix + relationshipNameOr2 + gradeSuffixOr + ")";
+                or = spouse + relationshipNameOr1 + " de " + halfPrefix + relationshipNameOr2 + gradeSuffixOr;
+                if (onlySecondaryDescription) {
+                    return or;
+                }
+                or = "  (" + or + ")";
             }
 
             return spouse + halfPrefix + relationshipName1 + relationshipName2 + gradeSuffix + or;
@@ -361,16 +386,6 @@ public class RelationshipMapper {
             return " noven" + sexSuffix;
         }
         return " de " + grade + "° grado";
-    }
-
-    private static String leftPadFixedWidth(String value, int width) {
-        value = StringUtils.defaultString(value);
-        int start = Math.max(value.length() - width, 0);
-        return StringUtils.leftPad(StringUtils.substring(value, start), width);
-    }
-
-    private static String rightPadFixedWidth(String value, int width) {
-        return StringUtils.rightPad(StringUtils.substring(value, 0, width), width);
     }
 
 }

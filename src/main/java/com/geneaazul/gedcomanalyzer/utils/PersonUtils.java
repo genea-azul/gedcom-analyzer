@@ -254,6 +254,7 @@ public class PersonUtils {
                         .filter(eventFact -> CHRISTENING_TAGS.contains(eventFact.getTag()))
                         .findFirst())
                 .map(EventFact::getPlace)
+                .map(PlaceUtils::adjustPlace)
                 .map(StringUtils::trimToNull);
     }
 
@@ -267,6 +268,7 @@ public class PersonUtils {
                         .filter(eventFact -> BURIAL_TAGS.contains(eventFact.getTag()))
                         .findFirst())
                 .map(EventFact::getPlace)
+                .map(PlaceUtils::adjustPlace)
                 .map(StringUtils::trimToNull);
     }
 

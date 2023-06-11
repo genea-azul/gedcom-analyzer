@@ -181,10 +181,10 @@ public class SearchControllerIT extends AbstractControllerIT {
                         .contentType(MediaType.APPLICATION_JSON)
                         .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.TEXT_PLAIN))
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF))
                 .andReturn();
 
-        log.info(url + " response: {}", result.getResponse().getContentAsString(StandardCharsets.UTF_8));
+        log.info(url + " response: {}", result.getResponse().getContentAsString(StandardCharsets.ISO_8859_1).substring(0, 100));
     }
 
 }

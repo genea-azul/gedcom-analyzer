@@ -6,6 +6,7 @@ import com.geneaazul.gedcomanalyzer.model.AncestryGenerations;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.FamilyTree;
+import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
 import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.Relationships;
@@ -23,12 +24,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -48,11 +45,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PersonService {
 
-    private static final int MAX_LISTED_PEOPLE_IN_TREE = 1000;
     private static final int MAX_DISTANCE_TO_OBFUSCATE = 3;
 
-    private final GedcomAnalyzerProperties properties;
+    private final FamilyTreeService familyTreeService;
     private final GedcomHolder gedcomHolder;
+    private final GedcomAnalyzerProperties properties;
     private final RelationshipMapper relationshipMapper;
 
     public Optional<FamilyTree> getFamilyTree(UUID personUuid, boolean obfuscateLiving) {
@@ -79,16 +76,15 @@ public class PersonService {
         Path path = properties
                 .getTempDir()
                 .resolve("family-trees")
-                .resolve(fileId + "_" + personUuid + ".txt");
+                .resolve(fileId + "_" + personUuid + ".pdf");
 
         if (!Files.exists(path)) {
             List<Relationship> relationships = getPeopleInTree(person, false);
 
-            MutableInt index = new MutableInt();
-            List<String> peopleInTree = relationships
+            MutableInt index = new MutableInt(1);
+            List<FormattedRelationship> peopleInTree = relationships
                     .stream()
                     .sorted()
-                    .limit(MAX_LISTED_PEOPLE_IN_TREE)
                     .map(relationship -> relationshipMapper.toRelationshipDto(
                             relationship,
                             obfuscateLiving
@@ -96,43 +92,11 @@ public class PersonService {
                                     && !relationship.person().getId().equals(person.getId())
                                     && (person.isAlive() && relationship.getDistance() <= MAX_DISTANCE_TO_OBFUSCATE
                                             || relationship.person().isAlive())))
-                    .map(relationship -> relationshipMapper.formatInSpanish(relationship, index.getAndIncrement()))
+                    .map(relationship -> relationshipMapper.formatInSpanish(relationship, index.getAndIncrement(), true))
                     .toList();
 
-            Stream<String> lines = Stream.concat(
-                    Stream.of(
-                            "Genea Azul - 2023",
-                            "http://geneaazul.com.ar/",
-                            "IG: @genea.azul", "", "",
-                            "Leyenda:",
-                            " • ♀  mujer", " • ♂  varón", " • ✝  difunto/a",
-                            " • ←  rama paterna                  →  rama materna                  ↔  rama paterna y materna",
-                            " • ↙  rama descendente y paterna    ↘  rama descendente y materna    ⇊  rama descendente, paterna y materna",
-                            " • ↓  rama descendente",
-                            " • Los datos de personas vivas o cercanas a la persona principal serán ocultados: <nombre privado>", "", "",
-                            "Árbol genealógico de " + person.getDisplayName(), "",
-                            " • Personas: " + relationships.size(), ""),
-                    peopleInTree
-                            .stream());
-
-            if (relationships.size() > peopleInTree.size()) {
-                lines = Stream.concat(
-                        lines,
-                        Stream.of("", "[ Debido a una limitación técnica se listaron un máximo de " + MAX_LISTED_PEOPLE_IN_TREE
-                                + " personas, para obtener el árbol completo ponete en contacto con nosotros. ]"));
-            }
-
-            lines = Stream.concat(
-                    lines,
-                    Stream.of("", "Generado el " + ZonedDateTime
-                            .now(properties.getZoneId())
-                            .format(DateTimeFormatter
-                                    .ofLocalizedDateTime(FormatStyle.FULL)
-                                    .localizedBy(new Locale("es", "AR")))));
-
             try {
-                Files.createDirectories(path.getParent());
-                Files.write(path, lines.toList(), StandardCharsets.UTF_8);
+                familyTreeService.exportToPDF(path, person.getDisplayName(), peopleInTree);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
@@ -140,9 +104,9 @@ public class PersonService {
 
         return Optional.of(new FamilyTree(
                 person,
-                "genea_azul_arbol_" + fileId + ".txt",
+                "genea_azul_arbol_" + fileId + ".pdf",
                 path,
-                MediaType.TEXT_PLAIN,
+                MediaType.APPLICATION_PDF,
                 new Locale("es", "AR")));
     }
 
@@ -259,6 +223,7 @@ public class PersonService {
         return person.getNumberOfPeopleInTree();
     }
 
+    @SuppressWarnings("OptionalAssignedToNull")
     public Optional<Relationship> getMaxDistantRelationship(EnrichedPerson person) {
         if (person.getMaxDistantRelationship() == null) {
             setNumberOfPeopleInTreeAndMaxDistantRelationship(person);
@@ -436,6 +401,7 @@ public class PersonService {
         EnrichedPerson previousPerson = nextPersonToVisit.getGedcom().getPersonById(previousPersonId);
 
         // TODO consider biological/adopted parents
+        //noinspection DataFlowIssue
         if (previousPerson.getParents().size() != nextPersonToVisit.getParents().size()) {
             return false;
         }

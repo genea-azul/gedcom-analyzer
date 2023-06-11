@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import jakarta.annotation.PostConstruct;
@@ -26,6 +27,7 @@ import lombok.Setter;
 public class GedcomAnalyzerProperties {
 
     private ZoneId zoneId = ZoneId.of("America/Argentina/Buenos_Aires");
+    private Locale locale = new Locale("es", "AR");
 
     private Path tempDir = Path.of("../gedcoms/temp");
     private String tempUploadedGedcomDirPrefix = "gedcomfile_";

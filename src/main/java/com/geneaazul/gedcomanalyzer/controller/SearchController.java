@@ -28,7 +28,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Optional;
 
@@ -147,7 +146,7 @@ public class SearchController {
 
         return ResponseEntity.ok()
                 .headers(headers)
-                .contentLength(Files.size(familyTree.path()))
+                .contentLength(resource.contentLength())
                 .contentType(familyTree.mediaType())
                 .body(resource);
     }

@@ -325,11 +325,13 @@ var searchFamilyTree = function(event) {
     $.ajax({
         type: "POST",
         url: "/api/search/family-tree/plain",
-        dataType: "text",
+        xhrFields: {
+            responseType: "blob"
+        },
         contentType: "application/json",
         data: JSON.stringify(searchFamilyTreeRequest),
         success: function(data, textStatus, request) {
-            var blob = new Blob([data], { type: "text/plain" });
+            var blob = new Blob([data], { type: "application/octet-stream" });
             var url = window.URL.createObjectURL(blob);
             var a = document.createElement("a");
             a.style.display = "none";

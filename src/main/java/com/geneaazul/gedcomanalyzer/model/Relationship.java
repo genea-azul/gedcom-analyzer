@@ -158,21 +158,27 @@ public record Relationship(
         if (compareDistanceToAncestor != 0) {
             return Math.negateExact(compareDistanceToAncestor);
         }
-        // not in-law -> is lower priority
-        int compareIsInLaw = Boolean.compare(this.isInLaw, other.isInLaw);
-        if (compareIsInLaw != 0) {
-            return compareIsInLaw;
+        //
+        int compareTreeSides = TREE_SIDE_TYPE_COLLECTION_COMPARATOR.compare(this.treeSides, other.treeSides);
+        if (compareTreeSides != 0) {
+            return compareTreeSides;
         }
         // not is-half -> is lower priority
         int compareIsHalf = Boolean.compare(this.isHalf, other.isHalf);
         if (compareIsHalf != 0) {
             return compareIsHalf;
         }
+        // not in-law -> is lower priority
+        int compareIsInLaw = Boolean.compare(this.isInLaw, other.isInLaw);
+        if (compareIsInLaw != 0) {
+            return compareIsInLaw;
+        }
         int compareRelatedPersonIds = STRING_COLLECTION_COMPARATOR.compare(this.relatedPersonIds, other.relatedPersonIds);
+        //noinspection RedundantIfStatement
         if (compareRelatedPersonIds != 0) {
             return compareRelatedPersonIds;
         }
-        return TREE_SIDE_TYPE_COLLECTION_COMPARATOR.compare(this.treeSides, other.treeSides);
+        return 0;
     }
 
     public int compareToWithInvertedPriority(Relationship other) {
@@ -193,25 +199,31 @@ public record Relationship(
         if (compareDistanceToAncestor != 0) {
             return compareDistanceToAncestor;
         }
-        // not in-law -> is higher priority
-        int compareIsInLaw = Boolean.compare(this.isInLaw, other.isInLaw);
-        if (compareIsInLaw != 0) {
-            return Math.negateExact(compareIsInLaw);
+        //
+        int compareTreeSides = TREE_SIDE_TYPE_COLLECTION_COMPARATOR
+                .reversed()
+                .compare(this.treeSides, other.treeSides);
+        if (compareTreeSides != 0) {
+            return compareTreeSides;
         }
         // not is-half -> is higher priority
         int compareIsHalf = Boolean.compare(this.isHalf, other.isHalf);
         if (compareIsHalf != 0) {
             return Math.negateExact(compareIsHalf);
         }
+        // not in-law -> is higher priority
+        int compareIsInLaw = Boolean.compare(this.isInLaw, other.isInLaw);
+        if (compareIsInLaw != 0) {
+            return Math.negateExact(compareIsInLaw);
+        }
         int compareRelatedPersonIds = STRING_COLLECTION_COMPARATOR
                 .reversed()
                 .compare(this.relatedPersonIds, other.relatedPersonIds);
+        //noinspection RedundantIfStatement
         if (compareRelatedPersonIds != 0) {
             return compareRelatedPersonIds;
         }
-        return TREE_SIDE_TYPE_COLLECTION_COMPARATOR
-                .reversed()
-                .compare(this.treeSides, other.treeSides);
+        return 0;
     }
 
     public Relationship withTreeSides(@Nullable Set<TreeSideType> treeSides) {
