@@ -23,7 +23,7 @@
     <gedcom.version>1.14.0</gedcom.version>
     <docker-java.version>3.3.0</docker-java.version>
     <icu.version>73.1</icu.version>
-    <poi.version>5.2.3</poi.version>
+    <pdfbox.version>3.0.0-alpha3</pdfbox.version>
     <commons-collections4.version>4.4</commons-collections4.version>
     <commons-io.version>2.12.0</commons-io.version>
     <commons-lang3.version>3.12.0</commons-lang3.version>
@@ -90,7 +90,7 @@
     <dependency>
       <groupId>org.apache.pdfbox</groupId>
       <artifactId>pdfbox-tools</artifactId>
-      <version>3.0.0-alpha3</version>
+      <version>${pdfbox.version}</version>
     </dependency>
 
     <!-- Docker-Java dependencies -->
