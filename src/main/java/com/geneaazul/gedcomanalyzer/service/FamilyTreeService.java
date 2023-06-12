@@ -50,7 +50,6 @@ public class FamilyTreeService {
             PDFont light = loadFont(document, EmbeddedFontsConfig.Font.ROBOTO_LIGHT);
             PDFont mono = loadFont(document, EmbeddedFontsConfig.Font.EVERSON_MONO);
 
-            int maxIndexWidth = peopleInTree.get(peopleInTree.size() - 1).index().length();
             int maxPersonsInFirstPage = 32;
             int maxPersonsInNextPages = 59;
 
@@ -110,7 +109,6 @@ public class FamilyTreeService {
                         mono,
                         peopleInTree.subList(0, Math.min(peopleInTree.size(), maxPersonsInFirstPage)),
                         375f,
-                        maxIndexWidth,
                         1,
                         peopleInTree.size() <= maxPersonsInFirstPage);
             }
@@ -133,7 +131,6 @@ public class FamilyTreeService {
                             mono,
                             peopleInPage,
                             60f,
-                            maxIndexWidth,
                             i + 2,
                             i == nextPages.size() - 1);
                 }
@@ -153,7 +150,6 @@ public class FamilyTreeService {
             PDFont mono,
             List<FormattedRelationship> peopleInPage,
             float yPos,
-            int maxIndexWidth,
             int pageNum,
             boolean isLastPage) throws IOException {
 
@@ -166,7 +162,7 @@ public class FamilyTreeService {
         List<String> lines = peopleInPage
                 .stream()
                 .map(relationship
-                        -> StringUtils.leftPad(relationship.index(), maxIndexWidth)
+                        -> StringUtils.leftPad(relationship.index(), 4)
                         + ". " + relationship.personSex()
                         + " " + relationship.treeSide()
                         + " " + relationship.personIsAlive())

@@ -175,12 +175,13 @@ public class SearchControllerIT extends AbstractControllerIT {
 
         url = "/api/search/family-tree/" + personUuid + "/plain";
         MvcResult result = mvc.perform(get(url)
+                        .queryParam("obfuscateLiving", "false")
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_PDF))
                 .andReturn();
 
-        log.info(url + " response: {}", result.getResponse().getContentAsString(StandardCharsets.ISO_8859_1).substring(0, 100));
+        log.info(url + " response: {}", result.getResponse().getContentAsString(StandardCharsets.ISO_8859_1).substring(0, 50));
     }
 
 }

@@ -122,9 +122,10 @@ public class SearchController {
     @GetMapping("/family-tree/{personUuid}/plain")
     public ResponseEntity<Resource> getPlainFamilyTree(
             @PathVariable UUID personUuid,
+            @RequestParam(defaultValue = "true") Boolean obfuscateLiving,
             HttpServletRequest request) throws IOException {
 
-        Optional<FamilyTree> maybeFamilyTree = personService.getFamilyTree(personUuid, true);
+        Optional<FamilyTree> maybeFamilyTree = personService.getFamilyTree(personUuid, obfuscateLiving);
 
         if (maybeFamilyTree.isEmpty()) {
             return ResponseEntity.badRequest()
