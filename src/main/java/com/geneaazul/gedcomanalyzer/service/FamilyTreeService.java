@@ -13,10 +13,11 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Service;
 
 import java.awt.*;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -227,10 +228,11 @@ public class FamilyTreeService {
         stream.endText();
     }
 
-    @SuppressWarnings({"DataFlowIssue", "SameParameterValue"})
+    @SuppressWarnings("SameParameterValue")
     private PDFont loadFont(PDDocument document, EmbeddedFontsConfig.Font font) throws IOException {
-        File file = new File(getClass().getResource(embeddedFonts.get(font)).getFile());
-        return PDType0Font.load(document, file);
+        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+        Resource resource = resolver.getResource(embeddedFonts.get(font));
+        return PDType0Font.load(document, resource.getInputStream());
     }
 
     private static String leftPadFixedWidth(String value, @SuppressWarnings("SameParameterValue") int width) {

@@ -21,7 +21,7 @@ public class EmbeddedFontsConfig {
         return Arrays.stream(Font.values())
                 .map(font -> Map.entry(
                         font,
-                        "/fonts/" + toSneakCase(font.label) + "/" + font.label + (font.variant == null ? "" : "-" + font.variant) + "." + font.type))
+                        "fonts/" + toSneakCase(font.label) + "/" + font.label + (font.variant == null ? "" : "-" + font.variant) + "." + font.type))
                 .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
