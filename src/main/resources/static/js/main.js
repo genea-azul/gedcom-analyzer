@@ -890,7 +890,9 @@ var displayRelationshipInSpanish = function(relationship) {
 
         var or = "";
         if (relationship.generation == 1 && relationship.grade >= 2 || relationship.generation >= 2) {
-            var relationshipNameOr1 = (relationshipName2 == "") ? "padre/madre" : relationshipName2.substring(0, relationshipName2.length - 1) + "o/a";
+            var relationshipNameOr1 = (relationshipName2 == "")
+                ? getTreeSideInSpanish(relationship.treeSides, "padre/madre")
+                : relationshipName2.substring(0, relationshipName2.length - 1) + "o/a";
             var relationshipNameOr2;
             if (relationship.grade == 1) {
                 relationshipNameOr2 = "herman" + sexSuffix;
@@ -941,6 +943,22 @@ var displayRelationshipInSpanish = function(relationship) {
     }
 
     return "<b>familiar</b>";
+};
+
+var getTreeSideInSpanish = function(treeSides, defaultValue) {
+    if (!treeSides) {
+        return defaultValue;
+    }
+    if (["FATHER", "MOTHER"].every(side => treeSides.includes(side))) {
+        return "padre/madre";
+    }
+    if (treeSides.includes("FATHER")) {
+        return "padre";
+    }
+    if (treeSides.includes("MOTHER")) {
+        return "madre";
+    }
+    return defaultValue;
 };
 
 var getSexSuffixInSpanish = function(relationship) {
