@@ -306,7 +306,9 @@ public class RelationshipMapper {
             String or = "";
             if (relationship.getGeneration() == 1 && relationship.getGrade() >= 2
                     || relationship.getGeneration() >= 2) {
-                String relationshipNameOr1 = (relationshipName2.isEmpty()) ? "padre/madre" : relationshipName2.substring(0, relationshipName2.length() - 1) + "o/a";
+                String relationshipNameOr1 = (relationshipName2.isEmpty())
+                        ? getTreeSideInSpanish(relationship.getTreeSides(), "padre/madre")
+                        : relationshipName2.substring(0, relationshipName2.length() - 1) + "o/a";
                 String relationshipNameOr2;
                 if (relationship.getGrade() == 1) {
                     relationshipNameOr2 = "herman" + sexSuffix;
@@ -366,6 +368,24 @@ public class RelationshipMapper {
         }
 
         return "familiar";
+    }
+
+    private String getTreeSideInSpanish(
+            @Nullable Set<TreeSideType> treeSides,
+            @SuppressWarnings("SameParameterValue") String defaultValue) {
+        if (treeSides == null) {
+            return defaultValue;
+        }
+        if (treeSides.containsAll(List.of(TreeSideType.FATHER, TreeSideType.MOTHER))) {
+            return "padre/madre";
+        }
+        if (treeSides.contains(TreeSideType.FATHER)) {
+            return "padre";
+        }
+        if (treeSides.contains(TreeSideType.MOTHER)) {
+            return "madre";
+        }
+        return defaultValue;
     }
 
     private String getSexSuffixInSpanish(RelationshipDto relationship) {
