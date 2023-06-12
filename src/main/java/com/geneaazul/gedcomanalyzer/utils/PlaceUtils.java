@@ -36,14 +36,23 @@ public class PlaceUtils {
     }
 
     /**
-     * i.e: Estados Unidos -> USA
+     * i.e: Estados Unidos -> EU.
      */
     public static String adjustCountryForReport(String country) {
         if (country == null) {
             return null;
         }
         if (country.startsWith("Estados Unidos")) {
-            return "EUA";
+            return "EU.";
+        }
+        if (country.startsWith("Países Bajos")) {
+            return "Hol";
+        }
+        if (country.startsWith("República Dominicana")) {
+            return "Dom";
+        }
+        if (country.startsWith("Océano Atlántico")) {
+            return "OA.";
         }
         return country;
     }

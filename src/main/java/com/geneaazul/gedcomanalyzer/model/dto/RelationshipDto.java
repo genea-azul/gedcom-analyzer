@@ -21,6 +21,8 @@ public class RelationshipDto {
     private SexType personSex;
     private Boolean personIsAlive;
     private String personName;
+    private Integer personYearOfBirth;
+    private Boolean personYearOfBirthIsAbout;
     private String personCountryOfBirth;
     private ReferenceType referenceType;
     private Integer generation;

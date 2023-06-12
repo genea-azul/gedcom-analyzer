@@ -83,6 +83,12 @@ public class RelationshipMapper {
                 .personSex(relationship.person().getSex())
                 .personIsAlive(relationship.person().isAlive())
                 .personName(PersonUtils.obfuscateName(relationship.person(), obfuscateCondition))
+                .personYearOfBirth(relationship.person().getDateOfBirth()
+                        .map(date -> obfuscateCondition ? -1 : date.getYear().getValue())
+                        .orElse(null))
+                .personYearOfBirthIsAbout(relationship.person().getDateOfBirth()
+                        .map(dateOfBirth -> dateOfBirth.getOperator() != null)
+                        .orElse(false))
                 .personCountryOfBirth(relationship
                         .person()
                         .getCountryOfBirth()
@@ -103,6 +109,9 @@ public class RelationshipMapper {
         String treeSide = displayTreeSide(relationship.getTreeSides());
         String personIsAlive = relationship.getPersonIsAlive() ? " " : "✝";
         String personName = displayNameInSpanish(relationship.getPersonName());
+        String personYearOfBirth = Optional.ofNullable(relationship.getPersonYearOfBirth())
+                .map(yearOfBirth -> displayYear(yearOfBirth, relationship.getPersonYearOfBirthIsAbout()))
+                .orElse(null);
         String personCountryOfBirth = relationship.getPersonCountryOfBirth();
         String relationshipStr = displayRelationshipInSpanish(relationship, onlySecondaryDescription);
         return new FormattedRelationship(
@@ -110,6 +119,7 @@ public class RelationshipMapper {
                 personName,
                 personSex,
                 personIsAlive,
+                personYearOfBirth,
                 personCountryOfBirth,
                 treeSide,
                 relationshipStr);
@@ -160,6 +170,15 @@ public class RelationshipMapper {
             }
         }
         return " ";
+    }
+
+    private String displayYear(Integer year, @Nullable Boolean yearIsAbout) {
+        if (year == -1) {
+            return "----"; // obfuscated
+        }
+        return Boolean.TRUE.equals(yearIsAbout)
+                ? "~" + year
+                : year.toString();
     }
 
     public String displayRelationshipInSpanish(RelationshipDto relationship, boolean onlySecondaryDescription) {

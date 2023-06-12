@@ -5,7 +5,8 @@ public record FormattedRelationship(
         String personName,
         String personSex,
         String personIsAlive,
-        String personCountry,
+        String personYearOfBirth,
+        String personCountryOfBirth,
         String treeSide,
         String relationshipDesc) {
 }

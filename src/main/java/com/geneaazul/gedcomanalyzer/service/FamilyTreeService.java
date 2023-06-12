@@ -50,8 +50,8 @@ public class FamilyTreeService {
             PDFont mono = loadFont(document, EmbeddedFontsConfig.Font.EVERSON_MONO);
 
             int maxIndexWidth = peopleInTree.get(peopleInTree.size() - 1).index().length();
-            int maxPersonsInFirstPage = 39;
-            int maxPersonsInNextPages = 67;
+            int maxPersonsInFirstPage = 32;
+            int maxPersonsInNextPages = 59;
 
             PDPage firstPage = new PDPage(PDRectangle.A4);
             document.addPage(firstPage);
@@ -75,6 +75,11 @@ public class FamilyTreeService {
                         "↙",
                         "↘",
                         "⇊");
+                writeText(stream, light, 11.5f, 1.2f, 50f, 261f,
+                        "~",
+                        "----",
+                        "<nombre privado>");
+
                 writeText(stream, light, 11.5f, 1.22f, 75f, 120f,
                         "mujer",
                         "varón",
@@ -86,14 +91,15 @@ public class FamilyTreeService {
                         "rama descendente y paterna",
                         "rama descendente y materna",
                         "rama descendente, paterna y materna");
-                writeText(stream, light, 11.5f, 1.2f, 50f, 261f,
-                        "<nombre privado>");
-                writeText(stream, light, 11.5f, 1.2f, 160f, 261f,
+                writeText(stream, light, 11.5f, 1.2f, 75f, 261f,
+                        "año de nacimiento aproximado",
+                        "año de nacimiento de persona viva o cercana a la persona principal");
+                writeText(stream, light, 11.5f, 1.2f, 160f, 288.5f,
                         "nombre de persona viva o cercana a la persona principal");
 
-                writeText(stream, bold, 13f, 1.2f, 30f, 300f,
+                writeText(stream, bold, 13f, 1.2f, 30f, 330f,
                         "Árbol genealógico de " + personName);
-                writeText(stream, light, 11.5f, 1.2f, 50f, 320f,
+                writeText(stream, light, 11.5f, 1.2f, 50f, 350f,
                         "Personas: " + peopleInTree.size());
 
                 writePeopleInPage(
@@ -102,7 +108,7 @@ public class FamilyTreeService {
                         light,
                         mono,
                         peopleInTree.subList(0, Math.min(peopleInTree.size(), maxPersonsInFirstPage)),
-                        350f,
+                        375f,
                         maxIndexWidth,
                         1,
                         peopleInTree.size() <= maxPersonsInFirstPage);
@@ -150,29 +156,51 @@ public class FamilyTreeService {
             int pageNum,
             boolean isLastPage) throws IOException {
 
+        float size1 = 10.5f;
+        float size2 = 9.2f;
+
+        float space1 = 1.15f;
+        float space2 = size1 * space1 / size2;
+
         List<String> lines = peopleInPage
                 .stream()
                 .map(relationship
                         -> StringUtils.leftPad(relationship.index(), maxIndexWidth)
                         + ". " + relationship.personSex()
                         + " " + relationship.treeSide()
-                        + " " + relationship.personIsAlive()
-                        + " " + rightPadFixedWidth(PlaceUtils.adjustCountryForReport(relationship.personCountry()), 3))
+                        + " " + relationship.personIsAlive())
                 .toList();
-        writeText(stream, mono, 10.5f, 1f, 30f, yPos, lines.toArray(String[]::new));
+        writeText(stream, mono, size1, space1, 30f, yPos, lines.toArray(String[]::new));
+
+        lines = peopleInPage
+                .stream()
+                .map(relationship -> rightPadFixedWidth(PlaceUtils.adjustCountryForReport(relationship.personCountryOfBirth()), 3))
+                .toList();
+        writeText(stream, light, size2, space2, 102f, yPos, lines.toArray(String[]::new));
+
+        lines = peopleInPage
+                .stream()
+                .map(relationship -> {
+                    int padding = "----".equals(relationship.personYearOfBirth())
+                            ? 9
+                            : (StringUtils.startsWith(relationship.personYearOfBirth(), "~") ? 5 : 7);
+                    return leftPadFixedWidth(relationship.personYearOfBirth(), padding);
+                })
+                .toList();
+        writeText(stream, light, size2, space2, 120f, yPos, lines.toArray(String[]::new));
 
         lines = peopleInPage
                 .stream()
                 .map(FormattedRelationship::personName)
                 .map(name -> StringUtils.substring(name, 0, 42))
                 .toList();
-        writeText(stream, light, 10.5f, 1f, 135f, yPos, lines.toArray(String[]::new));
+        writeText(stream, light, size1, space1, 155f, yPos, lines.toArray(String[]::new));
 
         lines = peopleInPage
                 .stream()
                 .map(relationship -> "• " + relationship.relationshipDesc())
                 .toList();
-        writeText(stream, light, 10.5f, 1f, 345f, yPos, lines.toArray(String[]::new));
+        writeText(stream, light, size2, space2, 370f, yPos, lines.toArray(String[]::new));
 
         writeText(stream, font, 12f, 1.2f, 500f, 780f, "Página " + pageNum);
 
@@ -203,6 +231,11 @@ public class FamilyTreeService {
     private PDFont loadFont(PDDocument document, EmbeddedFontsConfig.Font font) throws IOException {
         File file = new File(getClass().getResource(embeddedFonts.get(font)).getFile());
         return PDType0Font.load(document, file);
+    }
+
+    private static String leftPadFixedWidth(String value, @SuppressWarnings("SameParameterValue") int width) {
+        value = StringUtils.defaultString(value);
+        return StringUtils.leftPad(StringUtils.substring(value, 0, width), width);
     }
 
     private static String rightPadFixedWidth(String value, @SuppressWarnings("SameParameterValue") int width) {
