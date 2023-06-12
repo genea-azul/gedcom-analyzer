@@ -106,7 +106,9 @@ $(document).ready(function() {
 });
 
 $(document).ready(function() {
-    $("#searchBtn").on("click", function() {
+    $("#searchBtn").on("click", function(event) {
+        event.preventDefault();
+
         $("#searchBtn").prop("disabled", true);
 
         var resultComponentLocator = "#searchResultCard div.card-body";
@@ -236,6 +238,10 @@ $(document).ready(function() {
                             .append("<p>Refin&aacute; la b&uacute;squeda agregando fechas o completando nombres de padres y parejas.</p>")
                             .append("<p><b>Potenciales resultados:</b> " + data.potentialResults + "</p>");
                     }
+                } else {
+                    setTimeout(function() {
+                        enableFamilyTreeSearch(resultComponentLocator);
+                    }, 1500);
                 }
 
                 var surnamesInRequest = getSurnamesInRequest(searchFamilyRequest);
@@ -285,6 +291,13 @@ var finalizeSearch = function(callback = function() {}) {
         });
 };
 
+var enableFamilyTreeSearch = function(resultComponentLocator) {
+    $(resultComponentLocator + " .search-family-tree-btn")
+        .removeClass("btn-dark")
+        .addClass("btn-outline-light")
+        .removeClass("disabled");
+}
+
 var searchSurnames = function(surnames) {
     var surnamesComponentLocator = "#searchSurnamesResultCard div.card-body";
     var $surnamesComponent = $(surnamesComponentLocator);
@@ -315,37 +328,17 @@ var searchSurnames = function(surnames) {
 };
 
 var searchFamilyTree = function(event) {
-    $(event.data.btnLocator).addClass("disabled");
+    event.preventDefault();
+
     $(event.data.errorLocator).addClass("d-none");
 
-    var searchFamilyTreeRequest = {
-        "personUuid": event.data.personUuid
-    };
-
-    $.ajax({
-        type: "POST",
-        url: "/api/search/family-tree/plain",
-        dataType: "text",
-        contentType: "application/json",
-        data: JSON.stringify(searchFamilyTreeRequest),
-        success: function(data, textStatus, request) {
-            var blob = new Blob([data], { type: "text/plain" });
-            var url = window.URL.createObjectURL(blob);
-            var a = document.createElement("a");
-            a.style.display = "none";
-            a.href = url;
-            a.download = request.getResponseHeader("File-Name");
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-        },
-        error: function(xhr) {
-            handleError(xhr, event.data.errorLocator);
-        },
-        complete: function() {
-            $(event.data.btnLocator).removeClass("disabled");
-        }
-    });
+    var domain = window.location.protocol + '//' + window.location.host;
+    var win = window.open(domain + "/api/search/family-tree/" + event.data.personUuid + "/plain", "_blank");
+    if (win) {
+        win.focus();
+    } else {
+        handleError("El navegador bloque&oacute; la descarga, por favor intent&aacute; desde otro como Chrome.", event.data.errorLocator);
+    }
 }
 
 var handleError = function(xhr, componentLocator) {
@@ -355,21 +348,32 @@ var handleError = function(xhr, componentLocator) {
 
     // Get error details
     try {
-        var errorMsg;
-        if (xhr.status >= 500 && xhr.status < 600) {
-            errorMsg = "<p><b>Error:</b> El servidor se est&aacute; reiniciando, intent&aacute; de nuevo.</p>";
-        } else if (xhr.status == 0) {
-            errorMsg = "<p><b>Error:</b> El servidor est&aacute; ca&iacute;do, intent&aacute; de nuevo.</p>";
+        var errorMsg = null;
+        if (xhr.status !== undefined) {
+            if (xhr.status >= 500 && xhr.status < 600) {
+                errorMsg = "El servidor se est&aacute; reiniciando, intent&aacute; de nuevo.";
+            } else if (xhr.status == 0) {
+                errorMsg = "El servidor est&aacute; ca&iacute;do, intent&aacute; de nuevo.";
+            } else {
+                errorMsg = xhr.responseJSON.message;
+            }
+        } else if (xhr.message !== undefined) {
+            errorMsg = xhr.message;
         } else {
-            errorMsg = "<p><b>Error:</b> " + xhr.responseJSON.message + "</p>";
+            errorMsg = JSON.stringify(xhr);
         }
 
-        $component.html(
-            $("<div>")
-                .html(errorMsg));
+        if (errorMsg !== null) {
+            $component.html(
+                $("<div>")
+                    .html("<p><b>Error:</b> " + errorMsg + "</p>"));
+        }
 
     } catch (ex) {
         console.log(ex);
+        $component.html(
+            $("<div>")
+                .html("<p><b>Error:</b> " + JSON.stringify(ex) + "</p>"));
     }
 };
 
@@ -613,7 +617,7 @@ var getPersonComponent = function(person, index) {
                 .addClass("mt-1 text-center")
                 .html(
                     $("<a>")
-                        .addClass("btn btn-sm btn-outline-light")
+                        .addClass("btn btn-sm btn-dark search-family-tree-btn disabled")
                         .attr("id", "search-family-tree-btn-" + person.uuid)
                         .attr("role", "button")
                         .attr("href", "javascript:void(0)")

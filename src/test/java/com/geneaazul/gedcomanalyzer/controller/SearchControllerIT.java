@@ -12,7 +12,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.geneaazul.gedcomanalyzer.domain.SearchFamily;
-import com.geneaazul.gedcomanalyzer.model.dto.FamilyTreeDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyResultDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchPersonDto;
@@ -30,6 +29,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -171,20 +171,17 @@ public class SearchControllerIT extends AbstractControllerIT {
 
         SearchFamilyResultDto searchFamilyResult = objectMapper.readValue(searchResult, SearchFamilyResultDto.class);
 
-        FamilyTreeDto familyTreeDto = FamilyTreeDto.builder()
-                .personUuid(searchFamilyResult.getPeople().get(0).getUuid())
-                .build();
+        UUID personUuid = searchFamilyResult.getPeople().get(0).getUuid();
 
-        url = "/api/search/family-tree/plain";
-        MvcResult result = mvc.perform(post(url)
-                        .content(objectMapper.writeValueAsBytes(familyTreeDto))
-                        .contentType(MediaType.APPLICATION_JSON)
+        url = "/api/search/family-tree/" + personUuid + "/plain";
+        MvcResult result = mvc.perform(get(url)
+                        .queryParam("obfuscateLiving", "false")
                         .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.TEXT_PLAIN))
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF))
                 .andReturn();
 
-        log.info(url + " response: {}", result.getResponse().getContentAsString(StandardCharsets.UTF_8));
+        log.info(url + " response: {}", result.getResponse().getContentAsString(StandardCharsets.ISO_8859_1).substring(0, 50));
     }
 
 }

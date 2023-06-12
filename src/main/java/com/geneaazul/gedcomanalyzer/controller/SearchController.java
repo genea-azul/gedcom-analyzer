@@ -2,7 +2,6 @@ package com.geneaazul.gedcomanalyzer.controller;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.FamilyTree;
-import com.geneaazul.gedcomanalyzer.model.dto.FamilyTreeDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDetailsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyResultDto;
@@ -21,6 +20,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.util.InMemoryResource;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,9 +28,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -119,12 +119,13 @@ public class SearchController {
         return searchSurnamesResult;
     }
 
-    @PostMapping("/family-tree/plain")
+    @GetMapping("/family-tree/{personUuid}/plain")
     public ResponseEntity<Resource> getPlainFamilyTree(
-            @Valid @RequestBody FamilyTreeDto familyTreeDto,
+            @PathVariable UUID personUuid,
+            @RequestParam(defaultValue = "true") Boolean obfuscateLiving,
             HttpServletRequest request) throws IOException {
 
-        Optional<FamilyTree> maybeFamilyTree = personService.getFamilyTree(familyTreeDto.getPersonUuid(), true);
+        Optional<FamilyTree> maybeFamilyTree = personService.getFamilyTree(personUuid, obfuscateLiving);
 
         if (maybeFamilyTree.isEmpty()) {
             return ResponseEntity.badRequest()
@@ -139,7 +140,7 @@ public class SearchController {
         headers.add("File-Name", familyTree.filename());
 
         log.info("Search family tree [ personUuid={}, personId={}, httpRequestId={} ]",
-                familyTreeDto.getPersonUuid(),
+                personUuid,
                 familyTree.person().getId(),
                 request.getRequestId());
 
@@ -147,7 +148,7 @@ public class SearchController {
 
         return ResponseEntity.ok()
                 .headers(headers)
-                .contentLength(Files.size(familyTree.path()))
+                .contentLength(resource.contentLength())
                 .contentType(familyTree.mediaType())
                 .body(resource);
     }
