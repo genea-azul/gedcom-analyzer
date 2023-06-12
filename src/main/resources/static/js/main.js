@@ -330,43 +330,15 @@ var searchSurnames = function(surnames) {
 var searchFamilyTree = function(event) {
     event.preventDefault();
 
-    $(event.data.btnLocator).addClass("disabled");
     $(event.data.errorLocator).addClass("d-none");
 
-    var searchFamilyTreeRequest = {
-        "personUuid": event.data.personUuid
-    };
-
-    $.ajax({
-        type: "POST",
-        url: "/api/search/family-tree/plain",
-        xhrFields: {
-            responseType: "blob"
-        },
-        contentType: "application/json",
-        data: JSON.stringify(searchFamilyTreeRequest),
-        success: function(data, textStatus, request) {
-            try {
-                var blob = new Blob([data], { type: "application/octet-stream" });
-                var url = window.URL.createObjectURL(blob);
-                var a = document.createElement("a");
-                a.style.display = "none";
-                a.href = url;
-                a.download = request.getResponseHeader("File-Name");
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-            } catch (ex) {
-                handleError(ex, event.data.errorLocator);
-            }
-        },
-        error: function(xhr) {
-            handleError(xhr, event.data.errorLocator);
-        },
-        complete: function() {
-            $(event.data.btnLocator).removeClass("disabled");
-        }
-    });
+    var domain = window.location.protocol + '//' + window.location.host;
+    var win = window.open(domain + "/api/search/family-tree/" + event.data.personUuid + "/plain", "_blank");
+    if (win) {
+        win.focus();
+    } else {
+        handleError("El navegador bloque&oacute; la descarga, por favor intent&aacute; desde otro como Chrome.", event.data.errorLocator);
+    }
 }
 
 var handleError = function(xhr, componentLocator) {
