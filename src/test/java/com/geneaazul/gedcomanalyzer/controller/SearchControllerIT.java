@@ -144,11 +144,11 @@ public class SearchControllerIT extends AbstractControllerIT {
 
         SearchFamilyDto searchFamilyDto = SearchFamilyDto.builder()
                 .individual(SearchPersonDto.builder()
-                        .givenName("Father")
-                        .surname("Family1")
+                        .givenName("Ezequiel")
+                        .surname("Ferreyra")
                         .sex(SexType.M)
                         .isAlive(Boolean.FALSE)
-                        .yearOfBirth(1980)
+                        .yearOfBirth(1994)
                         .build())
                 .build();
 
