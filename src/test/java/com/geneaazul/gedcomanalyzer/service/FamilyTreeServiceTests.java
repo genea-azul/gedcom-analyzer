@@ -39,7 +39,7 @@ public class FamilyTreeServiceTests {
     public void testExportToPDF() throws IOException {
 
         EnrichedPerson person = gedcomHolder.getGedcom().getPersonById("I4");
-        List<Relationship> relationships = personService.getPeopleInTree(person, false);
+        List<Relationship> relationships = personService.setTransientProperties(person, false);
 
         MutableInt index = new MutableInt(1);
         List<FormattedRelationship> peopleInTree = relationships
@@ -50,7 +50,7 @@ public class FamilyTreeServiceTests {
                 .toList();
 
         Path path = properties.getTempDir().resolve("export_to_pdf_test.pdf");
-        familyTreeService.exportToPDF(path, person.getDisplayName(), peopleInTree);
+        familyTreeService.exportToPDF(path, person, peopleInTree);
     }
 
 }

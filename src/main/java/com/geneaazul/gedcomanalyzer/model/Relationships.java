@@ -42,7 +42,7 @@ public class Relationships {
         return new Relationships(
                 relationship.person().getId(),
                 newTreeSet(relationship),
-                isDirectRelationship(relationship),
+                relationship.isDirect(),
                 !relationship.isInLaw(),
                 relationship.treeSides());
     }
@@ -154,10 +154,6 @@ public class Relationships {
         result.add(toMergeRelationship);
 
         return Pair.of(result, treeSides.isEmpty() ? null : treeSides);
-    }
-
-    private static boolean isDirectRelationship(Relationship relationship) {
-        return relationship.distanceToAncestorRootPerson() == 0 || relationship.distanceToAncestorThisPerson() == 0;
     }
 
     /**

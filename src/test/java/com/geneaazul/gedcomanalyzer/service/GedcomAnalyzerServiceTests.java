@@ -190,6 +190,8 @@ public class GedcomAnalyzerServiceTests {
 
         System.out.println("\ngetNumberOfPeopleInTree and getMaxDistantRelationship:");
         System.out.println(personService.getNumberOfPeopleInTree(gedcom.getPersonById("I4")));
+        System.out.println(personService.getAncestryCountries(gedcom.getPersonById("I4")));
+        System.out.println(personService.getAncestryGenerations(gedcom.getPersonById("I4")));
         System.out.println(personService.getMaxDistantRelationship(gedcom.getPersonById("I4")));
 
         System.out.println("\ngetPeopleInTree:");

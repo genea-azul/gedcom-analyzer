@@ -71,11 +71,11 @@ public class EnrichedPerson {
 
     // Transient properties
     @Setter
+    private Integer numberOfPeopleInTree;
+    @Setter
     private List<String> ancestryCountries;
     @Setter
     private AncestryGenerations ancestryGenerations;
-    @Setter
-    private Integer numberOfPeopleInTree;
     @Setter
     private Optional<Relationship> maxDistantRelationship;
 
@@ -141,7 +141,7 @@ public class EnrichedPerson {
     private List<EnrichedPerson> toEnrichedPeople(
             List<Person> people,
             Map<String, EnrichedPerson> enrichedPeopleIndex,
-            @Nullable Comparator<EnrichedPerson> personComparator) {
+            @SuppressWarnings("SameParameterValue") @Nullable Comparator<EnrichedPerson> personComparator) {
 
         Stream<EnrichedPerson> peopleStream = people
                 .stream()

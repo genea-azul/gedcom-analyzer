@@ -2,6 +2,7 @@ package com.geneaazul.gedcomanalyzer.service;
 
 import com.geneaazul.gedcomanalyzer.config.EmbeddedFontsConfig;
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
+import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
 import com.geneaazul.gedcomanalyzer.utils.PlaceUtils;
 
@@ -40,7 +41,7 @@ public class FamilyTreeService {
     private final GedcomAnalyzerProperties properties;
     private final Map<EmbeddedFontsConfig.Font, String> embeddedFonts;
 
-    public void exportToPDF(Path path, String personName, List<FormattedRelationship> peopleInTree) throws IOException {
+    public void exportToPDF(Path path, EnrichedPerson person, List<FormattedRelationship> peopleInTree) throws IOException {
 
         // Create a document
         try (PDDocument document = new PDDocument()) {
@@ -50,7 +51,7 @@ public class FamilyTreeService {
             PDFont light = loadFont(document, EmbeddedFontsConfig.Font.ROBOTO_LIGHT);
             PDFont mono = loadFont(document, EmbeddedFontsConfig.Font.EVERSON_MONO);
 
-            int maxPersonsInFirstPage = 32;
+            int maxPersonsInFirstPage = 30;
             int maxPersonsInNextPages = 59;
 
             PDPage firstPage = new PDPage(PDRectangle.A4);
@@ -98,9 +99,13 @@ public class FamilyTreeService {
                         "nombre de persona viva o cercana a la persona principal");
 
                 writeText(stream, bold, 13f, 1.2f, 30f, 330f,
-                        "Árbol genealógico de " + personName);
+                        "Árbol genealógico de " + person.getDisplayName());
                 writeText(stream, light, 11.5f, 1.2f, 50f, 350f,
-                        "Personas: " + peopleInTree.size());
+                        "Personas: " + person.getNumberOfPeopleInTree(),
+                        "Generaciones: " + person.getAncestryGenerations().getTotalGenerations()
+                                + " (ascendencia: " + person.getAncestryGenerations().ascending()
+                                + ", descendencia: " + person.getAncestryGenerations().directDescending() + ")",
+                        "Países en su ascendencia: " + (person.getAncestryCountries().isEmpty() ? "-" : String.join(", ", person.getAncestryCountries())));
 
                 writePeopleInPage(
                         stream,
@@ -108,7 +113,7 @@ public class FamilyTreeService {
                         light,
                         mono,
                         peopleInTree.subList(0, Math.min(peopleInTree.size(), maxPersonsInFirstPage)),
-                        375f,
+                        410f,
                         1,
                         peopleInTree.size() <= maxPersonsInFirstPage);
             }
@@ -122,7 +127,7 @@ public class FamilyTreeService {
                 PDPage page = new PDPage(PDRectangle.A4);
                 document.addPage(page);
                 try (PDPageContentStream stream = new PDPageContentStream(document, page)) {
-                    writeText(stream, bold, 13f, 1.2f, 30f, 40f, "Árbol genealógico de " + personName);
+                    writeText(stream, bold, 13f, 1.2f, 30f, 40f, "Árbol genealógico de " + person.getDisplayName());
 
                     writePeopleInPage(
                             stream,

@@ -42,27 +42,27 @@ public class PersonMapper {
         return toPersonDto(
                 person,
                 ObfuscationType.NONE,
+                ep -> 1,
                 ep -> List.of(),
                 ep -> AncestryGenerations.empty(),
-                ep -> null,
                 ep -> Optional.empty());
     }
 
     public List<PersonDto> toPersonDto(
             Collection<EnrichedPerson> persons,
             ObfuscationType obfuscationType,
+            Function<EnrichedPerson, Integer> numberOfPeopleInTreeResolver,
             Function<EnrichedPerson, List<String>> ancestryCountriesResolver,
             Function<EnrichedPerson, AncestryGenerations> ancestryGenerationsResolver,
-            Function<EnrichedPerson, Integer> numberOfPeopleInTreeResolver,
             Function<EnrichedPerson, Optional<Relationship>> maxDistantRelationshipResolver) {
         return persons
                 .stream()
                 .map(person -> toPersonDto(
                         person,
                         obfuscationType,
+                        numberOfPeopleInTreeResolver,
                         ancestryCountriesResolver,
                         ancestryGenerationsResolver,
-                        numberOfPeopleInTreeResolver,
                         maxDistantRelationshipResolver))
                 .toList();
     }
@@ -70,9 +70,9 @@ public class PersonMapper {
     public PersonDto toPersonDto(
             EnrichedPerson person,
             ObfuscationType obfuscationType,
+            Function<EnrichedPerson, Integer> numberOfPeopleInTreeResolver,
             Function<EnrichedPerson, List<String>> ancestryCountriesResolver,
             Function<EnrichedPerson, AncestryGenerations> ancestryGenerationsResolver,
-            Function<EnrichedPerson, Integer> numberOfPeopleInTreeResolver,
             Function<EnrichedPerson, Optional<Relationship>> maxDistantRelationshipResolver) {
 
         boolean obfuscateLiving = obfuscationType != ObfuscationType.NONE;
@@ -83,14 +83,15 @@ public class PersonMapper {
                 obfuscateLiving,
                 person.isAlive());
 
+        Integer numberOfPeopleInTree = numberOfPeopleInTreeResolver.apply(person);
         List<String> ancestryCountries = ancestryCountriesResolver.apply(person);
         AncestryGenerations ancestryGenerations = ancestryGenerationsResolver.apply(person);
-        Integer numberOfPeopleInTree = numberOfPeopleInTreeResolver.apply(person);
         Optional<Relationship> maybeMaxDistantRelationship = maxDistantRelationshipResolver.apply(person);
 
         AncestryGenerationsDto ancestryGenerationsDto = AncestryGenerationsDto.builder()
                 .ascending(ancestryGenerations.ascending())
                 .descending(ancestryGenerations.descending())
+                .directDescending(ancestryGenerations.directDescending())
                 .build();
 
         return PersonDto.builder()
@@ -120,9 +121,9 @@ public class PersonMapper {
                                 .build())
                         .toList())
                 .spouses(spouses)
+                .numberOfPeopleInTree(numberOfPeopleInTree)
                 .ancestryCountries(ancestryCountries)
                 .ancestryGenerations(ancestryGenerationsDto)
-                .numberOfPeopleInTree(numberOfPeopleInTree)
                 .maxDistantRelationship(maybeMaxDistantRelationship
                         .map(maxDistantRelationship -> relationshipMapper.toRelationshipDto(
                                 maxDistantRelationship,

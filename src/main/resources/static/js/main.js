@@ -547,7 +547,7 @@ var getPersonComponent = function(person, index) {
     }
 
     var hasAncestryGenerations = person.ancestryGenerations != null
-            && (person.ancestryGenerations.ascending > 0 || person.ancestryGenerations.descending > 0);
+            && (person.ancestryGenerations.ascending > 0 || person.ancestryGenerations.directDescending > 0);
     var hasNumberOfPeopleInTree = person.numberOfPeopleInTree != null;
     var hasMaxDistantRelationship = person.maxDistantRelationship != null;
 
@@ -562,13 +562,13 @@ var getPersonComponent = function(person, index) {
 
             $treeInfo.append(
                 $("<li>")
-                    .html("Descendencia: " + getCardinal(person.ancestryGenerations.descending, "generaci&oacute;n", "generaciones")));
+                    .html("Descendencia: " + getCardinal(person.ancestryGenerations.directDescending, "generaci&oacute;n", "generaciones")));
         }
 
         if (hasNumberOfPeopleInTree) {
             $treeInfo.append(
                 $("<li>")
-                    .html("Cantidad de familiares: <b>" + (person.numberOfPeopleInTree - 1) + "</b>"));
+                    .html("Cantidad de familiares: <b>" + person.numberOfPeopleInTree + "</b>"));
         }
 
         if (hasMaxDistantRelationship) {

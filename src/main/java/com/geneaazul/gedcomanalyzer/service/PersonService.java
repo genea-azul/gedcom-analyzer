@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -34,7 +33,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -79,7 +77,7 @@ public class PersonService {
                 .resolve(fileId + "_" + personUuid + ".pdf");
 
         if (!Files.exists(path)) {
-            List<Relationship> relationships = getPeopleInTree(person, false);
+            List<Relationship> relationships = setTransientProperties(person, false);
 
             MutableInt index = new MutableInt(1);
             List<FormattedRelationship> peopleInTree = relationships
@@ -96,7 +94,7 @@ public class PersonService {
                     .toList();
 
             try {
-                familyTreeService.exportToPDF(path, person.getDisplayName(), peopleInTree);
+                familyTreeService.exportToPDF(path, person, peopleInTree);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
@@ -112,134 +110,65 @@ public class PersonService {
 
     public List<String> getAncestryCountries(EnrichedPerson person) {
         if (person.getAncestryCountries() == null) {
-            Set<String> visitedPersons = new HashSet<>();
-            List<String> ancestryCountries = person
-                    .getParents()
-                    .stream()
-                    .map(parent -> getAncestryCountries(parent, visitedPersons, 0))
-                    .flatMap(Set::stream)
-                    .distinct()
-                    .sorted()
-                    .toList();
-            person.setAncestryCountries(ancestryCountries);
+            setTransientProperties(person, true);
         }
-
         return person.getAncestryCountries();
-    }
-
-    private static Set<String> getAncestryCountries(
-            EnrichedPerson person,
-            Set<String> visitedPersons,
-            int level) {
-
-        // Corner case: parents are cousins -> skip visiting a person twice
-        if (visitedPersons.contains(person.getId())) {
-            return Set.of();
-        }
-
-        visitedPersons.add(person.getId());
-
-        if (level == 20) {
-            // If max level or recursion is reached, stop the search
-            return person.getCountryOfBirth()
-                    .map(Set::of)
-                    .orElseGet(Set::of);
-        }
-
-        Set<String> ancestryCountries = person
-                .getParents()
-                .stream()
-                .map(parent -> getAncestryCountries(
-                        parent,
-                        visitedPersons,
-                        level + 1))
-                .flatMap(Set::stream)
-                .collect(Collectors.toSet());
-
-        // Add person's country to the set of ancestry countries
-        person.getCountryOfBirth()
-                .ifPresent(ancestryCountries::add);
-
-        return ancestryCountries;
     }
 
     public AncestryGenerations getAncestryGenerations(EnrichedPerson person) {
         if (person.getAncestryGenerations() == null) {
-            int ascendingGenerations = getAncestryGenerations(person, new HashSet<>(), EnrichedPerson::getParents, 0, 0);
-            int descendingGenerations = getAncestryGenerations(person, new HashSet<>(), EnrichedPerson::getChildren, 0, 0);
-            person.setAncestryGenerations(AncestryGenerations.of(ascendingGenerations, descendingGenerations));
+            setTransientProperties(person, true);
         }
-
         return person.getAncestryGenerations();
-    }
-
-    private static int getAncestryGenerations(
-            EnrichedPerson person,
-            Set<String> visitedPersons,
-            Function<EnrichedPerson, List<EnrichedPerson>> relativesResolver,
-            int level,
-            int maxLevel) {
-
-        // Corner case: parents are cousins -> skip visiting
-        // Corner case: parent is cousin of spouse's parent -> visit higher distance
-        if (visitedPersons.contains(person.getId()) && level <= maxLevel) {
-            return level;
-        }
-
-        visitedPersons.add(person.getId());
-
-        if (level == 20) {
-            // If max level or recursion is reached, stop the search
-            return level;
-        }
-
-        MutableInt maxLevelHolder = new MutableInt(maxLevel);
-
-        return relativesResolver
-                .apply(person)
-                .stream()
-                .map(parent -> {
-                    int generations = getAncestryGenerations(
-                            parent,
-                            visitedPersons,
-                            relativesResolver,
-                            level + 1,
-                            maxLevelHolder.getValue());
-
-                    int newMaxLevel = Math.max(maxLevelHolder.getValue(), generations);
-                    maxLevelHolder.setValue(newMaxLevel);
-
-                    return generations;
-                })
-                .reduce(Integer::max)
-                .orElse(level);
     }
 
     public Integer getNumberOfPeopleInTree(EnrichedPerson person) {
         if (person.getNumberOfPeopleInTree() == null) {
-            setNumberOfPeopleInTreeAndMaxDistantRelationship(person);
+            setTransientProperties(person, true);
         }
-
         return person.getNumberOfPeopleInTree();
     }
 
     @SuppressWarnings("OptionalAssignedToNull")
     public Optional<Relationship> getMaxDistantRelationship(EnrichedPerson person) {
         if (person.getMaxDistantRelationship() == null) {
-            setNumberOfPeopleInTreeAndMaxDistantRelationship(person);
+            setTransientProperties(person, true);
         }
-
         return person.getMaxDistantRelationship();
     }
 
-    private void setNumberOfPeopleInTreeAndMaxDistantRelationship(EnrichedPerson person) {
-        List<Relationship> peopleInTree = getPeopleInTree(person, true);
-        Optional<Relationship> maxDistantRelationship = peopleInTree
+    public List<Relationship> setTransientProperties(EnrichedPerson person, boolean excludeRootPerson) {
+        List<Relationship> relationships = getPeopleInTree(person, excludeRootPerson);
+
+        List<String> ancestryCountries = relationships
+                .stream()
+                .reduce(Set.<String>of(),
+                        (s, r) -> (r.isDirect() && r.getGeneration() > 0 && !r.isInLaw())
+                                ? r
+                                        .person()
+                                        .getCountryOfBirth()
+                                        .map(country -> SetUtils.add(s, country))
+                                        .orElse(s)
+                                : s,
+                        SetUtils::merge)
+                .stream()
+                .sorted()
+                .toList();
+
+        AncestryGenerations ancestryGenerations = relationships
+                .stream()
+                .reduce(AncestryGenerations.empty(), AncestryGenerations::mergeRelationship, AncestryGenerations::merge);
+
+        Optional<Relationship> maxDistantRelationship = relationships
                 .stream()
                 .reduce((r1, r2) -> r1.compareToWithInvertedPriority(r2) >= 0 ? r1 : r2);
 
-        person.setNumberOfPeopleInTree(peopleInTree.size() + 1);
+        person.setNumberOfPeopleInTree(relationships.size());
+        person.setAncestryCountries(ancestryCountries);
+        person.setAncestryGenerations(ancestryGenerations);
         person.setMaxDistantRelationship(maxDistantRelationship);
+
+        return relationships;
     }
 
     public List<Relationship> getPeopleInTree(EnrichedPerson person, boolean excludeRootPerson) {

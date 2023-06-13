@@ -30,21 +30,19 @@ public class RelationshipMapper {
         }
 
         ReferenceType referenceType;
-        int generation;
+        int generation = relationship.getGeneration();
         int grade;
 
-        if (relationship.distanceToAncestorRootPerson() > relationship.distanceToAncestorThisPerson()) {
-            generation = relationship.distanceToAncestorRootPerson() - relationship.distanceToAncestorThisPerson();
+        if (generation > 0) {
             grade = relationship.distanceToAncestorThisPerson();
             referenceType = grade == 0 ? ReferenceType.PARENT : ReferenceType.PIBLING;
-        } else if (relationship.distanceToAncestorRootPerson() == relationship.distanceToAncestorThisPerson()) {
-            generation = 0;
+        } else if (generation == 0) {
             grade = relationship.distanceToAncestorRootPerson() - 1;
             referenceType = grade < 0
                     ? (relationship.isInLaw() ? ReferenceType.SPOUSE : ReferenceType.SELF)
                     : (grade == 0 ? ReferenceType.SIBLING : ReferenceType.COUSIN);
         } else {
-            generation = relationship.distanceToAncestorThisPerson() - relationship.distanceToAncestorRootPerson();
+            generation = -generation;
             grade = relationship.distanceToAncestorRootPerson();
             referenceType = grade == 0 ? ReferenceType.CHILD : ReferenceType.NIBLING;
         }

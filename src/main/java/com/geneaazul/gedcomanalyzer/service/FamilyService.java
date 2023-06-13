@@ -270,9 +270,9 @@ public class FamilyService {
         List<PersonDto> people = personMapper.toPersonDto(
                 result,
                 ObfuscationType.SKIP_MAIN_PERSON_NAME,
+                personService::getNumberOfPeopleInTree,
                 personService::getAncestryCountries,
                 personService::getAncestryGenerations,
-                personService::getNumberOfPeopleInTree,
                 personService::getMaxDistantRelationship);
 
         return SearchFamilyResultDto.builder()
