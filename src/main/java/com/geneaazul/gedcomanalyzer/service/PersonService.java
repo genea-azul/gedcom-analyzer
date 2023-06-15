@@ -14,6 +14,7 @@ import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.model.dto.TreeSideType;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
+import com.geneaazul.gedcomanalyzer.utils.RelationshipUtils;
 import com.geneaazul.gedcomanalyzer.utils.SearchUtils;
 import com.geneaazul.gedcomanalyzer.utils.SetUtils;
 
@@ -58,18 +59,7 @@ public class PersonService {
             return Optional.empty();
         }
 
-        String fileId = Stream.of(
-                person
-                        .getGivenName()
-                        .map(GivenName::value),
-                person
-                        .getSurname()
-                        .map(Surname::value))
-                .flatMap(Optional::stream)
-                .reduce((n1, n2) -> n1 + "_" + n2)
-                .map(SearchUtils::simplifyName)
-                .map(name -> name.replaceAll(" ", "_"))
-                .orElse("genea-azul");
+        String fileId = getFamilyTreeFileId(person);
 
         Path path = properties
                 .getTempDir()
@@ -108,62 +98,31 @@ public class PersonService {
                 new Locale("es", "AR")));
     }
 
-    public List<String> getAncestryCountries(EnrichedPerson person) {
-        if (person.getAncestryCountries() == null) {
-            setTransientProperties(person, true);
-        }
-        return person.getAncestryCountries();
-    }
-
-    public AncestryGenerations getAncestryGenerations(EnrichedPerson person) {
-        if (person.getAncestryGenerations() == null) {
-            setTransientProperties(person, true);
-        }
-        return person.getAncestryGenerations();
-    }
-
-    public Integer getNumberOfPeopleInTree(EnrichedPerson person) {
-        if (person.getNumberOfPeopleInTree() == null) {
-            setTransientProperties(person, true);
-        }
-        return person.getNumberOfPeopleInTree();
-    }
-
-    @SuppressWarnings("OptionalAssignedToNull")
-    public Optional<Relationship> getMaxDistantRelationship(EnrichedPerson person) {
-        if (person.getMaxDistantRelationship() == null) {
-            setTransientProperties(person, true);
-        }
-        return person.getMaxDistantRelationship();
+    private String getFamilyTreeFileId(EnrichedPerson person) {
+        return Stream.of(
+                        person
+                                .getGivenName()
+                                .map(GivenName::value),
+                        person
+                                .getSurname()
+                                .map(Surname::value))
+                .flatMap(Optional::stream)
+                .reduce((n1, n2) -> n1 + "_" + n2)
+                .map(SearchUtils::simplifyName)
+                .map(name -> name.replaceAll(" ", "_"))
+                .orElse("genea-azul");
     }
 
     public List<Relationship> setTransientProperties(EnrichedPerson person, boolean excludeRootPerson) {
         List<Relationship> relationships = getPeopleInTree(person, excludeRootPerson);
 
-        List<String> ancestryCountries = relationships
-                .stream()
-                .reduce(Set.<String>of(),
-                        (s, r) -> (r.isDirect() && r.getGeneration() > 0 && !r.isInLaw())
-                                ? r
-                                        .person()
-                                        .getCountryOfBirth()
-                                        .map(country -> SetUtils.add(s, country))
-                                        .orElse(s)
-                                : s,
-                        SetUtils::merge)
-                .stream()
-                .sorted()
-                .toList();
+        Integer surnamesCount = RelationshipUtils.getSurnamesCount(relationships);
+        List<String> ancestryCountries = RelationshipUtils.getAncestryCountries(relationships);
+        AncestryGenerations ancestryGenerations = RelationshipUtils.getAncestryGenerations(relationships);
+        Optional<Relationship> maxDistantRelationship = RelationshipUtils.getMaxDistantRelationship(relationships);
 
-        AncestryGenerations ancestryGenerations = relationships
-                .stream()
-                .reduce(AncestryGenerations.empty(), AncestryGenerations::mergeRelationship, AncestryGenerations::merge);
-
-        Optional<Relationship> maxDistantRelationship = relationships
-                .stream()
-                .reduce((r1, r2) -> r1.compareToWithInvertedPriority(r2) >= 0 ? r1 : r2);
-
-        person.setNumberOfPeopleInTree(relationships.size());
+        person.setPersonsCountInTree(relationships.size());
+        person.setSurnamesCountInTree(surnamesCount);
         person.setAncestryCountries(ancestryCountries);
         person.setAncestryGenerations(ancestryGenerations);
         person.setMaxDistantRelationship(maxDistantRelationship);
@@ -264,7 +223,7 @@ public class PersonService {
                 merged.getTreeSides(),
                 previousPersonId)
                 .forEach(relativeAndDirection -> traversePeopleInTree(
-                        toVisitRelationship.increase(
+                        toVisitRelationship.increaseWithPerson(
                                 relativeAndDirection.person,
                                 relativeAndDirection.direction,
                                 isSetHalf(direction, relativeAndDirection.direction, previousPersonId, relativeAndDirection.person),
@@ -303,7 +262,7 @@ public class PersonService {
                     merged.getTreeSides(),
                     previousPersonId)
                     .forEach(relativeAndDirection -> traversePeopleInTree(
-                            toVisitRelationship.increase(
+                            toVisitRelationship.increaseWithPerson(
                                     relativeAndDirection.person,
                                     relativeAndDirection.direction,
                                     false,
@@ -327,6 +286,7 @@ public class PersonService {
             return false;
         }
 
+        // Previous person and next person to visit are (half?) siblings
         EnrichedPerson previousPerson = nextPersonToVisit.getGedcom().getPersonById(previousPersonId);
 
         // TODO consider biological/adopted parents
@@ -371,7 +331,7 @@ public class PersonService {
      *     </li>
      * </ul>
      */
-    private static Stream<A> resolveRelativesToTraverse(
+    private static Stream<RelativeAndDirection> resolveRelativesToTraverse(
             EnrichedPerson person,
             @Nullable Sort.Direction direction,
             @Nullable Set<TreeSideType> treeSides,
@@ -383,11 +343,11 @@ public class PersonService {
 
         List<String> singleRelatedPersonIds = List.of(person.getId());
 
-        Stream<A> relativesAndDirections = Stream.concat(
+        Stream<RelativeAndDirection> relativesAndDirections = Stream.concat(
                 person
                         .getSpouses()
                         .stream()
-                        .map(spouse -> A.of(
+                        .map(spouse -> new RelativeAndDirection(
                                 spouse,
                                 null,
                                 Optional
@@ -411,7 +371,7 @@ public class PersonService {
                                     return spouseWithChildren
                                             .getChildren()
                                             .stream()
-                                            .map(child -> A.of(
+                                            .map(child -> new RelativeAndDirection(
                                                     child,
                                                     Sort.Direction.DESC,
                                                     Optional
@@ -425,7 +385,7 @@ public class PersonService {
                     person
                             .getParents()
                             .stream()
-                            .map(parent -> A.of(
+                            .map(parent -> new RelativeAndDirection(
                                     parent,
                                     Sort.Direction.ASC,
                                     Optional
@@ -439,31 +399,19 @@ public class PersonService {
                 .filter(relative -> !relative.person.getId().equals(previousPersonId));
     }
 
-    private record A(
+    private record RelativeAndDirection(
             EnrichedPerson person,
             @Nullable Sort.Direction direction,
             Set<TreeSideType> treeSides,
             List<String> relatedPersonIds) {
-
-        public static A of(
-                EnrichedPerson person,
-                @Nullable Sort.Direction direction,
-                Set<TreeSideType> treeSides,
-                List<String> relatedPersonIds) {
-            return new A(
-                    person,
-                    direction,
-                    treeSides,
-                    relatedPersonIds);
-        }
     }
 
     private static Set<TreeSideType> resolveParentTreeSideTypes(SexType parentSex) {
-        switch (parentSex) {
-            case F -> { return Set.of(TreeSideType.MOTHER); }
-            case M -> { return Set.of(TreeSideType.FATHER); }
-            default -> { return Set.of(); }
-        }
+        return switch (parentSex) {
+            case F -> Set.of(TreeSideType.MOTHER);
+            case M -> Set.of(TreeSideType.FATHER);
+            default -> Set.of();
+        };
     }
 
 }

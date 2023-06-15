@@ -546,12 +546,13 @@ var getPersonComponent = function(person, index) {
                 .append($spouses));
     }
 
+    var hasPersonsCountInTree = person.personsCountInTree != null;
+    var hasSurnamesCountInTree = person.surnamesCountInTree != null;
     var hasAncestryGenerations = person.ancestryGenerations != null
             && (person.ancestryGenerations.ascending > 0 || person.ancestryGenerations.directDescending > 0);
-    var hasNumberOfPeopleInTree = person.numberOfPeopleInTree != null;
     var hasMaxDistantRelationship = person.maxDistantRelationship != null;
 
-    if (hasAncestryGenerations || hasNumberOfPeopleInTree || hasMaxDistantRelationship) {
+    if (hasPersonsCountInTree || hasSurnamesCountInTree || hasAncestryGenerations || hasMaxDistantRelationship) {
         var $treeInfo = $("<ul>")
             .addClass("mb-0");
 
@@ -565,10 +566,16 @@ var getPersonComponent = function(person, index) {
                     .html("Descendencia: " + getCardinal(person.ancestryGenerations.directDescending, "generaci&oacute;n", "generaciones")));
         }
 
-        if (hasNumberOfPeopleInTree) {
+        if (hasPersonsCountInTree) {
             $treeInfo.append(
                 $("<li>")
-                    .html("Cantidad de familiares: <b>" + person.numberOfPeopleInTree + "</b>"));
+                    .html("Cantidad de familiares: <b>" + person.personsCountInTree + "</b>"));
+        }
+
+        if (hasSurnamesCountInTree) {
+            $treeInfo.append(
+                $("<li>")
+                    .html("Cantidad de apellidos: <b>" + person.surnamesCountInTree + "</b>"));
         }
 
         if (hasMaxDistantRelationship) {
@@ -812,7 +819,7 @@ var displayRelationshipInSpanish = function(relationship) {
 
         var or = "";
         if (relationship.generation >= 6) {
-            or = "<br>&nbsp; (" + spouse + "ancestro directo de " + relationship.generation + " gener.)";
+            or = "<br>&nbsp; (" + spouse + "ancestro directo de " + relationship.generation + " generaciones)";
         }
 
         return "<b>" + spouse + relationshipName + gradeSuffix + "</b>" + or;
@@ -841,7 +848,7 @@ var displayRelationshipInSpanish = function(relationship) {
 
         var or = "";
         if (relationship.generation >= 6) {
-            or = "<br>&nbsp; (" + spouse + "descendiente directo de " + relationship.generation + " gener.)";
+            or = "<br>&nbsp; (" + spouse + "descendiente directo de " + relationship.generation + " generaciones)";
         }
 
         return "<b>" + spouse + relationshipName + gradeSuffix + "</b>" + or;

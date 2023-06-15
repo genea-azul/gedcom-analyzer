@@ -1,13 +1,10 @@
 package com.geneaazul.gedcomanalyzer.mapper;
 
-import com.geneaazul.gedcomanalyzer.model.AncestryGenerations;
 import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.EnrichedSpouseWithChildren;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResult;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResults;
-import com.geneaazul.gedcomanalyzer.model.Relationship;
-import com.geneaazul.gedcomanalyzer.model.dto.AncestryGenerationsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateCompareDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateDto;
@@ -30,50 +27,20 @@ import lombok.RequiredArgsConstructor;
 public class PersonMapper {
 
     private final RelationshipMapper relationshipMapper;
-
-    public List<PersonDto> toPersonDto(Collection<EnrichedPerson> persons) {
-        return persons
-                .stream()
-                .map(this::toPersonDto)
-                .toList();
-    }
-
-    public PersonDto toPersonDto(EnrichedPerson person) {
-        return toPersonDto(
-                person,
-                ObfuscationType.NONE,
-                ep -> 1,
-                ep -> List.of(),
-                ep -> AncestryGenerations.empty(),
-                ep -> Optional.empty());
-    }
+    private final AncestryGenerationsMapper ancestryGenerationsMapper;
 
     public List<PersonDto> toPersonDto(
             Collection<EnrichedPerson> persons,
-            ObfuscationType obfuscationType,
-            Function<EnrichedPerson, Integer> numberOfPeopleInTreeResolver,
-            Function<EnrichedPerson, List<String>> ancestryCountriesResolver,
-            Function<EnrichedPerson, AncestryGenerations> ancestryGenerationsResolver,
-            Function<EnrichedPerson, Optional<Relationship>> maxDistantRelationshipResolver) {
+            ObfuscationType obfuscationType) {
         return persons
                 .stream()
-                .map(person -> toPersonDto(
-                        person,
-                        obfuscationType,
-                        numberOfPeopleInTreeResolver,
-                        ancestryCountriesResolver,
-                        ancestryGenerationsResolver,
-                        maxDistantRelationshipResolver))
+                .map(person -> toPersonDto(person, obfuscationType))
                 .toList();
     }
 
     public PersonDto toPersonDto(
             EnrichedPerson person,
-            ObfuscationType obfuscationType,
-            Function<EnrichedPerson, Integer> numberOfPeopleInTreeResolver,
-            Function<EnrichedPerson, List<String>> ancestryCountriesResolver,
-            Function<EnrichedPerson, AncestryGenerations> ancestryGenerationsResolver,
-            Function<EnrichedPerson, Optional<Relationship>> maxDistantRelationshipResolver) {
+            ObfuscationType obfuscationType) {
 
         boolean obfuscateLiving = obfuscationType != ObfuscationType.NONE;
         boolean obfuscateName = obfuscateLiving && obfuscationType != ObfuscationType.SKIP_MAIN_PERSON_NAME;
@@ -82,17 +49,6 @@ public class PersonMapper {
                 person.getSpousesWithChildren(),
                 obfuscateLiving,
                 person.isAlive());
-
-        Integer numberOfPeopleInTree = numberOfPeopleInTreeResolver.apply(person);
-        List<String> ancestryCountries = ancestryCountriesResolver.apply(person);
-        AncestryGenerations ancestryGenerations = ancestryGenerationsResolver.apply(person);
-        Optional<Relationship> maybeMaxDistantRelationship = maxDistantRelationshipResolver.apply(person);
-
-        AncestryGenerationsDto ancestryGenerationsDto = AncestryGenerationsDto.builder()
-                .ascending(ancestryGenerations.ascending())
-                .descending(ancestryGenerations.descending())
-                .directDescending(ancestryGenerations.directDescending())
-                .build();
 
         return PersonDto.builder()
                 .uuid(person.getUuid())
@@ -114,17 +70,23 @@ public class PersonMapper {
                         .stream()
                         .map(parentWithReference -> PersonWithReferenceDto.builder()
                                 .name(PersonUtils.obfuscateName(
-                                        parentWithReference.getPerson(),
-                                        obfuscateLiving && (person.isAlive() || parentWithReference.getPerson().isAlive())))
-                                .sex(parentWithReference.getPerson().getSex())
-                                .referenceType(parentWithReference.getReferenceType().orElse(null))
+                                        parentWithReference.person(),
+                                        obfuscateLiving && (person.isAlive() || parentWithReference.person().isAlive())))
+                                .sex(parentWithReference.person().getSex())
+                                .referenceType(parentWithReference.referenceType().orElse(null))
                                 .build())
                         .toList())
                 .spouses(spouses)
-                .numberOfPeopleInTree(numberOfPeopleInTree)
-                .ancestryCountries(ancestryCountries)
-                .ancestryGenerations(ancestryGenerationsDto)
-                .maxDistantRelationship(maybeMaxDistantRelationship
+                .personsCountInTree(person.getPersonsCountInTree())
+                .surnamesCountInTree(person.getSurnamesCountInTree())
+                .ancestryCountries(person.getAncestryCountries())
+                .ancestryGenerations(Optional
+                        .ofNullable(person.getAncestryGenerations())
+                        .map(ancestryGenerationsMapper::toAncestryGenerationDto)
+                        .orElse(null))
+                .maxDistantRelationship(Optional
+                        .ofNullable(person.getMaxDistantRelationship())
+                        .flatMap(Function.identity())
                         .map(maxDistantRelationship -> relationshipMapper.toRelationshipDto(
                                 maxDistantRelationship,
                                 obfuscateLiving && (person.isAlive() || maxDistantRelationship.person().isAlive())))
@@ -159,43 +121,47 @@ public class PersonMapper {
                         .stream()
                         .map(childWithReference -> PersonWithReferenceDto.builder()
                                 .name(PersonUtils.obfuscateName(
-                                        childWithReference.getPerson(),
-                                        obfuscateLiving && (mainPersonIsAlive || spouseIsAlive || childWithReference.getPerson().isAlive())))
-                                .sex(childWithReference.getPerson().getSex())
-                                .referenceType(childWithReference.getReferenceType().orElse(null))
+                                        childWithReference.person(),
+                                        obfuscateLiving && (mainPersonIsAlive || spouseIsAlive || childWithReference.person().isAlive())))
+                                .sex(childWithReference.person().getSex())
+                                .referenceType(childWithReference.referenceType().orElse(null))
                                 .build())
                         .toList())
                 .build();
     }
 
     public List<PersonDuplicateDto> toPersonDuplicateDto(
-            Collection<PersonComparisonResults> personComparisonResults) {
+            Collection<PersonComparisonResults> personComparisonResults,
+            ObfuscationType obfuscationType) {
         return personComparisonResults
                 .stream()
-                .map(this::toPersonDuplicateDto)
+                .map(personComparisonResult -> toPersonDuplicateDto(personComparisonResult, obfuscationType))
                 .toList();
     }
 
     public PersonDuplicateDto toPersonDuplicateDto(
-            PersonComparisonResults personComparisonResults) {
+            PersonComparisonResults personComparisonResults,
+            ObfuscationType obfuscationType) {
         return PersonDuplicateDto.builder()
-                .person(toPersonDto(personComparisonResults.getPerson()))
-                .duplicates(toPersonDuplicateCompareDto(personComparisonResults.getResults()))
+                .person(toPersonDto(personComparisonResults.person(), obfuscationType))
+                .duplicates(toPersonDuplicateCompareDto(personComparisonResults.results(), obfuscationType))
                 .build();
     }
 
     private List<PersonDuplicateCompareDto> toPersonDuplicateCompareDto(
-            Collection<PersonComparisonResult> personComparisonResults) {
+            Collection<PersonComparisonResult> personComparisonResults,
+            ObfuscationType obfuscationType) {
         return personComparisonResults
                 .stream()
-                .map(this::toPersonDuplicateDto)
+                .map(personComparisonResult -> toPersonDuplicateDto(personComparisonResult, obfuscationType))
                 .toList();
     }
 
     private PersonDuplicateCompareDto toPersonDuplicateDto(
-            PersonComparisonResult personComparisonResult) {
+            PersonComparisonResult personComparisonResult,
+            ObfuscationType obfuscationType) {
         return PersonDuplicateCompareDto.builder()
-                .person(toPersonDto(personComparisonResult.getCompare()))
+                .person(toPersonDto(personComparisonResult.getCompare(), obfuscationType))
                 .score(personComparisonResult.getScore())
                 .build();
     }

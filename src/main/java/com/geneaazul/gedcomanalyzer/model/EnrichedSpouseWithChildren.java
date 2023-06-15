@@ -36,7 +36,7 @@ public class EnrichedSpouseWithChildren {
         this.childrenWithReference = childrenWithReference;
         this.children = childrenWithReference
                 .stream()
-                .map(EnrichedPersonWithReference::getPerson)
+                .map(EnrichedPersonWithReference::person)
                 .toList();
         this.isSeparated = isSeparated;
         this.dateOfPartners = dateOfPartners;

@@ -20,6 +20,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
@@ -41,6 +42,15 @@ public class SearchControllerIT extends AbstractControllerIT {
 
     @Autowired
     private Jackson2ObjectMapperBuilder mapperBuilder;
+
+    @Value("${test.person.givenName:Father}")
+    private String personGivenName;
+    @Value("${test.person.surname:Family1}")
+    private String personSurname;
+    @Value("${test.person.sex:M}")
+    private SexType personSex;
+    @Value("${test.person.yearOfBirth:1980}")
+    private Integer personYearOfBirth;
 
     @Test
     public void testSearchFamily() throws Exception {
@@ -144,11 +154,11 @@ public class SearchControllerIT extends AbstractControllerIT {
 
         SearchFamilyDto searchFamilyDto = SearchFamilyDto.builder()
                 .individual(SearchPersonDto.builder()
-                        .givenName("Father")
-                        .surname("Family1")
-                        .sex(SexType.M)
+                        .givenName(personGivenName)
+                        .surname(personSurname)
+                        .sex(personSex)
                         .isAlive(Boolean.FALSE)
-                        .yearOfBirth(1980)
+                        .yearOfBirth(personYearOfBirth)
                         .build())
                 .build();
 

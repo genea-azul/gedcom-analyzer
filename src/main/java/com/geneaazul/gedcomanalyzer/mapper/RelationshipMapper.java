@@ -131,11 +131,11 @@ public class RelationshipMapper {
     }
 
     public String displaySex(SexType sex) {
-        switch (sex) {
-            case F -> { return "♀"; }
-            case M -> { return "♂"; }
-            default -> { return " "; }
-        }
+        return switch (sex) {
+            case F -> "♀";
+            case M -> "♂";
+            default -> " ";
+        };
     }
 
     public String displayTreeSide(@Nullable Set<TreeSideType> treeSides) {
@@ -144,12 +144,12 @@ public class RelationshipMapper {
         }
         if (treeSides.size() == 1) {
             TreeSideType treeSide = treeSides.stream().findFirst().orElseThrow();
-            switch (treeSide) {
-                case FATHER -> { return "←"; }
-                case MOTHER -> { return "→"; }
-                case DESCENDANT -> { return "↓"; }
-                default -> { return " "; }
-            }
+            return switch (treeSide) {
+                case FATHER -> "←";
+                case MOTHER -> "→";
+                case DESCENDANT -> "↓";
+                default -> " ";
+            };
         }
         if (treeSides.size() == 2) {
             if (treeSides.contains(TreeSideType.DESCENDANT)) {

@@ -71,7 +71,9 @@ public class EnrichedPerson {
 
     // Transient properties
     @Setter
-    private Integer numberOfPeopleInTree;
+    private Integer personsCountInTree;
+    @Setter
+    private Integer surnamesCountInTree;
     @Setter
     private List<String> ancestryCountries;
     @Setter
@@ -120,7 +122,7 @@ public class EnrichedPerson {
 
         parents = parentsWithReference
                 .stream()
-                .map(EnrichedPersonWithReference::getPerson)
+                .map(EnrichedPersonWithReference::person)
                 // A parent could be repeated when it has biological and adopted relationship with a child
                 .filter(StreamUtils.distinctByKey(EnrichedPerson::getId))
                 .toList();
@@ -164,18 +166,18 @@ public class EnrichedPerson {
                 .stream()
                 .map(spouseWithChildren -> EnrichedSpouseWithChildren.of(
                         spouseWithChildren
-                                .getSpouse()
+                                .spouse()
                                 .map(Person::getId)
                                 .map(enrichedPeopleIndex::get),
                         toEnrichedPeopleWithReference(
-                                spouseWithChildren.getChildren(),
+                                spouseWithChildren.children(),
                                 enrichedPeopleIndex,
                                 PersonUtils.DATES_COMPARATOR),
                         spouseWithChildren.isSeparated(),
-                        spouseWithChildren.getDateOfPartners(),
-                        spouseWithChildren.getDateOfSeparation(),
-                        spouseWithChildren.getPlaceOfPartners(),
-                        spouseWithChildren.getPlaceOfSeparation()))
+                        spouseWithChildren.dateOfPartners(),
+                        spouseWithChildren.dateOfSeparation(),
+                        spouseWithChildren.placeOfPartners(),
+                        spouseWithChildren.placeOfSeparation()))
                 .sorted(FamilyUtils.DATES_COMPARATOR)
                 .toList();
     }
@@ -187,13 +189,13 @@ public class EnrichedPerson {
 
         Stream<EnrichedPersonWithReference> peopleStream = people
                 .stream()
-                .map(personWithReference -> EnrichedPersonWithReference.of(
+                .map(personWithReference -> new EnrichedPersonWithReference(
                         enrichedPeopleIndex.get(personWithReference.getLeft().getId()),
                         Optional.ofNullable(personWithReference.getRight())));
 
         if (personComparator != null) {
             peopleStream = peopleStream
-                    .sorted((p1, p2) -> personComparator.compare(p1.getPerson(), p2.getPerson()));
+                    .sorted((p1, p2) -> personComparator.compare(p1.person(), p2.person()));
         }
 
         return peopleStream

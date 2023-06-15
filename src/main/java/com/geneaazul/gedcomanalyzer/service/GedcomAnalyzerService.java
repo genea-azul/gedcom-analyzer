@@ -1,6 +1,7 @@
 package com.geneaazul.gedcomanalyzer.service;
 
 import com.geneaazul.gedcomanalyzer.mapper.GedcomMapper;
+import com.geneaazul.gedcomanalyzer.mapper.ObfuscationType;
 import com.geneaazul.gedcomanalyzer.mapper.PersonMapper;
 import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
@@ -74,10 +75,10 @@ public class GedcomAnalyzerService {
         log.info("Analyze gedcom: {}", gedcom.getGedcomName());
 
         List<PersonComparisonResults> duplicatedPersons = searchService.findDuplicatedPersons(gedcom);
-        List<PersonDuplicateDto> personDuplicatesDto = personMapper.toPersonDuplicateDto(duplicatedPersons);
+        List<PersonDuplicateDto> personDuplicatesDto = personMapper.toPersonDuplicateDto(duplicatedPersons, ObfuscationType.NONE);
 
         List<EnrichedPerson> alivePersons = searchService.findAlivePersonsTooOldOrWithFamilyMembersTooOld(gedcom.getPeople());
-        List<PersonDto> invalidAlivePersonsDto = personMapper.toPersonDto(alivePersons);
+        List<PersonDto> invalidAlivePersonsDto = personMapper.toPersonDto(alivePersons, ObfuscationType.NONE);
 
         log.info("Gedcom analyzed: {}", gedcom.getGedcomName());
         return GedcomAnalysisDto.builder()

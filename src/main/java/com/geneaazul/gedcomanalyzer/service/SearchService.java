@@ -235,7 +235,7 @@ public class SearchService {
 
         return results
                 .stream()
-                .sorted(Comparator.comparingInt(PersonComparisonResults::getMinScore))
+                .sorted(Comparator.comparingInt(PersonComparisonResults::minScore))
                 .toList();
     }
 

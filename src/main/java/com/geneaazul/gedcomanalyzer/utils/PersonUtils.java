@@ -339,6 +339,7 @@ public class PersonUtils {
                 .toList();
     }
 
+    @SuppressWarnings("unused")
     public static List<Person> getSpouses(Person person, Gedcom gedcom) {
         return person
                 .getSpouseFamilies(gedcom)
@@ -384,7 +385,7 @@ public class PersonUtils {
                             .map(spouse -> spouse.getId().equals(person.getId())
                                     ? Optional.<Person>empty()
                                     : Optional.of(spouse))
-                            .map(spouse -> SpouseWithChildren.of(
+                            .map(spouse -> new SpouseWithChildren(
                                     spouse,
                                     children,
                                     isSeparated,
@@ -399,12 +400,12 @@ public class PersonUtils {
                         ? spouses
                         : spouses
                                 .stream()
-                                .filter(spouseWithChildren -> spouseWithChildren.getSpouse().isPresent())
+                                .filter(spouseWithChildren -> spouseWithChildren.spouse().isPresent())
                                 .toList())
                 .flatMap(List::stream)
                 // A spouse should not be repeated.. but just in case..
                 .filter(StreamUtils.distinctByKey(spouseWithChildren -> spouseWithChildren
-                        .getSpouse()
+                        .spouse()
                         .map(Person::getId)
                         .orElseGet(() -> String.valueOf(RandomUtils.nextInt()))))
                 .toList();
@@ -434,6 +435,7 @@ public class PersonUtils {
         return ReferenceType.PARENT;
     }
 
+    @SuppressWarnings("unused")
     public static List<Person> getChildren(Person person, Gedcom gedcom) {
         return person
                 .getSpouseFamilies(gedcom)

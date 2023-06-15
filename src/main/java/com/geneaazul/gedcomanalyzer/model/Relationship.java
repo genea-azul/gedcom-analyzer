@@ -4,6 +4,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.TreeSideType;
 import com.geneaazul.gedcomanalyzer.utils.CollectionComparator;
 
 import org.springframework.data.domain.Sort;
+import org.springframework.util.Assert;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -22,24 +23,6 @@ public record Relationship(
         boolean isHalf,
         @Nullable Set<TreeSideType> treeSides,
         @Nullable List<String> relatedPersonIds) implements Comparable<Relationship> {
-
-    public static Relationship of(
-            EnrichedPerson person,
-            int ascending,
-            int descending,
-            boolean isInLaw,
-            boolean isHalf,
-            @Nullable Set<TreeSideType> treeSides,
-            @Nullable List<String> relatedPersonIds) {
-        return new Relationship(
-                person,
-                ascending,
-                descending,
-                isInLaw,
-                isHalf,
-                treeSides,
-                relatedPersonIds);
-    }
 
     public static Relationship empty(EnrichedPerson person) {
         return new Relationship(
@@ -70,7 +53,7 @@ public record Relationship(
         return Integer.compare(distance1, distance2);
     }
 
-    public Relationship increase(
+    public Relationship increaseWithPerson(
             EnrichedPerson person,
             Sort.Direction direction,
             boolean isSetHalf,
@@ -80,8 +63,9 @@ public record Relationship(
         if (isInLaw || isHalf && direction == Sort.Direction.ASC || isHalf && isSetHalf) {
             throw new UnsupportedOperationException();
         }
+
         if (direction == Sort.Direction.ASC) {
-            return Relationship.of(
+            return new Relationship(
                     person,
                     distanceToAncestorRootPerson + 1,
                     distanceToAncestorThisPerson,
@@ -90,8 +74,9 @@ public record Relationship(
                     treeSides,
                     relatedPersonIds);
         }
+
         if (direction == Sort.Direction.DESC) {
-            return Relationship.of(
+            return new Relationship(
                     person,
                     distanceToAncestorRootPerson,
                     distanceToAncestorThisPerson + 1,
@@ -100,7 +85,8 @@ public record Relationship(
                     treeSides,
                     relatedPersonIds);
         }
-        return Relationship.of(
+
+        return new Relationship(
                 person,
                 distanceToAncestorRootPerson,
                 distanceToAncestorThisPerson,
@@ -111,6 +97,7 @@ public record Relationship(
     }
 
     public boolean isInLawOf(Relationship other) {
+        Assert.isTrue(this.person.getId().equals(other.person().getId()), "Person ID must equal");
         return this.distanceToAncestorRootPerson == other.distanceToAncestorRootPerson
                 && this.distanceToAncestorThisPerson == other.distanceToAncestorThisPerson
                 && this.isInLaw != other.isInLaw
@@ -202,7 +189,7 @@ public record Relationship(
         if (Objects.equals(this.treeSides, treeSides)) {
             return this;
         }
-        return Relationship.of(
+        return new Relationship(
                 person,
                 distanceToAncestorRootPerson,
                 distanceToAncestorThisPerson,

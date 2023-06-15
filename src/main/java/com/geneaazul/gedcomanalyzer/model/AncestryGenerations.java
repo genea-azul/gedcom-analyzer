@@ -1,10 +1,9 @@
 package com.geneaazul.gedcomanalyzer.model;
 
-public record AncestryGenerations(int ascending, int descending, int directDescending) {
-
-    public static AncestryGenerations of(int ascending, int descending, int directDescending) {
-        return new AncestryGenerations(ascending, descending, directDescending);
-    }
+public record AncestryGenerations(
+        int ascending,
+        int descending,
+        int directDescending) {
 
     public int getTotalGenerations() {
         return ascending + descending + 1;

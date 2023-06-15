@@ -19,6 +19,7 @@ import org.springframework.test.context.ActiveProfiles;
 import java.time.Month;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -177,10 +178,10 @@ public class GedcomAnalyzerServiceTests {
         searchService
                 .findDuplicatedPersons(gedcom)
                 .forEach(personResults -> {
-                    EnrichedPerson person = personResults.getPerson();
+                    EnrichedPerson person = personResults.person();
                     System.out.println(">    " + person);
                     personResults
-                            .getResults()
+                            .results()
                             .forEach(comparisonResult -> {
                                 Integer score = comparisonResult.getScore();
                                 EnrichedPerson compare = comparisonResult.getCompare();
@@ -188,18 +189,22 @@ public class GedcomAnalyzerServiceTests {
                             });
                 });
 
-        System.out.println("\ngetNumberOfPeopleInTree and getMaxDistantRelationship:");
-        System.out.println(personService.getNumberOfPeopleInTree(gedcom.getPersonById("I4")));
-        System.out.println(personService.getAncestryCountries(gedcom.getPersonById("I4")));
-        System.out.println(personService.getAncestryGenerations(gedcom.getPersonById("I4")));
-        System.out.println(personService.getMaxDistantRelationship(gedcom.getPersonById("I4")));
+        EnrichedPerson person = Objects.requireNonNull(gedcom.getPersonById("I4"));
+        personService.setTransientProperties(person, true);
+
+        System.out.println("\nsetTransientProperties (excludeRootPerson):");
+        System.out.println("personsCountInTree: " + person.getPersonsCountInTree());
+        System.out.println("surnamesCountInTree: " + person.getSurnamesCountInTree());
+        System.out.println("ancestryCountries: " + person.getAncestryCountries());
+        System.out.println("ancestryGenerations: " + person.getAncestryGenerations());
+        System.out.println("maxDistantRelationship: " + person.getMaxDistantRelationship());
 
         System.out.println("\ngetPeopleInTree:");
         personService
-                .getPeopleInTree(gedcom.getPersonById("I4"), false)
+                .getPeopleInTree(person, false)
                 .stream()
                 .sorted()
-                .limit(500)
+                .limit(50)
                 .forEach(relationship -> System.out.println(
                         relationshipMapper
                                 .toRelationshipDto(relationship, false)

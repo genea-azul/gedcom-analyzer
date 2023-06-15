@@ -63,9 +63,9 @@ public class FamilyTreeService {
                 writeText(stream, font, 12f, 1.2f, 30f, 60f,
                         "geneaazul.com.ar  -  en redes sociales: @genea.azul");
 
-                writeText(stream, bold, 13f, 1.2f, 30f, 100f,
+                writeText(stream, bold, 13f, 1.2f, 30f, 90f,
                         "Leyenda:");
-                writeText(stream, mono, 11.5f, 1.23f, 50f, 120f,
+                writeText(stream, mono, 11.5f, 1.23f, 50f, 110f,
                         "♀",
                         "♂",
                         "✝",
@@ -76,12 +76,12 @@ public class FamilyTreeService {
                         "↙",
                         "↘",
                         "⇊");
-                writeText(stream, light, 11.5f, 1.2f, 50f, 261f,
+                writeText(stream, light, 11.5f, 1.2f, 50f, 251f,
                         "~",
                         "----",
                         "<nombre privado>");
 
-                writeText(stream, light, 11.5f, 1.22f, 75f, 120f,
+                writeText(stream, light, 11.5f, 1.22f, 75f, 110f,
                         "mujer",
                         "varón",
                         "difunto/a",
@@ -92,16 +92,17 @@ public class FamilyTreeService {
                         "rama descendente y paterna",
                         "rama descendente y materna",
                         "rama descendente, paterna y materna");
-                writeText(stream, light, 11.5f, 1.2f, 75f, 261f,
+                writeText(stream, light, 11.5f, 1.2f, 75f, 251f,
                         "año de nacimiento aproximado",
                         "año de nacimiento de persona viva o cercana a la persona principal");
-                writeText(stream, light, 11.5f, 1.2f, 160f, 288.5f,
+                writeText(stream, light, 11.5f, 1.2f, 160f, 278.5f,
                         "nombre de persona viva o cercana a la persona principal");
 
-                writeText(stream, bold, 13f, 1.2f, 30f, 330f,
+                writeText(stream, bold, 13f, 1.3f, 30f, 315f,
                         "Árbol genealógico de " + person.getDisplayName());
-                writeText(stream, light, 11.5f, 1.2f, 50f, 350f,
-                        "Personas: " + person.getNumberOfPeopleInTree(),
+                writeText(stream, light, 11.5f, 1.3f, 50f, 335f,
+                        "Personas: " + person.getPersonsCountInTree(),
+                        "Apellidos (sólo se considera el primero en caso de apellidos compuestos): " + person.getSurnamesCountInTree(),
                         "Generaciones: " + person.getAncestryGenerations().getTotalGenerations()
                                 + " (ascendencia: " + person.getAncestryGenerations().ascending()
                                 + ", descendencia: " + person.getAncestryGenerations().directDescending() + ")",

@@ -37,11 +37,13 @@ public class PersonDto {
     private String dateOfDeath;
     private List<PersonWithReferenceDto> parents;
     private List<SpouseWithChildrenDto> spouses;
+    @ToString.Include
+    private Integer personsCountInTree;
+    @ToString.Include
+    private Integer surnamesCountInTree;
     private List<String> ancestryCountries;
     @ToString.Include
     private AncestryGenerationsDto ancestryGenerations;
-    @ToString.Include
-    private Integer numberOfPeopleInTree;
     @ToString.Include
     private RelationshipDto maxDistantRelationship;
 

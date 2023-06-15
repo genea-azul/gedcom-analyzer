@@ -246,7 +246,10 @@ public class FamilyService {
         result = result
                 .stream()
                 .filter(StreamUtils.distinctByKey(EnrichedPerson::getId))
+                .peek(person -> personService.setTransientProperties(person, true))
                 .toList();
+
+        List<PersonDto> people = personMapper.toPersonDto(result, ObfuscationType.SKIP_MAIN_PERSON_NAME);
 
         Integer potentialResultsCount = null;
 
@@ -266,14 +269,6 @@ public class FamilyService {
                     .filter(StreamUtils.distinctByKey(EnrichedPerson::getId))
                     .count();
         }
-
-        List<PersonDto> people = personMapper.toPersonDto(
-                result,
-                ObfuscationType.SKIP_MAIN_PERSON_NAME,
-                personService::getNumberOfPeopleInTree,
-                personService::getAncestryCountries,
-                personService::getAncestryGenerations,
-                personService::getMaxDistantRelationship);
 
         return SearchFamilyResultDto.builder()
                 .people(people)

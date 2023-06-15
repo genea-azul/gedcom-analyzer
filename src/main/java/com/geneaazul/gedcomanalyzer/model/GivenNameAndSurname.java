@@ -8,7 +8,9 @@ import java.util.Optional;
 
 import jakarta.annotation.Nullable;
 
-public record GivenNameAndSurname(@Nullable GivenName givenName, @Nullable Surname surname) {
+public record GivenNameAndSurname(
+        @Nullable GivenName givenName,
+        @Nullable Surname surname) {
 
     public boolean isAnyValueEmpty() {
         return givenName == null || surname == null;

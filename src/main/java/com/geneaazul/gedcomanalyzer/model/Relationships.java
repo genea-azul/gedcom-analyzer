@@ -78,6 +78,7 @@ public class Relationships {
     }
 
     public boolean containsInLawOf(Relationship relationship) {
+        Assert.isTrue(this.personId.equals(relationship.person().getId()), "Person ID must equal");
         return orderedRelationships
                 .stream()
                 .anyMatch(relationship::isInLawOf);
