@@ -71,8 +71,9 @@ public class SearchController {
 
         SearchFamilyResultDto searchFamilyResult = familyService.search(searchFamilyDto);
 
-        log.info("Search family [ id={}, peopleInResult={}, potentialResults={}, errors={}, httpRequestId={} ]",
+        log.info("Search family [ searchId={}, obfuscateLiving={}, peopleInResult={}, potentialResults={}, errors={}, httpRequestId={} ]",
                 searchId.orElse(null),
+                searchFamilyDto.getObfuscateLiving(),
                 searchFamilyResult.getPeople().size(),
                 searchFamilyResult.getPotentialResults(),
                 searchFamilyResult.getErrors().size(),
@@ -125,7 +126,7 @@ public class SearchController {
             @RequestParam(defaultValue = "true") Boolean obfuscateLiving,
             HttpServletRequest request) throws IOException {
 
-        Optional<FamilyTree> maybeFamilyTree = personService.getFamilyTree(personUuid, obfuscateLiving);
+        Optional<FamilyTree> maybeFamilyTree = personService.getFamilyTree(personUuid, Boolean.TRUE.equals(obfuscateLiving));
 
         if (maybeFamilyTree.isEmpty()) {
             return ResponseEntity.badRequest()
@@ -139,9 +140,10 @@ public class SearchController {
         headers.add(HttpHeaders.CONTENT_LANGUAGE, familyTree.locale().toString());
         headers.add("File-Name", familyTree.filename());
 
-        log.info("Search family tree [ personUuid={}, personId={}, httpRequestId={} ]",
+        log.info("Search family tree [ personUuid={}, personId={}, obfuscateLiving={}, httpRequestId={} ]",
                 personUuid,
                 familyTree.person().getId(),
+                obfuscateLiving,
                 request.getRequestId());
 
         PathResource resource = new PathResource(familyTree.path());

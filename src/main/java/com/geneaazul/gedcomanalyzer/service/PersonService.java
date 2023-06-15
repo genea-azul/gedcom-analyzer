@@ -62,11 +62,12 @@ public class PersonService {
         }
 
         String fileId = getFamilyTreeFileId(person);
+        String suffix = obfuscateLiving ? "" : "_visible";
 
         Path path = properties
                 .getTempDir()
                 .resolve("family-trees")
-                .resolve(fileId + "_" + personUuid + ".pdf");
+                .resolve(fileId + "_" + personUuid + suffix + ".pdf");
 
         if (!Files.exists(path)) {
             List<Relationships> relationshipsList = setTransientProperties(person, false);

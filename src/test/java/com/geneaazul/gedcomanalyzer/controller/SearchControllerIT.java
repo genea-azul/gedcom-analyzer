@@ -90,6 +90,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                         .placeOfBirth("Tapalqué")
                         .build())
                 .contact("juan.perez@gmail.com")
+                .obfuscateLiving(false)
                 .build();
 
         doReturn(SearchFamily.builder()

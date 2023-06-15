@@ -332,11 +332,13 @@ var searchFamilyTree = function(event) {
 
     $(event.data.errorLocator).addClass("d-none");
 
+    var searchParams = new URLSearchParams(window.location.search);
+    var filter = searchParams.get("f");
+    var obfuscate = (filter !== "0" ? "" : "?obfuscateLiving=false");
+
     var domain = window.location.protocol + '//' + window.location.host;
-    var win = window.open(domain + "/api/search/family-tree/" + event.data.personUuid + "/plain", "_blank");
-    if (win) {
-        win.focus();
-    } else {
+    var win = window.open(domain + "/api/search/family-tree/" + event.data.personUuid + "/plain" + obfuscate, "_blank");
+    if (!win) {
         handleError("El navegador bloque&oacute; la descarga, por favor intent&aacute; desde otro como Chrome.", event.data.errorLocator);
     }
 }
@@ -400,6 +402,11 @@ var postProcessRequest = function(searchFamilyRequest) {
         if (isPersonEmpty(searchFamilyRequest[person])) {
             delete searchFamilyRequest[person];
         }
+    }
+
+    var searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get("f") === "0") {
+        searchFamilyRequest["obfuscateLiving"] = false;
     }
 };
 

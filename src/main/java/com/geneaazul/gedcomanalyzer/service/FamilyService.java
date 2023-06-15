@@ -249,7 +249,10 @@ public class FamilyService {
                 .peek(person -> personService.setTransientProperties(person, true))
                 .toList();
 
-        List<PersonDto> people = personMapper.toPersonDto(result, ObfuscationType.SKIP_MAIN_PERSON_NAME);
+        ObfuscationType obfuscationType = Boolean.TRUE.equals(searchFamilyDto.getObfuscateLiving())
+                ? ObfuscationType.SKIP_MAIN_PERSON_NAME
+                : ObfuscationType.NONE;
+        List<PersonDto> people = personMapper.toPersonDto(result, obfuscationType);
 
         Integer potentialResultsCount = null;
 
