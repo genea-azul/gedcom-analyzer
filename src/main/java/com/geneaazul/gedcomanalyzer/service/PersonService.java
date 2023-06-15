@@ -5,12 +5,15 @@ import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
 import com.geneaazul.gedcomanalyzer.model.AncestryGenerations;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.EnrichedSpouseWithChildren;
 import com.geneaazul.gedcomanalyzer.model.FamilyTree;
 import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
 import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.Relationships;
 import com.geneaazul.gedcomanalyzer.model.Surname;
+import com.geneaazul.gedcomanalyzer.model.dto.AdoptionType;
+import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.model.dto.TreeSideType;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
@@ -34,7 +37,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import jakarta.annotation.Nullable;
@@ -226,7 +228,8 @@ public class PersonService {
                         toVisitRelationship.increaseWithPerson(
                                 relativeAndDirection.person,
                                 relativeAndDirection.direction,
-                                isSetHalf(direction, relativeAndDirection.direction, previousPersonId, relativeAndDirection.person),
+                                relativeAndDirection.isHalf,
+                                relativeAndDirection.adoptionType,
                                 relativeAndDirection.treeSides,
                                 relativeAndDirection.relatedPersonIds),
                         person.getId(),
@@ -265,7 +268,8 @@ public class PersonService {
                             toVisitRelationship.increaseWithPerson(
                                     relativeAndDirection.person,
                                     relativeAndDirection.direction,
-                                    false,
+                                    relativeAndDirection.isHalf,
+                                    relativeAndDirection.adoptionType,
                                     relativeAndDirection.treeSides,
                                     relativeAndDirection.relatedPersonIds),
                             toVisitRelationship.person().getId(),
@@ -274,38 +278,6 @@ public class PersonService {
                             visitedRelationshipTraversalStrategy,
                             true));
         }
-    }
-
-    private static boolean isSetHalf(
-            Sort.Direction currentDirection,
-            Sort.Direction nextDirection,
-            @Nullable String previousPersonId,
-            EnrichedPerson nextPersonToVisit) {
-
-        if (previousPersonId == null || !(currentDirection == Sort.Direction.ASC && nextDirection == Sort.Direction.DESC)) {
-            return false;
-        }
-
-        // Previous person and next person to visit are (half?) siblings
-        EnrichedPerson previousPerson = nextPersonToVisit.getGedcom().getPersonById(previousPersonId);
-
-        // TODO consider biological/adopted parents
-        //noinspection DataFlowIssue
-        if (previousPerson.getParents().size() != nextPersonToVisit.getParents().size()) {
-            return false;
-        }
-
-        Set<String> parentIds = previousPerson
-                .getParents()
-                .stream()
-                .map(EnrichedPerson::getId)
-                .collect(Collectors.toSet());
-
-        return nextPersonToVisit
-                .getParents()
-                .stream()
-                .map(EnrichedPerson::getId)
-                .anyMatch(personId -> !parentIds.contains(personId));
     }
 
     /**
@@ -343,12 +315,29 @@ public class PersonService {
 
         List<String> singleRelatedPersonIds = List.of(person.getId());
 
+        List<Optional<String>> previousPersonParents =
+                (direction == Sort.Direction.ASC && previousPersonId != null && !person.getSpousesWithChildren().isEmpty())
+                ? person
+                        .getSpousesWithChildren()
+                        .stream()
+                        .filter(spouseWithChildren -> spouseWithChildren
+                                .getChildren()
+                                .stream()
+                                .map(EnrichedPerson::getId)
+                                .anyMatch(previousPersonId::equals))
+                        .map(EnrichedSpouseWithChildren::getSpouse)
+                        .map(spouse -> spouse.map(EnrichedPerson::getId))
+                        .toList()
+                : null;
+
         Stream<RelativeAndDirection> relativesAndDirections = Stream.concat(
                 person
                         .getSpouses()
                         .stream()
                         .map(spouse -> new RelativeAndDirection(
                                 spouse,
+                                null,
+                                false,
                                 null,
                                 Optional
                                         .ofNullable(treeSides)
@@ -369,11 +358,17 @@ public class PersonService {
                                             .orElse(singleRelatedPersonIds);
 
                                     return spouseWithChildren
-                                            .getChildren()
+                                            .getChildrenWithReference()
                                             .stream()
-                                            .map(child -> new RelativeAndDirection(
-                                                    child,
+                                            .map(childWithReference -> new RelativeAndDirection(
+                                                    childWithReference.person(),
                                                     Sort.Direction.DESC,
+                                                    previousPersonParents != null && !previousPersonParents
+                                                            .contains(spouseWithChildren.getSpouse().map(EnrichedPerson::getId)),
+                                                    childWithReference
+                                                            .referenceType()
+                                                            .map(PersonService::resolveAdoptionType)
+                                                            .orElse(null),
                                                     Optional
                                                             .ofNullable(treeSides)
                                                             .orElseGet(() -> Set.of(TreeSideType.DESCENDANT)),
@@ -383,14 +378,19 @@ public class PersonService {
         if (direction == Sort.Direction.ASC) {
             relativesAndDirections = Stream.concat(
                     person
-                            .getParents()
+                            .getParentsWithReference()
                             .stream()
-                            .map(parent -> new RelativeAndDirection(
-                                    parent,
+                            .map(parentWithReference -> new RelativeAndDirection(
+                                    parentWithReference.person(),
                                     Sort.Direction.ASC,
+                                    false,
+                                    parentWithReference
+                                            .referenceType()
+                                            .map(PersonService::resolveAdoptionType)
+                                            .orElse(null),
                                     Optional
                                             .ofNullable(treeSides)
-                                            .orElseGet(() -> resolveParentTreeSideTypes(parent.getSex())),
+                                            .orElseGet(() -> resolveParentTreeSideTypes(parentWithReference.person().getSex())),
                                     singleRelatedPersonIds)),
                     relativesAndDirections);
         }
@@ -402,6 +402,8 @@ public class PersonService {
     private record RelativeAndDirection(
             EnrichedPerson person,
             @Nullable Sort.Direction direction,
+            boolean isHalf,
+            AdoptionType adoptionType,
             Set<TreeSideType> treeSides,
             List<String> relatedPersonIds) {
     }
@@ -411,6 +413,14 @@ public class PersonService {
             case F -> Set.of(TreeSideType.MOTHER);
             case M -> Set.of(TreeSideType.FATHER);
             default -> Set.of();
+        };
+    }
+
+    private static AdoptionType resolveAdoptionType(ReferenceType referenceType) {
+        return switch (referenceType) {
+            case ADOPTIVE_PARENT, ADOPTED_CHILD -> AdoptionType.ADOPTIVE;
+            case FOSTER_PARENT, FOSTER_CHILD -> AdoptionType.FOSTER;
+            default -> null;
         };
     }
 

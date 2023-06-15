@@ -4,6 +4,7 @@ import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.EnrichedSpouseWithChildren;
 import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
+import com.geneaazul.gedcomanalyzer.model.dto.AdoptionType;
 import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
 import com.geneaazul.gedcomanalyzer.model.dto.RelationshipDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
@@ -96,6 +97,7 @@ public class RelationshipMapper {
                 .grade(grade)
                 .isInLaw(relationship.isInLaw())
                 .isHalf(relationship.isHalf())
+                .adoptionType(relationship.adoptionType())
                 .spouseSex(spouseSex)
                 .isSeparated(isSeparated)
                 .treeSides(relationship.treeSides())
@@ -111,6 +113,9 @@ public class RelationshipMapper {
                 .map(yearOfBirth -> displayYear(yearOfBirth, relationship.getPersonYearOfBirthIsAbout()))
                 .orElse(null);
         String personCountryOfBirth = relationship.getPersonCountryOfBirth();
+        String adoption = Optional.ofNullable(relationship.getAdoptionType())
+                .map(AdoptionType::name)
+                .orElse(null);
         String relationshipStr = displayRelationshipInSpanish(relationship, onlySecondaryDescription);
         return new FormattedRelationship(
                 String.valueOf(index),
@@ -119,6 +124,7 @@ public class RelationshipMapper {
                 personIsAlive,
                 personYearOfBirth,
                 personCountryOfBirth,
+                adoption,
                 treeSide,
                 relationshipStr);
     }
@@ -302,8 +308,7 @@ public class RelationshipMapper {
             }
 
             String or = "";
-            if (relationship.getGeneration() == 1 && relationship.getGrade() >= 2
-                    || relationship.getGeneration() >= 2) {
+            if (relationship.getGeneration() > 2 || relationship.getGrade() >= 2) {
                 String relationshipNameOr1 = (relationshipName2.isEmpty())
                         ? getTreeSideInSpanish(relationship.getTreeSides(), "padre/madre")
                         : relationshipName2.substring(0, relationshipName2.length() - 1) + "o/a";
@@ -345,8 +350,7 @@ public class RelationshipMapper {
             }
 
             String or = "";
-            if (relationship.getGeneration() == 1 && relationship.getGrade() >= 2
-                    || relationship.getGeneration() >= 2) {
+            if (relationship.getGeneration() > 2 || relationship.getGrade() >= 2) {
                 String relationshipNameOr1 = (relationshipName2.isEmpty()) ? "hij" + sexSuffix : relationshipName2;
                 String relationshipNameOr2;
                 if (relationship.getGrade() == 1) {

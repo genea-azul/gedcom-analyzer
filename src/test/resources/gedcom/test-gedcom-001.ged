@@ -17,7 +17,7 @@
 1 NAME Test Mother /Family2/
 2 GIVN Test Mother
 2 SURN Family2
-2 _MARNM Cirigliano
+2 _MARNM Family1
 1 SEX F
 1 BIRT
 2 DATE 01 JAN 1985
@@ -55,7 +55,35 @@
 1 BIRT
 2 DATE 14 AUG 2022
 2 PLAC Italia
-1 FAMC @F3@
+0 @I6@ INDI
+1 NAME Test Mother /Biological/
+2 GIVN Test Mother
+2 SURN Biological
+1 SEX F
+1 FAMS @F4@
+1 FAMS @F5@
+0 @I7@ INDI
+1 NAME Test Father1 /Biological/
+2 GIVN Test Father1
+2 SURN Biological
+1 SEX M
+1 FAMS @F4@
+0 @I8@ INDI
+1 NAME Test Father2 /Adoptive/
+2 GIVN Test Father2
+2 SURN Adoptive
+1 SEX M
+1 FAMS @F5@
+0 @I9@ INDI
+1 NAME Test Son /Biological and Adoptive/
+2 GIVN Test Son
+2 SURN Biological and Adoptive
+1 SEX M
+1 BIRT
+2 DATE 01 JAN 2000
+1 FAMC @F4@
+1 FAMC @F5@
+2 PEDI Adopted
 0 @F1@ FAM
 1 HUSB @I1@
 1 WIFE @I2@
@@ -69,4 +97,12 @@
 0 @F3@ FAM
 1 WIFE @I3@
 1 CHIL @I5@
+0 @F4@ FAM
+1 WIFE @I6@
+1 HUSB @I7@
+1 CHIL @I9@
+0 @F5@ FAM
+1 WIFE @I6@
+1 HUSB @I8@
+1 CHIL @I9@
 0 TRLR

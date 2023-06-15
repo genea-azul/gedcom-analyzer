@@ -18,6 +18,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.SearchPersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,14 +44,22 @@ public class SearchControllerIT extends AbstractControllerIT {
     @Autowired
     private Jackson2ObjectMapperBuilder mapperBuilder;
 
-    @Value("${test.person.givenName:Father}")
-    private String personGivenName;
-    @Value("${test.person.surname:Family1}")
-    private String personSurname;
-    @Value("${test.person.sex:M}")
-    private SexType personSex;
-    @Value("${test.person.yearOfBirth:1980}")
-    private Integer personYearOfBirth;
+    @Value("${test.individual.givenName:Test Son}")
+    private String individualGivenName;
+    @Value("${test.individual.surname:Biological and Adoptive}")
+    private String individualSurname;
+    @Value("${test.individual.sex:M}")
+    private SexType individualSex;
+    @Value("${test.individual.yearOfBirth:2000}")
+    private Integer individualYearOfBirth;
+    @Value("${test.spouse.givenName:}")
+    private String spouseGivenName;
+    @Value("${test.spouse.surname:}")
+    private String spouseSurname;
+    @Value("${test.spouse.sex:F}")
+    private SexType spouseSex;
+    @Value("${test.father.givenName:Test Father}")
+    private String fatherGivenName;
 
     @Test
     public void testSearchFamily() throws Exception {
@@ -154,11 +163,19 @@ public class SearchControllerIT extends AbstractControllerIT {
 
         SearchFamilyDto searchFamilyDto = SearchFamilyDto.builder()
                 .individual(SearchPersonDto.builder()
-                        .givenName(personGivenName)
-                        .surname(personSurname)
-                        .sex(personSex)
-                        .isAlive(Boolean.FALSE)
-                        .yearOfBirth(personYearOfBirth)
+                        .givenName(individualGivenName)
+                        .surname(individualSurname)
+                        .sex(individualSex)
+                        .yearOfBirth(individualYearOfBirth)
+                        .build())
+                .spouse(SearchPersonDto.builder()
+                        .givenName(spouseGivenName)
+                        .surname(spouseSurname)
+                        .sex(spouseSex)
+                        .build())
+                .father(SearchPersonDto.builder()
+                        .givenName(fatherGivenName)
+                        .sex(SexType.M)
                         .build())
                 .build();
 
@@ -174,7 +191,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                         .contentType(MediaType.APPLICATION_JSON)
                         .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.people", hasSize(1)))
+                .andExpect(jsonPath("$.people", hasSize(StringUtils.isEmpty(spouseGivenName) ? 1 : 2)))
                 .andReturn()
                 .getResponse()
                 .getContentAsString();

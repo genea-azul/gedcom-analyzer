@@ -18,7 +18,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Service;
 
-import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,6 +26,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import lombok.RequiredArgsConstructor;
 
@@ -49,6 +49,7 @@ public class FamilyTreeService {
             PDFont font = loadFont(document, EmbeddedFontsConfig.Font.ROBOTO);
             PDFont bold = loadFont(document, EmbeddedFontsConfig.Font.ROBOTO_BOLD);
             PDFont light = loadFont(document, EmbeddedFontsConfig.Font.ROBOTO_LIGHT);
+            PDFont italic = loadFont(document, EmbeddedFontsConfig.Font.ROBOTO_LIGHT_ITALIC);
             PDFont mono = loadFont(document, EmbeddedFontsConfig.Font.EVERSON_MONO);
 
             int maxPersonsInFirstPage = 30;
@@ -60,12 +61,12 @@ public class FamilyTreeService {
             try (PDPageContentStream stream = new PDPageContentStream(document, firstPage)) {
                 writeText(stream, bold, 16f, 1.2f, 30f, 40f,
                         "Genea Azul - Estudio de Genealogía Azuleña");
-                writeText(stream, font, 12f, 1.2f, 30f, 60f,
+                writeText(stream, font, 11.5f, 1.2f, 30f, 60f,
                         "geneaazul.com.ar  -  en redes sociales: @genea.azul");
 
-                writeText(stream, bold, 13f, 1.2f, 30f, 90f,
+                writeText(stream, bold, 12.5f, 1.2f, 30f, 95f,
                         "Leyenda:");
-                writeText(stream, mono, 11.5f, 1.23f, 50f, 110f,
+                writeText(stream, mono, 11.5f, 1.175f, 50f, 115f,
                         "♀",
                         "♂",
                         "✝",
@@ -76,12 +77,13 @@ public class FamilyTreeService {
                         "↙",
                         "↘",
                         "⇊");
-                writeText(stream, light, 11.5f, 1.2f, 50f, 251f,
-                        "~",
-                        "----",
-                        "<nombre privado>");
+                writeText(stream, text -> "I".equals(text) ? italic : light, 11f, 1.2f, 50f, 250f,
+                        new String[] { null, "~" },
+                        new String[] { null, "----" },
+                        new String[] { null, "<nombre privado>" },
+                        new String[] { "I", "relación en cursiva" });
 
-                writeText(stream, light, 11.5f, 1.22f, 75f, 110f,
+                writeText(stream, light, 11f, 1.22f, 75f, 115f,
                         "mujer",
                         "varón",
                         "difunto/a",
@@ -92,15 +94,16 @@ public class FamilyTreeService {
                         "rama descendente y paterna",
                         "rama descendente y materna",
                         "rama descendente, paterna y materna");
-                writeText(stream, light, 11.5f, 1.2f, 75f, 251f,
+                writeText(stream, light, 11f, 1.2f, 75f, 250f,
                         "año de nacimiento aproximado",
                         "año de nacimiento de persona viva o cercana a la persona principal");
-                writeText(stream, light, 11.5f, 1.2f, 160f, 278.5f,
-                        "nombre de persona viva o cercana a la persona principal");
+                writeText(stream, light, 11f, 1.2f, 160f, 276.4f,
+                        "nombre de persona viva o cercana a la persona principal",
+                        "relación familar dada a través de una rama adoptiva");
 
-                writeText(stream, bold, 13f, 1.3f, 30f, 315f,
+                writeText(stream, bold, 12.5f, 1.2f, 30f, 325f,
                         "Árbol genealógico de " + person.getDisplayName());
-                writeText(stream, light, 11.5f, 1.3f, 50f, 335f,
+                writeText(stream, light, 11f, 1.3f, 50f, 345f,
                         "Personas: " + person.getPersonsCountInTree(),
                         "Apellidos (sólo se considera el primero en caso de apellidos compuestos): " + person.getSurnamesCountInTree(),
                         "Generaciones: " + person.getAncestryGenerations().getTotalGenerations()
@@ -112,9 +115,10 @@ public class FamilyTreeService {
                         stream,
                         font,
                         light,
+                        italic,
                         mono,
                         peopleInTree.subList(0, Math.min(peopleInTree.size(), maxPersonsInFirstPage)),
-                        410f,
+                        415f,
                         1,
                         peopleInTree.size() <= maxPersonsInFirstPage);
             }
@@ -128,12 +132,13 @@ public class FamilyTreeService {
                 PDPage page = new PDPage(PDRectangle.A4);
                 document.addPage(page);
                 try (PDPageContentStream stream = new PDPageContentStream(document, page)) {
-                    writeText(stream, bold, 13f, 1.2f, 30f, 40f, "Árbol genealógico de " + person.getDisplayName());
+                    writeText(stream, bold, 12.5f, 1.2f, 30f, 40f, "Árbol genealógico de " + person.getDisplayName());
 
                     writePeopleInPage(
                             stream,
                             font,
                             light,
+                            italic,
                             mono,
                             peopleInPage,
                             60f,
@@ -153,6 +158,7 @@ public class FamilyTreeService {
             PDPageContentStream stream,
             PDFont font,
             PDFont light,
+            PDFont italic,
             PDFont mono,
             List<FormattedRelationship> peopleInPage,
             float yPos,
@@ -165,21 +171,21 @@ public class FamilyTreeService {
         float space1 = 1.15f;
         float space2 = size1 * space1 / size2;
 
-        List<String> lines = peopleInPage
+        String[] lines = peopleInPage
                 .stream()
                 .map(relationship
                         -> StringUtils.leftPad(relationship.index(), 4)
                         + ". " + relationship.personSex()
                         + " " + relationship.treeSide()
                         + " " + relationship.personIsAlive())
-                .toList();
-        writeText(stream, mono, size1, space1, 30f, yPos, lines.toArray(String[]::new));
+                .toArray(String[]::new);
+        writeText(stream, mono, size1, space1, 30f, yPos, lines);
 
         lines = peopleInPage
                 .stream()
                 .map(relationship -> rightPadFixedWidth(PlaceUtils.adjustCountryForReport(relationship.personCountryOfBirth()), 3))
-                .toList();
-        writeText(stream, light, size2, space2, 102f, yPos, lines.toArray(String[]::new));
+                .toArray(String[]::new);
+        writeText(stream, light, size2, space2, 102f, yPos, lines);
 
         lines = peopleInPage
                 .stream()
@@ -189,21 +195,27 @@ public class FamilyTreeService {
                             : (StringUtils.startsWith(relationship.personYearOfBirth(), "~") ? 5 : 7);
                     return leftPadFixedWidth(relationship.personYearOfBirth(), padding);
                 })
-                .toList();
-        writeText(stream, light, size2, space2, 120f, yPos, lines.toArray(String[]::new));
+                .toArray(String[]::new);
+        writeText(stream, light, size2, space2, 120f, yPos, lines);
 
         lines = peopleInPage
                 .stream()
                 .map(FormattedRelationship::personName)
                 .map(name -> StringUtils.substring(name, 0, 42))
-                .toList();
-        writeText(stream, light, size1, space1, 155f, yPos, lines.toArray(String[]::new));
+                .toArray(String[]::new);
+        writeText(stream, light, size1, space1, 155f, yPos, lines);
 
         lines = peopleInPage
                 .stream()
-                .map(relationship -> "• " + relationship.relationshipDesc())
-                .toList();
-        writeText(stream, light, size2, space2, 370f, yPos, lines.toArray(String[]::new));
+                .map(relationship -> "• ")
+                .toArray(String[]::new);
+        writeText(stream, light, size2, space2, 370f, yPos, lines);
+
+        String[][] linesWithCond = peopleInPage
+                .stream()
+                .map(relationship -> new String[] { relationship.adoption(), relationship.relationshipDesc() })
+                .toArray(String[][]::new);
+        writeText(stream, text -> StringUtils.isNotBlank(text) ? italic : light, size2, space2, 375f, yPos, linesWithCond);
 
         writeText(stream, font, 12f, 1.2f, 500f, 780f, "Página " + pageNum);
 
@@ -221,10 +233,28 @@ public class FamilyTreeService {
         stream.beginText();
         stream.setFont(font, size);
         stream.setLeading(size * space);
-        stream.setStrokingColor(Color.RED);
         stream.newLineAtOffset(x, A4_MAX_OFFSET_Y - y);
         for (String text : texts) {
             stream.showText(text);
+            stream.newLine();
+        }
+        stream.endText();
+    }
+
+    private void writeText(
+            PDPageContentStream stream,
+            Function<String, PDFont> fontResolver,
+            float size,
+            float space,
+            @SuppressWarnings("SameParameterValue") float x,
+            float y,
+            String[]... texts) throws IOException {
+        stream.beginText();
+        stream.setLeading(size * space);
+        stream.newLineAtOffset(x, A4_MAX_OFFSET_Y - y);
+        for (String[] text : texts) {
+            stream.setFont(fontResolver.apply(text[0]), size);
+            stream.showText(text[1]);
             stream.newLine();
         }
         stream.endText();

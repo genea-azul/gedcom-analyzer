@@ -503,7 +503,9 @@ var getPersonComponent = function(person, index) {
                     .html(
                         $("<b>")
                             .html(displayNameInSpanish(parent.name)))
-                    .append(parent.referenceType == null ? "" : " (" + displayReferenceTypeInSpanish(parent.referenceType, parent.sex) + ")"));
+                    .append(!parent.referenceType
+                        ? ""
+                        : " (" + displayReferenceTypeInSpanish(parent.referenceType, parent.sex) + ")"));
         });
 
         $cardBody.append(
@@ -532,7 +534,9 @@ var getPersonComponent = function(person, index) {
                     $children.append(
                         $("<li>")
                             .html(displayNameInSpanish(child.name))
-                            .append(child.referenceType == null ? "" : " (" + displayReferenceTypeInSpanish(child.referenceType, child.sex) + ")"));
+                            .append(!child.referenceType
+                                ? ""
+                                : " (" + displayReferenceTypeInSpanish(child.referenceType, child.sex) + ")"));
                 });
 
                 $spouses.append($children);

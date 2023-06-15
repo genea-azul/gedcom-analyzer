@@ -183,15 +183,15 @@ public class EnrichedPerson {
     }
 
     private List<EnrichedPersonWithReference> toEnrichedPeopleWithReference(
-            List<Pair<Person, ReferenceType>> people,
+            List<Pair<String, Optional<ReferenceType>>> people,
             Map<String, EnrichedPerson> enrichedPeopleIndex,
             @Nullable Comparator<EnrichedPerson> personComparator) {
 
         Stream<EnrichedPersonWithReference> peopleStream = people
                 .stream()
                 .map(personWithReference -> new EnrichedPersonWithReference(
-                        enrichedPeopleIndex.get(personWithReference.getLeft().getId()),
-                        Optional.ofNullable(personWithReference.getRight())));
+                        enrichedPeopleIndex.get(personWithReference.getLeft()),
+                        personWithReference.getRight()));
 
         if (personComparator != null) {
             peopleStream = peopleStream

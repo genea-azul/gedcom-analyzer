@@ -29,6 +29,7 @@ public class RelationshipDto {
     private Integer grade;
     private Boolean isInLaw;
     private Boolean isHalf;
+    private AdoptionType adoptionType;
     private SexType spouseSex;
     private Boolean isSeparated;
     private Set<TreeSideType> treeSides;
@@ -45,6 +46,7 @@ public class RelationshipDto {
                 + grade + ", "
                 + (isInLaw ? " " + isInLaw : isInLaw) + ", "
                 + (isHalf ? " " + isHalf : isHalf) + ", "
+                + (adoptionType == null ? "      " : adoptionType) + ", "
                 + spouseSex + ", "
                 + (isSeparated ? " " + isSeparated : isSeparated) + ", "
                 + treeSides + "]";

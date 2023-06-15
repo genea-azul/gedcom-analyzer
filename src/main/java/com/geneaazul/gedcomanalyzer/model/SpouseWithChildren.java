@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public record SpouseWithChildren(
         Optional<Person> spouse,
-        List<Pair<Person, ReferenceType>> children,
+        List<Pair<String, Optional<ReferenceType>>> children,
         boolean isSeparated,
         Optional<Date> dateOfPartners,
         Optional<Date> dateOfSeparation,
