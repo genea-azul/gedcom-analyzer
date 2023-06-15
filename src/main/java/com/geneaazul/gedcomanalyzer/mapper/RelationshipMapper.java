@@ -116,7 +116,7 @@ public class RelationshipMapper {
         String adoption = Optional.ofNullable(relationship.getAdoptionType())
                 .map(AdoptionType::name)
                 .orElse(null);
-        String relationshipStr = displayRelationshipInSpanish(relationship, onlySecondaryDescription);
+        String relationshipDesc = displayRelationshipInSpanish(relationship, onlySecondaryDescription);
         return new FormattedRelationship(
                 String.valueOf(index),
                 personName,
@@ -126,7 +126,7 @@ public class RelationshipMapper {
                 personCountryOfBirth,
                 adoption,
                 treeSide,
-                relationshipStr);
+                relationshipDesc);
     }
 
     public String displayNameInSpanish(String name) {
@@ -154,7 +154,7 @@ public class RelationshipMapper {
                 case FATHER -> "←";
                 case MOTHER -> "→";
                 case DESCENDANT -> "↓";
-                default -> " ";
+                case SPOUSE -> "◇";
             };
         }
         if (treeSides.size() == 2) {
@@ -165,11 +165,21 @@ public class RelationshipMapper {
                 if (treeSides.contains(TreeSideType.MOTHER)) {
                     return "↘";
                 }
-            } else if (treeSides.containsAll(List.of(TreeSideType.FATHER, TreeSideType.MOTHER))) {
+            } else if (treeSides.contains(TreeSideType.SPOUSE)) {
+                if (treeSides.contains(TreeSideType.FATHER)) {
+                    return "◁";
+                }
+                if (treeSides.contains(TreeSideType.MOTHER)) {
+                    return "▷";
+                }
+            } else {
                 return "↔";
             }
         } else if (treeSides.size() == 3) {
-            if (treeSides.containsAll(List.of(TreeSideType.DESCENDANT, TreeSideType.FATHER, TreeSideType.MOTHER))) {
+            if (treeSides.contains(TreeSideType.SPOUSE)) {
+                return "▽";
+            }
+            if (treeSides.contains(TreeSideType.DESCENDANT)) {
                 return "⇊";
             }
         }

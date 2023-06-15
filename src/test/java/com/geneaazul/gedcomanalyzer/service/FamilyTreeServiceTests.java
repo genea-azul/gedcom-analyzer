@@ -4,7 +4,7 @@ import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
-import com.geneaazul.gedcomanalyzer.model.Relationship;
+import com.geneaazul.gedcomanalyzer.model.Relationships;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -39,12 +39,13 @@ public class FamilyTreeServiceTests {
     public void testExportToPDF() throws IOException {
 
         EnrichedPerson person = gedcomHolder.getGedcom().getPersonById("I4");
-        List<Relationship> relationships = personService.setTransientProperties(person, false);
+        List<Relationships> relationshipsList = personService.setTransientProperties(person, false);
 
         MutableInt index = new MutableInt(1);
-        List<FormattedRelationship> peopleInTree = relationships
+        List<FormattedRelationship> peopleInTree = relationshipsList
                 .stream()
                 .sorted()
+                .map(Relationships::findFirst)
                 .map(relationship -> relationshipMapper.toRelationshipDto(relationship, false))
                 .map(relationship -> relationshipMapper.formatInSpanish(relationship, index.getAndIncrement(), true))
                 .toList();

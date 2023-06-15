@@ -52,7 +52,7 @@ public class FamilyTreeService {
             PDFont italic = loadFont(document, EmbeddedFontsConfig.Font.ROBOTO_LIGHT_ITALIC);
             PDFont mono = loadFont(document, EmbeddedFontsConfig.Font.EVERSON_MONO);
 
-            int maxPersonsInFirstPage = 30;
+            int maxPersonsInFirstPage = 36;
             int maxPersonsInNextPages = 59;
 
             PDPage firstPage = new PDPage(PDRectangle.A4);
@@ -66,46 +66,74 @@ public class FamilyTreeService {
 
                 writeText(stream, bold, 12.5f, 1.2f, 30f, 95f,
                         "Leyenda:");
-                writeText(stream, mono, 11.5f, 1.175f, 50f, 115f,
+
+                float legendX = 50f;
+                float legendY = 115f;
+                float legendIndX = 25f;
+                float legendSepX = 150f;
+
+                writeText(stream, mono, 11.5f, 1.175f, legendX, legendY,
                         "♀",
                         "♂",
-                        "✝",
+                        "✝");
+                writeText(stream, light, 11f, 1.22f, legendX + legendIndX, legendY,
+                        "mujer",
+                        "varón",
+                        "difunto/a");
+
+                writeText(stream, mono, 11.5f, 1.175f, legendX + legendSepX * 0.8f, legendY,
                         "←",
                         "→",
                         "↔",
+                        "◇");
+                writeText(stream, light, 11f, 1.22f, legendX + legendSepX * 0.8f + legendIndX, legendY,
+                        "rama paterna",
+                        "rama materna",
+                        "rama paterna y materna",
+                        "rama política (pareja)");
+
+                writeText(stream, mono, 11.5f, 1.175f, legendX + 2 * legendSepX, legendY,
                         "↓",
                         "↙",
                         "↘",
                         "⇊");
-                writeText(stream, text -> "I".equals(text) ? italic : light, 11f, 1.2f, 50f, 250f,
-                        new String[] { null, "~" },
-                        new String[] { null, "----" },
-                        new String[] { null, "<nombre privado>" },
-                        new String[] { "I", "relación en cursiva" });
-
-                writeText(stream, light, 11f, 1.22f, 75f, 115f,
-                        "mujer",
-                        "varón",
-                        "difunto/a",
-                        "rama paterna",
-                        "rama materna",
-                        "rama paterna y materna",
+                writeText(stream, light, 11f, 1.22f, legendX + 2 * legendSepX + legendIndX, legendY,
                         "rama descendente",
                         "rama descendente y paterna",
                         "rama descendente y materna",
                         "rama descendente, paterna y materna");
-                writeText(stream, light, 11f, 1.2f, 75f, 250f,
+
+                //noinspection DataFlowIssue
+                legendX = 50f;
+                legendY = 168f;
+                //noinspection DataFlowIssue
+                legendIndX = 25f;
+                legendSepX = 85f;
+                float legendSepY = 26.4f;
+
+                writeText(stream, text -> "I".equals(text) ? italic : light, 11f, 1.2f, legendX, legendY,
+                        new String[] { null, "~" },
+                        new String[] { null, "----" },
+                        new String[] { null, "<nombre privado>" },
+                        new String[] { "I", "relación en cursiva" });
+                writeText(stream, light, 11f, 1.2f, legendX + legendIndX, legendY,
                         "año de nacimiento aproximado",
                         "año de nacimiento de persona viva o cercana a la persona principal");
-                writeText(stream, light, 11f, 1.2f, 160f, 276.4f,
+                writeText(stream, light, 11f, 1.2f, legendX + legendIndX + legendSepX, legendY + legendSepY,
                         "nombre de persona viva o cercana a la persona principal",
                         "relación familar dada a través de una rama adoptiva");
 
-                writeText(stream, bold, 12.5f, 1.2f, 30f, 325f,
+                writeText(stream, bold, 12.5f, 1.2f, 30f, 245f,
                         "Árbol genealógico de " + person.getDisplayName());
-                writeText(stream, light, 11f, 1.3f, 50f, 345f,
+
+                //noinspection DataFlowIssue
+                legendX = 50f;
+                legendY = 265f;
+                legendSepY = 70f;
+
+                writeText(stream, light, 11f, 1.3f, legendX, legendY,
                         "Personas: " + person.getPersonsCountInTree(),
-                        "Apellidos (sólo se considera el primero en caso de apellidos compuestos): " + person.getSurnamesCountInTree(),
+                        "Apellidos (en caso de apellidos compuestos sólo se considera el primero): " + person.getSurnamesCountInTree(),
                         "Generaciones: " + person.getAncestryGenerations().getTotalGenerations()
                                 + " (ascendencia: " + person.getAncestryGenerations().ascending()
                                 + ", descendencia: " + person.getAncestryGenerations().directDescending() + ")",
@@ -118,7 +146,7 @@ public class FamilyTreeService {
                         italic,
                         mono,
                         peopleInTree.subList(0, Math.min(peopleInTree.size(), maxPersonsInFirstPage)),
-                        415f,
+                        legendY + legendSepY,
                         1,
                         peopleInTree.size() <= maxPersonsInFirstPage);
             }

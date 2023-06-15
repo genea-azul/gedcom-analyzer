@@ -69,20 +69,44 @@ public class PersonService {
                 .resolve(fileId + "_" + personUuid + ".pdf");
 
         if (!Files.exists(path)) {
-            List<Relationship> relationships = setTransientProperties(person, false);
+            List<Relationships> relationshipsList = setTransientProperties(person, false);
 
             MutableInt index = new MutableInt(1);
-            List<FormattedRelationship> peopleInTree = relationships
+            List<FormattedRelationship> peopleInTree = relationshipsList
                     .stream()
                     .sorted()
-                    .map(relationship -> relationshipMapper.toRelationshipDto(
-                            relationship,
-                            obfuscateLiving
-                                    // don't obfuscate root person
-                                    && !relationship.person().getId().equals(person.getId())
-                                    && (person.isAlive() && relationship.getDistance() <= MAX_DISTANCE_TO_OBFUSCATE
-                                            || relationship.person().isAlive())))
-                    .map(relationship -> relationshipMapper.formatInSpanish(relationship, index.getAndIncrement(), true))
+                    .map(relationships -> relationships
+                            .getOrderedRelationships()
+                            .stream()
+                            .map(relationship -> relationshipMapper.toRelationshipDto(
+                                    relationship,
+                                    obfuscateLiving
+                                            // don't obfuscate root person
+                                            && !relationship.person().getId().equals(person.getId())
+                                            && (person.isAlive() && relationship.getDistance() <= MAX_DISTANCE_TO_OBFUSCATE
+                                                    || relationship.person().isAlive())))
+                            .map(relationship -> relationshipMapper.formatInSpanish(relationship, index.getAndIncrement(), true))
+                            .toList())
+                    .map(formattedRelationships -> {
+                        if (formattedRelationships.size() > 2 || formattedRelationships.isEmpty()) {
+                            throw new UnsupportedOperationException("Something is wrong");
+                        }
+                        if (formattedRelationships.size() == 1) {
+                            return formattedRelationships.get(0);
+                        }
+                        FormattedRelationship first = formattedRelationships.get(0);
+                        FormattedRelationship second = formattedRelationships.get(1);
+                        return new FormattedRelationship(
+                                first.index(),
+                                first.personName(),
+                                first.personSex(),
+                                first.personIsAlive(),
+                                first.personYearOfBirth(),
+                                first.personCountryOfBirth(),
+                                first.adoption(),
+                                first.treeSide(),
+                                first.relationshipDesc() + " / " + second.relationshipDesc());
+                    })
                     .toList();
 
             try {
@@ -115,13 +139,18 @@ public class PersonService {
                 .orElse("genea-azul");
     }
 
-    public List<Relationship> setTransientProperties(EnrichedPerson person, boolean excludeRootPerson) {
-        List<Relationship> relationships = getPeopleInTree(person, excludeRootPerson);
+    public List<Relationships> setTransientProperties(EnrichedPerson person, boolean excludeRootPerson) {
+        List<Relationships> relationships = getPeopleInTree(person, excludeRootPerson);
+        List<Relationship> lastRelationships = relationships
+                .stream()
+                // Getting the last will prioritize the not-in-law relationships
+                .map(Relationships::findLast)
+                .toList();
 
-        Integer surnamesCount = RelationshipUtils.getSurnamesCount(relationships);
-        List<String> ancestryCountries = RelationshipUtils.getAncestryCountries(relationships);
-        AncestryGenerations ancestryGenerations = RelationshipUtils.getAncestryGenerations(relationships);
-        Optional<Relationship> maxDistantRelationship = RelationshipUtils.getMaxDistantRelationship(relationships);
+        Integer surnamesCount = RelationshipUtils.getSurnamesCount(lastRelationships);
+        List<String> ancestryCountries = RelationshipUtils.getAncestryCountries(lastRelationships);
+        AncestryGenerations ancestryGenerations = RelationshipUtils.getAncestryGenerations(lastRelationships);
+        Optional<Relationship> maxDistantRelationship = RelationshipUtils.getMaxDistantRelationship(lastRelationships);
 
         person.setPersonsCountInTree(relationships.size());
         person.setSurnamesCountInTree(surnamesCount);
@@ -132,25 +161,22 @@ public class PersonService {
         return relationships;
     }
 
-    public List<Relationship> getPeopleInTree(EnrichedPerson person, boolean excludeRootPerson) {
+    public List<Relationships> getPeopleInTree(EnrichedPerson person, boolean excludeRootPerson) {
         Map<String, Relationships> visitedPersons = new LinkedHashMap<>();
         traversePeopleInTree(
                 Relationship.empty(person),
                 null,
                 visitedPersons,
                 Sort.Direction.ASC,
-                Relationships.VisitedRelationshipTraversalStrategy.CLOSEST_SKIPPING_IN_LAW_WHEN_EXISTS_ANY_NOT_IN_LAW,
+                Relationships.VisitedRelationshipTraversalStrategy.CLOSEST_KEEPING_CLOSER_IN_LAW_WHEN_EXISTS_ANY_NOT_IN_LAW,
                 false);
 
         return visitedPersons
                 .values()
                 .stream()
                 .filter(relationships -> !excludeRootPerson || !relationships.getPersonId().equals(person.getId()))
-                .map(relationships -> {
-                    // Set the collected tree sides from all relationships for the current person
-                    Relationship relationship = relationships.findFirst();
-                    return relationship.withTreeSides(relationships.getTreeSides());
-                })
+                // Make sure all relationships have the updated list of tree sides
+                .peek(Relationships::propagateTreeSidesToRelationships)
                 .toList();
     }
 
@@ -163,6 +189,7 @@ public class PersonService {
             boolean onlyPropagateTreeSides) {
 
         EnrichedPerson person = toVisitRelationship.person();
+
         boolean visited = visitedPersons.containsKey(person.getId());
         if (visited) {
             Relationships visitedRelationships = visitedPersons.get(person.getId());
@@ -180,12 +207,19 @@ public class PersonService {
 
             // Check traversal strategies for visited in-law relationship
             if (toVisitRelationship.isInLaw()) {
-                if (visitedRelationshipTraversalStrategy.isSkipInLawWhenSameDistanceNotInLaw() && visitedRelationships.containsInLawOf(toVisitRelationship)) {
+                if (visitedRelationshipTraversalStrategy.isSkipInLawWhenSameDistanceNotInLaw()
+                        && visitedRelationships.containsInLawOf(toVisitRelationship)) {
                     // The visited in-law relationship appears also as not in-law (with the same distance)
                     return;
                 }
-                if (visitedRelationshipTraversalStrategy.isSkipInLawWhenAnyDistanceNonInLaw() && visitedRelationships.isContainsNotInLaw()) {
+                if (visitedRelationshipTraversalStrategy.isSkipInLawWhenAnyDistanceNotInLaw()
+                        && visitedRelationships.isContainsNotInLaw()) {
                     // The visited in-law relationship appears also as not in-law (with any distance)
+                    return;
+                }
+                if (visitedRelationshipTraversalStrategy.isSkipInLawWhenHigherDistanceNotInLaw()
+                        && visitedRelationships.containsWithLowerDistance(toVisitRelationship)) {
+                    // The visited in-law relationship appears also as not in-law (with lower distance) or as same in-law (with lower distance)
                     return;
                 }
             }
@@ -194,13 +228,23 @@ public class PersonService {
             if (visitedRelationshipTraversalStrategy.isClosestDistance()) {
                 if (visitedRelationshipTraversalStrategy.isSkipInLawWhenSameDistanceNotInLaw()
                         && (toVisitRelationship.isInLaw() || !visitedRelationships.containsInLawOf(toVisitRelationship))
-                        && toVisitRelationship.compareTo(visitedRelationships.getOrderedRelationships().first()) >= 0) {
+                        && toVisitRelationship.compareTo(visitedRelationships.findFirst()) >= 0) {
                     mergeTreeSides(visitedPersons, toVisitRelationship, previousPersonId, direction, visitedRelationshipTraversalStrategy);
                     return;
                 }
-                if (visitedRelationshipTraversalStrategy.isSkipInLawWhenAnyDistanceNonInLaw()
+                if (visitedRelationshipTraversalStrategy.isSkipInLawWhenAnyDistanceNotInLaw()
                         && (toVisitRelationship.isInLaw() || visitedRelationships.isContainsNotInLaw())
-                        && toVisitRelationship.compareTo(visitedRelationships.getOrderedRelationships().first()) >= 0) {
+                        && toVisitRelationship.compareTo(visitedRelationships.findFirst()) >= 0) {
+                    mergeTreeSides(visitedPersons, toVisitRelationship, previousPersonId, direction, visitedRelationshipTraversalStrategy);
+                    return;
+                }
+                if (visitedRelationshipTraversalStrategy.isSkipInLawWhenHigherDistanceNotInLaw()
+                        // In this case the comparison for the in-law condition was already performed some lines above
+                        && !toVisitRelationship.isInLaw()
+                        && visitedRelationships
+                                .findFirstNotInLaw()
+                                .map(relationship -> toVisitRelationship.compareTo(relationship) >= 0)
+                                .orElse(false)) {
                     mergeTreeSides(visitedPersons, toVisitRelationship, previousPersonId, direction, visitedRelationshipTraversalStrategy);
                     return;
                 }
@@ -246,38 +290,39 @@ public class PersonService {
             Sort.Direction direction,
             Relationships.VisitedRelationshipTraversalStrategy visitedRelationshipTraversalStrategy) {
 
-        @Nullable Set<TreeSideType> previousTreeSides = visitedPersons
-                .get(toVisitRelationship.person().getId())
-                .getTreeSides();
+        Relationships relationships = visitedPersons.get(toVisitRelationship.person().getId());
 
-        boolean merge = !SetUtils.containsAll(previousTreeSides, toVisitRelationship.treeSides());
+        boolean isTreeSideCompatible = toVisitRelationship.isTreeSideCompatible(relationships.getOrderedRelationships());
+        boolean isMissingTreeSides = !SetUtils.containsAll(relationships.getTreeSides(), toVisitRelationship.treeSides());
 
-        if (merge) {
-            Relationships merged = visitedPersons.merge(
-                    toVisitRelationship.person().getId(),
-                    Relationships.from(toVisitRelationship),
-                    Relationships::mergeTreeSides);
-
-            // Propagate merged tree sides to descendants
-            resolveRelativesToTraverse(
-                    toVisitRelationship.person(),
-                    direction,
-                    merged.getTreeSides(),
-                    previousPersonId)
-                    .forEach(relativeAndDirection -> traversePeopleInTree(
-                            toVisitRelationship.increaseWithPerson(
-                                    relativeAndDirection.person,
-                                    relativeAndDirection.direction,
-                                    relativeAndDirection.isHalf,
-                                    relativeAndDirection.adoptionType,
-                                    relativeAndDirection.treeSides,
-                                    relativeAndDirection.relatedPersonIds),
-                            toVisitRelationship.person().getId(),
-                            visitedPersons,
-                            relativeAndDirection.direction,
-                            visitedRelationshipTraversalStrategy,
-                            true));
+        if (!isTreeSideCompatible || !isMissingTreeSides) {
+            return;
         }
+
+        Relationships merged = visitedPersons.merge(
+                toVisitRelationship.person().getId(),
+                Relationships.from(toVisitRelationship),
+                Relationships::mergeTreeSides);
+
+        // Propagate merged tree sides to descendants
+        resolveRelativesToTraverse(
+                toVisitRelationship.person(),
+                direction,
+                merged.getTreeSides(),
+                previousPersonId)
+                .forEach(relativeAndDirection -> traversePeopleInTree(
+                        toVisitRelationship.increaseWithPerson(
+                                relativeAndDirection.person,
+                                relativeAndDirection.direction,
+                                relativeAndDirection.isHalf,
+                                relativeAndDirection.adoptionType,
+                                relativeAndDirection.treeSides,
+                                relativeAndDirection.relatedPersonIds),
+                        toVisitRelationship.person().getId(),
+                        visitedPersons,
+                        relativeAndDirection.direction,
+                        visitedRelationshipTraversalStrategy,
+                        true));
     }
 
     /**

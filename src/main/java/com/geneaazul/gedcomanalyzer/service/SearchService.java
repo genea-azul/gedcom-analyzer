@@ -46,6 +46,7 @@ public class SearchService {
         String personSurnameStr = SearchUtils.simplifyName(personSurname);
         String spouseSurnameStr = SearchUtils.simplifyName(spouseSurname);
 
+        //noinspection DataFlowIssue
         return people
                 .stream()
                 .filter(person -> person.getSurname()
@@ -63,6 +64,7 @@ public class SearchService {
         String personSurnameStr = SearchUtils.simplifyName(personSurname);
         String spouseGivenNameStr = SearchUtils.simplifyName(spouseGivenName);
 
+        //noinspection DataFlowIssue
         return people
                 .stream()
                 .filter(person -> person.getSurname()

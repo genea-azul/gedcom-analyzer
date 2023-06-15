@@ -116,6 +116,19 @@ public record Relationship(
                 && this.adoptionType == other.adoptionType;
     }
 
+    public boolean isTreeSideCompatible(Collection<Relationship> relationships) {
+        return relationships.stream().allMatch(this::isTreeSideCompatible);
+    }
+
+    public boolean isTreeSideCompatible(Relationship other) {
+        return isAdoptionTypeCompatible(other.adoptionType);
+    }
+
+    private boolean isAdoptionTypeCompatible(AdoptionType otherAdoptionType) {
+        return this.adoptionType == null && otherAdoptionType == null
+                || this.adoptionType != null && otherAdoptionType != null;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -173,26 +186,27 @@ public record Relationship(
         if (compareDistanceToAncestor != 0) {
             return invert(compareDistanceToAncestor, invertedPriority);
         }
-        //
-        int compareTreeSides = TREE_SIDE_TYPE_COLLECTION_COMPARATOR.compare(this.treeSides, other.treeSides);
-        if (compareTreeSides != 0) {
-            return invert(compareTreeSides, invertedPriority);
-        }
         // not in-law -> is lower priority
         int compareIsInLaw = Boolean.compare(this.isInLaw, other.isInLaw);
         if (compareIsInLaw != 0) {
             return invert(compareIsInLaw, invertedPriority);
-        }
-        // not is-half -> is lower priority
-        int compareIsHalf = Boolean.compare(this.isHalf, other.isHalf);
-        if (compareIsHalf != 0) {
-            return invert(compareIsHalf, invertedPriority);
         }
         // not adoptive -> is lower priority
         int compareAdoption = ADOPTION_TYPE_COMPARATOR.compare(this.adoptionType, other.adoptionType);
         if (compareAdoption != 0) {
             return invert(compareAdoption, invertedPriority);
         }
+        // not is-half -> is lower priority
+        int compareIsHalf = Boolean.compare(this.isHalf, other.isHalf);
+        if (compareIsHalf != 0) {
+            return invert(compareIsHalf, invertedPriority);
+        }
+        //
+        int compareTreeSides = TREE_SIDE_TYPE_COLLECTION_COMPARATOR.compare(this.treeSides, other.treeSides);
+        if (compareTreeSides != 0) {
+            return invert(compareTreeSides, invertedPriority);
+        }
+        //
         int compareRelatedPersonIds = STRING_COLLECTION_COMPARATOR.compare(this.relatedPersonIds, other.relatedPersonIds);
         if (compareRelatedPersonIds != 0) {
             return invert(compareRelatedPersonIds, invertedPriority);
