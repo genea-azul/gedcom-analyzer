@@ -34,7 +34,13 @@
         $(document).ready(function() {
             var siteUrl = "https://geneaazul.ddns.net";
             var healthCheckUrl = siteUrl + "/api/gedcom-analyzer";
-            var redirectUrl = siteUrl + "/?r=main";
+            var redirectUrl = siteUrl;
+
+            var searchParams = new URLSearchParams(window.location.search);
+            if (searchParams.get("f") === "0") {
+                redirectUrl = redirectUrl + "/?f=0";
+            }
+
             $.ajax({
                 type: "GET",
                 url: healthCheckUrl,
