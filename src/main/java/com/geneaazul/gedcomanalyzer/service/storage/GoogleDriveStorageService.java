@@ -24,9 +24,9 @@ public class GoogleDriveStorageService implements StorageService {
     public EnrichedGedcom getGedcom(boolean refreshCachedGedcom) throws Exception {
 
         if (refreshCachedGedcom
-                || Files.notExists(properties.getGedcomLocalStoragePath())
-                || Files.size(properties.getGedcomLocalStoragePath()) == 0L) {
-            log.info("Downloading Gedcom file from Google Drive with id {}", properties.getGedcomGoogleDriveFileId());
+                || Files.notExists(properties.getGedcomStorageLocalPath())
+                || Files.size(properties.getGedcomStorageLocalPath()) == 0L) {
+            log.info("Downloading Gedcom file from Google Drive with id {}", properties.getGedcomStorageGoogleDriveFileId());
             downloadDriveFileToLocalFile();
         }
 
@@ -45,17 +45,17 @@ public class GoogleDriveStorageService implements StorageService {
                 .setApplicationName("gedcom-analyzer")
                 .build();
 
-        try (FileOutputStream outputStream = new FileOutputStream(properties.getGedcomLocalStoragePath().toFile())) {
+        try (FileOutputStream outputStream = new FileOutputStream(properties.getGedcomStorageLocalPath().toFile())) {
             service
                     .files()
-                    .get(properties.getGedcomGoogleDriveFileId())
+                    .get(properties.getGedcomStorageGoogleDriveFileId())
                     .executeMediaAndDownloadTo(outputStream);
         }
     }
 
     @Override
     public String getGedcomName() {
-        return "Google Drive file " + properties.getGedcomGoogleDriveFileId();
+        return "Google Drive file " + properties.getGedcomStorageGoogleDriveFileId();
     }
 
 }

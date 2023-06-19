@@ -15,7 +15,7 @@ public class LocalStorageService implements StorageService {
     private final GedcomAnalyzerProperties properties;
 
     public EnrichedGedcom getGedcom() throws Exception {
-        return gedcomParsingService.parse(properties.getGedcomLocalStoragePath());
+        return gedcomParsingService.parse(properties.getGedcomStorageLocalPath());
     }
 
     @Override
@@ -25,7 +25,7 @@ public class LocalStorageService implements StorageService {
 
     @Override
     public String getGedcomName() {
-        return properties.getGedcomLocalStoragePath().toString();
+        return properties.getGedcomStorageLocalPath().toString();
     }
 
 }

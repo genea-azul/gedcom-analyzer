@@ -1,9 +1,13 @@
 $(document).ready(function() {
     var searchParams = new URLSearchParams(window.location.search);
+    var nonMatchingWithContactParam = searchParams.get("nonMatchingWithContact");
+    var isNonMatchingWithContact = nonMatchingWithContactParam === "true" || nonMatchingWithContactParam === "1",
 
     $.ajax({
         type: "GET",
-        url: "/api/search/family/latest",
+        url: isNonMatchingWithContact
+            ? "/api/search/family/latestNonMatchingWithContact"
+            : "/api/search/family/latest",
         contentType: "application/json",
         data: {
             page: searchParams.get("page"),
@@ -15,7 +19,7 @@ $(document).ready(function() {
         },
         error: function(xhr) {
             console.log(xhr);
-            $("#result-container").jsonViewer("{\"error\": \"!\"}", {collapsed: false, rootCollapsable: false});
+            $("#result-container").jsonViewer(JSON.parse("{\"error\": \"!\"}"), {collapsed: false, rootCollapsable: false});
 
             // Get error details
             try {
@@ -25,10 +29,10 @@ $(document).ready(function() {
                 } else if (xhr.status == 0) {
                     errorJson = "{\"error\": \"El servidor est\u00E1 ca\u00EDdo, intent\u00E1 de nuevo.\"}";
                 } else {
-                    errorJson = "{\"error\": \"" + xhr.responseJSON.message + "\"}";
+                    errorJson = "{\"error\": \"" + xhr.responseJSON.error + " (" + xhr.responseJSON.message + ")\"}";
                 }
 
-                $("#result-container").jsonViewer(errorJson, {collapsed: false, rootCollapsable: false});
+                $("#result-container").jsonViewer(JSON.parse(errorJson), {collapsed: false, rootCollapsable: false});
 
             } catch (ex) {
                 console.log(ex);

@@ -88,10 +88,24 @@ public class SearchController {
 
     @GetMapping("/family/latest")
     public List<SearchFamilyDetailsDto> getLatest(
-            @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         dockerService.startDbContainer();
-        return familyService.getLatest(page, size);
+
+        log.info("Search family latest [ page={}, size={} ]", page, size);
+
+        return familyService.getLatest(null, null, page, size);
+    }
+
+    @GetMapping("/family/latestNonMatchingWithContact")
+    public List<SearchFamilyDetailsDto> getLatestNonMatchingWithContact(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        dockerService.startDbContainer();
+
+        log.info("Search family latest non-matching with contact [ page={}, size={} ]", page, size);
+
+        return familyService.getLatestNonMatchingWithContact(page, size);
     }
 
     @PostMapping("/surnames")
