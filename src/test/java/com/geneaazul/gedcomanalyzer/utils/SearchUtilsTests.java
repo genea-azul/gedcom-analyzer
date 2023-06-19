@@ -275,6 +275,30 @@ public class SearchUtilsTests {
                     Surname matching = PersonUtils.getShortenedSurnameMainWord("B", properties.getNormalizedSurnamesMap()).orElse(null);
                     assertThat(surname.matches(matching)).isFalse();
                 });
+
+        name.setSurname("De los Heros");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("De los Heros");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("delosheros");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("delosheros");
+
+                    Surname matching = PersonUtils.getShortenedSurnameMainWord("Heros", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(matching)).isFalse();
+                });
+
+        name.setSurname("De San Martín");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("De San Martín");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("sanmartin");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("sanmartin");
+
+                    Surname matching = PersonUtils.getShortenedSurnameMainWord("San Martín", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(matching)).isTrue();
+                });
     }
 
 }

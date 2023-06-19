@@ -5,6 +5,7 @@ import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
+import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.DateUtils.AstrologicalSign;
 
@@ -72,6 +73,13 @@ public class GedcomAnalyzerServiceTests {
         System.out.println("\nfindPersonsBySurnameAndSpouseSurname:");
         searchService
                 .findPersonsBySurnameAndSpouseSurname("Diéguez", "Pérez", false, gedcom.getPeople())
+                .forEach(System.out::println);
+
+        System.out.println("\nfindSurnamesByPattern:");
+        searchService
+                .findSurnamesByPattern("^[dD]e ", gedcom.getPeople())
+                .stream()
+                .map(Surname::value)
                 .forEach(System.out::println);
 
         System.out.println("\nfindPersonsBySurnameAndSpouseGivenName:");
