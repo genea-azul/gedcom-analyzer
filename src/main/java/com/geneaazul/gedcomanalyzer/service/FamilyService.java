@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,13 +62,36 @@ public class FamilyService {
     }
 
     @Transactional(readOnly = true)
-    public List<SearchFamilyDetailsDto> getLatest(int page, int size) {
+    public List<SearchFamilyDetailsDto> getSearchFamilies(
+            @Nullable Boolean isMatch,
+            @Nullable Boolean hasContact,
+            int page,
+            int size,
+            @Nullable Sort sort) {
         size = Math.min(size, MAX_PAGE_SIZE);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+        Pageable pageable = PageRequest.of(page, size, Optional.ofNullable(sort).orElseGet(Sort::unsorted));
+
         return searchFamilyRepository
-                .findAll(pageable)
+                .findAll(Specification
+                        .where(SearchFamilyRepository.isMatch(isMatch))
+                        .and(SearchFamilyRepository.hasContact(hasContact)), pageable)
+                .stream()
                 .map(searchFamilyMapper::toSearchFamilyDetailsDto)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<SearchFamilyDetailsDto> getLatest(
+            @Nullable Boolean isMatch,
+            @Nullable Boolean hasContact,
+            int page,
+            int size) {
+        return getSearchFamilies(isMatch, hasContact, page, size, Sort.by(Sort.Direction.DESC, "id"));
+    }
+
+    @Transactional(readOnly = true)
+    public List<SearchFamilyDetailsDto> getLatestNonMatchingWithContact(int page, int size) {
+        return getLatest(Boolean.FALSE, Boolean.TRUE, page, size);
     }
 
     @Transactional(readOnly = true)
@@ -79,7 +103,7 @@ public class FamilyService {
         OffsetDateTime createDateTo = OffsetDateTime.now();
         OffsetDateTime createDateFrom = createDateTo.minusHours(properties.getMaxClientRequestsHoursThreshold());
 
-        int clientRequests = searchFamilyRepository.countByClientIpAddressAndCreateDateBetween(clientIpAddress, createDateFrom, createDateTo);
+        long clientRequests = searchFamilyRepository.countByClientIpAddressAndCreateDateBetween(clientIpAddress, createDateFrom, createDateTo);
         return clientRequests < properties.getMaxClientRequestsCountThreshold();
     }
 
@@ -246,7 +270,13 @@ public class FamilyService {
         result = result
                 .stream()
                 .filter(StreamUtils.distinctByKey(EnrichedPerson::getId))
+                .peek(person -> personService.setTransientProperties(person, true))
                 .toList();
+
+        ObfuscationType obfuscationType = Boolean.TRUE.equals(searchFamilyDto.getObfuscateLiving())
+                ? ObfuscationType.SKIP_MAIN_PERSON_NAME
+                : ObfuscationType.NONE;
+        List<PersonDto> people = personMapper.toPersonDto(result, obfuscationType);
 
         Integer potentialResultsCount = null;
 
@@ -266,14 +296,6 @@ public class FamilyService {
                     .filter(StreamUtils.distinctByKey(EnrichedPerson::getId))
                     .count();
         }
-
-        List<PersonDto> people = personMapper.toPersonDto(
-                result,
-                ObfuscationType.SKIP_MAIN_PERSON_NAME,
-                personService::getAncestryCountries,
-                personService::getAncestryGenerations,
-                personService::getNumberOfPeopleInTree,
-                personService::getMaxDistantRelationship);
 
         return SearchFamilyResultDto.builder()
                 .people(people)

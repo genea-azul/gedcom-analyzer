@@ -4,16 +4,10 @@ import com.geneaazul.gedcomanalyzer.service.SearchService;
 
 import java.util.List;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
-@Getter
-@RequiredArgsConstructor
-public class PersonComparisonResults {
-
-    private final EnrichedPerson person;
-    private final List<PersonComparisonResult> results;
-    private final int minScore;
+public record PersonComparisonResults(
+        EnrichedPerson person,
+        List<PersonComparisonResult> results,
+        int minScore) {
 
     public static PersonComparisonResults of(EnrichedPerson person, List<PersonComparisonResult> comparisonResults) {
         int minScore = comparisonResults

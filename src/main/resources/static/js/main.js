@@ -332,11 +332,13 @@ var searchFamilyTree = function(event) {
 
     $(event.data.errorLocator).addClass("d-none");
 
+    var searchParams = new URLSearchParams(window.location.search);
+    var filter = searchParams.get("f");
+    var obfuscate = (filter !== "0" ? "" : "?obfuscateLiving=false");
+
     var domain = window.location.protocol + '//' + window.location.host;
-    var win = window.open(domain + "/api/search/family-tree/" + event.data.personUuid + "/plain", "_blank");
-    if (win) {
-        win.focus();
-    } else {
+    var win = window.open(domain + "/api/search/family-tree/" + event.data.personUuid + "/plain" + obfuscate, "_blank");
+    if (!win) {
         handleError("El navegador bloque&oacute; la descarga, por favor intent&aacute; desde otro como Chrome.", event.data.errorLocator);
     }
 }
@@ -400,6 +402,11 @@ var postProcessRequest = function(searchFamilyRequest) {
         if (isPersonEmpty(searchFamilyRequest[person])) {
             delete searchFamilyRequest[person];
         }
+    }
+
+    var searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get("f") === "0") {
+        searchFamilyRequest["obfuscateLiving"] = false;
     }
 };
 
@@ -503,7 +510,9 @@ var getPersonComponent = function(person, index) {
                     .html(
                         $("<b>")
                             .html(displayNameInSpanish(parent.name)))
-                    .append(parent.referenceType == null ? "" : " (" + displayReferenceTypeInSpanish(parent.referenceType, parent.sex) + ")"));
+                    .append(!parent.referenceType
+                        ? ""
+                        : " (" + displayReferenceTypeInSpanish(parent.referenceType, parent.sex) + ")"));
         });
 
         $cardBody.append(
@@ -532,7 +541,9 @@ var getPersonComponent = function(person, index) {
                     $children.append(
                         $("<li>")
                             .html(displayNameInSpanish(child.name))
-                            .append(child.referenceType == null ? "" : " (" + displayReferenceTypeInSpanish(child.referenceType, child.sex) + ")"));
+                            .append(!child.referenceType
+                                ? ""
+                                : " (" + displayReferenceTypeInSpanish(child.referenceType, child.sex) + ")"));
                 });
 
                 $spouses.append($children);
@@ -546,12 +557,13 @@ var getPersonComponent = function(person, index) {
                 .append($spouses));
     }
 
+    var hasPersonsCountInTree = person.personsCountInTree != null;
+    var hasSurnamesCountInTree = person.surnamesCountInTree != null;
     var hasAncestryGenerations = person.ancestryGenerations != null
-            && (person.ancestryGenerations.ascending > 0 || person.ancestryGenerations.descending > 0);
-    var hasNumberOfPeopleInTree = person.numberOfPeopleInTree != null;
+            && (person.ancestryGenerations.ascending > 0 || person.ancestryGenerations.directDescending > 0);
     var hasMaxDistantRelationship = person.maxDistantRelationship != null;
 
-    if (hasAncestryGenerations || hasNumberOfPeopleInTree || hasMaxDistantRelationship) {
+    if (hasPersonsCountInTree || hasSurnamesCountInTree || hasAncestryGenerations || hasMaxDistantRelationship) {
         var $treeInfo = $("<ul>")
             .addClass("mb-0");
 
@@ -562,13 +574,19 @@ var getPersonComponent = function(person, index) {
 
             $treeInfo.append(
                 $("<li>")
-                    .html("Descendencia: " + getCardinal(person.ancestryGenerations.descending, "generaci&oacute;n", "generaciones")));
+                    .html("Descendencia: " + getCardinal(person.ancestryGenerations.directDescending, "generaci&oacute;n", "generaciones")));
         }
 
-        if (hasNumberOfPeopleInTree) {
+        if (hasPersonsCountInTree) {
             $treeInfo.append(
                 $("<li>")
-                    .html("Cantidad de familiares: <b>" + (person.numberOfPeopleInTree - 1) + "</b>"));
+                    .html("Cantidad de familiares: <b>" + person.personsCountInTree + "</b>"));
+        }
+
+        if (hasSurnamesCountInTree) {
+            $treeInfo.append(
+                $("<li>")
+                    .html("Cantidad de apellidos: <b>" + person.surnamesCountInTree + "</b>"));
         }
 
         if (hasMaxDistantRelationship) {
@@ -812,7 +830,7 @@ var displayRelationshipInSpanish = function(relationship) {
 
         var or = "";
         if (relationship.generation >= 6) {
-            or = "<br>&nbsp; (" + spouse + "ancestro directo de " + relationship.generation + " gener.)";
+            or = "<br>&nbsp; (" + spouse + "ancestro directo de " + relationship.generation + " generaciones)";
         }
 
         return "<b>" + spouse + relationshipName + gradeSuffix + "</b>" + or;
@@ -841,7 +859,7 @@ var displayRelationshipInSpanish = function(relationship) {
 
         var or = "";
         if (relationship.generation >= 6) {
-            or = "<br>&nbsp; (" + spouse + "descendiente directo de " + relationship.generation + " gener.)";
+            or = "<br>&nbsp; (" + spouse + "descendiente directo de " + relationship.generation + " generaciones)";
         }
 
         return "<b>" + spouse + relationshipName + gradeSuffix + "</b>" + or;

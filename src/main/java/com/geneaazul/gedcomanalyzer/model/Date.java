@@ -80,10 +80,6 @@ public class Date implements Comparable<Date> {
         this.yearMonth = YearMonth.of(year.getValue(), month);
     }
 
-    public static Date of(Year year, Month month, Integer day, Operator operator, Date secondary) {
-        return new Date(year, month, day, operator, secondary);
-    }
-
     public static Date now(ZoneId zoneId) {
         return new Date(LocalDate.now(zoneId));
     }

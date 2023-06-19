@@ -8,38 +8,13 @@ import org.folg.gedcom.model.Person;
 import java.util.List;
 import java.util.Optional;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
-@Getter
-@RequiredArgsConstructor
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-public class SpouseWithChildren {
-
-    private final Optional<Person> spouse;
-    private final List<Pair<Person, ReferenceType>> children;
-    private final boolean isSeparated;
-    private final Optional<Date> dateOfPartners;
-    private final Optional<Date> dateOfSeparation;
-    private final Optional<String> placeOfPartners;
-    private final Optional<String> placeOfSeparation;
-
-    public static SpouseWithChildren of(
-            Optional<Person> spouse,
-            List<Pair<Person, ReferenceType>> children,
-            boolean isSeparated,
-            Optional<Date> dateOfPartners,
-            Optional<Date> dateOfSeparation,
-            Optional<String> placeOfPartners,
-            Optional<String> placeOfSeparation) {
-        return new SpouseWithChildren(
-                spouse,
-                children,
-                isSeparated,
-                dateOfPartners,
-                dateOfSeparation,
-                placeOfPartners,
-                placeOfSeparation);
-    }
+public record SpouseWithChildren(
+        Optional<Person> spouse,
+        List<Pair<String, Optional<ReferenceType>>> children,
+        boolean isSeparated,
+        Optional<Date> dateOfPartners,
+        Optional<Date> dateOfSeparation,
+        Optional<String> placeOfPartners,
+        Optional<String> placeOfSeparation) {
 
 }

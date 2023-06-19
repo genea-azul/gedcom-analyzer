@@ -3,10 +3,12 @@ package com.geneaazul.gedcomanalyzer.model;
 import com.geneaazul.gedcomanalyzer.model.dto.TreeSideType;
 import com.geneaazul.gedcomanalyzer.utils.SetUtils;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.util.Assert;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -24,7 +26,7 @@ import lombok.ToString;
 @Getter
 @RequiredArgsConstructor(staticName = "of")
 @ToString(onlyExplicitlyIncluded = true)
-public class Relationships {
+public class Relationships implements Comparable<Relationships> {
 
     @ToString.Include
     private final String personId;
@@ -42,7 +44,7 @@ public class Relationships {
         return new Relationships(
                 relationship.person().getId(),
                 newTreeSet(relationship),
-                isDirectRelationship(relationship),
+                relationship.isDirect(),
                 !relationship.isInLaw(),
                 relationship.treeSides());
     }
@@ -78,22 +80,45 @@ public class Relationships {
     }
 
     public boolean containsInLawOf(Relationship relationship) {
+        Assert.isTrue(this.personId.equals(relationship.person().getId()), "Person ID must equal");
         return orderedRelationships
                 .stream()
                 .anyMatch(relationship::isInLawOf);
     }
 
-    public Relationship findFirst() {
-        return orderedRelationships
-                .first();
+    // there is a in-law-of with lower distance or there is a (same in-law) with lower distance
+    public boolean containsWithLowerDistance(Relationship relationship) {
+        Assert.isTrue(this.personId.equals(relationship.person().getId()), "Person ID must equal");
+        return relationship.isInLaw()
+                && orderedRelationships
+                        .stream()
+                        .anyMatch(r
+                                -> !r.isInLaw() && relationship.compareTo(r) >= 0
+                                || r.isInLaw() && relationship.compareTo(r) >= 0);
     }
 
-    @SuppressWarnings("unused")
+    public Relationship findFirst() {
+        return orderedRelationships.first();
+    }
+
+    public Relationship findLast() {
+        return orderedRelationships.last();
+    }
+
     public Optional<Relationship> findFirstNotInLaw() {
         return orderedRelationships
                 .stream()
                 .filter(relationship -> !relationship.isInLaw())
                 .findFirst();
+    }
+
+    public void propagateTreeSidesToRelationships() {
+        TreeSet<Relationship> withPropagatedTreeSides = orderedRelationships
+                .stream()
+                .map(relationship -> relationship.withTreeSides(treeSides))
+                .collect(Collectors.toCollection(TreeSet::new));
+        orderedRelationships.clear();
+        orderedRelationships.addAll(withPropagatedTreeSides);
     }
 
     private static TreeSet<Relationship> newTreeSet(Relationship relationship) {
@@ -119,19 +144,41 @@ public class Relationships {
 
         if (!toMergeRelationship.isInLaw()
                 && !relationships.isEmpty()
-                && (traversalStrategy.isSkipInLawWhenAnyDistanceNonInLaw() || traversalStrategy.isSkipInLawWhenSameDistanceNotInLaw())) {
+                && (traversalStrategy.isSkipInLawWhenAnyDistanceNotInLaw()
+                        || traversalStrategy.isSkipInLawWhenSameDistanceNotInLaw()
+                        || traversalStrategy.isSkipInLawWhenHigherDistanceNotInLaw())) {
             if (relationships
                     .stream()
                     .anyMatch(r
-                            -> traversalStrategy.isSkipInLawWhenAnyDistanceNonInLaw() && r.isInLaw()
-                            || traversalStrategy.isSkipInLawWhenSameDistanceNotInLaw() && r.isInLaw() && r.isInLawOf(toMergeRelationship))) {
+                            -> traversalStrategy.isSkipInLawWhenAnyDistanceNotInLaw() && r.isInLaw()
+                            || traversalStrategy.isSkipInLawWhenSameDistanceNotInLaw() && r.isInLaw() && r.isInLawOf(toMergeRelationship)
+                            || traversalStrategy.isSkipInLawWhenHigherDistanceNotInLaw() && (!r.isInLaw() || r.compareTo(toMergeRelationship) >= 0))) {
                 relationships = relationships
                         .stream()
                         .filter(r
-                                -> traversalStrategy.isSkipInLawWhenAnyDistanceNonInLaw() && !r.isInLaw()
-                                || traversalStrategy.isSkipInLawWhenSameDistanceNotInLaw() && !(r.isInLaw() && r.isInLawOf(toMergeRelationship)))
+                                -> traversalStrategy.isSkipInLawWhenAnyDistanceNotInLaw() && !r.isInLaw()
+                                || traversalStrategy.isSkipInLawWhenSameDistanceNotInLaw() && !(r.isInLaw() && r.isInLawOf(toMergeRelationship))
+                                || traversalStrategy.isSkipInLawWhenHigherDistanceNotInLaw() && !(!r.isInLaw() || r.compareTo(toMergeRelationship) >= 0))
                         .collect(Collectors.toList());
             }
+        } else if (toMergeRelationship.isInLaw()
+                && !relationships.isEmpty()
+                && traversalStrategy.isSkipInLawWhenHigherDistanceNotInLaw()) {
+            if (relationships
+                    .stream()
+                    .anyMatch(Relationship::isInLaw)) {
+                relationships = relationships
+                        .stream()
+                        .filter(r -> !r.isInLaw())
+                        .collect(Collectors.toList());
+            }
+        }
+
+        if (CollectionUtils.isNotEmpty(toMergeRelationship.treeSides())) {
+            relationships = relationships
+                    .stream()
+                    .filter(toMergeRelationship::isTreeSideCompatible)
+                    .toList();
         }
 
         Set<TreeSideType> treeSides = Stream
@@ -141,12 +188,14 @@ public class Relationships {
                                 .map(Relationship::treeSides)
                                 .filter(Objects::nonNull)
                                 .flatMap(Set::stream),
-                        Stream.ofNullable(
-                                toMergeRelationship.treeSides())
+                        Stream
+                                .ofNullable(toMergeRelationship.treeSides())
                                 .flatMap(Set::stream))
                 .collect(Collectors.toUnmodifiableSet());
 
-        if (traversalStrategy.isClosestDistance() && !relationships.isEmpty()) {
+        if (traversalStrategy.isClosestDistance()
+                && !traversalStrategy.isSkipInLawWhenHigherDistanceNotInLaw() // for this strategy we don't need to clean the list
+                && !relationships.isEmpty()) {
             relationships = List.of();
         }
 
@@ -156,9 +205,12 @@ public class Relationships {
         return Pair.of(result, treeSides.isEmpty() ? null : treeSides);
     }
 
-    private static boolean isDirectRelationship(Relationship relationship) {
-        return relationship.distanceToAncestorRootPerson() == 0 || relationship.distanceToAncestorThisPerson() == 0;
+    @Override
+    public int compareTo(Relationships other) {
+        return RELATIONSHIP_COMPARATOR.compare(this.findFirst(), other.findFirst());
     }
+
+    private static final Comparator<Relationship> RELATIONSHIP_COMPARATOR = Comparator.nullsFirst(Comparator.naturalOrder());
 
     /**
      *
@@ -166,13 +218,19 @@ public class Relationships {
     @Getter
     @RequiredArgsConstructor
     public enum VisitedRelationshipTraversalStrategy {
-        INCLUDE_ALL(false, false, false),
-        SKIP_IN_LAW_WHEN_EXISTS_SAME_DIST_NOT_IN_LAW(true, false, false),
-        SKIP_IN_LAW_WHEN_EXISTS_ANY_DIST_NOT_IN_LAW(false, true, false),
-        CLOSEST_SKIPPING_IN_LAW_WHEN_EXISTS_ANY_NOT_IN_LAW(false, true, true);
+        INCLUDE_ALL(false, false, false, false),
+        SKIP_IN_LAW_WHEN_EXISTS_SAME_DIST_NOT_IN_LAW(true, false, false,false),
+        SKIP_IN_LAW_WHEN_EXISTS_ANY_DIST_NOT_IN_LAW(false, true, false, false),
+        CLOSEST_SKIPPING_IN_LAW_WHEN_EXISTS_ANY_NOT_IN_LAW(false, true, false, true),
+        /*
+         * When a person has a not in-law relationship, and also it has an in-law relationship closer than the not in-law.
+         * i.e: a guy married to his aunt --> [distance 0, in-law, spouse] , [distance 3, not-in-law, aunt]
+         */
+        CLOSEST_KEEPING_CLOSER_IN_LAW_WHEN_EXISTS_ANY_NOT_IN_LAW(false, false, true, true);
 
         private final boolean skipInLawWhenSameDistanceNotInLaw;
-        private final boolean skipInLawWhenAnyDistanceNonInLaw;
+        private final boolean skipInLawWhenAnyDistanceNotInLaw;
+        private final boolean skipInLawWhenHigherDistanceNotInLaw;
         private final boolean closestDistance;
 
     }

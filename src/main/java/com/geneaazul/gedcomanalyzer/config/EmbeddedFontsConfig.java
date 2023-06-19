@@ -31,6 +31,7 @@ public class EmbeddedFontsConfig {
         ROBOTO("ttf", "Roboto", "Regular"),
         ROBOTO_BOLD("ttf", "Roboto", "Bold"),
         ROBOTO_LIGHT("ttf", "Roboto", "Light"),
+        ROBOTO_LIGHT_ITALIC("ttf", "Roboto", "LightItalic"),
         EVERSON_MONO("ttf", "EversonMono");
 
         private final String type;

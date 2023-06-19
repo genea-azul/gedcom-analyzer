@@ -2,6 +2,8 @@ package com.geneaazul.gedcomanalyzer.service.storage;
 
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -38,11 +40,12 @@ public class GedcomHolder {
 
     public void reloadFromStorage(boolean refreshCachedGedcom) {
         try {
+            Instant start = Instant.now();
             gedcomQueue.clear();
             EnrichedGedcom gedcom = storageService.getGedcom(refreshCachedGedcom);
             gedcomQueue.offer(gedcom);
 
-            log.info("Gedcom file loaded: {}", storageService.getGedcomName());
+            log.info("Gedcom file loaded: {} - total time: {}", storageService.getGedcomName(), Duration.between(start, Instant.now()));
 
         } catch (Throwable e) {
             log.error("Error when loading gedcom file: {}", storageService.getGedcomName(), e);

@@ -22,7 +22,7 @@ services:
     build: .
     depends_on:
       - mysqldb
-    restart: on-failure
+    restart: always
     ports:
       - $SPRING_LOCAL_SECURE_PORT:$SPRING_DOCKER_SECURE_PORT
     environment:
@@ -40,8 +40,9 @@ services:
         "server.ssl.key-store-password" : "$SSL_KEYSTORE_PASSWORD",
         "server.ssl.key-alias" : "$SSL_KEY_ALIAS",
         "google-api-key" : "$GOOGLE_API_KEY",
-        "gedcom-google-drive-file-id" : "$GEDCOM_GOOGLE_DRIVE_FILE_ID",
-        "gedcom-local-storage-path" : "/tmp/genea-azul-full-gedcom.ged"
+        "gedcom-storage-google-drive.enabled" : $GEDCOM_GOOGLE_DRIVE_ENABLED,
+        "gedcom-storage-google-drive-file-id" : "$GEDCOM_GOOGLE_DRIVE_FILE_ID",
+        "gedcom-storage-local-path" : "/tmp/genea-azul-full-gedcom.ged"
       }'
     volumes:
       - app:/tmp

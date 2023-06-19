@@ -35,7 +35,8 @@ import lombok.ToString;
 @ToString(onlyExplicitlyIncluded = true)
 @Entity
 @Table(indexes = {
-        @Index(name = "search_family_client_ip_address_idx", columnList = "clientIpAddress")
+        @Index(name = "search_family_client_ip_address_create_date_idx", columnList = "clientIpAddress, createDate"),
+        @Index(name = "search_family_is_match_idx", columnList = "isMatch"),
 })
 public class SearchFamily {
 

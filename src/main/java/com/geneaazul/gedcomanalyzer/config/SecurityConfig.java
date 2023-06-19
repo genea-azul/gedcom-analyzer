@@ -1,5 +1,6 @@
 package com.geneaazul.gedcomanalyzer.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,6 +10,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -22,6 +24,8 @@ public class SecurityConfig {
                 authorize
                         .anyRequest()
                         .permitAll());
+
+        log.info("Using SSL on WEB: {}", requiresSecureChannel);
 
         if (requiresSecureChannel) {
             http.requiresChannel(channel ->

@@ -30,6 +30,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,7 @@ public class SearchService {
         String personSurnameStr = SearchUtils.simplifyName(personSurname);
         String spouseSurnameStr = SearchUtils.simplifyName(spouseSurname);
 
+        //noinspection DataFlowIssue
         return people
                 .stream()
                 .filter(person -> person.getSurname()
@@ -63,6 +65,7 @@ public class SearchService {
         String personSurnameStr = SearchUtils.simplifyName(personSurname);
         String spouseGivenNameStr = SearchUtils.simplifyName(spouseGivenName);
 
+        //noinspection DataFlowIssue
         return people
                 .stream()
                 .filter(person -> person.getSurname()
@@ -235,7 +238,7 @@ public class SearchService {
 
         return results
                 .stream()
-                .sorted(Comparator.comparingInt(PersonComparisonResults::getMinScore))
+                .sorted(Comparator.comparingInt(PersonComparisonResults::minScore))
                 .toList();
     }
 
@@ -508,6 +511,19 @@ public class SearchService {
         return PersonUtils.getShortenedSurnameMainWord(surname, properties.getNormalizedSurnamesMap())
                 .map(s -> gedcom.getPersonsBySurnameMainWordAndSexAndYearOfDeathIndex(s, sex, Year.of(yearOfDeath)))
                 .orElseGet(List::of);
+    }
+
+    public List<Surname> findSurnamesByPattern(String regex, List<EnrichedPerson> people) {
+        Pattern pattern = Pattern.compile(regex);
+        Comparator<Surname> comparator = Comparator.comparing(Surname::value);
+        return people
+                .stream()
+                .map(EnrichedPerson::getSurname)
+                .flatMap(Optional::stream)
+                .filter(surname -> pattern.matcher(surname.value()).find())
+                .distinct()
+                .sorted(comparator)
+                .toList();
     }
 
 }

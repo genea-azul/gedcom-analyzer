@@ -45,5 +45,7 @@ public class SearchFamilyDto {
     @Size(max = 120)
     @ToString.Include
     private String contact;
+    @Builder.Default
+    private Boolean obfuscateLiving = true;
 
 }

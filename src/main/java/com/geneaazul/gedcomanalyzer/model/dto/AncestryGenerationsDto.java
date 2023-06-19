@@ -22,4 +22,7 @@ public class AncestryGenerationsDto {
     @ToString.Include
     private Integer descending;
 
+    @ToString.Include
+    private Integer directDescending;
+
 }

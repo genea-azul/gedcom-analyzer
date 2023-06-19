@@ -9,19 +9,39 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class SetUtils {
 
-    public static <T> Set<T> merge(Set<T> s1, Set<T> s2) {
-        if (s1 == null && s2 == null) {
+    public static <T> Set<T> add(Set<T> s, T e) {
+        if (s == null) {
             return null;
         }
-        if (s1 == null) {
-            return s2;
+        if (e == null) {
+            return s;
         }
-        if (s2 == null) {
-            return s1;
+        if (s.contains(e)) {
+            return s;
         }
         return Stream
-                .of(s1, s2)
-                .flatMap(Set::stream)
+                .concat(s.stream(), Stream.of(e))
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    public static <T> Set<T> merge(Set<T> s1, Set<T> s2) {
+        if (s1 == s2) {
+            return s1;
+        }
+        if (s1 == null || s1.isEmpty()) {
+            return s2;
+        }
+        if (s2 == null || s2.isEmpty()) {
+            return s1;
+        }
+        if (s1.size() >= s2.size() && s1.containsAll(s2)) {
+            return s1;
+        }
+        if (s2.size() > s1.size() && s2.containsAll(s1)) {
+            return s2;
+        }
+        return Stream
+                .concat(s1.stream(), s2.stream())
                 .collect(Collectors.toUnmodifiableSet());
     }
 

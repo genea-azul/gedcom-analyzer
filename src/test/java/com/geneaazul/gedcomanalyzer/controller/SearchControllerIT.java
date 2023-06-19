@@ -6,9 +6,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.geneaazul.gedcomanalyzer.domain.SearchFamily;
@@ -18,10 +16,13 @@ import com.geneaazul.gedcomanalyzer.model.dto.SearchPersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.test.web.servlet.MockMvc;
@@ -41,6 +42,23 @@ public class SearchControllerIT extends AbstractControllerIT {
 
     @Autowired
     private Jackson2ObjectMapperBuilder mapperBuilder;
+
+    @Value("${test.individual.givenName:Test Son}")
+    private String individualGivenName;
+    @Value("${test.individual.surname:Biological and Adoptive}")
+    private String individualSurname;
+    @Value("${test.individual.sex:M}")
+    private SexType individualSex;
+    @Value("${test.individual.yearOfBirth:2000}")
+    private Integer individualYearOfBirth;
+    @Value("${test.spouse.givenName:}")
+    private String spouseGivenName;
+    @Value("${test.spouse.surname:}")
+    private String spouseSurname;
+    @Value("${test.spouse.sex:F}")
+    private SexType spouseSex;
+    @Value("${test.father.givenName:Test Father}")
+    private String fatherGivenName;
 
     @Test
     public void testSearchFamily() throws Exception {
@@ -71,6 +89,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                         .placeOfBirth("Tapalqué")
                         .build())
                 .contact("juan.perez@gmail.com")
+                .obfuscateLiving(false)
                 .build();
 
         doReturn(SearchFamily.builder()
@@ -92,19 +111,21 @@ public class SearchControllerIT extends AbstractControllerIT {
     }
 
     @Test
-    public void testSearchFamilyLatest() throws Exception {
+    @SuppressWarnings("unchecked")
+    public void testSearchFamilyLatestNonMatchingWithContact() throws Exception {
 
         doReturn(new PageImpl<>(
                 List.of(
                         SearchFamily.builder()
                                 .id(1L)
-                                .isMatch(true)
+                                .isMatch(false)
+                                .contact("@contact")
                                 .build()
                 )))
                 .when(searchFamilyRepository)
-                .findAll(any(Pageable.class));
+                .findAll(any(Specification.class), any(Pageable.class));
 
-        String url = "/api/search/family/latest?page=0&size=5";
+        String url = "/api/search/family/latestNonMatchingWithContact?page=0&size=5";
         MvcResult result = mvc.perform(get(url)
                         .with(csrf()))
                 .andExpect(status().isOk())
@@ -144,11 +165,19 @@ public class SearchControllerIT extends AbstractControllerIT {
 
         SearchFamilyDto searchFamilyDto = SearchFamilyDto.builder()
                 .individual(SearchPersonDto.builder()
-                        .givenName("Father")
-                        .surname("Family1")
+                        .givenName(individualGivenName)
+                        .surname(individualSurname)
+                        .sex(individualSex)
+                        .yearOfBirth(individualYearOfBirth)
+                        .build())
+                .spouse(SearchPersonDto.builder()
+                        .givenName(spouseGivenName)
+                        .surname(spouseSurname)
+                        .sex(spouseSex)
+                        .build())
+                .father(SearchPersonDto.builder()
+                        .givenName(fatherGivenName)
                         .sex(SexType.M)
-                        .isAlive(Boolean.FALSE)
-                        .yearOfBirth(1980)
                         .build())
                 .build();
 
@@ -164,7 +193,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                         .contentType(MediaType.APPLICATION_JSON)
                         .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.people", hasSize(1)))
+                .andExpect(jsonPath("$.people", hasSize(StringUtils.isEmpty(spouseGivenName) ? 1 : 2)))
                 .andReturn()
                 .getResponse()
                 .getContentAsString();

@@ -1,9 +1,12 @@
 package com.geneaazul.gedcomanalyzer.model;
 
+import com.geneaazul.gedcomanalyzer.model.dto.AdoptionType;
 import com.geneaazul.gedcomanalyzer.model.dto.TreeSideType;
 import com.geneaazul.gedcomanalyzer.utils.CollectionComparator;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.data.domain.Sort;
+import org.springframework.util.Assert;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -20,26 +23,9 @@ public record Relationship(
         int distanceToAncestorThisPerson,
         boolean isInLaw,
         boolean isHalf,
+        @Nullable AdoptionType adoptionType,
         @Nullable Set<TreeSideType> treeSides,
         @Nullable List<String> relatedPersonIds) implements Comparable<Relationship> {
-
-    public static Relationship of(
-            EnrichedPerson person,
-            int ascending,
-            int descending,
-            boolean isInLaw,
-            boolean isHalf,
-            @Nullable Set<TreeSideType> treeSides,
-            @Nullable List<String> relatedPersonIds) {
-        return new Relationship(
-                person,
-                ascending,
-                descending,
-                isInLaw,
-                isHalf,
-                treeSides,
-                relatedPersonIds);
-    }
 
     public static Relationship empty(EnrichedPerson person) {
         return new Relationship(
@@ -49,11 +35,20 @@ public record Relationship(
                 false,
                 false,
                 null,
+                null,
                 null);
+    }
+
+    public boolean isDirect() {
+        return distanceToAncestorRootPerson == 0 || distanceToAncestorThisPerson == 0;
     }
 
     public int getDistance() {
         return distanceToAncestorRootPerson + distanceToAncestorThisPerson;
+    }
+
+    public int getGeneration() {
+        return distanceToAncestorRootPerson - distanceToAncestorThisPerson;
     }
 
     public int compareDistance(Relationship other) {
@@ -62,51 +57,76 @@ public record Relationship(
         return Integer.compare(distance1, distance2);
     }
 
-    public Relationship increase(
+    public Relationship increaseWithPerson(
             EnrichedPerson person,
             Sort.Direction direction,
             boolean isSetHalf,
+            @Nullable AdoptionType newAdoptionType,
             Set<TreeSideType> treeSides,
             List<String> relatedPersonIds) {
 
-        if (isInLaw || isHalf && direction == Sort.Direction.ASC || isHalf && isSetHalf) {
+        if (isInLaw
+                || isHalf && direction == Sort.Direction.ASC
+                || isHalf && isSetHalf
+                || newAdoptionType != null && direction == null) {
             throw new UnsupportedOperationException();
         }
+
         if (direction == Sort.Direction.ASC) {
-            return Relationship.of(
+            return new Relationship(
                     person,
                     distanceToAncestorRootPerson + 1,
                     distanceToAncestorThisPerson,
                     false,
                     false,
+                    ObjectUtils.defaultIfNull(newAdoptionType, adoptionType),
                     treeSides,
                     relatedPersonIds);
         }
+
         if (direction == Sort.Direction.DESC) {
-            return Relationship.of(
+            return new Relationship(
                     person,
                     distanceToAncestorRootPerson,
                     distanceToAncestorThisPerson + 1,
                     false,
                     isHalf || isSetHalf,
+                    ObjectUtils.defaultIfNull(newAdoptionType, adoptionType),
                     treeSides,
                     relatedPersonIds);
         }
-        return Relationship.of(
+
+        return new Relationship(
                 person,
                 distanceToAncestorRootPerson,
                 distanceToAncestorThisPerson,
                 true,
                 isHalf,
+                adoptionType,
                 treeSides,
                 relatedPersonIds);
     }
 
     public boolean isInLawOf(Relationship other) {
+        Assert.isTrue(this.person.getId().equals(other.person().getId()), "Person ID must equal");
         return this.distanceToAncestorRootPerson == other.distanceToAncestorRootPerson
                 && this.distanceToAncestorThisPerson == other.distanceToAncestorThisPerson
                 && this.isInLaw != other.isInLaw
-                && this.isHalf == other.isHalf;
+                && this.isHalf == other.isHalf
+                && this.adoptionType == other.adoptionType;
+    }
+
+    public boolean isTreeSideCompatible(Collection<Relationship> relationships) {
+        return relationships.stream().allMatch(this::isTreeSideCompatible);
+    }
+
+    public boolean isTreeSideCompatible(Relationship other) {
+        return isAdoptionTypeCompatible(other.adoptionType);
+    }
+
+    private boolean isAdoptionTypeCompatible(AdoptionType otherAdoptionType) {
+        return this.adoptionType == null && otherAdoptionType == null
+                || this.adoptionType != null && otherAdoptionType != null;
     }
 
     @Override
@@ -123,6 +143,7 @@ public record Relationship(
                 && distanceToAncestorThisPerson == that.distanceToAncestorThisPerson
                 && isInLaw == that.isInLaw
                 && isHalf == that.isHalf
+                && adoptionType == that.adoptionType
                 && Objects.equals(this.treeSides, that.treeSides)
                 && Objects.equals(this.relatedPersonIds, that.relatedPersonIds);
     }
@@ -135,111 +156,84 @@ public record Relationship(
                 distanceToAncestorThisPerson,
                 isInLaw,
                 isHalf,
+                adoptionType,
                 treeSides,
                 relatedPersonIds);
     }
 
     @Override
     public int compareTo(@NotNull Relationship other) {
+        return compareTo(other, false);
+    }
+
+    public int compareToWithInvertedPriority(@NotNull Relationship other) {
+        return compareTo(other, true);
+    }
+
+    private int compareTo(Relationship other, boolean invertedPriority) {
         // min distance -> is lower priority
         int compareDistance = compareDistance(other);
         if (compareDistance != 0) {
             return compareDistance;
         }
         // min generation difference -> is lower priority
-        int thisGeneration = Math.abs(this.distanceToAncestorRootPerson - this.distanceToAncestorThisPerson);
-        int otherGeneration = Math.abs(other.distanceToAncestorRootPerson - other.distanceToAncestorThisPerson);
-        int compareGeneration = Integer.compare(thisGeneration, otherGeneration);
+        int compareGeneration = Integer.compare(Math.abs(this.getGeneration()), Math.abs(other.getGeneration()));
         if (compareGeneration != 0) {
-            return compareGeneration;
+            return invert(compareGeneration, invertedPriority);
         }
         // max distance to ancestor root person -> is lower priority
-        int compareDistanceToAncestor = Integer.compare(this.distanceToAncestorRootPerson, other.distanceToAncestorRootPerson);
+        int compareDistanceToAncestor = -Integer.compare(this.distanceToAncestorRootPerson, other.distanceToAncestorRootPerson);
         if (compareDistanceToAncestor != 0) {
-            return Math.negateExact(compareDistanceToAncestor);
-        }
-        //
-        int compareTreeSides = TREE_SIDE_TYPE_COLLECTION_COMPARATOR.compare(this.treeSides, other.treeSides);
-        if (compareTreeSides != 0) {
-            return compareTreeSides;
-        }
-        // not is-half -> is lower priority
-        int compareIsHalf = Boolean.compare(this.isHalf, other.isHalf);
-        if (compareIsHalf != 0) {
-            return compareIsHalf;
+            return invert(compareDistanceToAncestor, invertedPriority);
         }
         // not in-law -> is lower priority
         int compareIsInLaw = Boolean.compare(this.isInLaw, other.isInLaw);
         if (compareIsInLaw != 0) {
-            return compareIsInLaw;
+            return invert(compareIsInLaw, invertedPriority);
         }
+        // not adoptive -> is lower priority
+        int compareAdoption = ADOPTION_TYPE_COMPARATOR.compare(this.adoptionType, other.adoptionType);
+        if (compareAdoption != 0) {
+            return invert(compareAdoption, invertedPriority);
+        }
+        // not is-half -> is lower priority
+        int compareIsHalf = Boolean.compare(this.isHalf, other.isHalf);
+        if (compareIsHalf != 0) {
+            return invert(compareIsHalf, invertedPriority);
+        }
+        //
+        int compareTreeSides = TREE_SIDE_TYPE_COLLECTION_COMPARATOR.compare(this.treeSides, other.treeSides);
+        if (compareTreeSides != 0) {
+            return invert(compareTreeSides, invertedPriority);
+        }
+        //
         int compareRelatedPersonIds = STRING_COLLECTION_COMPARATOR.compare(this.relatedPersonIds, other.relatedPersonIds);
-        //noinspection RedundantIfStatement
         if (compareRelatedPersonIds != 0) {
-            return compareRelatedPersonIds;
+            return invert(compareRelatedPersonIds, invertedPriority);
         }
         return 0;
     }
 
-    public int compareToWithInvertedPriority(Relationship other) {
-        // min distance -> is lower priority
-        int compareDistance = compareDistance(other);
-        if (compareDistance != 0) {
-            return compareDistance;
-        }
-        // min generation difference -> is higher priority
-        int thisGeneration = Math.abs(this.distanceToAncestorRootPerson - this.distanceToAncestorThisPerson);
-        int otherGeneration = Math.abs(other.distanceToAncestorRootPerson - other.distanceToAncestorThisPerson);
-        int compareGeneration = Integer.compare(thisGeneration, otherGeneration);
-        if (compareGeneration != 0) {
-            return Math.negateExact(compareGeneration);
-        }
-        // max distance to ancestor root person -> is higher priority
-        int compareDistanceToAncestor = Integer.compare(this.distanceToAncestorRootPerson, other.distanceToAncestorRootPerson);
-        if (compareDistanceToAncestor != 0) {
-            return compareDistanceToAncestor;
-        }
-        //
-        int compareTreeSides = TREE_SIDE_TYPE_COLLECTION_COMPARATOR
-                .reversed()
-                .compare(this.treeSides, other.treeSides);
-        if (compareTreeSides != 0) {
-            return compareTreeSides;
-        }
-        // not is-half -> is higher priority
-        int compareIsHalf = Boolean.compare(this.isHalf, other.isHalf);
-        if (compareIsHalf != 0) {
-            return Math.negateExact(compareIsHalf);
-        }
-        // not in-law -> is higher priority
-        int compareIsInLaw = Boolean.compare(this.isInLaw, other.isInLaw);
-        if (compareIsInLaw != 0) {
-            return Math.negateExact(compareIsInLaw);
-        }
-        int compareRelatedPersonIds = STRING_COLLECTION_COMPARATOR
-                .reversed()
-                .compare(this.relatedPersonIds, other.relatedPersonIds);
-        //noinspection RedundantIfStatement
-        if (compareRelatedPersonIds != 0) {
-            return compareRelatedPersonIds;
-        }
-        return 0;
+    private int invert(int value, boolean invert) {
+        return invert ? -value : value;
     }
 
     public Relationship withTreeSides(@Nullable Set<TreeSideType> treeSides) {
         if (Objects.equals(this.treeSides, treeSides)) {
             return this;
         }
-        return Relationship.of(
+        return new Relationship(
                 person,
                 distanceToAncestorRootPerson,
                 distanceToAncestorThisPerson,
                 isInLaw,
                 isHalf,
+                adoptionType,
                 treeSides,
                 relatedPersonIds);
     }
 
+    private static final Comparator<AdoptionType> ADOPTION_TYPE_COMPARATOR = Comparator.nullsFirst(Comparator.naturalOrder());
     private static final Comparator<Collection<String>> STRING_COLLECTION_COMPARATOR = Comparator.nullsFirst(new CollectionComparator<>());
     private static final Comparator<Collection<TreeSideType>> TREE_SIDE_TYPE_COLLECTION_COMPARATOR = Comparator.nullsFirst(new CollectionComparator<>());
 

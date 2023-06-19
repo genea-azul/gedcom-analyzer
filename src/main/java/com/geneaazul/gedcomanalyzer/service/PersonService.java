@@ -5,15 +5,19 @@ import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
 import com.geneaazul.gedcomanalyzer.model.AncestryGenerations;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.EnrichedSpouseWithChildren;
 import com.geneaazul.gedcomanalyzer.model.FamilyTree;
 import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
 import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.Relationships;
 import com.geneaazul.gedcomanalyzer.model.Surname;
+import com.geneaazul.gedcomanalyzer.model.dto.AdoptionType;
+import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.model.dto.TreeSideType;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
+import com.geneaazul.gedcomanalyzer.utils.RelationshipUtils;
 import com.geneaazul.gedcomanalyzer.utils.SearchUtils;
 import com.geneaazul.gedcomanalyzer.utils.SetUtils;
 
@@ -26,7 +30,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -34,8 +37,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import jakarta.annotation.Nullable;
@@ -60,43 +61,57 @@ public class PersonService {
             return Optional.empty();
         }
 
-        String fileId = Stream.of(
-                person
-                        .getGivenName()
-                        .map(GivenName::value),
-                person
-                        .getSurname()
-                        .map(Surname::value))
-                .flatMap(Optional::stream)
-                .reduce((n1, n2) -> n1 + "_" + n2)
-                .map(SearchUtils::simplifyName)
-                .map(name -> name.replaceAll(" ", "_"))
-                .orElse("genea-azul");
+        String fileId = getFamilyTreeFileId(person);
+        String suffix = obfuscateLiving ? "" : "_visible";
 
         Path path = properties
                 .getTempDir()
                 .resolve("family-trees")
-                .resolve(fileId + "_" + personUuid + ".pdf");
+                .resolve(fileId + "_" + personUuid + suffix + ".pdf");
 
         if (!Files.exists(path)) {
-            List<Relationship> relationships = getPeopleInTree(person, false);
+            List<Relationships> relationshipsList = setTransientProperties(person, false);
 
             MutableInt index = new MutableInt(1);
-            List<FormattedRelationship> peopleInTree = relationships
+            List<FormattedRelationship> peopleInTree = relationshipsList
                     .stream()
                     .sorted()
-                    .map(relationship -> relationshipMapper.toRelationshipDto(
-                            relationship,
-                            obfuscateLiving
-                                    // don't obfuscate root person
-                                    && !relationship.person().getId().equals(person.getId())
-                                    && (person.isAlive() && relationship.getDistance() <= MAX_DISTANCE_TO_OBFUSCATE
-                                            || relationship.person().isAlive())))
-                    .map(relationship -> relationshipMapper.formatInSpanish(relationship, index.getAndIncrement(), true))
+                    .map(relationships -> relationships
+                            .getOrderedRelationships()
+                            .stream()
+                            .map(relationship -> relationshipMapper.toRelationshipDto(
+                                    relationship,
+                                    obfuscateLiving
+                                            // don't obfuscate root person
+                                            && !relationship.person().getId().equals(person.getId())
+                                            && (person.isAlive() && relationship.getDistance() <= MAX_DISTANCE_TO_OBFUSCATE
+                                                    || relationship.person().isAlive())))
+                            .map(relationship -> relationshipMapper.formatInSpanish(relationship, index.getAndIncrement(), true))
+                            .toList())
+                    .map(formattedRelationships -> {
+                        if (formattedRelationships.size() > 2 || formattedRelationships.isEmpty()) {
+                            throw new UnsupportedOperationException("Something is wrong");
+                        }
+                        if (formattedRelationships.size() == 1) {
+                            return formattedRelationships.get(0);
+                        }
+                        FormattedRelationship first = formattedRelationships.get(0);
+                        FormattedRelationship second = formattedRelationships.get(1);
+                        return new FormattedRelationship(
+                                first.index(),
+                                first.personName(),
+                                first.personSex(),
+                                first.personIsAlive(),
+                                first.personYearOfBirth(),
+                                first.personCountryOfBirth(),
+                                first.adoption(),
+                                first.treeSide(),
+                                first.relationshipDesc() + " / " + second.relationshipDesc());
+                    })
                     .toList();
 
             try {
-                familyTreeService.exportToPDF(path, person.getDisplayName(), peopleInTree);
+                familyTreeService.exportToPDF(path, person, peopleInTree);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
@@ -110,157 +125,59 @@ public class PersonService {
                 new Locale("es", "AR")));
     }
 
-    public List<String> getAncestryCountries(EnrichedPerson person) {
-        if (person.getAncestryCountries() == null) {
-            Set<String> visitedPersons = new HashSet<>();
-            List<String> ancestryCountries = person
-                    .getParents()
-                    .stream()
-                    .map(parent -> getAncestryCountries(parent, visitedPersons, 0))
-                    .flatMap(Set::stream)
-                    .distinct()
-                    .sorted()
-                    .toList();
-            person.setAncestryCountries(ancestryCountries);
-        }
-
-        return person.getAncestryCountries();
+    private String getFamilyTreeFileId(EnrichedPerson person) {
+        return Stream.of(
+                        person
+                                .getGivenName()
+                                .map(GivenName::value),
+                        person
+                                .getSurname()
+                                .map(Surname::value))
+                .flatMap(Optional::stream)
+                .reduce((n1, n2) -> n1 + "_" + n2)
+                .map(SearchUtils::simplifyName)
+                .map(name -> name.replaceAll(" ", "_"))
+                .orElse("genea-azul");
     }
 
-    private static Set<String> getAncestryCountries(
-            EnrichedPerson person,
-            Set<String> visitedPersons,
-            int level) {
-
-        // Corner case: parents are cousins -> skip visiting a person twice
-        if (visitedPersons.contains(person.getId())) {
-            return Set.of();
-        }
-
-        visitedPersons.add(person.getId());
-
-        if (level == 20) {
-            // If max level or recursion is reached, stop the search
-            return person.getCountryOfBirth()
-                    .map(Set::of)
-                    .orElseGet(Set::of);
-        }
-
-        Set<String> ancestryCountries = person
-                .getParents()
+    public List<Relationships> setTransientProperties(EnrichedPerson person, boolean excludeRootPerson) {
+        List<Relationships> relationships = getPeopleInTree(person, excludeRootPerson);
+        List<Relationship> lastRelationships = relationships
                 .stream()
-                .map(parent -> getAncestryCountries(
-                        parent,
-                        visitedPersons,
-                        level + 1))
-                .flatMap(Set::stream)
-                .collect(Collectors.toSet());
+                // Getting the last will prioritize the not-in-law relationships
+                .map(Relationships::findLast)
+                .toList();
 
-        // Add person's country to the set of ancestry countries
-        person.getCountryOfBirth()
-                .ifPresent(ancestryCountries::add);
+        Integer surnamesCount = RelationshipUtils.getSurnamesCount(lastRelationships);
+        List<String> ancestryCountries = RelationshipUtils.getAncestryCountries(lastRelationships);
+        AncestryGenerations ancestryGenerations = RelationshipUtils.getAncestryGenerations(lastRelationships);
+        Optional<Relationship> maxDistantRelationship = RelationshipUtils.getMaxDistantRelationship(lastRelationships);
 
-        return ancestryCountries;
-    }
-
-    public AncestryGenerations getAncestryGenerations(EnrichedPerson person) {
-        if (person.getAncestryGenerations() == null) {
-            int ascendingGenerations = getAncestryGenerations(person, new HashSet<>(), EnrichedPerson::getParents, 0, 0);
-            int descendingGenerations = getAncestryGenerations(person, new HashSet<>(), EnrichedPerson::getChildren, 0, 0);
-            person.setAncestryGenerations(AncestryGenerations.of(ascendingGenerations, descendingGenerations));
-        }
-
-        return person.getAncestryGenerations();
-    }
-
-    private static int getAncestryGenerations(
-            EnrichedPerson person,
-            Set<String> visitedPersons,
-            Function<EnrichedPerson, List<EnrichedPerson>> relativesResolver,
-            int level,
-            int maxLevel) {
-
-        // Corner case: parents are cousins -> skip visiting
-        // Corner case: parent is cousin of spouse's parent -> visit higher distance
-        if (visitedPersons.contains(person.getId()) && level <= maxLevel) {
-            return level;
-        }
-
-        visitedPersons.add(person.getId());
-
-        if (level == 20) {
-            // If max level or recursion is reached, stop the search
-            return level;
-        }
-
-        MutableInt maxLevelHolder = new MutableInt(maxLevel);
-
-        return relativesResolver
-                .apply(person)
-                .stream()
-                .map(parent -> {
-                    int generations = getAncestryGenerations(
-                            parent,
-                            visitedPersons,
-                            relativesResolver,
-                            level + 1,
-                            maxLevelHolder.getValue());
-
-                    int newMaxLevel = Math.max(maxLevelHolder.getValue(), generations);
-                    maxLevelHolder.setValue(newMaxLevel);
-
-                    return generations;
-                })
-                .reduce(Integer::max)
-                .orElse(level);
-    }
-
-    public Integer getNumberOfPeopleInTree(EnrichedPerson person) {
-        if (person.getNumberOfPeopleInTree() == null) {
-            setNumberOfPeopleInTreeAndMaxDistantRelationship(person);
-        }
-
-        return person.getNumberOfPeopleInTree();
-    }
-
-    @SuppressWarnings("OptionalAssignedToNull")
-    public Optional<Relationship> getMaxDistantRelationship(EnrichedPerson person) {
-        if (person.getMaxDistantRelationship() == null) {
-            setNumberOfPeopleInTreeAndMaxDistantRelationship(person);
-        }
-
-        return person.getMaxDistantRelationship();
-    }
-
-    private void setNumberOfPeopleInTreeAndMaxDistantRelationship(EnrichedPerson person) {
-        List<Relationship> peopleInTree = getPeopleInTree(person, true);
-        Optional<Relationship> maxDistantRelationship = peopleInTree
-                .stream()
-                .reduce((r1, r2) -> r1.compareToWithInvertedPriority(r2) >= 0 ? r1 : r2);
-
-        person.setNumberOfPeopleInTree(peopleInTree.size() + 1);
+        person.setPersonsCountInTree(relationships.size());
+        person.setSurnamesCountInTree(surnamesCount);
+        person.setAncestryCountries(ancestryCountries);
+        person.setAncestryGenerations(ancestryGenerations);
         person.setMaxDistantRelationship(maxDistantRelationship);
+
+        return relationships;
     }
 
-    public List<Relationship> getPeopleInTree(EnrichedPerson person, boolean excludeRootPerson) {
+    public List<Relationships> getPeopleInTree(EnrichedPerson person, boolean excludeRootPerson) {
         Map<String, Relationships> visitedPersons = new LinkedHashMap<>();
         traversePeopleInTree(
                 Relationship.empty(person),
                 null,
                 visitedPersons,
                 Sort.Direction.ASC,
-                Relationships.VisitedRelationshipTraversalStrategy.CLOSEST_SKIPPING_IN_LAW_WHEN_EXISTS_ANY_NOT_IN_LAW,
+                Relationships.VisitedRelationshipTraversalStrategy.CLOSEST_KEEPING_CLOSER_IN_LAW_WHEN_EXISTS_ANY_NOT_IN_LAW,
                 false);
 
         return visitedPersons
                 .values()
                 .stream()
                 .filter(relationships -> !excludeRootPerson || !relationships.getPersonId().equals(person.getId()))
-                .map(relationships -> {
-                    // Set the collected tree sides from all relationships for the current person
-                    Relationship relationship = relationships.findFirst();
-                    return relationship.withTreeSides(relationships.getTreeSides());
-                })
+                // Make sure all relationships have the updated list of tree sides
+                .peek(Relationships::propagateTreeSidesToRelationships)
                 .toList();
     }
 
@@ -273,6 +190,7 @@ public class PersonService {
             boolean onlyPropagateTreeSides) {
 
         EnrichedPerson person = toVisitRelationship.person();
+
         boolean visited = visitedPersons.containsKey(person.getId());
         if (visited) {
             Relationships visitedRelationships = visitedPersons.get(person.getId());
@@ -290,12 +208,19 @@ public class PersonService {
 
             // Check traversal strategies for visited in-law relationship
             if (toVisitRelationship.isInLaw()) {
-                if (visitedRelationshipTraversalStrategy.isSkipInLawWhenSameDistanceNotInLaw() && visitedRelationships.containsInLawOf(toVisitRelationship)) {
+                if (visitedRelationshipTraversalStrategy.isSkipInLawWhenSameDistanceNotInLaw()
+                        && visitedRelationships.containsInLawOf(toVisitRelationship)) {
                     // The visited in-law relationship appears also as not in-law (with the same distance)
                     return;
                 }
-                if (visitedRelationshipTraversalStrategy.isSkipInLawWhenAnyDistanceNonInLaw() && visitedRelationships.isContainsNotInLaw()) {
+                if (visitedRelationshipTraversalStrategy.isSkipInLawWhenAnyDistanceNotInLaw()
+                        && visitedRelationships.isContainsNotInLaw()) {
                     // The visited in-law relationship appears also as not in-law (with any distance)
+                    return;
+                }
+                if (visitedRelationshipTraversalStrategy.isSkipInLawWhenHigherDistanceNotInLaw()
+                        && visitedRelationships.containsWithLowerDistance(toVisitRelationship)) {
+                    // The visited in-law relationship appears also as not in-law (with lower distance) or as same in-law (with lower distance)
                     return;
                 }
             }
@@ -304,13 +229,23 @@ public class PersonService {
             if (visitedRelationshipTraversalStrategy.isClosestDistance()) {
                 if (visitedRelationshipTraversalStrategy.isSkipInLawWhenSameDistanceNotInLaw()
                         && (toVisitRelationship.isInLaw() || !visitedRelationships.containsInLawOf(toVisitRelationship))
-                        && toVisitRelationship.compareTo(visitedRelationships.getOrderedRelationships().first()) >= 0) {
+                        && toVisitRelationship.compareTo(visitedRelationships.findFirst()) >= 0) {
                     mergeTreeSides(visitedPersons, toVisitRelationship, previousPersonId, direction, visitedRelationshipTraversalStrategy);
                     return;
                 }
-                if (visitedRelationshipTraversalStrategy.isSkipInLawWhenAnyDistanceNonInLaw()
+                if (visitedRelationshipTraversalStrategy.isSkipInLawWhenAnyDistanceNotInLaw()
                         && (toVisitRelationship.isInLaw() || visitedRelationships.isContainsNotInLaw())
-                        && toVisitRelationship.compareTo(visitedRelationships.getOrderedRelationships().first()) >= 0) {
+                        && toVisitRelationship.compareTo(visitedRelationships.findFirst()) >= 0) {
+                    mergeTreeSides(visitedPersons, toVisitRelationship, previousPersonId, direction, visitedRelationshipTraversalStrategy);
+                    return;
+                }
+                if (visitedRelationshipTraversalStrategy.isSkipInLawWhenHigherDistanceNotInLaw()
+                        // In this case the comparison for the in-law condition was already performed some lines above
+                        && !toVisitRelationship.isInLaw()
+                        && visitedRelationships
+                                .findFirstNotInLaw()
+                                .map(relationship -> toVisitRelationship.compareTo(relationship) >= 0)
+                                .orElse(false)) {
                     mergeTreeSides(visitedPersons, toVisitRelationship, previousPersonId, direction, visitedRelationshipTraversalStrategy);
                     return;
                 }
@@ -335,10 +270,11 @@ public class PersonService {
                 merged.getTreeSides(),
                 previousPersonId)
                 .forEach(relativeAndDirection -> traversePeopleInTree(
-                        toVisitRelationship.increase(
+                        toVisitRelationship.increaseWithPerson(
                                 relativeAndDirection.person,
                                 relativeAndDirection.direction,
-                                isSetHalf(direction, relativeAndDirection.direction, previousPersonId, relativeAndDirection.person),
+                                relativeAndDirection.isHalf,
+                                relativeAndDirection.adoptionType,
                                 relativeAndDirection.treeSides,
                                 relativeAndDirection.relatedPersonIds),
                         person.getId(),
@@ -355,68 +291,39 @@ public class PersonService {
             Sort.Direction direction,
             Relationships.VisitedRelationshipTraversalStrategy visitedRelationshipTraversalStrategy) {
 
-        @Nullable Set<TreeSideType> previousTreeSides = visitedPersons
-                .get(toVisitRelationship.person().getId())
-                .getTreeSides();
+        Relationships relationships = visitedPersons.get(toVisitRelationship.person().getId());
 
-        boolean merge = !SetUtils.containsAll(previousTreeSides, toVisitRelationship.treeSides());
+        boolean isTreeSideCompatible = toVisitRelationship.isTreeSideCompatible(relationships.getOrderedRelationships());
+        boolean isMissingTreeSides = !SetUtils.containsAll(relationships.getTreeSides(), toVisitRelationship.treeSides());
 
-        if (merge) {
-            Relationships merged = visitedPersons.merge(
-                    toVisitRelationship.person().getId(),
-                    Relationships.from(toVisitRelationship),
-                    Relationships::mergeTreeSides);
-
-            // Propagate merged tree sides to descendants
-            resolveRelativesToTraverse(
-                    toVisitRelationship.person(),
-                    direction,
-                    merged.getTreeSides(),
-                    previousPersonId)
-                    .forEach(relativeAndDirection -> traversePeopleInTree(
-                            toVisitRelationship.increase(
-                                    relativeAndDirection.person,
-                                    relativeAndDirection.direction,
-                                    false,
-                                    relativeAndDirection.treeSides,
-                                    relativeAndDirection.relatedPersonIds),
-                            toVisitRelationship.person().getId(),
-                            visitedPersons,
-                            relativeAndDirection.direction,
-                            visitedRelationshipTraversalStrategy,
-                            true));
-        }
-    }
-
-    private static boolean isSetHalf(
-            Sort.Direction currentDirection,
-            Sort.Direction nextDirection,
-            @Nullable String previousPersonId,
-            EnrichedPerson nextPersonToVisit) {
-
-        if (previousPersonId == null || !(currentDirection == Sort.Direction.ASC && nextDirection == Sort.Direction.DESC)) {
-            return false;
+        if (!isTreeSideCompatible || !isMissingTreeSides) {
+            return;
         }
 
-        EnrichedPerson previousPerson = nextPersonToVisit.getGedcom().getPersonById(previousPersonId);
+        Relationships merged = visitedPersons.merge(
+                toVisitRelationship.person().getId(),
+                Relationships.from(toVisitRelationship),
+                Relationships::mergeTreeSides);
 
-        // TODO consider biological/adopted parents
-        //noinspection DataFlowIssue
-        if (previousPerson.getParents().size() != nextPersonToVisit.getParents().size()) {
-            return false;
-        }
-
-        Set<String> parentIds = previousPerson
-                .getParents()
-                .stream()
-                .map(EnrichedPerson::getId)
-                .collect(Collectors.toSet());
-
-        return nextPersonToVisit
-                .getParents()
-                .stream()
-                .map(EnrichedPerson::getId)
-                .anyMatch(personId -> !parentIds.contains(personId));
+        // Propagate merged tree sides to descendants
+        resolveRelativesToTraverse(
+                toVisitRelationship.person(),
+                direction,
+                merged.getTreeSides(),
+                previousPersonId)
+                .forEach(relativeAndDirection -> traversePeopleInTree(
+                        toVisitRelationship.increaseWithPerson(
+                                relativeAndDirection.person,
+                                relativeAndDirection.direction,
+                                relativeAndDirection.isHalf,
+                                relativeAndDirection.adoptionType,
+                                relativeAndDirection.treeSides,
+                                relativeAndDirection.relatedPersonIds),
+                        toVisitRelationship.person().getId(),
+                        visitedPersons,
+                        relativeAndDirection.direction,
+                        visitedRelationshipTraversalStrategy,
+                        true));
     }
 
     /**
@@ -442,7 +349,7 @@ public class PersonService {
      *     </li>
      * </ul>
      */
-    private static Stream<A> resolveRelativesToTraverse(
+    private static Stream<RelativeAndDirection> resolveRelativesToTraverse(
             EnrichedPerson person,
             @Nullable Sort.Direction direction,
             @Nullable Set<TreeSideType> treeSides,
@@ -454,12 +361,29 @@ public class PersonService {
 
         List<String> singleRelatedPersonIds = List.of(person.getId());
 
-        Stream<A> relativesAndDirections = Stream.concat(
+        List<Optional<String>> previousPersonParents =
+                (direction == Sort.Direction.ASC && previousPersonId != null && !person.getSpousesWithChildren().isEmpty())
+                ? person
+                        .getSpousesWithChildren()
+                        .stream()
+                        .filter(spouseWithChildren -> spouseWithChildren
+                                .getChildren()
+                                .stream()
+                                .map(EnrichedPerson::getId)
+                                .anyMatch(previousPersonId::equals))
+                        .map(EnrichedSpouseWithChildren::getSpouse)
+                        .map(spouse -> spouse.map(EnrichedPerson::getId))
+                        .toList()
+                : null;
+
+        Stream<RelativeAndDirection> relativesAndDirections = Stream.concat(
                 person
                         .getSpouses()
                         .stream()
-                        .map(spouse -> A.of(
+                        .map(spouse -> new RelativeAndDirection(
                                 spouse,
+                                null,
+                                false,
                                 null,
                                 Optional
                                         .ofNullable(treeSides)
@@ -480,11 +404,17 @@ public class PersonService {
                                             .orElse(singleRelatedPersonIds);
 
                                     return spouseWithChildren
-                                            .getChildren()
+                                            .getChildrenWithReference()
                                             .stream()
-                                            .map(child -> A.of(
-                                                    child,
+                                            .map(childWithReference -> new RelativeAndDirection(
+                                                    childWithReference.person(),
                                                     Sort.Direction.DESC,
+                                                    previousPersonParents != null && !previousPersonParents
+                                                            .contains(spouseWithChildren.getSpouse().map(EnrichedPerson::getId)),
+                                                    childWithReference
+                                                            .referenceType()
+                                                            .map(PersonService::resolveAdoptionType)
+                                                            .orElse(null),
                                                     Optional
                                                             .ofNullable(treeSides)
                                                             .orElseGet(() -> Set.of(TreeSideType.DESCENDANT)),
@@ -494,14 +424,19 @@ public class PersonService {
         if (direction == Sort.Direction.ASC) {
             relativesAndDirections = Stream.concat(
                     person
-                            .getParents()
+                            .getParentsWithReference()
                             .stream()
-                            .map(parent -> A.of(
-                                    parent,
+                            .map(parentWithReference -> new RelativeAndDirection(
+                                    parentWithReference.person(),
                                     Sort.Direction.ASC,
+                                    false,
+                                    parentWithReference
+                                            .referenceType()
+                                            .map(PersonService::resolveAdoptionType)
+                                            .orElse(null),
                                     Optional
                                             .ofNullable(treeSides)
-                                            .orElseGet(() -> resolveParentTreeSideTypes(parent.getSex())),
+                                            .orElseGet(() -> resolveParentTreeSideTypes(parentWithReference.person().getSex())),
                                     singleRelatedPersonIds)),
                     relativesAndDirections);
         }
@@ -510,31 +445,29 @@ public class PersonService {
                 .filter(relative -> !relative.person.getId().equals(previousPersonId));
     }
 
-    private record A(
+    private record RelativeAndDirection(
             EnrichedPerson person,
             @Nullable Sort.Direction direction,
+            boolean isHalf,
+            AdoptionType adoptionType,
             Set<TreeSideType> treeSides,
             List<String> relatedPersonIds) {
-
-        public static A of(
-                EnrichedPerson person,
-                @Nullable Sort.Direction direction,
-                Set<TreeSideType> treeSides,
-                List<String> relatedPersonIds) {
-            return new A(
-                    person,
-                    direction,
-                    treeSides,
-                    relatedPersonIds);
-        }
     }
 
     private static Set<TreeSideType> resolveParentTreeSideTypes(SexType parentSex) {
-        switch (parentSex) {
-            case F -> { return Set.of(TreeSideType.MOTHER); }
-            case M -> { return Set.of(TreeSideType.FATHER); }
-            default -> { return Set.of(); }
-        }
+        return switch (parentSex) {
+            case F -> Set.of(TreeSideType.MOTHER);
+            case M -> Set.of(TreeSideType.FATHER);
+            default -> Set.of();
+        };
+    }
+
+    private static AdoptionType resolveAdoptionType(ReferenceType referenceType) {
+        return switch (referenceType) {
+            case ADOPTIVE_PARENT, ADOPTED_CHILD -> AdoptionType.ADOPTIVE;
+            case FOSTER_PARENT, FOSTER_CHILD -> AdoptionType.FOSTER;
+            default -> null;
+        };
     }
 
 }
