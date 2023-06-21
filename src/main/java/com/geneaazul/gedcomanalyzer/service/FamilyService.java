@@ -69,7 +69,12 @@ public class FamilyService {
             int size,
             @Nullable Sort sort) {
         size = Math.min(size, MAX_PAGE_SIZE);
-        Pageable pageable = PageRequest.of(page, size, Optional.ofNullable(sort).orElseGet(Sort::unsorted));
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Optional
+                        .ofNullable(sort)
+                        .orElseGet(Sort::unsorted));
 
         return searchFamilyRepository
                 .findAll(Specification
@@ -86,12 +91,12 @@ public class FamilyService {
             @Nullable Boolean hasContact,
             int page,
             int size) {
-        return getSearchFamilies(isMatch, hasContact, page, size, Sort.by(Sort.Direction.DESC, "id"));
-    }
-
-    @Transactional(readOnly = true)
-    public List<SearchFamilyDetailsDto> getLatestNonMatchingWithContact(int page, int size) {
-        return getLatest(Boolean.FALSE, Boolean.TRUE, page, size);
+        return getSearchFamilies(
+                isMatch,
+                hasContact,
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "id"));
     }
 
     @Transactional(readOnly = true)

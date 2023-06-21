@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -88,13 +89,15 @@ public class SearchController {
 
     @GetMapping("/family/latest")
     public List<SearchFamilyDetailsDto> getLatest(
+            @RequestParam @Nullable Boolean isMatch,
+            @RequestParam @Nullable Boolean hasContact,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         dockerService.startDbContainer();
 
-        log.info("Search family latest [ page={}, size={} ]", page, size);
+        log.info("Search family latest [ isMatch={}, hasContact={}, page={}, size={} ]", isMatch, hasContact, page, size);
 
-        return familyService.getLatest(null, null, page, size);
+        return familyService.getLatest(isMatch, hasContact, page, size);
     }
 
     @GetMapping("/family/latestNonMatchingWithContact")
@@ -105,7 +108,7 @@ public class SearchController {
 
         log.info("Search family latest non-matching with contact [ page={}, size={} ]", page, size);
 
-        return familyService.getLatestNonMatchingWithContact(page, size);
+        return familyService.getLatest(Boolean.FALSE, Boolean.TRUE, page, size);
     }
 
     @PostMapping("/surnames")
