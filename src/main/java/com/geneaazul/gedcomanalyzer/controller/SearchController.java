@@ -14,6 +14,7 @@ import com.geneaazul.gedcomanalyzer.service.PersonService;
 import com.geneaazul.gedcomanalyzer.service.SurnameService;
 import com.geneaazul.gedcomanalyzer.utils.InetAddressUtils;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
@@ -91,12 +92,14 @@ public class SearchController {
     }
 
     @GetMapping("/family/{searchId}/reviewed")
-    public SearchFamilyDetailsDto markFamilyReviewed(@PathVariable Long searchId) {
+    public SearchFamilyDetailsDto markFamilyReviewed(
+            @PathVariable Long searchId,
+            @RequestParam(defaultValue = BooleanUtils.TRUE) Boolean isReviewed) {
         dockerService.startDbContainer();
 
         log.info("Mark family reviewed [ searchId={} ]", searchId);
 
-        return familyService.updateSearchIsReviewed(searchId, Boolean.TRUE);
+        return familyService.updateSearchIsReviewed(searchId, isReviewed);
     }
 
     @GetMapping("/family/latest")
@@ -145,7 +148,7 @@ public class SearchController {
     @GetMapping("/family-tree/{personUuid}/plain")
     public ResponseEntity<Resource> getPlainFamilyTree(
             @PathVariable UUID personUuid,
-            @RequestParam(defaultValue = "true") Boolean obfuscateLiving,
+            @RequestParam(defaultValue = BooleanUtils.TRUE) Boolean obfuscateLiving,
             HttpServletRequest request) throws IOException {
 
         Optional<FamilyTree> maybeFamilyTree = personService.getFamilyTree(personUuid, Boolean.TRUE.equals(obfuscateLiving));
