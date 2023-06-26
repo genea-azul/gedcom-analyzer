@@ -55,14 +55,14 @@ public class FamilyService {
     }
 
     @Transactional
-    public void updateSearchIsMatch(Long searchFamilyId, boolean isMatch) {
+    public void updateSearchIsMatch(Long searchFamilyId, Boolean isMatch) {
         searchFamilyRepository
                 .findById(searchFamilyId)
                 .ifPresent(searchFamily -> searchFamily.setIsMatch(isMatch));
     }
 
     @Transactional
-    public SearchFamilyDetailsDto updateSearchIsReviewed(Long searchFamilyId, boolean isReviewed) {
+    public SearchFamilyDetailsDto updateSearchIsReviewed(Long searchFamilyId, Boolean isReviewed) {
         return searchFamilyRepository
                 .findById(searchFamilyId)
                 .map(searchFamily -> {
