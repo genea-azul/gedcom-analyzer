@@ -229,8 +229,8 @@ $(document).ready(function() {
                         } else {
                             $resultComponent
                                 .html("<p>🔎 No se encontraron resultados. 🔍</p>")
-                                .append("<p>Edit&aacute; la b&uacute;squeda agregando fechas o completando nombres de padres y parejas.</p>")
-                                .append("<p>Verific&aacute; que el sexo de la persona est&eacute; bien seleccionado.</p>");
+                                .append("<p>Verific&aacute; que el <span class=\"text-danger fw-bold\">sexo</span> de la persona est&eacute; bien seleccionado.</p>")
+                                .append("<p>Edit&aacute; la b&uacute;squeda agregando fechas o completando nombres de padres y parejas.</p>");
                         }
                     } else {
                         $resultComponent

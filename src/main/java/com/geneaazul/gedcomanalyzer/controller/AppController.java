@@ -32,4 +32,11 @@ public class AppController {
         return new ModelAndView("search-family/latest", params);
     }
 
+    @GetMapping("/search-family/latestToReview")
+    public ModelAndView searchFamilyToReview() {
+        dockerService.startDbContainer();
+        Map<String, ?> params = Map.of("projectVersion", projectVersion, "toReview", true);
+        return new ModelAndView("search-family/latest", params);
+    }
+
 }

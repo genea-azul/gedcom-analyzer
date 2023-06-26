@@ -296,7 +296,7 @@ public class GedcomAnalyzerService {
     /**
      * Analyse GEDCOM for orphan trees: sub-graph not connected to first person's sub-graph.
      */
-    public Map<EnrichedPerson, String> getMostFrequentSurnamesByPersonSubTree(List<EnrichedPerson> people) {
+    public Map<EnrichedPerson, Pair<String, Integer>> getMostFrequentSurnamesByPersonSubTree(List<EnrichedPerson> people) {
 
         Set<String> visitedPersons = new HashSet<>();
 
@@ -313,16 +313,18 @@ public class GedcomAnalyzerService {
                     Map<String, Integer> cardinality = CollectionUtils.getCardinalityMap(surnames);
                     return Map.entry(
                             person,
-                            cardinality
-                                    .entrySet()
-                                    .stream()
-                                    .reduce((e1, e2) -> e1.getValue() < e2.getValue() ? e2 : e1)
-                                    .map(Map.Entry::getKey));
+                            Pair.of(
+                                    cardinality
+                                            .entrySet()
+                                            .stream()
+                                            .reduce((e1, e2) -> e1.getValue() < e2.getValue() ? e2 : e1)
+                                            .map(Map.Entry::getKey)
+                                            .get(),
+                                    surnames.size()));
                 })
-                .filter(entry -> entry.getValue().isPresent())
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
-                        entry -> entry.getValue().get(),
+                        Map.Entry::getValue,
                         (u, v) -> u,
                         LinkedHashMap::new));
     }

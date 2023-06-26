@@ -6,7 +6,6 @@ import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchPersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
-import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -14,9 +13,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
-import lombok.RequiredArgsConstructor;
-
 import javax.annotation.CheckForNull;
+
+import jakarta.annotation.Nullable;
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
@@ -67,6 +67,7 @@ public class SearchFamilyMapper {
                 .maternalGrandfather(searchPersonMapper.toSearchPersonDto(searchFamily.getMaternalGrandfather(), SexType.M))
                 .maternalGrandmother(searchPersonMapper.toSearchPersonDto(searchFamily.getMaternalGrandmother(), SexType.F))
                 .isMatch(searchFamily.getIsMatch())
+                .isReviewed(searchFamily.getIsReviewed())
                 .contact(searchFamily.getContact())
                 .createDate(searchFamily.getCreateDate())
                 .clientIpAddress(searchFamily.getClientIpAddress())

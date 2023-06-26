@@ -1,12 +1,10 @@
 $(document).ready(function() {
     var searchParams = new URLSearchParams(window.location.search);
-    var nonMatchingWithContactParam = searchParams.get("nonMatchingWithContact");
-    var isNonMatchingWithContact = nonMatchingWithContactParam === "true" || nonMatchingWithContactParam === "1";
 
     $.ajax({
         type: "GET",
-        url: isNonMatchingWithContact
-            ? "/api/search/family/latestNonMatchingWithContact"
+        url: isToReview
+            ? "/api/search/family/latest?isReviewed=false"
             : "/api/search/family/latest",
         contentType: "application/json",
         data: {
