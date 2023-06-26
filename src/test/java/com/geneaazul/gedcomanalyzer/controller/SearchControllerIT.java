@@ -1,12 +1,15 @@
 package com.geneaazul.gedcomanalyzer.controller;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.geneaazul.gedcomanalyzer.domain.SearchFamily;
@@ -30,6 +33,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
@@ -112,24 +116,48 @@ public class SearchControllerIT extends AbstractControllerIT {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void testSearchFamilyLatestNonMatchingWithContact() throws Exception {
+    public void testSearchFamilyLatestToReview() throws Exception {
 
         doReturn(new PageImpl<>(
                 List.of(
                         SearchFamily.builder()
                                 .id(1L)
                                 .isMatch(false)
+                                .isReviewed(null)
                                 .contact("@contact")
                                 .build()
                 )))
                 .when(searchFamilyRepository)
                 .findAll(any(Specification.class), any(Pageable.class));
 
-        String url = "/api/search/family/latestNonMatchingWithContact?page=0&size=5";
+        String url = "/api/search/family/latest?isReviewed=false&page=0&size=5";
         MvcResult result = mvc.perform(get(url)
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
+                .andReturn();
+
+        log.info(url + " response: {}", result.getResponse().getContentAsString(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testMarkFamilyReviewed() throws Exception {
+
+        doReturn(Optional.of(
+                SearchFamily.builder()
+                        .id(1L)
+                        .isMatch(false)
+                        .isReviewed(null)
+                        .build()
+                ))
+                .when(searchFamilyRepository)
+                .findById(1L);
+
+        String url = "/api/search/family/1/reviewed";
+        MvcResult result = mvc.perform(get(url)
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isReviewed", is(true)))
                 .andReturn();
 
         log.info(url + " response: {}", result.getResponse().getContentAsString(StandardCharsets.UTF_8));

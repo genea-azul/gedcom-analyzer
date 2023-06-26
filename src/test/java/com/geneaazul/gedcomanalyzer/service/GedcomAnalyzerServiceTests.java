@@ -68,7 +68,7 @@ public class GedcomAnalyzerServiceTests {
                 .getInitialPersonOfOrphanTrees(gedcom);
         gedcomAnalyzerService
                 .getMostFrequentSurnamesByPersonSubTree(persons1)
-                .forEach((person, surname) -> System.out.println(surname + " tree - Main person: " + person.getId() + " - " + person.getDisplayName()));
+                .forEach((person, pair) -> System.out.println(pair.getLeft() + " tree - (" + pair.getRight() + " persons) - Main person: " + person.getId() + " - " + person.getDisplayName()));
 
         System.out.println("\nfindPersonsBySurnameAndSpouseSurname:");
         searchService

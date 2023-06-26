@@ -14,6 +14,7 @@ import com.geneaazul.gedcomanalyzer.service.PersonService;
 import com.geneaazul.gedcomanalyzer.service.SurnameService;
 import com.geneaazul.gedcomanalyzer.utils.InetAddressUtils;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -51,7 +52,9 @@ public class SearchController {
     private final DockerService dockerService;
 
     @PostMapping("/family")
-    public SearchFamilyResultDto searchFamily(@Valid @RequestBody SearchFamilyDto searchFamilyDto, HttpServletRequest request) {
+    public SearchFamilyResultDto searchFamily(
+            @Valid @RequestBody SearchFamilyDto searchFamilyDto,
+            HttpServletRequest request) {
         dockerService.startDbContainer();
 
         Optional<String> clientIpAddress = InetAddressUtils.getRemoteAddress(request);
@@ -82,33 +85,35 @@ public class SearchController {
 
         searchId
                 .filter(id -> properties.isStoreFamilySearch())
-                .ifPresent(id -> familyService.updateSearch(id, searchFamilyResult.getPeople().size() > 0));
+                .ifPresent(id -> familyService.updateSearchIsMatch(id, searchFamilyResult.getPeople().size() > 0));
 
         return searchFamilyResult;
+    }
+
+    @GetMapping("/family/{searchId}/reviewed")
+    public SearchFamilyDetailsDto markFamilyReviewed(@PathVariable Long searchId) {
+        dockerService.startDbContainer();
+
+        log.info("Mark family reviewed [ searchId={} ]", searchId);
+
+        return familyService.updateSearchIsReviewed(searchId, Boolean.TRUE);
     }
 
     @GetMapping("/family/latest")
     public List<SearchFamilyDetailsDto> getLatest(
             @RequestParam @Nullable Boolean isMatch,
+            @RequestParam @Nullable Boolean isReviewed,
             @RequestParam @Nullable Boolean hasContact,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request) {
         dockerService.startDbContainer();
 
-        log.info("Search family latest [ isMatch={}, hasContact={}, page={}, size={} ]", isMatch, hasContact, page, size);
+        log.info("Search family latest [ isMatch={}, isReviewed={}, hasContact={}, page={}, size={} ]",
+                isMatch, isReviewed, hasContact, page, size);
 
-        return familyService.getLatest(isMatch, hasContact, page, size);
-    }
-
-    @GetMapping("/family/latestNonMatchingWithContact")
-    public List<SearchFamilyDetailsDto> getLatestNonMatchingWithContact(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        dockerService.startDbContainer();
-
-        log.info("Search family latest non-matching with contact [ page={}, size={} ]", page, size);
-
-        return familyService.getLatest(Boolean.FALSE, Boolean.TRUE, page, size);
+        String context = StringUtils.substringBefore(request.getRequestURL().toString(), "/api");
+        return familyService.getLatest(isMatch, isReviewed, hasContact, page, size, context);
     }
 
     @PostMapping("/surnames")

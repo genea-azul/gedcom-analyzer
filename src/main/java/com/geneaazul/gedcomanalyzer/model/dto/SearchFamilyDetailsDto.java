@@ -39,6 +39,10 @@ public class SearchFamilyDetailsDto {
     @ToString.Include
     private Boolean isMatch;
     @ToString.Include
+    private Boolean isReviewed;
+    @ToString.Include
+    private String markReviewedLink;
+    @ToString.Include
     private String contact;
     @ToString.Include
     private OffsetDateTime createDate;

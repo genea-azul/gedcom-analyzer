@@ -55,19 +55,33 @@ public class FamilyService {
     }
 
     @Transactional
-    public void updateSearch(Long searchFamilyId, boolean isMatch) {
+    public void updateSearchIsMatch(Long searchFamilyId, boolean isMatch) {
         searchFamilyRepository
                 .findById(searchFamilyId)
                 .ifPresent(searchFamily -> searchFamily.setIsMatch(isMatch));
     }
 
+    @Transactional
+    public SearchFamilyDetailsDto updateSearchIsReviewed(Long searchFamilyId, boolean isReviewed) {
+        return searchFamilyRepository
+                .findById(searchFamilyId)
+                .map(searchFamily -> {
+                    searchFamily.setIsReviewed(isReviewed);
+                    return searchFamily;
+                })
+                .map(searchFamilyMapper::toSearchFamilyDetailsDto)
+                .orElseThrow(() -> new RuntimeException("SearchFamily not found id=" + searchFamilyId));
+    }
+
     @Transactional(readOnly = true)
     public List<SearchFamilyDetailsDto> getSearchFamilies(
             @Nullable Boolean isMatch,
+            @Nullable Boolean isReviewed,
             @Nullable Boolean hasContact,
             int page,
             int size,
-            @Nullable Sort sort) {
+            @Nullable Sort sort,
+            @Nullable String context) {
         size = Math.min(size, MAX_PAGE_SIZE);
         Pageable pageable = PageRequest.of(
                 page,
@@ -79,24 +93,35 @@ public class FamilyService {
         return searchFamilyRepository
                 .findAll(Specification
                         .where(SearchFamilyRepository.isMatch(isMatch))
+                        .and(SearchFamilyRepository.isReviewed(isReviewed))
                         .and(SearchFamilyRepository.hasContact(hasContact)), pageable)
                 .stream()
                 .map(searchFamilyMapper::toSearchFamilyDetailsDto)
+                .peek(details -> {
+                    //noinspection DataFlowIssue
+                    if (context != null && !Boolean.TRUE.equals(details.getIsReviewed())) {
+                        details.setMarkReviewedLink(context + "/api/search/family/" + details.getId() + "/reviewed");
+                    }
+                })
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public List<SearchFamilyDetailsDto> getLatest(
             @Nullable Boolean isMatch,
+            @Nullable Boolean isReviewed,
             @Nullable Boolean hasContact,
             int page,
-            int size) {
+            int size,
+            @Nullable String context) {
         return getSearchFamilies(
                 isMatch,
+                isReviewed,
                 hasContact,
                 page,
                 size,
-                Sort.by(Sort.Direction.DESC, "id"));
+                Sort.by(Sort.Direction.DESC, "id"),
+                context);
     }
 
     @Transactional(readOnly = true)
