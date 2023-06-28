@@ -133,6 +133,16 @@ public class GedcomAnalyzerServiceTests {
                                         .collect(Collectors.joining(", "))
                                 + " - Related: " + String.join(", ", cardinality.relatedNormalized())));
 
+        System.out.println("\ngetAncestryCountriesCardinalityByPlaceOfBirth:");
+        gedcomAnalyzerService
+                .getAncestryCountriesCardinalityByPlaceOfBirth(gedcom.getPeople(), "Azul, Buenos Aires, Argentina")
+                .stream()
+                .limit(500)
+                .forEach(cardinality -> System.out.println(
+                        cardinality.country()
+                                + " - " + cardinality.cardinality()
+                                + " - " + cardinality.surnames()));
+
         System.out.println("\nfindPersonsByPlaceOfBirth:");
         searchService
                 .findPersonsByPlaceOfBirth("Latina, Lazio, Italia", null, null, gedcom.getPeople())
@@ -210,7 +220,7 @@ public class GedcomAnalyzerServiceTests {
 
         System.out.println("\ngetPeopleInTree:");
         personService
-                .getPeopleInTree(person, false)
+                .getPeopleInTree(person, false, false)
                 .stream()
                 .sorted()
                 .limit(50)

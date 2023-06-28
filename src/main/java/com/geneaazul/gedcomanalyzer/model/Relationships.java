@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -143,27 +144,18 @@ public class Relationships implements Comparable<Relationships> {
         Relationship toMergeRelationship = t2.iterator().next();
 
         if (!toMergeRelationship.isInLaw()
-                && !relationships.isEmpty()
-                && (traversalStrategy.isSkipInLawWhenAnyDistanceNotInLaw()
-                        || traversalStrategy.isSkipInLawWhenSameDistanceNotInLaw()
-                        || traversalStrategy.isSkipInLawWhenHigherDistanceNotInLaw())) {
+                && !relationships.isEmpty()) {
             if (relationships
                     .stream()
-                    .anyMatch(r
-                            -> traversalStrategy.isSkipInLawWhenAnyDistanceNotInLaw() && r.isInLaw()
-                            || traversalStrategy.isSkipInLawWhenSameDistanceNotInLaw() && r.isInLaw() && r.isInLawOf(toMergeRelationship)
-                            || traversalStrategy.isSkipInLawWhenHigherDistanceNotInLaw() && (!r.isInLaw() || r.compareTo(toMergeRelationship) >= 0))) {
+                    .anyMatch(r -> traversalStrategy.notInLawMatching.test(r, toMergeRelationship))) {
                 relationships = relationships
                         .stream()
-                        .filter(r
-                                -> traversalStrategy.isSkipInLawWhenAnyDistanceNotInLaw() && !r.isInLaw()
-                                || traversalStrategy.isSkipInLawWhenSameDistanceNotInLaw() && !(r.isInLaw() && r.isInLawOf(toMergeRelationship))
-                                || traversalStrategy.isSkipInLawWhenHigherDistanceNotInLaw() && !(!r.isInLaw() || r.compareTo(toMergeRelationship) >= 0))
+                        .filter(r -> !traversalStrategy.notInLawMatching.test(r, toMergeRelationship))
                         .collect(Collectors.toList());
             }
         } else if (toMergeRelationship.isInLaw()
                 && !relationships.isEmpty()
-                && traversalStrategy.isSkipInLawWhenHigherDistanceNotInLaw()) {
+                && traversalStrategy.type == VisitedRelationshipTraversalType.KEEP_CLOSER_IN_LAW_WHEN_EXISTS_ANY_NOT_IN_LAW) {
             if (relationships
                     .stream()
                     .anyMatch(Relationship::isInLaw)) {
@@ -194,7 +186,8 @@ public class Relationships implements Comparable<Relationships> {
                 .collect(Collectors.toUnmodifiableSet());
 
         if (traversalStrategy.isClosestDistance()
-                && !traversalStrategy.isSkipInLawWhenHigherDistanceNotInLaw() // for this strategy we don't need to clean the list
+                // for this strategy we don't need to clean the list
+                && traversalStrategy.type != VisitedRelationshipTraversalType.KEEP_CLOSER_IN_LAW_WHEN_EXISTS_ANY_NOT_IN_LAW
                 && !relationships.isEmpty()) {
             relationships = List.of();
         }
@@ -218,21 +211,52 @@ public class Relationships implements Comparable<Relationships> {
     @Getter
     @RequiredArgsConstructor
     public enum VisitedRelationshipTraversalStrategy {
-        INCLUDE_ALL(false, false, false, false),
-        SKIP_IN_LAW_WHEN_EXISTS_SAME_DIST_NOT_IN_LAW(true, false, false,false),
-        SKIP_IN_LAW_WHEN_EXISTS_ANY_DIST_NOT_IN_LAW(false, true, false, false),
-        CLOSEST_SKIPPING_IN_LAW_WHEN_EXISTS_ANY_NOT_IN_LAW(false, true, false, true),
+        SKIP_IN_LAW_WHEN_EXISTS_SAME_DIST_NOT_IN_LAW(
+                VisitedRelationshipTraversalType.SKIP_IN_LAW_WHEN_EXISTS_SAME_DIST_NOT_IN_LAW,
+                false,
+                // The visited in-law relationship appears also as not in-law (with lower distance) or as same in-law (with lower distance)
+                Relationships::containsInLawOf,
+                (rel, notInLawRel) -> rel.isInLaw() && rel.isInLawOf(notInLawRel)),
+        SKIP_IN_LAW_WHEN_EXISTS_ANY_DIST_NOT_IN_LAW(
+                VisitedRelationshipTraversalType.SKIP_IN_LAW_WHEN_EXISTS_ANY_DIST_NOT_IN_LAW,
+                false,
+                // The visited in-law relationship appears also as not in-law (with any distance)
+                (rels, rel) -> rels.isContainsNotInLaw(),
+                (rel, notInLawRel) -> rel.isInLaw()),
+        CLOSEST_SKIPPING_IN_LAW_WHEN_EXISTS_ANY_NOT_IN_LAW(
+                VisitedRelationshipTraversalType.SKIP_IN_LAW_WHEN_EXISTS_ANY_DIST_NOT_IN_LAW,
+                true,
+                // The visited in-law relationship appears also as not in-law (with any distance)
+                (rels, rel) -> rels.isContainsNotInLaw(),
+                (rel, notInLawRel) -> rel.isInLaw()),
         /*
          * When a person has a not in-law relationship, and also it has an in-law relationship closer than the not in-law.
          * i.e: a guy married to his aunt --> [distance 0, in-law, spouse] , [distance 3, not-in-law, aunt]
          */
-        CLOSEST_KEEPING_CLOSER_IN_LAW_WHEN_EXISTS_ANY_NOT_IN_LAW(false, false, true, true);
+        CLOSEST_KEEPING_CLOSER_IN_LAW_WHEN_EXISTS_ANY_NOT_IN_LAW(
+                VisitedRelationshipTraversalType.KEEP_CLOSER_IN_LAW_WHEN_EXISTS_ANY_NOT_IN_LAW,
+                true,
+                // The visited in-law relationship appears also as not in-law (with the same distance)
+                Relationships::containsWithLowerDistance,
+                (rel, notInLawRel) -> !rel.isInLaw() || rel.compareTo(notInLawRel) >= 0);
 
-        private final boolean skipInLawWhenSameDistanceNotInLaw;
-        private final boolean skipInLawWhenAnyDistanceNotInLaw;
-        private final boolean skipInLawWhenHigherDistanceNotInLaw;
+        private final VisitedRelationshipTraversalType type;
         private final boolean closestDistance;
+        private final BiPredicate<Relationships, Relationship> inLawMatching;
+        private final BiPredicate<Relationship, Relationship> notInLawMatching;
 
+    }
+
+    @Getter
+    @RequiredArgsConstructor
+    public enum VisitedRelationshipTraversalType {
+        SKIP_IN_LAW_WHEN_EXISTS_SAME_DIST_NOT_IN_LAW,
+        SKIP_IN_LAW_WHEN_EXISTS_ANY_DIST_NOT_IN_LAW,
+        /*
+         * When a person has a not in-law relationship, and also it has an in-law relationship closer than the not in-law.
+         * i.e: a guy married to his aunt --> [distance 0, in-law, spouse] , [distance 3, not-in-law, aunt]
+         */
+        KEEP_CLOSER_IN_LAW_WHEN_EXISTS_ANY_NOT_IN_LAW
     }
 
 }

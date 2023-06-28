@@ -8,6 +8,7 @@ import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResults;
 import com.geneaazul.gedcomanalyzer.model.Reference;
+import com.geneaazul.gedcomanalyzer.model.Relationships;
 import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.model.dto.GedcomAnalysisDto;
 import com.geneaazul.gedcomanalyzer.model.dto.GedcomMetadataDto;
@@ -18,10 +19,11 @@ import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.DateUtils;
 import com.geneaazul.gedcomanalyzer.utils.EnumCollectionUtils;
 import com.geneaazul.gedcomanalyzer.utils.FamilyUtils;
+import com.geneaazul.gedcomanalyzer.utils.MapUtils;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
+import com.geneaazul.gedcomanalyzer.utils.RelationshipUtils;
 import com.geneaazul.gedcomanalyzer.utils.SearchUtils;
 
-import jakarta.annotation.Nullable;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -53,6 +55,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,6 +65,7 @@ import lombok.extern.slf4j.Slf4j;
 public class GedcomAnalyzerService {
 
     private final SearchService searchService;
+    private final PersonService personService;
     private final GedcomHolder gedcomHolder;
     private final PersonMapper personMapper;
     private final GedcomMapper gedcomMapper;
@@ -445,6 +449,65 @@ public class GedcomAnalyzerService {
             Integer cardinality,
             List<Pair<String, Integer>> surnamesCardinality,
             List<String> relatedNormalized) {
+
+    }
+
+    /**
+     * .
+     */
+    public List<CountryCardinality> getAncestryCountriesCardinalityByPlaceOfBirth(List<EnrichedPerson> people, String placeOfBirth) {
+
+        List<Pair<Optional<String>, Set<String>>> countries = searchService
+                .findPersonsByPlaceOfBirth(placeOfBirth, Boolean.TRUE, null, people)
+                .stream()
+                .map(person -> Pair.of(
+                        person.getSurname().map(Surname::value),
+                        RelationshipUtils.getCountriesOfBirth(
+                                personService
+                                        .getPeopleInTree(person, false, true)
+                                        .stream()
+                                        .map(Relationships::findFirst)
+                                        .toList())))
+                .toList();
+
+        Map<String, Integer> cardinality = CollectionUtils.getCardinalityMap(
+                countries
+                        .stream()
+                        .map(Pair::getRight)
+                        .flatMap(Set::stream)
+                        .toList());
+
+        Map<String, Set<String>> surnamesByCountry = MapUtils.reduceOptsToSet(
+                countries
+                        .stream()
+                        .flatMap(pair -> pair
+                                .getRight()
+                                .stream()
+                                .map(c -> Pair.of(c, pair.getLeft())))
+                        .toList());
+
+        return cardinality
+                .entrySet()
+                .stream()
+                .sorted(Comparator
+                        .<Map.Entry<String, Integer>>comparingInt(Map.Entry::getValue)
+                        .reversed()
+                        .thenComparing(Map.Entry::getKey))
+                .map(entry -> new CountryCardinality(
+                        entry.getKey(),
+                        entry.getValue(),
+                        surnamesByCountry
+                                .get(entry.getKey())
+                                .stream()
+                                .sorted()
+                                .toList()))
+                .toList();
+    }
+
+    public record CountryCardinality (
+            String country,
+            Integer cardinality,
+            List<String> surnames) {
 
     }
 

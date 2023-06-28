@@ -5,7 +5,6 @@ import com.geneaazul.gedcomanalyzer.model.dto.TreeSideType;
 import com.geneaazul.gedcomanalyzer.utils.CollectionComparator;
 
 import org.apache.commons.lang3.ObjectUtils;
-import org.springframework.data.domain.Sort;
 import org.springframework.util.Assert;
 
 import java.util.Collection;
@@ -15,7 +14,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import jakarta.annotation.Nullable;
-import jakarta.validation.constraints.NotNull;
+import lombok.NonNull;
 
 public record Relationship(
         EnrichedPerson person,
@@ -58,22 +57,22 @@ public record Relationship(
     }
 
     public Relationship increaseWithPerson(
-            EnrichedPerson person,
-            Sort.Direction direction,
+            @NonNull EnrichedPerson person,
+            @NonNull TreeTraversalDirection direction,
             boolean isSetHalf,
             @Nullable AdoptionType newAdoptionType,
-            Set<TreeSideType> treeSides,
-            List<String> relatedPersonIds) {
+            @NonNull Set<TreeSideType> treeSides,
+            @NonNull List<String> relatedPersonIds) {
 
         if (isInLaw
-                || isHalf && direction == Sort.Direction.ASC
+                || isHalf && (direction == TreeTraversalDirection.ASC || direction == TreeTraversalDirection.ONLY_ASC)
                 || isHalf && isSetHalf
-                || newAdoptionType != null && direction == null) {
+                || newAdoptionType != null && direction == TreeTraversalDirection.SAME) {
             throw new UnsupportedOperationException();
         }
 
-        if (direction == Sort.Direction.ASC) {
-            return new Relationship(
+        return switch (direction) {
+            case ASC, ONLY_ASC -> new Relationship(
                     person,
                     distanceToAncestorRootPerson + 1,
                     distanceToAncestorThisPerson,
@@ -82,10 +81,7 @@ public record Relationship(
                     ObjectUtils.defaultIfNull(newAdoptionType, adoptionType),
                     treeSides,
                     relatedPersonIds);
-        }
-
-        if (direction == Sort.Direction.DESC) {
-            return new Relationship(
+            case DESC -> new Relationship(
                     person,
                     distanceToAncestorRootPerson,
                     distanceToAncestorThisPerson + 1,
@@ -94,17 +90,16 @@ public record Relationship(
                     ObjectUtils.defaultIfNull(newAdoptionType, adoptionType),
                     treeSides,
                     relatedPersonIds);
-        }
-
-        return new Relationship(
-                person,
-                distanceToAncestorRootPerson,
-                distanceToAncestorThisPerson,
-                true,
-                isHalf,
-                adoptionType,
-                treeSides,
-                relatedPersonIds);
+            case SAME -> new Relationship(
+                    person,
+                    distanceToAncestorRootPerson,
+                    distanceToAncestorThisPerson,
+                    true,
+                    isHalf,
+                    adoptionType,
+                    treeSides,
+                    relatedPersonIds);
+        };
     }
 
     public boolean isInLawOf(Relationship other) {
@@ -162,11 +157,11 @@ public record Relationship(
     }
 
     @Override
-    public int compareTo(@NotNull Relationship other) {
+    public int compareTo(@NonNull Relationship other) {
         return compareTo(other, false);
     }
 
-    public int compareToWithInvertedPriority(@NotNull Relationship other) {
+    public int compareToWithInvertedPriority(@NonNull Relationship other) {
         return compareTo(other, true);
     }
 
