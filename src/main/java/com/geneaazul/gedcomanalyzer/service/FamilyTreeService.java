@@ -55,6 +55,10 @@ public class FamilyTreeService {
             int maxPersonsInFirstPage = 36;
             int maxPersonsInNextPages = 59;
 
+            boolean isAnyPersonObfuscated = peopleInTree
+                    .stream()
+                    .anyMatch(FormattedRelationship::isObfuscated);
+
             PDPage firstPage = new PDPage(PDRectangle.A4);
             document.addPage(firstPage);
 
@@ -148,7 +152,8 @@ public class FamilyTreeService {
                         peopleInTree.subList(0, Math.min(peopleInTree.size(), maxPersonsInFirstPage)),
                         legendY + legendSepY,
                         1,
-                        peopleInTree.size() <= maxPersonsInFirstPage);
+                        peopleInTree.size() <= maxPersonsInFirstPage,
+                        isAnyPersonObfuscated);
             }
 
             List<List<FormattedRelationship>> nextPages = (peopleInTree.size() > maxPersonsInFirstPage)
@@ -171,7 +176,8 @@ public class FamilyTreeService {
                             peopleInPage,
                             60f,
                             i + 2,
-                            i == nextPages.size() - 1);
+                            i == nextPages.size() - 1,
+                            isAnyPersonObfuscated);
                 }
             }
 
@@ -191,7 +197,8 @@ public class FamilyTreeService {
             List<FormattedRelationship> peopleInPage,
             float yPos,
             int pageNum,
-            boolean isLastPage) throws IOException {
+            boolean isLastPage,
+            boolean isAnyPersonObfuscated) throws IOException {
 
         float size1 = 10.5f;
         float size2 = 9.2f;
@@ -254,6 +261,11 @@ public class FamilyTreeService {
                             .format(DateTimeFormatter
                                     .ofLocalizedDateTime(FormatStyle.FULL)
                                     .localizedBy(properties.getLocale())));
+        }
+
+        if (isAnyPersonObfuscated) {
+            writeText(stream, light, 10.f, 1.2f, 75f, 805f,
+                    "Para revelar las datos privados de las personas ponete en contacto con nosotros (no tiene costo).");
         }
     }
 

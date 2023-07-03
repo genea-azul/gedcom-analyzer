@@ -46,7 +46,7 @@ public class FamilyTreeServiceTests {
                 .stream()
                 .sorted()
                 .map(Relationships::findFirst)
-                .map(relationship -> relationshipMapper.toRelationshipDto(relationship, false))
+                .map(relationship -> relationshipMapper.toRelationshipDto(relationship, true))
                 .map(relationship -> relationshipMapper.formatInSpanish(relationship, index.getAndIncrement(), true))
                 .toList();
 

@@ -98,16 +98,7 @@ public class PersonService {
                         }
                         FormattedRelationship first = formattedRelationships.get(0);
                         FormattedRelationship second = formattedRelationships.get(1);
-                        return new FormattedRelationship(
-                                first.index(),
-                                first.personName(),
-                                first.personSex(),
-                                first.personIsAlive(),
-                                first.personYearOfBirth(),
-                                first.personCountryOfBirth(),
-                                first.adoption(),
-                                first.treeSide(),
-                                first.relationshipDesc() + " / " + second.relationshipDesc());
+                        return first.mergeRelationshipDesc(second);
                     })
                     .toList();
 

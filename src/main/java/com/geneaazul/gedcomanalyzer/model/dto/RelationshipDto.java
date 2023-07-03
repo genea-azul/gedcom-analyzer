@@ -33,6 +33,7 @@ public class RelationshipDto {
     private SexType spouseSex;
     private Boolean isSeparated;
     private Set<TreeSideType> treeSides;
+    private Boolean isObfuscated;
 
     @Override
     public String toString() {
