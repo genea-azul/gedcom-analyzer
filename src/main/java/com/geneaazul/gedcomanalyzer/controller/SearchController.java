@@ -97,7 +97,7 @@ public class SearchController {
             @RequestParam(defaultValue = BooleanUtils.TRUE) Boolean isReviewed) {
         dockerService.startDbContainer();
 
-        log.info("Mark family reviewed [ searchId={} ]", searchId);
+        log.info("Mark family reviewed [ searchId={}, isReviewed={} ]", searchId, isReviewed);
 
         return familyService.updateSearchIsReviewed(searchId, isReviewed);
     }

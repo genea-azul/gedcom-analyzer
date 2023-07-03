@@ -11,11 +11,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class RelationshipUtils {
+
+    public static Set<String> getCountriesOfBirth(List<Relationship> relationships) {
+        return relationships
+                .stream()
+                .map(Relationship::person)
+                .map(EnrichedPerson::getCountryOfBirth)
+                .flatMap(Optional::stream)
+                .collect(Collectors.toUnmodifiableSet());
+    }
 
     public static Integer getSurnamesCount(List<Relationship> relationships) {
         return relationships
@@ -32,7 +42,7 @@ public class RelationshipUtils {
                                     RelationshipUtils::mergeSurnamesSets);
                             return map;
                         },
-                        RelationshipUtils::mergeMaps)
+                        RelationshipUtils::mergeSurnameMaps)
                 .values()
                 .stream()
                 .mapToInt(Set::size)
@@ -50,7 +60,7 @@ public class RelationshipUtils {
         return result;
     }
 
-    private static Map<String, Set<Surname>> mergeMaps(Map<String, Set<Surname>> map1, Map<String, Set<Surname>> map2) {
+    private static Map<String, Set<Surname>> mergeSurnameMaps(Map<String, Set<Surname>> map1, Map<String, Set<Surname>> map2) {
         Map<String, Set<Surname>> result = new HashMap<>(map1);
         map2
                 .forEach((shortenedMainWord, surnamesSet) -> result.merge(shortenedMainWord, surnamesSet, RelationshipUtils::mergeSurnamesSets));

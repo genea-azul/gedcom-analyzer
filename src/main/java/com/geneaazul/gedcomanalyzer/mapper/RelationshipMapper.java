@@ -101,6 +101,7 @@ public class RelationshipMapper {
                 .spouseSex(spouseSex)
                 .isSeparated(isSeparated)
                 .treeSides(relationship.treeSides())
+                .isObfuscated(obfuscateCondition)
                 .build();
     }
 
@@ -126,7 +127,8 @@ public class RelationshipMapper {
                 personCountryOfBirth,
                 adoption,
                 treeSide,
-                relationshipDesc);
+                relationshipDesc,
+                relationship.getIsObfuscated());
     }
 
     public String displayNameInSpanish(String name) {
