@@ -13,7 +13,7 @@
 
   <groupId>com.geneaazul</groupId>
   <artifactId>gedcom-analyzer</artifactId>
-  <version>1.4.3</version>
+  <version>1.4.4-SNAPSHOT</version>
   <name>Gedcom Analyzer</name>
   <description>Gedcom Analyzer by Genea Azul</description>
   <url>https://github.com/genea-azul/gedcom-analyzer</url>

@@ -1,10 +1,6 @@
 package com.geneaazul.gedcomanalyzer.repository;
 
 import com.geneaazul.gedcomanalyzer.domain.SearchFamily;
-import jakarta.annotation.Nullable;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
 
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,6 +8,11 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
+
+import jakarta.annotation.Nullable;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 
 @Repository
 public interface SearchFamilyRepository extends JpaRepository<SearchFamily, Long>, JpaSpecificationExecutor<SearchFamily> {

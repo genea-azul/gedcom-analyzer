@@ -335,7 +335,11 @@
           <div class="card-header text-bg-dark">
             <div>Resultado de la b&uacute;squeda</div>
             <div class="small">
-              Los datos de personas vivas serán ocultados (&lt;dato privado&gt;)
+              <#if obfuscateLiving == true>
+                Los datos de personas vivas <b>ser&aacute;n ocultados</b>
+              <#else>
+                Los datos de personas vivas <b>ser&aacute;n visibles</b>
+              </#if>
             </div>
           </div>
           <div class="card-body overflow-auto"></div>

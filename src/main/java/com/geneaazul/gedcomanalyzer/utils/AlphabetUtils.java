@@ -1,10 +1,10 @@
 package com.geneaazul.gedcomanalyzer.utils;
 
 import com.ibm.icu.text.Transliterator;
-
 import org.apache.commons.lang3.StringUtils;
 
 import jakarta.annotation.Nullable;
+
 import lombok.experimental.UtilityClass;
 
 @UtilityClass

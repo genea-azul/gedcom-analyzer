@@ -1,10 +1,10 @@
 package com.geneaazul.gedcomanalyzer.utils;
 
-import lombok.experimental.UtilityClass;
-
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class EntryStreamUtils {
