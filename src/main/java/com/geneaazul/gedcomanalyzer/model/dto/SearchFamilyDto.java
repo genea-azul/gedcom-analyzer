@@ -43,7 +43,7 @@ public class SearchFamilyDto {
     @Valid
     @ToString.Include
     private SearchPersonDto maternalGrandmother;
-    @Size(max = 120)
+    @Size(max = 180)
     @ToString.Include
     private String contact;
     @Builder.Default
