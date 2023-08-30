@@ -28,6 +28,8 @@ var toggleCardColorBySex = function(cardComponent, sexRadioComponent, relatedCar
         $(cardComponent).toggleClass("border-danger", !isMale);
         $(cardComponent + " div.card-header").toggleClass("text-bg-secondary", isMale);
         $(cardComponent + " div.card-header").toggleClass("text-bg-danger", !isMale);
+        $(cardComponent + " i.card-header-icon").toggleClass("bi-gender-male", isMale);
+        $(cardComponent + " i.card-header-icon").toggleClass("bi-gender-female", !isMale);
 
         if (relatedCardComponent && relatedSexRadioComponent) {
             var $genderRadio = $("input[type=radio][name=" + relatedSexRadioComponent + "]");
@@ -38,6 +40,8 @@ var toggleCardColorBySex = function(cardComponent, sexRadioComponent, relatedCar
             $(relatedCardComponent).toggleClass("border-danger", isMale);
             $(relatedCardComponent + " div.card-header").toggleClass("text-bg-secondary", !isMale);
             $(relatedCardComponent + " div.card-header").toggleClass("text-bg-danger", isMale);
+            $(relatedCardComponent + " i.card-header-icon").toggleClass("bi-gender-male", !isMale);
+            $(relatedCardComponent + " i.card-header-icon").toggleClass("bi-gender-female", isMale);
         }
     });
 };

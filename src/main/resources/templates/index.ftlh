@@ -5,6 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
     <link rel="stylesheet" href="/css/main.css?v${projectVersion}" />
   </head>
 
@@ -22,7 +23,10 @@
     <div class="row mb-3">
       <div class="col-xl-auto">
         <div class="card border-danger mb-2" id="individualCard">
-          <div class="card-header text-bg-danger">Persona principal</div>
+          <div class="card-header text-bg-danger">
+            <i class="card-header-icon float-end bi-gender-female"></i>
+            Persona principal
+          </div>
           <div class="card-body">
             <span class="small text-secondary">Sexo:</span>
             <div class="btn-group btn-group-sm" role="group" aria-label="Sexo">
@@ -60,7 +64,10 @@
       </div>
       <div class="col-xl-auto">
         <div class="card border-secondary mb-2" id="spouseCard">
-          <div class="card-header text-bg-secondary">Pareja</div>
+          <div class="card-header text-bg-secondary">
+            <i class="card-header-icon float-end bi-gender-male"></i>
+            Pareja
+          </div>
           <div class="card-body">
             <div class="alert alert-light mb-0" role="alert" id="spouseContainerShowBtnContainer">
               <div class="form-check">
