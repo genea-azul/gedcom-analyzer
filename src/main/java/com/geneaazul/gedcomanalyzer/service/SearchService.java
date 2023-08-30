@@ -5,6 +5,7 @@ import com.geneaazul.gedcomanalyzer.model.Age;
 import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.GivenNameAndSurname;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResult;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResults;
@@ -15,11 +16,13 @@ import com.geneaazul.gedcomanalyzer.utils.SearchUtils;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.Year;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -31,8 +34,11 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import jakarta.annotation.Nullable;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -43,40 +49,54 @@ public class SearchService {
 
     private final GedcomAnalyzerProperties properties;
 
-    public List<EnrichedPerson> findPersonsBySurnameAndSpouseSurname(String personSurname, @Nullable String spouseSurname, boolean exactMatch, List<EnrichedPerson> people) {
+    public List<EnrichedPerson> findPersonsByNameAndSpouseName(
+            @Nullable String personGivenName,
+            @Nullable String personSurname,
+            @Nullable String spouseGivenName,
+            @Nullable String spouseSurname,
+            boolean exactMatch,
+            List<EnrichedPerson> people) {
+        String personGivenNameStr = SearchUtils.simplifyName(personGivenName);
         String personSurnameStr = SearchUtils.simplifyName(personSurname);
+        String spouseGivenNameStr = SearchUtils.simplifyName(spouseGivenName);
         String spouseSurnameStr = SearchUtils.simplifyName(spouseSurname);
 
-        //noinspection DataFlowIssue
+        if (personGivenNameStr == null && personSurnameStr == null
+                || spouseGivenNameStr == null && spouseSurnameStr == null) {
+            return List.of();
+        }
+
         return people
                 .stream()
-                .filter(person -> person.getSurname()
-                        .map(surname -> exactMatch ? surname.value().equals(personSurnameStr) : surname.value().contains(personSurnameStr))
-                        .orElse(false))
-                .filter(person -> spouseSurnameStr == null || person.getSpouses()
-                        .stream()
-                        .map(EnrichedPerson::getSurname)
-                        .flatMap(Optional::stream)
-                        .anyMatch(surname -> exactMatch ? surname.value().equals(spouseSurnameStr) : surname.value().contains(spouseSurnameStr)))
+                .filter(person -> personGivenNameStr == null || this.evalPersonName(person, EnrichedPerson::getGivenName, GivenName::value, personGivenNameStr, exactMatch))
+                .filter(person -> personSurnameStr == null || this.evalPersonName(person, EnrichedPerson::getSurname, Surname::value, personSurnameStr, exactMatch))
+                .filter(person -> spouseGivenNameStr == null || this.evalSpouseName(person, EnrichedPerson::getGivenName, GivenName::value, spouseGivenNameStr, exactMatch))
+                .filter(person -> spouseSurnameStr == null || this.evalSpouseName(person, EnrichedPerson::getSurname, Surname::value, spouseSurnameStr, exactMatch))
                 .toList();
     }
 
-    public List<EnrichedPerson> findPersonsBySurnameAndSpouseGivenName(String personSurname, @Nullable String spouseGivenName, boolean exactMatch, List<EnrichedPerson> people) {
-        String personSurnameStr = SearchUtils.simplifyName(personSurname);
-        String spouseGivenNameStr = SearchUtils.simplifyName(spouseGivenName);
+    private <T> boolean evalPersonName(
+            EnrichedPerson person,
+            Function<EnrichedPerson, Optional<T>> map1,
+            Function<T, String> map2, String personName,
+            boolean exactMatch) {
+        return map1.apply(person)
+                .map(map2)
+                .map(name -> exactMatch ? name.equals(personName) : name.contains(personName))
+                .orElse(false);
+    }
 
-        //noinspection DataFlowIssue
-        return people
+    private <T> boolean evalSpouseName(
+            EnrichedPerson person,
+            Function<EnrichedPerson, Optional<T>> map1,
+            Function<T, String> map2, String spouseName,
+            boolean exactMatch) {
+        return person.getSpouses()
                 .stream()
-                .filter(person -> person.getSurname()
-                        .map(surname -> exactMatch ? surname.value().equals(personSurnameStr) : surname.value().contains(personSurnameStr))
-                        .orElse(false))
-                .filter(person -> spouseGivenNameStr == null || person.getSpouses()
-                        .stream()
-                        .map(EnrichedPerson::getGivenName)
-                        .flatMap(Optional::stream)
-                        .anyMatch(givenName -> exactMatch ? givenName.value().equals(spouseGivenNameStr) : givenName.value().contains(spouseGivenNameStr)))
-                .toList();
+                .map(map1)
+                .flatMap(Optional::stream)
+                .map(map2)
+                .anyMatch(name -> exactMatch ? name.equals(spouseName) : name.contains(spouseName));
     }
 
     /**
@@ -523,6 +543,99 @@ public class SearchService {
                 .filter(surname -> pattern.matcher(surname.value()).find())
                 .distinct()
                 .sorted(comparator)
+                .toList();
+    }
+
+    /**
+     * .
+     */
+    public List<EnrichedPerson> findPersonsWithMisspellingByPlaceOfBirth(
+            @Nullable String countryOfBirth,
+            @Nullable Boolean isAlive,
+            @Nullable SexType sex,
+            List<EnrichedPerson> people) {
+
+        List<EnrichedPerson> filteredPeople = people
+                .stream()
+                .filter(person -> isAlive == null || isAlive == person.isAlive())
+                .filter(person -> sex == null || sex == person.getSex())
+                .filter(person
+                        -> countryOfBirth == null && person.getCountryOfBirth().isEmpty()
+                        || countryOfBirth != null && person
+                                .getCountryOfBirth()
+                                .map(countryOfBirth::equals)
+                                .orElse(false))
+                .toList();
+
+        List<String> givenNames = filteredPeople
+                .stream()
+                .map(EnrichedPerson::getGivenName)
+                .flatMap(Optional::stream)
+                .map(GivenName::value)
+                .flatMap(givenName -> Arrays.stream(givenName.split(" ")))
+                .map(givenName -> StringUtils.stripStart(givenName, "("))
+                .map(givenName -> StringUtils.stripEnd(givenName, ")"))
+                .distinct()
+                .toList();
+
+        Set<String> misspelledGivenNames;
+
+        // Spanish-speaking countries
+        if (Set.of("Argentina", "Chile", "España", "Paraguay", "Perú", "Uruguay").contains(countryOfBirth)) {
+
+            List<String> expectedSpelledWithAccentsGivenNames = givenNames
+                    .stream()
+                    .filter(givenName
+                            -> !Set.of("Cristián", "Álida", "Rosalía", "Yésica").contains(givenName)
+                            && (StringUtils.containsAny(givenName, "Á", "É", "Í", "Ó", "Ú", "Ü", "á", "é", "í", "ó", "ú", "ü")))
+                    .distinct()
+                    .sorted()
+                    .toList();
+
+            List<String> expectedMisspelledGivenNames = givenNames
+                    .stream()
+                    .filter(givenName
+                            -> StringUtils.containsAny(givenName, "À", "È", "Ì", "Ò", "Ù", "à", "è", "ì", "ò", "ù")
+                            || !Set.of("de", "del", "la", "las", "los", "o").contains(givenName) && Character.isLowerCase(givenName.charAt(0)))
+                    .distinct()
+                    .sorted()
+                    .toList();
+
+            // System.out.println(expectedSpelledWithAccentsGivenNames);
+
+            misspelledGivenNames = Stream
+                    .concat(
+                            expectedSpelledWithAccentsGivenNames
+                                    .stream()
+                                    .map(StringUtils::stripAccents),
+                            expectedMisspelledGivenNames
+                                    .stream())
+                    .collect(Collectors.toUnmodifiableSet());
+
+        // Italian-speaking countries
+        } else if (Set.of("Austria", "Italia", "Suiza").contains(countryOfBirth)) {
+
+            //noinspection RedundantCollectionOperation
+            misspelledGivenNames = givenNames
+                    .stream()
+                    .filter(givenName
+                            -> Set.of("Vicenzo", "Vicenza").contains(givenName)
+                            || !Set.of("del").contains(givenName) && Character.isLowerCase(givenName.charAt(0)))
+                    .collect(Collectors.toUnmodifiableSet());
+
+        } else {
+            misspelledGivenNames = Set.of();
+        }
+
+        return filteredPeople
+                .stream()
+                .filter(person -> person.getGivenName()
+                                .map(GivenName::value)
+                                .stream()
+                                .flatMap(givenName -> Arrays.stream(givenName.split(" ")))
+                                .map(givenName -> StringUtils.stripStart(givenName, "("))
+                                .map(givenName -> StringUtils.stripEnd(givenName, ")"))
+                                .anyMatch(misspelledGivenNames::contains))
                 .toList();
     }
 

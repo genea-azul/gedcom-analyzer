@@ -14,6 +14,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import jakarta.annotation.Nullable;
+
 import lombok.NonNull;
 
 public record Relationship(

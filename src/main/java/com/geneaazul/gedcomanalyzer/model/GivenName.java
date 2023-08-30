@@ -1,11 +1,12 @@
 package com.geneaazul.gedcomanalyzer.model;
 
-import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import jakarta.annotation.Nullable;
 
 public record GivenName(
         String value,

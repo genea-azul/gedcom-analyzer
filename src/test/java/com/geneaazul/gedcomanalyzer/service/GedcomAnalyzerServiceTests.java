@@ -70,21 +70,16 @@ public class GedcomAnalyzerServiceTests {
                 .getMostFrequentSurnamesByPersonSubTree(persons1)
                 .forEach((person, pair) -> System.out.println(pair.getLeft() + " tree - (" + pair.getRight() + " persons) - Main person: " + person.getId() + " - " + person.getDisplayName()));
 
-        System.out.println("\nfindPersonsBySurnameAndSpouseSurname:");
+        System.out.println("\nfindPersonsByNameAndSpouseName:");
         searchService
-                .findPersonsBySurnameAndSpouseSurname("Diéguez", "Pérez", false, gedcom.getPeople())
+                .findPersonsByNameAndSpouseName(null, "Diéguez", null, "Pérez", false, gedcom.getPeople())
                 .forEach(System.out::println);
 
         System.out.println("\nfindSurnamesByPattern:");
         searchService
-                .findSurnamesByPattern("^[dD]e ", gedcom.getPeople())
+                .findSurnamesByPattern("^[dD]el ", gedcom.getPeople())
                 .stream()
                 .map(Surname::value)
-                .forEach(System.out::println);
-
-        System.out.println("\nfindPersonsBySurnameAndSpouseGivenName:");
-        searchService
-                .findPersonsBySurnameAndSpouseGivenName("Zaffora", "Maria", false, gedcom.getPeople())
                 .forEach(System.out::println);
 
         System.out.println("\nfindAlivePersonsTooOldOrWithFamilyMembersTooOld:");
@@ -102,11 +97,16 @@ public class GedcomAnalyzerServiceTests {
                         .map(EventFact::getType)
                         .toList()));
 
+        System.out.println("\nfindPersonsWithMisspellingByPlaceOfBirth:");
+        searchService
+                .findPersonsWithMisspellingByPlaceOfBirth("Italia", null, null, gedcom.getPeople())
+                .forEach(System.out::println);
+
         System.out.println("\ngetPlacesOfBirthCardinality:");
         gedcomAnalyzerService
                 .getPlacesOfBirthCardinality(gedcom.getPeople(), true)
                 .stream()
-                .filter(pair -> pair.getRight() > 1)
+                .filter(pair -> pair.getRight() > 10)
                 .forEach(pair -> System.out.println(pair.getLeft() + " (" + pair.getRight() + ")"));
 
         System.out.println("\ngetCountriesOfBirthCardinality:");
@@ -123,7 +123,7 @@ public class GedcomAnalyzerServiceTests {
         gedcomAnalyzerService
                 .getSurnamesCardinalityByPlaceOfBirth(gedcom.getPeople(), "Azul, Buenos Aires, Argentina")
                 .stream()
-                .limit(500)
+                .limit(150)
                 .forEach(cardinality -> System.out.println(
                         cardinality.normalizedMainWord()
                                 + " - " + cardinality.cardinality()
@@ -137,7 +137,7 @@ public class GedcomAnalyzerServiceTests {
         gedcomAnalyzerService
                 .getAncestryCountriesCardinalityByPlaceOfBirth(gedcom.getPeople(), "Azul, Buenos Aires, Argentina")
                 .stream()
-                .limit(500)
+                .limit(150)
                 .forEach(cardinality -> System.out.println(
                         cardinality.country()
                                 + " - " + cardinality.cardinality()

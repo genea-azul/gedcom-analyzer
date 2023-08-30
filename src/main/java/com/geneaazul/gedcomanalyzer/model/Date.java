@@ -1,6 +1,5 @@
 package com.geneaazul.gedcomanalyzer.model;
 
-import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -15,6 +14,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import jakarta.annotation.Nullable;
 
 import lombok.AccessLevel;
 import lombok.Getter;

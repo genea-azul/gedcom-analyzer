@@ -1,6 +1,7 @@
 package com.geneaazul.gedcomanalyzer.domain;
 
 import jakarta.persistence.Embeddable;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

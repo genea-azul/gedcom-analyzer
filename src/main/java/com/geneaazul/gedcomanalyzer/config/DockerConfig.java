@@ -1,13 +1,12 @@
 package com.geneaazul.gedcomanalyzer.config;
 
 import com.geneaazul.gedcomanalyzer.service.DockerService;
+
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
-import jakarta.annotation.PreDestroy;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
@@ -18,6 +17,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import java.io.IOException;
 import java.time.Duration;
+
+import jakarta.annotation.PreDestroy;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableScheduling
