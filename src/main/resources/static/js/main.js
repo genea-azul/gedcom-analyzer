@@ -84,6 +84,7 @@ $(document).ready(function() {
     toggleYearOfDeath("#fatherIsAlive", "#fatherYearOfDeath");
     toggleYearOfDeath("#motherIsAlive", "#motherYearOfDeath");
     toggleYearOfDeath("#individualIsAlive", "#individualYearOfDeath");
+    toggleYearOfDeath("#spouseIsAlive", "#spouseYearOfDeath");
     toggleCardColorBySex("#individualCard", "individualSex", "#spouseCard", "spouseSex");
     toggleCardColorBySex("#spouseCard", "spouseSex");
     toggleContainers("#grandparentsContainerShowBtn", "#grandparentsContainerShowBtnContainer", "#grandparentsContainer");
