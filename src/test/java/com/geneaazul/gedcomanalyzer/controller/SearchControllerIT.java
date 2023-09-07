@@ -51,16 +51,12 @@ public class SearchControllerIT extends AbstractControllerIT {
     private String individualGivenName;
     @Value("${test.individual.surname:Biological and Adoptive}")
     private String individualSurname;
-    @Value("${test.individual.sex:M}")
-    private SexType individualSex;
     @Value("${test.individual.yearOfBirth:2000}")
     private Integer individualYearOfBirth;
     @Value("${test.spouse.givenName:}")
     private String spouseGivenName;
     @Value("${test.spouse.surname:}")
     private String spouseSurname;
-    @Value("${test.spouse.sex:F}")
-    private SexType spouseSex;
     @Value("${test.father.givenName:Test Father}")
     private String fatherGivenName;
 
@@ -72,7 +68,6 @@ public class SearchControllerIT extends AbstractControllerIT {
                 .individual(SearchPersonDto.builder()
                         .givenName("Some")
                         .surname("Person")
-                        .sex(SexType.M)
                         .isAlive(Boolean.TRUE)
                         .yearOfBirth(2020)
                         .placeOfBirth("Azul")
@@ -195,13 +190,11 @@ public class SearchControllerIT extends AbstractControllerIT {
                 .individual(SearchPersonDto.builder()
                         .givenName(individualGivenName)
                         .surname(individualSurname)
-                        .sex(individualSex)
                         .yearOfBirth(individualYearOfBirth)
                         .build())
                 .spouse(SearchPersonDto.builder()
                         .givenName(spouseGivenName)
                         .surname(spouseSurname)
-                        .sex(spouseSex)
                         .build())
                 .father(SearchPersonDto.builder()
                         .givenName(fatherGivenName)

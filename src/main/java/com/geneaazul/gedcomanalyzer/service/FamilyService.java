@@ -298,6 +298,10 @@ public class FamilyService {
                 maternalGrandmotherSurname,
                 gedcom));
 
+        /*
+         * Process results
+         */
+
         result = result
                 .stream()
                 .filter(StreamUtils.distinctByKey(EnrichedPerson::getId))

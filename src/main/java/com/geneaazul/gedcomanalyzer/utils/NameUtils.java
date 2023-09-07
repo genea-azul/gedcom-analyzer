@@ -21,7 +21,7 @@ import jakarta.annotation.Nullable;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class SearchUtils {
+public class NameUtils {
 
     private static final String[] NAME_SEARCH_SPECIAL_CHARS = new String[]{ "?", "(", ")", "'", ".", "-" };
     private static final String[] NAME_REPLACEMENT_SPECIAL_CHARS = new String[]{ "", "", "", "", "", " " };

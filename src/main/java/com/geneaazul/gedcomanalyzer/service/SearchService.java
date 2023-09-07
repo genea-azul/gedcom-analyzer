@@ -12,7 +12,7 @@ import com.geneaazul.gedcomanalyzer.model.PersonComparisonResults;
 import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
-import com.geneaazul.gedcomanalyzer.utils.SearchUtils;
+import com.geneaazul.gedcomanalyzer.utils.NameUtils;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -56,10 +56,10 @@ public class SearchService {
             @Nullable String spouseSurname,
             boolean exactMatch,
             List<EnrichedPerson> people) {
-        String personGivenNameStr = SearchUtils.simplifyName(personGivenName);
-        String personSurnameStr = SearchUtils.simplifyName(personSurname);
-        String spouseGivenNameStr = SearchUtils.simplifyName(spouseGivenName);
-        String spouseSurnameStr = SearchUtils.simplifyName(spouseSurname);
+        String personGivenNameStr = NameUtils.simplifyName(personGivenName);
+        String personSurnameStr = NameUtils.simplifyName(personSurname);
+        String spouseGivenNameStr = NameUtils.simplifyName(spouseGivenName);
+        String spouseSurnameStr = NameUtils.simplifyName(spouseSurname);
 
         if (personGivenNameStr == null && personSurnameStr == null
                 || spouseGivenNameStr == null && spouseSurnameStr == null) {
@@ -68,17 +68,26 @@ public class SearchService {
 
         return people
                 .stream()
-                .filter(person -> personGivenNameStr == null || this.evalPersonName(person, EnrichedPerson::getGivenName, GivenName::value, personGivenNameStr, exactMatch))
-                .filter(person -> personSurnameStr == null || this.evalPersonName(person, EnrichedPerson::getSurname, Surname::value, personSurnameStr, exactMatch))
-                .filter(person -> spouseGivenNameStr == null || this.evalSpouseName(person, EnrichedPerson::getGivenName, GivenName::value, spouseGivenNameStr, exactMatch))
-                .filter(person -> spouseSurnameStr == null || this.evalSpouseName(person, EnrichedPerson::getSurname, Surname::value, spouseSurnameStr, exactMatch))
+                .filter(person
+                        -> personGivenNameStr == null
+                        || this.evalPersonName(person, EnrichedPerson::getGivenName, name -> NameUtils.simplifyName(name.value()), personGivenNameStr, exactMatch))
+                .filter(person
+                        -> personSurnameStr == null
+                        || this.evalPersonName(person, EnrichedPerson::getSurname, name -> NameUtils.simplifyName(name.value()), personSurnameStr, exactMatch))
+                .filter(person
+                        -> spouseGivenNameStr == null
+                        || this.evalSpouseName(person, EnrichedPerson::getGivenName, name -> NameUtils.simplifyName(name.value()), spouseGivenNameStr, exactMatch))
+                .filter(person
+                        -> spouseSurnameStr == null
+                        || this.evalSpouseName(person, EnrichedPerson::getSurname, name -> NameUtils.simplifyName(name.value()), spouseSurnameStr, exactMatch))
                 .toList();
     }
 
     private <T> boolean evalPersonName(
             EnrichedPerson person,
             Function<EnrichedPerson, Optional<T>> map1,
-            Function<T, String> map2, String personName,
+            Function<T, String> map2,
+            String personName,
             boolean exactMatch) {
         return map1.apply(person)
                 .map(map2)
@@ -89,7 +98,8 @@ public class SearchService {
     private <T> boolean evalSpouseName(
             EnrichedPerson person,
             Function<EnrichedPerson, Optional<T>> map1,
-            Function<T, String> map2, String spouseName,
+            Function<T, String> map2,
+            String spouseName,
             boolean exactMatch) {
         return person.getSpouses()
                 .stream()
@@ -418,12 +428,19 @@ public class SearchService {
             @Nullable String surname,
             @Nullable SexType sex,
             EnrichedGedcom gedcom) {
-        if (ObjectUtils.anyNull(givenName, surname, sex)) {
+        if (ObjectUtils.anyNull(givenName, surname)) {
             return List.of();
         }
-        return findPersonsByName(
-                () -> GivenNameAndSurname.of(givenName, surname, sex, properties),
-                s -> gedcom.getPersonsBySurnameMainWordAndSex(s, sex));
+
+        List<SexType> personSexes = PersonUtils.getOrValidValues(sex);
+
+        return personSexes
+                .stream()
+                .map(pSex -> findPersonsByName(
+                        () -> GivenNameAndSurname.of(givenName, surname, pSex, properties),
+                        s -> gedcom.getPersonsBySurnameMainWordAndSex(s, pSex)))
+                .flatMap(List::stream)
+                .toList();
     }
 
     @SuppressWarnings("DataFlowIssue")
@@ -433,12 +450,19 @@ public class SearchService {
             @Nullable SexType sex,
             @Nullable Integer yearOfBirth,
             EnrichedGedcom gedcom) {
-        if (ObjectUtils.anyNull(givenName, surname, sex, yearOfBirth)) {
+        if (ObjectUtils.anyNull(givenName, surname, yearOfBirth)) {
             return List.of();
         }
-        return findPersonsByName(
-                () -> GivenNameAndSurname.of(givenName, surname, sex, properties),
-                s -> gedcom.getPersonsBySurnameMainWordAndSexAndYearOfBirthIndex(s, sex, Year.of(yearOfBirth)));
+
+        List<SexType> personSexes = PersonUtils.getOrValidValues(sex);
+
+        return personSexes
+                .stream()
+                .map(pSex -> findPersonsByName(
+                        () -> GivenNameAndSurname.of(givenName, surname, pSex, properties),
+                        s -> gedcom.getPersonsBySurnameMainWordAndSexAndYearOfBirthIndex(s, pSex, Year.of(yearOfBirth))))
+                .flatMap(List::stream)
+                .toList();
     }
 
     @SuppressWarnings("DataFlowIssue")
@@ -448,12 +472,19 @@ public class SearchService {
             @Nullable SexType sex,
             @Nullable Integer yearOfDeath,
             EnrichedGedcom gedcom) {
-        if (ObjectUtils.anyNull(givenName, surname, sex, yearOfDeath)) {
+        if (ObjectUtils.anyNull(givenName, surname, yearOfDeath)) {
             return List.of();
         }
-        return findPersonsByName(
-                () -> GivenNameAndSurname.of(givenName, surname, sex, properties),
-                s -> gedcom.getPersonsBySurnameMainWordAndSexAndYearOfDeathIndex(s, sex, Year.of(yearOfDeath)));
+
+        List<SexType> personSexes = PersonUtils.getOrValidValues(sex);
+
+        return personSexes
+                .stream()
+                .map(pSex -> findPersonsByName(
+                        () -> GivenNameAndSurname.of(givenName, surname, pSex, properties),
+                        s -> gedcom.getPersonsBySurnameMainWordAndSexAndYearOfDeathIndex(s, pSex, Year.of(yearOfDeath))))
+                .flatMap(List::stream)
+                .toList();
     }
 
     public List<EnrichedPerson> findPersonsByNameAndParentsNames(
@@ -461,47 +492,71 @@ public class SearchService {
             @Nullable String parent1GivenName, @Nullable String parent1Surname, @Nullable SexType parent1Sex,
             @Nullable String parent2GivenName, @Nullable String parent2Surname, @Nullable SexType parent2Sex,
             EnrichedGedcom gedcom) {
-        if (ObjectUtils.anyNull(personGivenName, personSurname, personSex)
+        if (ObjectUtils.anyNull(personGivenName, personSurname)
                 || ObjectUtils.anyNull(parent1GivenName, parent1Surname, parent1Sex)
                 && ObjectUtils.anyNull(parent2GivenName, parent2Surname, parent2Sex)) {
             return List.of();
         }
-        return findPersonsByNameAndAnyRelative(
-                () -> GivenNameAndSurname.of(personGivenName, personSurname, personSex, properties),
-                surname-> gedcom.getPersonsBySurnameMainWordAndSex(surname, personSex),
-                () -> Optional.of(List.of(
-                        GivenNameAndSurname.of(parent1GivenName, parent1Surname, parent1Sex, properties),
-                        GivenNameAndSurname.of(parent2GivenName, parent2Surname, parent2Sex, properties))),
-                EnrichedPerson::getParents,
-                true);
+
+        List<SexType> personSexes = PersonUtils.getOrValidValues(personSex);
+
+        return personSexes
+                .stream()
+                .map(pSex -> findPersonsByNameAndAnyRelative(
+                        () -> GivenNameAndSurname.of(personGivenName, personSurname, pSex, properties),
+                        surname-> gedcom.getPersonsBySurnameMainWordAndSex(surname, pSex),
+                        () -> Optional.of(List.of(
+                                GivenNameAndSurname.of(parent1GivenName, parent1Surname, parent1Sex, properties),
+                                GivenNameAndSurname.of(parent2GivenName, parent2Surname, parent2Sex, properties))),
+                        EnrichedPerson::getParents,
+                        true))
+                .flatMap(List::stream)
+                .toList();
     }
 
     public List<EnrichedPerson> findPersonsByNameAndSpouseName(
             @Nullable String personGivenName, @Nullable String personSurname, @Nullable SexType personSex,
             @Nullable String spouseGivenName, @Nullable String spouseSurname, @Nullable SexType spouseSex,
             EnrichedGedcom gedcom) {
-        if (ObjectUtils.anyNull(personGivenName, personSurname, personSex)
-                || ObjectUtils.anyNull(spouseGivenName, spouseSurname, spouseSex)) {
+        if (ObjectUtils.anyNull(personGivenName, personSurname)
+                || ObjectUtils.anyNull(spouseGivenName, spouseSurname)) {
             return List.of();
         }
-        return findPersonsByNameAndAnyRelative(
-                () -> GivenNameAndSurname.of(personGivenName, personSurname, personSex, properties),
-                surname -> gedcom.getPersonsBySurnameMainWordAndSex(surname, personSex),
-                () -> Optional.of(List.of(
-                        GivenNameAndSurname.of(spouseGivenName, spouseSurname, spouseSex, properties))),
-                EnrichedPerson::getSpouses,
-                false);
+
+        List<SexType> personSexes = PersonUtils.getOrValidValues(personSex);
+        List<SexType> spouseSexes = PersonUtils.getOrValidValues(spouseSex);
+
+        return personSexes
+                .stream()
+                .map(pSex -> findPersonsByNameAndAnyRelative(
+                        () -> GivenNameAndSurname.of(personGivenName, personSurname, pSex, properties),
+                        surname -> gedcom.getPersonsBySurnameMainWordAndSex(surname, pSex),
+                        () -> Optional.of(spouseSexes
+                                .stream()
+                                .map(sSex -> GivenNameAndSurname.of(spouseGivenName, spouseSurname, sSex, properties))
+                                .toList()),
+                        EnrichedPerson::getSpouses,
+                        false))
+                .flatMap(List::stream)
+                .toList();
     }
 
     public List<EnrichedPerson> findPersonsBySurname(
             @Nullable String surname,
             @Nullable SexType sex,
             EnrichedGedcom gedcom) {
-        if (ObjectUtils.anyNull(surname, sex)) {
+        if (ObjectUtils.anyNull(surname)) {
             return List.of();
         }
+
+        List<SexType> personSexes = PersonUtils.getOrValidValues(sex);
+
         return PersonUtils.getShortenedSurnameMainWord(surname, properties.getNormalizedSurnamesMap())
-                .map(s -> gedcom.getPersonsBySurnameMainWordAndSex(s, sex))
+                .map(shortenedSurname -> personSexes
+                        .stream()
+                        .map(pSex -> gedcom.getPersonsBySurnameMainWordAndSex(shortenedSurname, pSex))
+                        .flatMap(List::stream)
+                        .toList())
                 .orElseGet(List::of);
     }
 
@@ -511,11 +566,18 @@ public class SearchService {
             @Nullable SexType sex,
             @Nullable Integer yearOfBirth,
             EnrichedGedcom gedcom) {
-        if (ObjectUtils.anyNull(surname, sex, yearOfBirth)) {
+        if (ObjectUtils.anyNull(surname, yearOfBirth)) {
             return List.of();
         }
+
+        List<SexType> personSexes = PersonUtils.getOrValidValues(sex);
+
         return PersonUtils.getShortenedSurnameMainWord(surname, properties.getNormalizedSurnamesMap())
-                .map(s -> gedcom.getPersonsBySurnameMainWordAndSexAndYearOfBirthIndex(s, sex, Year.of(yearOfBirth)))
+                .map(shortenedSurname -> personSexes
+                        .stream()
+                        .map(pSex -> gedcom.getPersonsBySurnameMainWordAndSexAndYearOfBirthIndex(shortenedSurname, pSex, Year.of(yearOfBirth)))
+                        .flatMap(List::stream)
+                        .toList())
                 .orElseGet(List::of);
     }
 
@@ -525,11 +587,18 @@ public class SearchService {
             @Nullable SexType sex,
             @Nullable Integer yearOfDeath,
             EnrichedGedcom gedcom) {
-        if (ObjectUtils.anyNull(surname, sex, yearOfDeath)) {
+        if (ObjectUtils.anyNull(surname, yearOfDeath)) {
             return List.of();
         }
+
+        List<SexType> personSexes = PersonUtils.getOrValidValues(sex);
+
         return PersonUtils.getShortenedSurnameMainWord(surname, properties.getNormalizedSurnamesMap())
-                .map(s -> gedcom.getPersonsBySurnameMainWordAndSexAndYearOfDeathIndex(s, sex, Year.of(yearOfDeath)))
+                .map(shortenedSurname -> personSexes
+                        .stream()
+                        .map(pSex -> gedcom.getPersonsBySurnameMainWordAndSexAndYearOfDeathIndex(shortenedSurname, pSex, Year.of(yearOfDeath)))
+                        .flatMap(List::stream)
+                        .toList())
                 .orElseGet(List::of);
     }
 

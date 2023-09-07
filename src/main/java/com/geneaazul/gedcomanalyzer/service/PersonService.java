@@ -19,7 +19,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.model.dto.TreeSideType;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.RelationshipUtils;
-import com.geneaazul.gedcomanalyzer.utils.SearchUtils;
+import com.geneaazul.gedcomanalyzer.utils.NameUtils;
 import com.geneaazul.gedcomanalyzer.utils.SetUtils;
 
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -87,7 +87,7 @@ public class PersonService {
                                             // don't obfuscate root person
                                             && !relationship.person().getId().equals(person.getId())
                                             && (person.isAlive() && relationship.getDistance() <= MAX_DISTANCE_TO_OBFUSCATE
-                                                    || relationship.person().isAlive())))
+                                            || relationship.person().isAlive())))
                             .map(relationship -> relationshipMapper.formatInSpanish(relationship, index.getAndIncrement(), true))
                             .toList())
                     .map(formattedRelationships -> {
@@ -128,7 +128,7 @@ public class PersonService {
                                 .map(Surname::value))
                 .flatMap(Optional::stream)
                 .reduce((n1, n2) -> n1 + "_" + n2)
-                .map(SearchUtils::simplifyName)
+                .map(NameUtils::simplifyName)
                 .map(name -> name.replaceAll(" ", "_"))
                 .orElse("genea-azul");
     }
@@ -187,6 +187,11 @@ public class PersonService {
         boolean visited = visitedPersons.containsKey(person.getId());
         if (visited) {
             Relationships visitedRelationships = visitedPersons.get(person.getId());
+
+            // Skip re-visiting root person
+            if (visitedRelationships.findFirst().getDistance() == 0) {
+                return;
+            }
 
             if (onlyPropagateTreeSides
                     && !SetUtils.containsAll(visitedRelationships.getTreeSides(), toVisitRelationship.treeSides())) {
@@ -371,33 +376,33 @@ public class PersonService {
                                 .getSpousesWithChildren()
                                 .stream()
                                 .flatMap(spouseWithChildren -> {
-                                            // when traversing children, both parents will be considered the related persons
-                                            List<String> relatedPersonIds = spouseWithChildren.getSpouse()
-                                                    .map(spouse -> Stream
-                                                            .of(
-                                                                    person.getId(),
-                                                                    spouse.getId())
-                                                            .sorted()
-                                                            .toList())
-                                                    .orElse(singleRelatedPersonIds);
+                                    // when traversing children, both parents will be considered the related persons
+                                    List<String> relatedPersonIds = spouseWithChildren.getSpouse()
+                                            .map(spouse -> Stream
+                                                    .of(
+                                                            person.getId(),
+                                                            spouse.getId())
+                                                    .sorted()
+                                                    .toList())
+                                            .orElse(singleRelatedPersonIds);
 
-                                            return spouseWithChildren
-                                                    .getChildrenWithReference()
-                                                    .stream()
-                                                    .map(childWithReference -> new RelativeAndDirection(
-                                                            childWithReference.person(),
-                                                            TreeTraversalDirection.DESC,
-                                                            previousPersonParents != null && !previousPersonParents
-                                                                    .contains(spouseWithChildren.getSpouse().map(EnrichedPerson::getId)),
-                                                            childWithReference
-                                                                    .referenceType()
-                                                                    .map(PersonService::resolveAdoptionType)
-                                                                    .orElse(null),
-                                                            Optional
-                                                                    .ofNullable(treeSides)
-                                                                    .orElseGet(() -> Set.of(TreeSideType.DESCENDANT)),
-                                                            relatedPersonIds));
-                                        }))
+                                    return spouseWithChildren
+                                            .getChildrenWithReference()
+                                            .stream()
+                                            .map(childWithReference -> new RelativeAndDirection(
+                                                    childWithReference.person(),
+                                                    TreeTraversalDirection.DESC,
+                                                    previousPersonParents != null && !previousPersonParents
+                                                            .contains(spouseWithChildren.getSpouse().map(EnrichedPerson::getId)),
+                                                    childWithReference
+                                                            .referenceType()
+                                                            .map(PersonService::resolveAdoptionType)
+                                                            .orElse(null),
+                                                    Optional
+                                                            .ofNullable(treeSides)
+                                                            .orElseGet(() -> Set.of(TreeSideType.DESCENDANT)),
+                                                    relatedPersonIds));
+                                }))
                 : Stream.empty();
 
         if (direction == TreeTraversalDirection.ASC || direction == TreeTraversalDirection.ONLY_ASC) {

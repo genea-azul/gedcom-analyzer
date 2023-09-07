@@ -22,15 +22,15 @@
 
     <div class="row mb-3">
       <div class="col-xl-auto">
-        <div class="card border-danger mb-2" id="individualCard">
-          <div class="card-header text-bg-danger">
-            <i class="card-header-icon float-end bi-gender-female"></i>
+        <div class="card border-dark mb-2" id="individualCard">
+          <div class="card-header text-bg-dark">
+            <i class="card-header-icon float-end"></i>
             Persona principal
           </div>
           <div class="card-body">
             <span class="small text-secondary">Sexo:</span>
             <div class="btn-group btn-group-sm" role="group" aria-label="Sexo">
-              <input type="radio" class="btn-check" name="individualSex" id="individualSexF" value="F" autocomplete="off" checked="checked" />
+              <input type="radio" class="btn-check" name="individualSex" id="individualSexF" value="F" autocomplete="off" />
               <label class="btn btn-outline-danger" for="individualSexF">Mujer</label>
               <input type="radio" class="btn-check" name="individualSex" id="individualSexM" value="M" autocomplete="off" />
               <label class="btn btn-outline-secondary" for="individualSexM">Hombre</label>
@@ -63,9 +63,9 @@
         </div>
       </div>
       <div class="col-xl-auto">
-        <div class="card border-secondary mb-2" id="spouseCard">
-          <div class="card-header text-bg-secondary">
-            <i class="card-header-icon float-end bi-gender-male"></i>
+        <div class="card border-dark mb-2" id="spouseCard">
+          <div class="card-header text-bg-dark">
+            <i class="card-header-icon float-end"></i>
             Pareja
           </div>
           <div class="card-body">
@@ -81,7 +81,7 @@
               <div class="btn-group btn-group-sm" role="group" aria-label="Sexo">
                 <input type="radio" class="btn-check" name="spouseSex" id="spouseSexF" value="F" autocomplete="off" />
                 <label class="btn btn-outline-danger" for="spouseSexF">Mujer</label>
-                <input type="radio" class="btn-check" name="spouseSex" id="spouseSexM" value="M" autocomplete="off" checked="checked" />
+                <input type="radio" class="btn-check" name="spouseSex" id="spouseSexM" value="M" autocomplete="off" />
                 <label class="btn btn-outline-secondary" for="spouseSexM">Hombre</label>
               </div>
               <div class="form-floating mt-1">
@@ -178,8 +178,8 @@
 
     <div class="row mb-3" id="grandparentsContainerShowBtnContainer">
       <div class="col-xl-auto">
-        <div class="card border-secondary mb-2">
-          <div class="card-header text-bg-secondary">Abuelos/as</div>
+        <div class="card border-dark mb-2">
+          <div class="card-header text-bg-dark">Abuelos/as</div>
           <div class="card-body">
             <div class="alert alert-light mb-0" role="alert">
               <div class="form-check">
