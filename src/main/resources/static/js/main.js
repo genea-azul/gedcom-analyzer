@@ -26,8 +26,10 @@ var toggleCardColorBySex = function(cardComponent, sexRadioComponent, relatedCar
         var isMale = $(this).val() === "M";
         $(cardComponent).toggleClass("border-secondary", isMale);
         $(cardComponent).toggleClass("border-danger", !isMale);
+        $(cardComponent).toggleClass("border-dark", false);
         $(cardComponent + " div.card-header").toggleClass("text-bg-secondary", isMale);
         $(cardComponent + " div.card-header").toggleClass("text-bg-danger", !isMale);
+        $(cardComponent + " div.card-header").toggleClass("text-bg-dark", false);
         $(cardComponent + " i.card-header-icon").toggleClass("bi-gender-male", isMale);
         $(cardComponent + " i.card-header-icon").toggleClass("bi-gender-female", !isMale);
 
@@ -38,8 +40,10 @@ var toggleCardColorBySex = function(cardComponent, sexRadioComponent, relatedCar
 
             $(relatedCardComponent).toggleClass("border-secondary", !isMale);
             $(relatedCardComponent).toggleClass("border-danger", isMale);
+            $(relatedCardComponent).toggleClass("border-dark", false);
             $(relatedCardComponent + " div.card-header").toggleClass("text-bg-secondary", !isMale);
             $(relatedCardComponent + " div.card-header").toggleClass("text-bg-danger", isMale);
+            $(relatedCardComponent + " div.card-header").toggleClass("text-bg-dark", false);
             $(relatedCardComponent + " i.card-header-icon").toggleClass("bi-gender-male", !isMale);
             $(relatedCardComponent + " i.card-header-icon").toggleClass("bi-gender-female", isMale);
         }
@@ -234,8 +238,11 @@ $(document).ready(function() {
                         } else {
                             $resultComponent
                                 .html("<p>🔎 No se encontraron resultados. 🔍</p>")
-                                .append("<p>Verific&aacute; que el <span class=\"text-danger fw-bold\">sexo</span> de la persona est&eacute; bien seleccionado.</p>")
                                 .append("<p>Edit&aacute; la b&uacute;squeda agregando fechas o completando nombres de padres y parejas.</p>");
+                            if (!!searchFamilyRequest["individual"]["sex"]) {
+                                $resultComponent
+                                    .append("<p>Verific&aacute; que el <span class=\"text-danger fw-bold\">sexo</span> de la persona est&eacute; bien seleccionado.</p>");
+                            }
                         }
                     } else {
                         $resultComponent

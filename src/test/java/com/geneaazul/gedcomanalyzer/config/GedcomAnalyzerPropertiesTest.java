@@ -2,7 +2,7 @@ package com.geneaazul.gedcomanalyzer.config;
 
 import com.geneaazul.gedcomanalyzer.model.NameAndSex;
 import com.geneaazul.gedcomanalyzer.utils.EntryStreamTestUtils;
-import com.geneaazul.gedcomanalyzer.utils.SearchUtils;
+import com.geneaazul.gedcomanalyzer.utils.NameUtils;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,8 +36,8 @@ public class GedcomAnalyzerPropertiesTest {
                         new NameAndSex(entry.getValue(), entry.getKey().sex())))
                 .distinct()
                 .map(mappingEntry(NameAndSex::name))
-                .map(entryValueMapper(SearchUtils::simplifyName))
-                .map(entryValueMapper((nameAndSex, givenName) -> SearchUtils.normalizeGivenName(givenName, nameAndSex.sex(), Map.of())))
+                .map(entryValueMapper(NameUtils::simplifyName))
+                .map(entryValueMapper((nameAndSex, givenName) -> NameUtils.normalizeGivenName(givenName, nameAndSex.sex(), Map.of())))
                 .forEach(entry -> assertEqualMappingKey(entry, NameAndSex::name));
     }
 
@@ -56,8 +56,8 @@ public class GedcomAnalyzerPropertiesTest {
                         .values()
                         .stream())
                 .map(unaryEntry())
-                .map(entryValueMapper(SearchUtils::simplifyName))
-                .map(entryValueMapper(surname -> SearchUtils.normalizeSurnameToMainWord(surname, Map.of())))
+                .map(entryValueMapper(NameUtils::simplifyName))
+                .map(entryValueMapper(surname -> NameUtils.normalizeSurnameToMainWord(surname, Map.of())))
                 .forEach(EntryStreamTestUtils::assertEqualKeyValue);
     }
 

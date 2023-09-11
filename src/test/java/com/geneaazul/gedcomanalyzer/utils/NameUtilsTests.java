@@ -17,7 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest
 @EnableConfigurationProperties
 @ActiveProfiles("test")
-public class SearchUtilsTests {
+public class NameUtilsTests {
 
     @Autowired
     private GedcomAnalyzerProperties properties;

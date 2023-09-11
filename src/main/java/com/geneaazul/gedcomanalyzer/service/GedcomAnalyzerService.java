@@ -22,7 +22,7 @@ import com.geneaazul.gedcomanalyzer.utils.FamilyUtils;
 import com.geneaazul.gedcomanalyzer.utils.MapUtils;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 import com.geneaazul.gedcomanalyzer.utils.RelationshipUtils;
-import com.geneaazul.gedcomanalyzer.utils.SearchUtils;
+import com.geneaazul.gedcomanalyzer.utils.NameUtils;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -425,7 +425,7 @@ public class GedcomAnalyzerService {
                         .thenComparing(Map.Entry::getKey))
                 .map(entry -> {
                     String normalizedMainWord = entry.getKey();
-                    String shortenedMainWord = SearchUtils.shortenSurnameMainWord(normalizedMainWord);
+                    String shortenedMainWord = NameUtils.shortenSurnameMainWord(normalizedMainWord);
                     return new SurnamesCardinality(
                             normalizedMainWord,
                             entry.getValue(),

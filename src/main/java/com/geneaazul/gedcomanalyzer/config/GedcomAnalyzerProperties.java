@@ -1,7 +1,7 @@
 package com.geneaazul.gedcomanalyzer.config;
 
 import com.geneaazul.gedcomanalyzer.model.NameAndSex;
-import com.geneaazul.gedcomanalyzer.utils.SearchUtils;
+import com.geneaazul.gedcomanalyzer.utils.NameUtils;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -94,8 +94,8 @@ public class GedcomAnalyzerProperties {
         this.childMinDateOfBirth = now.minusYears(childMaxAge);
         this.childMinDateOfDeath = now.minusYears(childMaxAge);
 
-        this.normalizedGivenNamesMap = SearchUtils.invertGivenNamesMap(nameNormalizedM, nameNormalizedF);
-        this.normalizedSurnamesMap = SearchUtils.invertSurnamesMap(surnameNormalized);
+        this.normalizedGivenNamesMap = NameUtils.invertGivenNamesMap(nameNormalizedM, nameNormalizedF);
+        this.normalizedSurnamesMap = NameUtils.invertSurnamesMap(surnameNormalized);
     }
 
 }

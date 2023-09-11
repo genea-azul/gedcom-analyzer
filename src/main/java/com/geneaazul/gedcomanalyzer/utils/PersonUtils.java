@@ -144,8 +144,8 @@ public class PersonUtils {
             @Nullable SexType sex,
             Map<NameAndSex, String> normalizedGivenNamesMap) {
         return Optional.ofNullable(givenName)
-                .map(SearchUtils::simplifyName)
-                .map(simplifiedGivenName -> SearchUtils.normalizeGivenName(simplifiedGivenName, sex, normalizedGivenNamesMap))
+                .map(NameUtils::simplifyName)
+                .map(simplifiedGivenName -> NameUtils.normalizeGivenName(simplifiedGivenName, sex, normalizedGivenNamesMap))
                 .map(normalized -> GivenName.of(givenName, normalized));
     }
 
@@ -175,10 +175,10 @@ public class PersonUtils {
             @Nullable String surname,
             Map<String, String> normalizedSurnamesMap) {
         return Optional.ofNullable(surname)
-                .map(SearchUtils::simplifyName)
-                .map(simplifiedSurname -> SearchUtils.normalizeSurnameToMainWord(simplifiedSurname, normalizedSurnamesMap))
+                .map(NameUtils::simplifyName)
+                .map(simplifiedSurname -> NameUtils.normalizeSurnameToMainWord(simplifiedSurname, normalizedSurnamesMap))
                 .map(normalizedMainWord -> {
-                    String shortenedMainWord = SearchUtils.shortenSurnameMainWord(normalizedMainWord);
+                    String shortenedMainWord = NameUtils.shortenSurnameMainWord(normalizedMainWord);
                     return Surname.of(surname, normalizedMainWord, shortenedMainWord);
                 });
     }
@@ -479,6 +479,13 @@ public class PersonUtils {
         return maybeSpouse
                 .map(spouse -> obfuscateName(spouse, condition.test(spouse)))
                 .orElse(NO_SPOUSE);
+    }
+
+    public static List<SexType> getOrValidValues(@Nullable SexType sex) {
+        if (sex != null) {
+            return List.of(sex);
+        }
+        return SexType.VALID_SEX_TYPES;
     }
 
     public static final Comparator<EnrichedPerson> DATES_COMPARATOR = Comparator
