@@ -112,7 +112,11 @@ public class SearchService {
     /**
      * .
      */
-    public List<EnrichedPerson> findPersonsByMonthAndDayOfDeath(Month month, int day, SexType sex, List<EnrichedPerson> people) {
+    public List<EnrichedPerson> findPersonsByMonthAndDayOfDeath(
+            Month month,
+            int day,
+            @Nullable SexType sex,
+            List<EnrichedPerson> people) {
         return people
                 .stream()
                 .filter(person -> !person.isAlive())
@@ -137,8 +141,12 @@ public class SearchService {
                 .filter(person -> isAlive == null || isAlive == person.isAlive())
                 .filter(person -> sex == null || sex == person.getSex())
                 .filter(person
-                        -> placeOfBirth == null && person.getPlaceOfBirthForSearch().isEmpty()
-                        || placeOfBirth != null && person
+                        -> placeOfBirth == null
+                        && person
+                                .getPlaceOfBirthForSearch()
+                                .isEmpty()
+                        || placeOfBirth != null
+                        && person
                                 .getPlaceOfBirthForSearch()
                                 .map(pob -> pob.endsWith(placeOfBirth))
                                 .orElse(false))
@@ -148,14 +156,24 @@ public class SearchService {
     /**
      * .
      */
-    public List<EnrichedPerson> findPersonsByPlaceOfDeath(String placeOfDeath, SexType sex, List<EnrichedPerson> people) {
+    public List<EnrichedPerson> findPersonsByPlaceOfDeath(
+            @Nullable String placeOfDeath,
+            @Nullable SexType sex,
+            List<EnrichedPerson> people) {
         return people
                 .stream()
                 .filter(person -> !person.isAlive())
                 .filter(person -> sex == null || sex == person.getSex())
-                .filter(person -> person.getPlaceOfBirthForSearch()
-                        .map(pod -> pod.endsWith(placeOfDeath))
-                        .orElse(false))
+                .filter(person
+                        -> placeOfDeath == null
+                        && person
+                                .getPlaceOfDeathForSearch()
+                                .isEmpty()
+                        || placeOfDeath != null
+                        && person
+                                .getPlaceOfDeathForSearch()
+                                .map(pod -> pod.endsWith(placeOfDeath))
+                                .orElse(false))
                 .toList();
     }
 
@@ -170,8 +188,8 @@ public class SearchService {
                                 .anyMatch(parent
                                         -> isDateOfBirthBefore(parent, properties.getParentMinDateOfBirth())
                                         || isDateOfDeathBefore(parent, properties.getParentMinDateOfDeath()))
-                        // Compare siblings
-                        || person.getSiblings()
+                        // Compare all siblings (full and half)
+                        || person.getAllSiblings()
                                 .stream()
                                 .anyMatch(sibling
                                         -> isDateOfBirthBefore(sibling, properties.getSiblingMinDateOfBirth())

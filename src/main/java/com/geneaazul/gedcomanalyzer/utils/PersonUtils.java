@@ -342,10 +342,21 @@ public class PersonUtils {
                 .toList();
     }
 
-    public static List<Person> getSiblings(Person person, Gedcom gedcom) {
+    /**
+     * Full and half siblings.
+     */
+    public static List<Person> getAllSiblings(Person person, Gedcom gedcom) {
         return person
                 .getParentFamilies(gedcom)
                 .stream()
+                .flatMap(family -> Stream
+                        .of(
+                                family.getHusbands(gedcom),
+                                family.getWives(gedcom))
+                        .flatMap(List::stream)
+                        .map(parent -> parent.getSpouseFamilies(gedcom))
+                        .flatMap(List::stream)
+                        .distinct())
                 .map(family -> family.getChildren(gedcom))
                 .flatMap(List::stream)
                 .filter(sibling -> !sibling.getId().equals(person.getId()))

@@ -86,7 +86,7 @@ public class SurnameService {
                                                             spouseWithChildren.getDateOfSeparation()))
                                             .flatMap(Optional::stream)))
                             .map(Date::getYear)
-                            .collect(Collectors.summarizingInt(Year::getValue));;
+                            .collect(Collectors.summarizingInt(Year::getValue));
 
                     return SearchSurnameResultDto.builder()
                             .surname(surname.value())

@@ -54,6 +54,7 @@ public class EnrichedPerson {
 
     // Search values
     private final Optional<String> placeOfBirthForSearch;
+    private final Optional<String> placeOfDeathForSearch;
     private final Optional<String> countryOfBirth;
     private final Optional<String> countryOfDeath;
 
@@ -66,7 +67,7 @@ public class EnrichedPerson {
     private List<EnrichedPersonWithReference> parentsWithReference;
     private List<EnrichedSpouseWithChildren> spousesWithChildren;
     private List<EnrichedPerson> parents;
-    private List<EnrichedPerson> siblings;
+    private List<EnrichedPerson> allSiblings;
     private List<EnrichedPerson> spouses;
     private List<EnrichedPerson> children;
 
@@ -105,10 +106,11 @@ public class EnrichedPerson {
 
         placeOfBirthForSearch = placeOfBirth
                 .map(PlaceUtils::removeLastParenthesis);
+        placeOfDeathForSearch = placeOfDeath
+                .map(PlaceUtils::removeLastParenthesis);
         countryOfBirth = placeOfBirthForSearch
                 .map(PlaceUtils::getCountry);
-        countryOfDeath = placeOfBirth
-                .map(PlaceUtils::removeLastParenthesis)
+        countryOfDeath = placeOfDeathForSearch
                 .map(PlaceUtils::getCountry);
     }
 
@@ -119,7 +121,7 @@ public class EnrichedPerson {
     public void enrichFamily(Map<String, EnrichedPerson> enrichedPeopleIndex) {
         parentsWithReference = toEnrichedPeopleWithReference(PersonUtils.getParentsWithReference(person, gedcom.getGedcom()), enrichedPeopleIndex, null);
         spousesWithChildren = toEnrichedSpousesWithChildren(PersonUtils.getSpousesWithChildren(person, gedcom.getGedcom()), enrichedPeopleIndex);
-        siblings = toEnrichedPeople(PersonUtils.getSiblings(person, gedcom.getGedcom()), enrichedPeopleIndex, PersonUtils.DATES_COMPARATOR);
+        allSiblings = toEnrichedPeople(PersonUtils.getAllSiblings(person, gedcom.getGedcom()), enrichedPeopleIndex, PersonUtils.DATES_COMPARATOR);
 
         parents = parentsWithReference
                 .stream()

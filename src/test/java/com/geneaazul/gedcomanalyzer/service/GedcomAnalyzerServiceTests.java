@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @SpringBootTest
 @EnableConfigurationProperties
@@ -192,6 +193,46 @@ public class GedcomAnalyzerServiceTests {
                 + ": " + monthsCount + " deaths");
         monthsOfDeathCardinality
                 .forEach(((month, count) -> System.out.printf("%s\t%.2f%%\t%d%n", month, (double) count / monthsCount * 100, count)));
+
+        System.out.println("\nfindPersonsWithManyChildrenByPlaceOfBirth:");
+        Stream.concat(
+                searchService
+                        .findPersonsByPlaceOfBirth("Azul, Buenos Aires, Argentina", true, null, gedcom.getPeople())
+                        .stream(),
+                searchService
+                        .findPersonsByPlaceOfBirth("Azul, Buenos Aires, Argentina", true, null, gedcom.getPeople())
+                        .stream()
+                        .map(EnrichedPerson::getParents)
+                        .flatMap(List::stream))
+                .distinct()
+                .filter(person -> person.getChildren().size() >= 9)
+                .forEach(System.out::println);
+
+        /* searchService
+                .findPersonsByPlaceOfBirth("Azul, Buenos Aires, Argentina", null, null, gedcom.getPeople())
+                .stream()
+                .filter(EnrichedPerson::isAlive)
+                .filter(person -> person.getChildren().size() >= 9)
+                .forEach(System.out::println);
+
+        System.out.println("\nfindPersonsWithManyChildrenByChildPlaceOfBirth:");
+        searchService
+                .findPersonsByPlaceOfBirth("Azul, Buenos Aires, Argentina", null, null, gedcom.getPeople())
+                .stream()
+                .map(EnrichedPerson::getParents)
+                .flatMap(List::stream)
+                .distinct()
+                .filter(person -> person.getChildren().size() >= 9)
+                .filter(person -> person.getChildren().stream().anyMatch(EnrichedPerson::isAlive))
+                .forEach(System.out::println); */
+
+        System.out.println("\nfindPersonsWithManySiblingsByPlaceOfBirth:");
+        searchService
+                .findPersonsByPlaceOfBirth("Azul, Buenos Aires, Argentina", null, null, gedcom.getPeople())
+                .stream()
+                .filter(EnrichedPerson::isAlive)
+                .filter(person -> person.getAllSiblings().size() >= 8) // size used in previous search - 1
+                .forEach(System.out::println);
 
         System.out.println("\nfindDuplicatedPersons:");
         searchService
