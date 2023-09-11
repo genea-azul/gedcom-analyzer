@@ -19,6 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.Month;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -206,32 +207,9 @@ public class GedcomAnalyzerServiceTests {
                         .flatMap(List::stream))
                 .distinct()
                 .filter(person -> person.getChildren().size() >= 9)
-                .forEach(System.out::println);
-
-        /* searchService
-                .findPersonsByPlaceOfBirth("Azul, Buenos Aires, Argentina", null, null, gedcom.getPeople())
-                .stream()
-                .filter(EnrichedPerson::isAlive)
-                .filter(person -> person.getChildren().size() >= 9)
-                .forEach(System.out::println);
-
-        System.out.println("\nfindPersonsWithManyChildrenByChildPlaceOfBirth:");
-        searchService
-                .findPersonsByPlaceOfBirth("Azul, Buenos Aires, Argentina", null, null, gedcom.getPeople())
-                .stream()
-                .map(EnrichedPerson::getParents)
-                .flatMap(List::stream)
-                .distinct()
-                .filter(person -> person.getChildren().size() >= 9)
-                .filter(person -> person.getChildren().stream().anyMatch(EnrichedPerson::isAlive))
-                .forEach(System.out::println); */
-
-        System.out.println("\nfindPersonsWithManySiblingsByPlaceOfBirth:");
-        searchService
-                .findPersonsByPlaceOfBirth("Azul, Buenos Aires, Argentina", null, null, gedcom.getPeople())
-                .stream()
-                .filter(EnrichedPerson::isAlive)
-                .filter(person -> person.getAllSiblings().size() >= 8) // size used in previous search - 1
+                .sorted(Comparator
+                        .<EnrichedPerson, Integer>comparing(person -> person.getChildren().size())
+                        .reversed())
                 .forEach(System.out::println);
 
         System.out.println("\nfindDuplicatedPersons:");
