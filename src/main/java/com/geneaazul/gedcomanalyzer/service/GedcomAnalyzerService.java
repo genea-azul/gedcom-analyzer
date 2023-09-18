@@ -381,10 +381,13 @@ public class GedcomAnalyzerService {
     /**
      * .
      */
-    public List<SurnamesCardinality> getSurnamesCardinalityByPlaceOfBirth(List<EnrichedPerson> people, String placeOfBirth) {
+    public List<SurnamesCardinality> getSurnamesCardinalityByPlaceOfBirth(
+            List<EnrichedPerson> people,
+            String placeOfBirth,
+            @Nullable Boolean isAlive) {
 
         List<Surname> surnamesByPlaceOfBirth = searchService
-                .findPersonsByPlaceOfBirth(placeOfBirth, null, null, people)
+                .findPersonsByPlaceOfBirth(placeOfBirth, isAlive, null, people)
                 .stream()
                 .map(EnrichedPerson::getSurname)
                 .flatMap(Optional::stream)

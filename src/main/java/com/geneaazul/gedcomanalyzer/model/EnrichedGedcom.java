@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import javax.annotation.CheckForNull;
 
@@ -131,6 +132,16 @@ public class EnrichedGedcom {
                 })
                 .map(person -> {
                     Date date = dateMapper.apply(person);
+                    // Secondary date is used to represent from-to dates, when it is set we don't check whether the dates are estimated or not
+                    if (date.getSecondary() != null) {
+                        return IntStream
+                                .rangeClosed(
+                                        date.getYear().getValue(),
+                                        date.getSecondary().getYear().getValue())
+                                .mapToObj(year -> Pair.of(person, Year.of(year)))
+                                .toList();
+                    }
+                    // When it is an estimated only-year date we consider a year before and a year after
                     if (date.isOnlyYearDate()
                             && (date.getOperator() == Date.Operator.ABT || date.getOperator() == Date.Operator.EST)) {
                         return List.of(
