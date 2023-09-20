@@ -104,10 +104,12 @@ public class PersonUtils {
         if (StringUtils.isNotBlank(name.getPrefix())) {
             displayName = trimAndAppend(displayName, name.getPrefix());
         }
-        if (StringUtils.isNotBlank(name.getGiven())) {
-            String givenName = "?".equals(StringUtils.trim(name.getGiven())) ? NO_NAME : name.getGiven();
-            displayName = trimAndAppend(displayName, givenName);
-        }
+
+        boolean isGivenNameMissing = StringUtils.isBlank(name.getGiven())
+                || "?".equals(StringUtils.trim(name.getGiven()));
+        String givenName = isGivenNameMissing ? NO_NAME : name.getGiven();
+        displayName = trimAndAppend(displayName, givenName);
+
         if (StringUtils.isNotBlank(name.getNickname())) {
             displayName = trimAndAppend(displayName, "\"" + name.getNickname() + "\"");
         }
