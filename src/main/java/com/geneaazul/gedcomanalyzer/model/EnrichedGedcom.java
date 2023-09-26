@@ -7,8 +7,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.folg.gedcom.model.Gedcom;
 
 import java.time.Year;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -21,7 +23,7 @@ import lombok.Getter;
 @Getter
 public class EnrichedGedcom {
 
-    private final Gedcom gedcom;
+    private final Gedcom legacyGedcom;
     private final String gedcomName;
     private final GedcomAnalyzerProperties properties;
 
@@ -34,12 +36,14 @@ public class EnrichedGedcom {
     private final Map<NameSexYear, List<EnrichedPerson>> peopleByNormalizedSurnameMainWordAndSexAndYearOfBirthIndex;
     private final Map<NameSexYear, List<EnrichedPerson>> peopleByNormalizedSurnameMainWordAndSexAndYearOfDeathIndex;
 
-    private EnrichedGedcom(Gedcom gedcom, String gedcomName, GedcomAnalyzerProperties properties) {
-        this.gedcom = gedcom;
+    private final Map<String, Place> places = new HashMap<>();
+
+    private EnrichedGedcom(Gedcom legacyGedcom, String gedcomName, GedcomAnalyzerProperties properties) {
+        this.legacyGedcom = properties.isKeepReferenceToLegacyGedcom() ? legacyGedcom : null;
         this.gedcomName = gedcomName;
         this.properties = properties;
 
-        this.people = getEnrichedPeople();
+        this.people = getEnrichedPeople(legacyGedcom);
 
         this.peopleByIdIndex = this.people
                 .stream()
@@ -70,12 +74,16 @@ public class EnrichedGedcom {
                 person -> person.getDateOfDeath().orElse(null));
     }
 
-    public static EnrichedGedcom of(Gedcom gedcom, String gedcomName, GedcomAnalyzerProperties properties) {
-        return new EnrichedGedcom(gedcom, gedcomName, properties);
+    public static EnrichedGedcom of(Gedcom legacyGedcom, String gedcomName, GedcomAnalyzerProperties properties) {
+        return new EnrichedGedcom(legacyGedcom, gedcomName, properties);
     }
 
-    private List<EnrichedPerson> getEnrichedPeople() {
-        List<EnrichedPerson> enrichedPeople = gedcom.getPeople()
+    public Optional<Gedcom> getLegacyGedcom() {
+        return Optional.ofNullable(legacyGedcom);
+    }
+
+    private List<EnrichedPerson> getEnrichedPeople(Gedcom legacyGedcom) {
+        List<EnrichedPerson> enrichedPeople = legacyGedcom.getPeople()
                 .stream()
                 .map(p -> EnrichedPerson.of(p, this))
                 .toList();
@@ -85,7 +93,7 @@ public class EnrichedGedcom {
                 .collect(Collectors.toUnmodifiableMap(EnrichedPerson::getId, Function.identity()));
 
         enrichedPeople
-                .forEach(person -> person.enrichFamily(enrichedPeopleIndex));
+                .forEach(person -> person.enrichFamily(legacyGedcom, enrichedPeopleIndex));
 
         return enrichedPeople;
     }
@@ -165,7 +173,8 @@ public class EnrichedGedcom {
     }
 
     public void analyzeCustomEventFactsAndTagExtensions() {
-        people.forEach(EnrichedPerson::analyzeCustomEventFactsAndTagExtensions);
+        getLegacyGedcom()
+                .ifPresent(gedcom -> people.forEach(person -> person.analyzeCustomEventFactsAndTagExtensions(gedcom)));
     }
 
 }

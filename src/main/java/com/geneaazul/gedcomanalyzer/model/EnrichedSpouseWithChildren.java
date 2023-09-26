@@ -17,12 +17,8 @@ public class EnrichedSpouseWithChildren {
     private final boolean isSeparated;
     private final Optional<Date> dateOfPartners;
     private final Optional<Date> dateOfSeparation;
-    private final Optional<String> placeOfPartners;
-    private final Optional<String> placeOfSeparation;
-
-    // Search values
-    private final Optional<String> countryOfPartners;
-    private final Optional<String> countryOfSeparation;
+    private final Optional<Place> placeOfPartners;
+    private final Optional<Place> placeOfSeparation;
 
     private EnrichedSpouseWithChildren(
             Optional<EnrichedPerson> spouse,
@@ -30,8 +26,8 @@ public class EnrichedSpouseWithChildren {
             boolean isSeparated,
             Optional<Date> dateOfPartners,
             Optional<Date> dateOfSeparation,
-            Optional<String> placeOfPartners,
-            Optional<String> placeOfSeparation) {
+            Optional<Place> placeOfPartners,
+            Optional<Place> placeOfSeparation) {
         this.spouse = spouse;
         this.childrenWithReference = childrenWithReference;
         this.children = childrenWithReference
@@ -43,13 +39,6 @@ public class EnrichedSpouseWithChildren {
         this.dateOfSeparation = dateOfSeparation;
         this.placeOfPartners = placeOfPartners;
         this.placeOfSeparation = placeOfSeparation;
-
-        this.countryOfPartners = placeOfPartners
-                .map(PlaceUtils::removeLastParenthesis)
-                .map(PlaceUtils::getCountry);
-        this.countryOfSeparation = placeOfSeparation
-                .map(PlaceUtils::removeLastParenthesis)
-                .map(PlaceUtils::getCountry);
     }
 
     public static EnrichedSpouseWithChildren of(
@@ -58,8 +47,8 @@ public class EnrichedSpouseWithChildren {
             boolean isSeparated,
             Optional<Date> dateOfPartners,
             Optional<Date> dateOfSeparation,
-            Optional<String> placeOfPartners,
-            Optional<String> placeOfSeparation) {
+            Optional<Place> placeOfPartners,
+            Optional<Place> placeOfSeparation) {
         return new EnrichedSpouseWithChildren(
                 spouse,
                 childrenWithReference,

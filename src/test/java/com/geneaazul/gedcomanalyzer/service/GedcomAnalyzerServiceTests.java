@@ -12,6 +12,8 @@ import com.geneaazul.gedcomanalyzer.utils.DateUtils.AstrologicalSign;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folg.gedcom.model.EventFact;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -43,53 +45,80 @@ public class GedcomAnalyzerServiceTests {
     @Autowired
     private RelationshipMapper relationshipMapper;
 
+    private EnrichedGedcom gedcom;
+
+    @BeforeEach
+    public void setUp() {
+        gedcom = gedcomHolder.getGedcom();
+    }
+
     @Test
-    public void smokeTest() {
-
-        EnrichedGedcom gedcom = gedcomHolder.getGedcom();
-
-        gedcom.analyzeCustomEventFactsAndTagExtensions();
-
+    public void getMissingReferences() {
         System.out.println("\ngetMissingReferences:");
         gedcomAnalyzerService
-                .getMissingReferences(gedcom.getGedcom())
+                .getMissingReferences(gedcom.getLegacyGedcom().orElseThrow())
                 .forEach(System.out::println);
+    }
 
+    @Test
+    public void findPersonsWithTagExtensions() {
         System.out.println("\nfindPersonsWithTagExtensions:");
+        gedcom.analyzeCustomEventFactsAndTagExtensions();
+
         searchService
                 .findPersonsWithTagExtensions(gedcom.getPeople())
                 .forEach(person -> System.out.println(person.getDisplayName() + ": " + person.getTagExtensions()));
+    }
 
+    @Test
+    public void findPersonsWithNoCountryButParentsWithCountry() {
         System.out.println("\nfindPersonsWithNoCountryButParentsWithCountry:");
         searchService
                 .findPersonsWithNoCountryButParentsWithCountry(gedcom.getPeople())
                 .forEach(System.out::println);
+    }
 
+    @Test
+    public void getMostFrequentSurnamesByOrphanTree() {
         System.out.println("\ngetMostFrequentSurnamesByOrphanTree:");
         List<EnrichedPerson> persons1 = gedcomAnalyzerService
                 .getInitialPersonOfOrphanTrees(gedcom);
         gedcomAnalyzerService
                 .getMostFrequentSurnamesByPersonSubTree(persons1)
                 .forEach((person, pair) -> System.out.println(pair.getLeft() + " tree - (" + pair.getRight() + " persons) - Main person: " + person.getId() + " - " + person.getDisplayName()));
+    }
 
+    @Test
+    public void findPersonsByNameAndSpouseName() {
         System.out.println("\nfindPersonsByNameAndSpouseName:");
         searchService
-                .findPersonsByNameAndSpouseName(null, "Diéguez", null, "Pérez", false, gedcom.getPeople())
+                .findPersonsByNameAndSpouseName(null, "Molina", null, "Mola", false, gedcom.getPeople())
                 .forEach(System.out::println);
+    }
 
+    @Test
+    public void findSurnamesByPattern() {
         System.out.println("\nfindSurnamesByPattern:");
         searchService
                 .findSurnamesByPattern("^[dD]el ", gedcom.getPeople())
                 .stream()
                 .map(Surname::value)
                 .forEach(System.out::println);
+    }
 
+    @Test
+    public void findAlivePersonsTooOldOrWithFamilyMembersTooOld() {
         System.out.println("\nfindAlivePersonsTooOldOrWithFamilyMembersTooOld:");
         searchService
                 .findAlivePersonsTooOldOrWithFamilyMembersTooOld(gedcom.getPeople())
                 .forEach(System.out::println);
+    }
 
+    @Test
+    public void findPersonsWithCustomEventFacts() {
         System.out.println("\nfindPersonsWithCustomEventFacts:");
+        gedcom.analyzeCustomEventFactsAndTagExtensions();
+
         searchService
                 .findPersonsWithCustomEventFacts(gedcom.getPeople())
                 .stream()
@@ -98,29 +127,44 @@ public class GedcomAnalyzerServiceTests {
                         .stream()
                         .map(EventFact::getType)
                         .toList()));
+    }
 
+    @Test
+    public void findPersonsWithMisspellingByPlaceOfBirth() {
         System.out.println("\nfindPersonsWithMisspellingByPlaceOfBirth:");
         searchService
                 .findPersonsWithMisspellingByPlaceOfBirth("Italia", null, null, gedcom.getPeople())
                 .forEach(System.out::println);
+    }
 
+    @Test
+    public void getPlacesOfBirthCardinality() {
         System.out.println("\ngetPlacesOfBirthCardinality:");
         gedcomAnalyzerService
                 .getPlacesOfBirthCardinality(gedcom.getPeople(), true)
                 .stream()
                 .filter(pair -> pair.getRight() > 10)
                 .forEach(pair -> System.out.println(pair.getLeft() + " (" + pair.getRight() + ")"));
+    }
 
+    @Test
+    public void getCountriesOfBirthCardinality() {
         System.out.println("\ngetCountriesOfBirthCardinality:");
         gedcomAnalyzerService
                 .getCountriesOfBirthCardinality(gedcom.getPeople(), true)
                 .forEach(pair -> System.out.println(pair.getLeft() + " (" + pair.getRight() + ")"));
+    }
 
+    @Test
+    public void getAllPlaces() {
         System.out.println("\ngetAllPlaces:");
         gedcomAnalyzerService
-                .getAllPlaces(gedcom.getGedcom(), true)
+                .getAllPlaces(gedcom.getLegacyGedcom().orElseThrow(), true)
                 .forEach(System.out::println);
+    }
 
+    @Test
+    public void getSurnamesCardinalityByPlaceOfBirth() {
         System.out.println("\ngetSurnamesCardinalityByPlaceOfBirth:");
         gedcomAnalyzerService
                 .getSurnamesCardinalityByPlaceOfBirth(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", true)
@@ -134,8 +178,11 @@ public class GedcomAnalyzerServiceTests {
                                         .map(pair -> pair.getLeft() + " (" + pair.getRight() + ")")
                                         .collect(Collectors.joining(", "))
                                 + " - Related: " + String.join(", ", cardinality.relatedNormalized())));
+    }
 
-        /*
+    @Test
+    @Disabled
+    public void getAncestryCountriesCardinalityByPlaceOfBirth() {
         System.out.println("\ngetAncestryCountriesCardinalityByPlaceOfBirth:");
         gedcomAnalyzerService
                 .getAncestryCountriesCardinalityByPlaceOfBirth(gedcom.getPeople(), "Azul, Buenos Aires, Argentina")
@@ -145,18 +192,26 @@ public class GedcomAnalyzerServiceTests {
                         cardinality.country()
                                 + " - " + cardinality.cardinality()
                                 + " - " + cardinality.surnames()));
-        */
+    }
 
+    @Test
+    public void findPersonsByPlaceOfBirth() {
         System.out.println("\nfindPersonsByPlaceOfBirth:");
         searchService
                 .findPersonsByPlaceOfBirth("Latina, Lazio, Italia", null, null, gedcom.getPeople())
                 .forEach(System.out::println);
+    }
 
+    @Test
+    public void findPersonsByMonthAndDayOfDeath() {
         System.out.println("\nfindPersonsByMonthAndDayOfDeath:");
         searchService
                 .findPersonsByMonthAndDayOfDeath(Month.APRIL, 2, null, gedcom.getPeople())
                 .forEach(System.out::println);
+    }
 
+    @Test
+    public void getAstrologicalSignsCardinalityByPlaceOfBirth() {
         System.out.println("\ngetAstrologicalSignsCardinalityByPlaceOfBirth:");
         List<EnrichedPerson> personsByPlaceOfBirth = searchService
                 .findPersonsByPlaceOfBirth("Azul, Buenos Aires, Argentina", null, null, gedcom.getPeople());
@@ -176,7 +231,10 @@ public class GedcomAnalyzerServiceTests {
                 + ": " + astrologicalSignsCount + " births");
         astrologicalSignsCardinality
                 .forEach(((astrologicalSign, count) -> System.out.printf("%s\t%.2f%%\t%d%n", astrologicalSign, (double) count / astrologicalSignsCount * 100, count)));
+    }
 
+    @Test
+    public void getMonthOfDeathCardinalityByPlaceOfDeath() {
         System.out.println("\ngetMonthOfDeathCardinalityByPlaceOfDeath:");
         List<EnrichedPerson> personsByPlaceOfDeath = searchService
                 .findPersonsByPlaceOfDeath("Azul, Buenos Aires, Argentina", null, gedcom.getPeople());
@@ -196,7 +254,10 @@ public class GedcomAnalyzerServiceTests {
                 + ": " + monthsCount + " deaths");
         monthsOfDeathCardinality
                 .forEach(((month, count) -> System.out.printf("%s\t%.2f%%\t%d%n", month, (double) count / monthsCount * 100, count)));
+    }
 
+    @Test
+    public void findPersonsWithManyChildrenByPlaceOfBirth() {
         System.out.println("\nfindPersonsWithManyChildrenByPlaceOfBirth:");
         Stream.concat(
                 searchService
@@ -213,7 +274,10 @@ public class GedcomAnalyzerServiceTests {
                         .<EnrichedPerson, Integer>comparing(person -> person.getChildren().size())
                         .reversed())
                 .forEach(System.out::println);
+    }
 
+    @Test
+    public void findDuplicatedPersons() {
         System.out.println("\nfindDuplicatedPersons:");
         searchService
                 .findDuplicatedPersons(gedcom)
@@ -228,7 +292,10 @@ public class GedcomAnalyzerServiceTests {
                                 System.out.println(StringUtils.leftPad(String.valueOf(score), 2) + " - " + compare);
                             });
                 });
+    }
 
+    @Test
+    public void getPeopleInTree() {
         EnrichedPerson person = Objects.requireNonNull(gedcom.getPersonById("I4"));
         personService.setTransientProperties(person, true);
 

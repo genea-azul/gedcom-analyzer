@@ -311,6 +311,18 @@ public class NameUtilsTests {
                     Surname matching = PersonUtils.getShortenedSurnameMainWord("Etchegaray", properties.getNormalizedSurnamesMap()).orElse(null);
                     assertThat(surname.matches(matching)).isTrue();
                 });
+
+        name.setSurname("Peuvrié de Urreta");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("Peuvrié de Urreta");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("peuvrie");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("peuvr_");
+
+                    Surname matching = PersonUtils.getShortenedSurnameMainWord("Peuvrié", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(matching)).isTrue();
+                });
     }
 
 }

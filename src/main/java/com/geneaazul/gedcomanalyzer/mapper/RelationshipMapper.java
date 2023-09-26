@@ -3,6 +3,7 @@ package com.geneaazul.gedcomanalyzer.mapper;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.EnrichedSpouseWithChildren;
 import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
+import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.dto.AdoptionType;
 import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
@@ -90,7 +91,8 @@ public class RelationshipMapper {
                         .orElse(false))
                 .personCountryOfBirth(relationship
                         .person()
-                        .getCountryOfBirth()
+                        .getPlaceOfBirth()
+                        .map(Place::country)
                         .orElse(null))
                 .referenceType(referenceType)
                 .generation(generation)

@@ -3,6 +3,7 @@ package com.geneaazul.gedcomanalyzer.service;
 import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnameResultDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesDto;
@@ -51,20 +52,9 @@ public class SurnameService {
 
                     List<String> countries = persons
                             .stream()
-                            .flatMap(person -> Stream.concat(
-                                    Stream
-                                            .of(
-                                                    person.getCountryOfBirth(),
-                                                    person.getCountryOfDeath())
-                                            .flatMap(Optional::stream),
-                                    person
-                                            .getSpousesWithChildren()
-                                            .stream()
-                                            .flatMap(spouseWithChildren -> Stream
-                                                    .of(
-                                                            spouseWithChildren.getCountryOfPartners(),
-                                                            spouseWithChildren.getCountryOfSeparation()))
-                                            .flatMap(Optional::stream)))
+                            .map(EnrichedPerson::getPlacesOfAnyEvent)
+                            .flatMap(List::stream)
+                            .map(Place::country)
                             .distinct()
                             .sorted()
                             .toList();

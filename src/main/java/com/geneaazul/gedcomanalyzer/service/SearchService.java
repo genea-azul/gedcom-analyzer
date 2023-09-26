@@ -9,6 +9,7 @@ import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.GivenNameAndSurname;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResult;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResults;
+import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
@@ -39,6 +40,7 @@ import java.util.stream.Stream;
 
 import jakarta.annotation.Nullable;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -132,7 +134,7 @@ public class SearchService {
      * .
      */
     public List<EnrichedPerson> findPersonsByPlaceOfBirth(
-            @Nullable String placeOfBirth,
+            @NonNull String placeOfBirth,
             @Nullable Boolean isAlive,
             @Nullable SexType sex,
             List<EnrichedPerson> people) {
@@ -140,16 +142,11 @@ public class SearchService {
                 .stream()
                 .filter(person -> isAlive == null || isAlive == person.isAlive())
                 .filter(person -> sex == null || sex == person.getSex())
-                .filter(person
-                        -> placeOfBirth == null
-                        && person
-                                .getPlaceOfBirthForSearch()
-                                .isEmpty()
-                        || placeOfBirth != null
-                        && person
-                                .getPlaceOfBirthForSearch()
-                                .map(pob -> pob.endsWith(placeOfBirth))
-                                .orElse(false))
+                .filter(person -> person
+                        .getPlaceOfBirth()
+                        .map(Place::forSearch)
+                        .map(pob -> pob.endsWith(placeOfBirth))
+                        .orElse(false))
                 .toList();
     }
 
@@ -157,23 +154,38 @@ public class SearchService {
      * .
      */
     public List<EnrichedPerson> findPersonsByPlaceOfDeath(
-            @Nullable String placeOfDeath,
+            @NonNull String placeOfDeath,
             @Nullable SexType sex,
             List<EnrichedPerson> people) {
         return people
                 .stream()
                 .filter(person -> !person.isAlive())
                 .filter(person -> sex == null || sex == person.getSex())
-                .filter(person
-                        -> placeOfDeath == null
-                        && person
-                                .getPlaceOfDeathForSearch()
-                                .isEmpty()
-                        || placeOfDeath != null
-                        && person
-                                .getPlaceOfDeathForSearch()
-                                .map(pod -> pod.endsWith(placeOfDeath))
-                                .orElse(false))
+                .filter(person -> person
+                        .getPlaceOfDeath()
+                        .map(Place::forSearch)
+                        .map(pod -> pod.endsWith(placeOfDeath))
+                        .orElse(false))
+                .toList();
+    }
+
+    /**
+     * .
+     */
+    public List<EnrichedPerson> findPersonsByPlaceOfAnyEvent(
+            @NonNull String placeOfEvent,
+            @Nullable Boolean isAlive,
+            @Nullable SexType sex,
+            List<EnrichedPerson> people) {
+        return people
+                .stream()
+                .filter(person -> isAlive == null || isAlive == person.isAlive())
+                .filter(person -> sex == null || sex == person.getSex())
+                .filter(person -> person
+                        .getPlacesOfAnyEvent()
+                        .stream()
+                        .map(Place::forSearch)
+                        .anyMatch(place -> place.endsWith(placeOfEvent)))
                 .toList();
     }
 
@@ -238,11 +250,11 @@ public class SearchService {
     public List<EnrichedPerson> findPersonsWithNoCountryButParentsWithCountry(List<EnrichedPerson> people) {
         return people
                 .stream()
-                .filter(person -> person.getCountryOfBirth().isEmpty()
+                .filter(person -> person.getPlaceOfBirth().isEmpty()
                         && !person.getParents().isEmpty()
                         && person.getParents()
                                 .stream()
-                                .allMatch(parent -> parent.getCountryOfBirth().isPresent()))
+                                .allMatch(parent -> parent.getPlaceOfBirth().isPresent()))
                 .toList();
     }
 
@@ -647,9 +659,10 @@ public class SearchService {
                 .filter(person -> isAlive == null || isAlive == person.isAlive())
                 .filter(person -> sex == null || sex == person.getSex())
                 .filter(person
-                        -> countryOfBirth == null && person.getCountryOfBirth().isEmpty()
+                        -> countryOfBirth == null && person.getPlaceOfBirth().isEmpty()
                         || countryOfBirth != null && person
-                                .getCountryOfBirth()
+                                .getPlaceOfBirth()
+                                .map(Place::country)
                                 .map(countryOfBirth::equals)
                                 .orElse(false))
                 .toList();
@@ -687,8 +700,6 @@ public class SearchService {
                     .distinct()
                     .sorted()
                     .toList();
-
-            // System.out.println(expectedSpelledWithAccentsGivenNames);
 
             misspelledGivenNames = Stream
                     .concat(

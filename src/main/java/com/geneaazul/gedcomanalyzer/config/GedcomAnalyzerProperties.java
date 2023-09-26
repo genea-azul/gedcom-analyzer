@@ -43,6 +43,7 @@ public class GedcomAnalyzerProperties {
 
     private boolean deleteUploadedGedcom = false;
     private boolean storeFamilySearch = true;
+    private boolean keepReferenceToLegacyGedcom = false;
 
     private int alivePersonMaxAge = 105;
     private int parentMinAgeDiff = 20;

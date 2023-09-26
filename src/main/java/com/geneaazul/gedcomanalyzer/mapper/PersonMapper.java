@@ -5,6 +5,7 @@ import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.EnrichedSpouseWithChildren;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResult;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResults;
+import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateCompareDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateDto;
@@ -61,7 +62,8 @@ public class PersonMapper {
                 .dateOfBirth(person.getDateOfBirth()
                         .map(date -> DateUtils.obfuscateDate(date, obfuscateLiving && person.isAlive()))
                         .orElse(null))
-                .placeOfBirth(person.getCountryOfBirth()
+                .placeOfBirth(person.getPlaceOfBirth()
+                        .map(Place::country)
                         .orElse(null))
                 .dateOfDeath(person.getDateOfDeath()
                         .map(Date::format)
