@@ -125,7 +125,7 @@ public class NameUtilsTests {
                     assertThat(surname.normalizedMainWord()).isEqualTo("sainteclucue");
                     assertThat(surname.shortenedMainWord()).isEqualTo("saintecluc_");
 
-                    Surname matching = PersonUtils.getShortenedSurnameMainWord("Saintecluque", properties.getNormalizedSurnamesMap()).orElse(null);
+                    Surname matching = PersonUtils.getShortenedSurnameMainWord("Saint Cluque", properties.getNormalizedSurnamesMap()).orElse(null);
                     assertThat(surname.matches(matching)).isTrue();
                 });
 

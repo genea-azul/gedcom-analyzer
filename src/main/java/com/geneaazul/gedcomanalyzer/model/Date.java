@@ -81,6 +81,10 @@ public class Date implements Comparable<Date> {
         this.yearMonth = YearMonth.of(year.getValue(), month);
     }
 
+    public static Date from(LocalDate localDate) {
+        return new Date(localDate);
+    }
+
     public static Date now(ZoneId zoneId) {
         return new Date(LocalDate.now(zoneId));
     }
