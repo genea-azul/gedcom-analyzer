@@ -54,15 +54,15 @@ public class NameUtilsTests {
                     assertThat(givenName.searchPattern().toString()).isEqualTo("^(?=.*\\bfrancisco\\b)(?=.*\\bantonio\\b).*$");
                 });
 
-        name.setGiven("Elizabeth");
+        name.setGiven("Elizabeth dite Marie");
         sex.setValue("F");
         assertThat(PersonUtils.getNormalizedGivenName(person, properties.getNormalizedGivenNamesMap()))
                 .get()
                 .satisfies(givenName -> {
-                    assertThat(givenName.value()).isEqualTo("Elizabeth");
-                    assertThat(givenName.normalized()).isEqualTo("elisa isabel");
-                    assertThat(givenName.wordsCount()).isEqualTo(2);
-                    assertThat(givenName.searchPattern().toString()).isEqualTo("^(?=.*\\belisa\\b)(?=.*\\bisabel\\b).*$");
+                    assertThat(givenName.value()).isEqualTo("Elizabeth dite Marie");
+                    assertThat(givenName.normalized()).isEqualTo("elisa isabel maria");
+                    assertThat(givenName.wordsCount()).isEqualTo(3);
+                    assertThat(givenName.searchPattern().toString()).isEqualTo("^(?=.*\\belisa\\b)(?=.*\\bisabel\\b)(?=.*\\bmaria\\b).*$");
                 });
 
         name.setGiven("Валянціна");
