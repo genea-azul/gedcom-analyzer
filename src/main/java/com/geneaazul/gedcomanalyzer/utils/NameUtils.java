@@ -29,8 +29,8 @@ public class NameUtils {
 
     private static final Pattern NORMALIZED_NAME_SEPARATOR_PATTERN = Pattern.compile("-");
 
-    private static final String[] GIVEN_NAME_COMMON_EXTRAS = new String[]{ "cadet", "dite", "dit" }; // keep dite before dit
-    private static final String[] GIVEN_NAME_COMMON_EXTRAS_REPLACEMENT = new String[]{ "", "", "" };
+    private static final String[] GIVEN_NAME_COMMON_EXTRAS = new String[]{ " cadette", " cadet", " dite ", " dit " };
+    private static final String[] GIVEN_NAME_COMMON_EXTRAS_REPLACEMENT = new String[]{ "", "", " ", " " };
 
     private static final Pattern SURNAME_COMMON_CONNECTOR_PATTERN =
             Pattern.compile("^([^ ]+)(?: (de|der|la|los|las|san))+ (.+)$");

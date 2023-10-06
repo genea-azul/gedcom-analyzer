@@ -121,14 +121,18 @@ public class PersonUtils {
             displayName = trimAndAppend(displayName, name.getSurname());
         }
         if (StringUtils.isNotBlank(name.getSuffix())) {
-            displayName = trimAndAppend(displayName, name.getSuffix());
+            displayName = trimAndAppend(displayName, name.getSuffix(), ", ");
         }
         return displayName;
     }
 
     private static String trimAndAppend(String str, String append) {
+        return trimAndAppend(str, append, " ");
+    }
+
+    private static String trimAndAppend(String str, String append, String separator) {
         append = append.trim();
-        return StringUtils.isEmpty(str) ? append : str + " " + append;
+        return StringUtils.isEmpty(str) ? append : str + separator + append;
     }
 
     /**

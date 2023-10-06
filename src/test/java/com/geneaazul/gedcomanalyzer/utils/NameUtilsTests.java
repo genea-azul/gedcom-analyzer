@@ -23,6 +23,20 @@ public class NameUtilsTests {
     private GedcomAnalyzerProperties properties;
 
     @Test
+    public void testGetDisplayName() {
+        Name name = new Name();
+        name.setPrefix("Mr.");
+        name.setGiven("John");
+        name.setNickname("Doe");
+        name.setSurname("Smith");
+        name.setSuffix("II");
+        Person person = new Person();
+        person.addName(name);
+
+        assertThat(PersonUtils.getDisplayName(person)).isEqualTo("Mr. John \"Doe\" Smith, II");
+    }
+
+    @Test
     public void testGetNormalizedGivenName() {
         Name name = new Name();
         name.setSurname("Smith");
@@ -54,12 +68,12 @@ public class NameUtilsTests {
                     assertThat(givenName.searchPattern().toString()).isEqualTo("^(?=.*\\bfrancisco\\b)(?=.*\\bantonio\\b).*$");
                 });
 
-        name.setGiven("Elizabeth dite Marie");
+        name.setGiven("Elizabeth dite Marie cadette");
         sex.setValue("F");
         assertThat(PersonUtils.getNormalizedGivenName(person, properties.getNormalizedGivenNamesMap()))
                 .get()
                 .satisfies(givenName -> {
-                    assertThat(givenName.value()).isEqualTo("Elizabeth dite Marie");
+                    assertThat(givenName.value()).isEqualTo("Elizabeth dite Marie cadette");
                     assertThat(givenName.normalized()).isEqualTo("elisa isabel maria");
                     assertThat(givenName.wordsCount()).isEqualTo(3);
                     assertThat(givenName.searchPattern().toString()).isEqualTo("^(?=.*\\belisa\\b)(?=.*\\bisabel\\b)(?=.*\\bmaria\\b).*$");

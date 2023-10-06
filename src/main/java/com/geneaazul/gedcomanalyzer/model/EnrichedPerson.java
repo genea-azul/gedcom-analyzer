@@ -234,18 +234,18 @@ public class EnrichedPerson {
     }
 
     public boolean matchesGivenNameAndSurname(EnrichedPerson other) {
-        return matchesGivenNameAndSurname(GivenNameAndSurname.of(other.givenName, other.surname));
+        return matchesGivenNameAndSurname(GivenNameAndSurname.of(other.givenName, other.surname, other.aka));
     }
 
     public boolean matchesGivenNameAndSurname(GivenNameAndSurname givenNameAndSurname) {
-        return GivenNameAndSurname.of(this.givenName, this.surname).matches(givenNameAndSurname);
+        return GivenNameAndSurname.of(this.givenName, this.surname, this.aka).matches(givenNameAndSurname);
     }
 
-    public boolean matchesParents(EnrichedPerson other) {
+    public boolean matchesAllParents(EnrichedPerson other) {
         return matchesPersonsBySexAndName(this.parents, other.parents, true);
     }
 
-    public boolean matchesSpouses(EnrichedPerson other) {
+    public boolean matchesAnySpouses(EnrichedPerson other) {
         return matchesPersonsBySexAndName(this.spouses, other.spouses, false);
     }
 

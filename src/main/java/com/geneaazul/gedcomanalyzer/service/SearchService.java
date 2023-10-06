@@ -75,13 +75,15 @@ public class SearchService {
                         || this.evalPersonName(person, EnrichedPerson::getGivenName, name -> NameUtils.simplifyName(name.value()), personGivenNameStr, exactMatch))
                 .filter(person
                         -> personSurnameStr == null
-                        || this.evalPersonName(person, EnrichedPerson::getSurname, name -> NameUtils.simplifyName(name.value()), personSurnameStr, exactMatch))
+                        || this.evalPersonName(person, EnrichedPerson::getSurname, name -> NameUtils.simplifyName(name.value()), personSurnameStr, exactMatch)
+                        || this.evalSpouseName(person, EnrichedPerson::getAka, NameUtils::simplifyName, personSurnameStr, exactMatch))
                 .filter(person
                         -> spouseGivenNameStr == null
                         || this.evalSpouseName(person, EnrichedPerson::getGivenName, name -> NameUtils.simplifyName(name.value()), spouseGivenNameStr, exactMatch))
                 .filter(person
                         -> spouseSurnameStr == null
-                        || this.evalSpouseName(person, EnrichedPerson::getSurname, name -> NameUtils.simplifyName(name.value()), spouseSurnameStr, exactMatch))
+                        || this.evalSpouseName(person, EnrichedPerson::getSurname, name -> NameUtils.simplifyName(name.value()), spouseSurnameStr, exactMatch)
+                        || this.evalSpouseName(person, EnrichedPerson::getAka, NameUtils::simplifyName, spouseSurnameStr, exactMatch))
                 .toList();
     }
 
@@ -310,8 +312,8 @@ public class SearchService {
         }
 
         boolean bothHaveParents = !person.getParents().isEmpty() && !compare.getParents().isEmpty();
-        boolean pMatchesParents = person.matchesParents(compare);
-        boolean cMatchesParents = compare.matchesParents(person);
+        boolean pMatchesParents = person.matchesAllParents(compare);
+        boolean cMatchesParents = compare.matchesAllParents(person);
         boolean matchesParents = bothHaveParents && (pMatchesParents || cMatchesParents);
         boolean fullMatchesParents = bothHaveParents && pMatchesParents && cMatchesParents;
 
@@ -340,8 +342,8 @@ public class SearchService {
 
                 // Look for matching spouses
                 boolean bothHaveSpouses = !person.getSpouses().isEmpty() && !compare.getSpouses().isEmpty();
-                boolean pMatchesSpouses = person.matchesSpouses(compare);
-                boolean cMatchesSpouses = compare.matchesSpouses(person);
+                boolean pMatchesSpouses = person.matchesAnySpouses(compare);
+                boolean cMatchesSpouses = compare.matchesAnySpouses(person);
                 boolean matchesSpouses = bothHaveSpouses && (pMatchesSpouses || cMatchesSpouses);
 
                 if (matchesSpouses) {
