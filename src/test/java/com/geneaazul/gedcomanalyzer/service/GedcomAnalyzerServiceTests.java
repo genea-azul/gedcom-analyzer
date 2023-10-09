@@ -92,7 +92,7 @@ public class GedcomAnalyzerServiceTests {
     public void findPersonsByNameAndSpouseName() {
         System.out.println("\nfindPersonsByNameAndSpouseName:");
         searchService
-                .findPersonsByNameAndSpouseName(null, "Molina", null, "Mola", false, gedcom.getPeople())
+                .findPersonsByNameAndSpouseName(null, "Vazzano", null, "Bazzano", false, gedcom.getPeople())
                 .forEach(System.out::println);
     }
 

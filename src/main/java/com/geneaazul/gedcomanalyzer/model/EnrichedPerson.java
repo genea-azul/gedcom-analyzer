@@ -241,15 +241,32 @@ public class EnrichedPerson {
         return GivenNameAndSurname.of(this.givenName, this.surname, this.aka).matches(givenNameAndSurname);
     }
 
+    public boolean matchesOptionalGivenNameAndSurname(EnrichedPerson other) {
+        return matchesOptionalGivenNameAndSurname(GivenNameAndSurname.of(other.givenName, other.surname, other.aka));
+    }
+
+    public boolean matchesOptionalGivenNameAndSurname(GivenNameAndSurname givenNameAndSurname) {
+        return GivenNameAndSurname.of(this.givenName, this.surname, this.aka).matchesWithOptionalGivenName(givenNameAndSurname);
+    }
+
     public boolean matchesAllParents(EnrichedPerson other) {
-        return matchesPersonsBySexAndName(this.parents, other.parents, true);
+        return matchesPersonsBySexAndName(this.parents, other.parents, true, false);
     }
 
     public boolean matchesAnySpouses(EnrichedPerson other) {
-        return matchesPersonsBySexAndName(this.spouses, other.spouses, false);
+        return matchesPersonsBySexAndName(this.spouses, other.spouses, false, false);
     }
 
-    private static boolean matchesPersonsBySexAndName(List<EnrichedPerson> persons1, List<EnrichedPerson> persons2, boolean isAllMatch) {
+    public boolean matchesAnySpousesWithOptionalGivenName(EnrichedPerson other) {
+        return matchesPersonsBySexAndName(this.spouses, other.spouses, false, true);
+    }
+
+    private static boolean matchesPersonsBySexAndName(
+            List<EnrichedPerson> persons1,
+            List<EnrichedPerson> persons2,
+            boolean isAllMatch,
+            boolean isOptionalGivenNameMatch) {
+
         if (persons1.isEmpty() || persons2.isEmpty() || isAllMatch && persons1.size() > persons2.size()) {
             return false;
         }
@@ -258,7 +275,8 @@ public class EnrichedPerson {
                 .stream()
                 .anyMatch(person2
                         -> person1.equalsSex(person2)
-                        && person1.matchesGivenNameAndSurname(person2));
+                        && (!isOptionalGivenNameMatch && person1.matchesGivenNameAndSurname(person2)
+                                || isOptionalGivenNameMatch && person1.matchesOptionalGivenNameAndSurname(person2)));
 
         return isAllMatch
                 ? persons1

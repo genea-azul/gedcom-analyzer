@@ -18,6 +18,14 @@ public record GivenNameAndSurname(
         return givenName == null || surname == null;
     }
 
+    public boolean isGivenNameEmpty() {
+        return givenName == null;
+    }
+
+    public boolean isSurnameEmpty() {
+        return surname == null;
+    }
+
     public boolean areAllValuesNotEmpty() {
         return givenName != null && surname != null;
     }
@@ -71,18 +79,31 @@ public record GivenNameAndSurname(
         if (this.simplifiedAka != null) {
             String simplifiedGivenName = NameUtils.simplifyName(other.givenName.value());
             String simplifiedSurname = NameUtils.simplifyName(other.surname.value());
-            if (this.simplifiedAka.contains(simplifiedGivenName) || this.simplifiedAka.contains(simplifiedSurname)) {
+            if (this.simplifiedAka.contains(simplifiedGivenName) && this.simplifiedAka.contains(simplifiedSurname)) {
                 return true;
             }
         }
         if (other.simplifiedAka != null) {
             String simplifiedGivenName = NameUtils.simplifyName(this.givenName.value());
             String simplifiedSurname = NameUtils.simplifyName(this.surname.value());
-            if (other.simplifiedAka.contains(simplifiedGivenName) || other.simplifiedAka.contains(simplifiedSurname)) {
+            if (other.simplifiedAka.contains(simplifiedGivenName) && other.simplifiedAka.contains(simplifiedSurname)) {
                 return true;
             }
         }
         return false;
+    }
+
+    public boolean matchesWithOptionalGivenName(@Nullable GivenNameAndSurname other) {
+        if (other == null) {
+            return false;
+        }
+        if (!this.isGivenNameEmpty() && !other.isGivenNameEmpty()) {
+            return false; // cause it is not optional given name
+        }
+        if (this.isSurnameEmpty() || other.isSurnameEmpty()) {
+            return false;
+        }
+        return this.surname.matches(other.surname);
     }
 
 }

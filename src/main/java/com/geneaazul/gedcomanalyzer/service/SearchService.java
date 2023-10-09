@@ -342,12 +342,18 @@ public class SearchService {
 
                 // Look for matching spouses
                 boolean bothHaveSpouses = !person.getSpouses().isEmpty() && !compare.getSpouses().isEmpty();
-                boolean pMatchesSpouses = person.matchesAnySpouses(compare);
-                boolean cMatchesSpouses = compare.matchesAnySpouses(person);
-                boolean matchesSpouses = bothHaveSpouses && (pMatchesSpouses || cMatchesSpouses);
+                if (bothHaveSpouses) {
+                    boolean pMatchesSpouses = person.matchesAnySpouses(compare);
+                    boolean cMatchesSpouses = compare.matchesAnySpouses(person);
+                    if (pMatchesSpouses || cMatchesSpouses) {
+                        return 50;
+                    }
 
-                if (matchesSpouses) {
-                    return 50;
+                    boolean pMatchesSpousesWithOptionalGivenName = person.matchesAnySpousesWithOptionalGivenName(compare);
+                    boolean cMatchesSpousesWithOptionalGivenName = compare.matchesAnySpousesWithOptionalGivenName(person);
+                    if (pMatchesSpousesWithOptionalGivenName || cMatchesSpousesWithOptionalGivenName) {
+                        return 51;
+                    }
                 }
             }
 
