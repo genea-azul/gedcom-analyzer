@@ -58,6 +58,7 @@ public class PersonUtils {
     public static final Set<String> BURIAL_TAGS = Set.of("BURI", "BURIAL");
     public static final Set<String> SEX_TAGS = Set.of("SEX");
     public static final Set<String> EVENT_TAGS = Set.of("EVEN", "EVENT");
+    public static final Set<String> ETHNICITY_EVENT_TYPES = Set.of("ETHN", "ETHNICITY", "Grupo étnico");
 
     /**
      * Custom extension tags.

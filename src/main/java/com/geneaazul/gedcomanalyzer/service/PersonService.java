@@ -5,6 +5,7 @@ import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
 import com.geneaazul.gedcomanalyzer.model.AncestryGenerations;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.EnrichedPersonWithReference;
 import com.geneaazul.gedcomanalyzer.model.EnrichedSpouseWithChildren;
 import com.geneaazul.gedcomanalyzer.model.FamilyTree;
 import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
@@ -427,6 +428,73 @@ public class PersonService {
 
         return relativesAndDirections
                 .filter(relative -> !relative.person.getId().equals(previousPersonId));
+    }
+
+    public Relationship getRelationshipBetween(EnrichedPerson personA, EnrichedPerson personB) {
+
+        Optional<EnrichedPersonWithReference> personWithReference = personA
+                .getParentsWithReference()
+                .stream()
+                .filter(pwr -> pwr.person().getId().equals(personB.getId()))
+                .findFirst();
+        if (personWithReference.isPresent()) {
+            return Relationship
+                    .empty(personA)
+                    .increaseWithPerson(
+                            personB,
+                            TreeTraversalDirection.ASC,
+                            false,
+                            personWithReference
+                                    .get()
+                                    .referenceType()
+                                    .map(PersonService::resolveAdoptionType)
+                                    .orElse(null),
+                            Set.of(),
+                            List.of(personA.getId()));
+        }
+
+        Optional<EnrichedSpouseWithChildren> spouseWithChildren = personA
+                .getSpousesWithChildren()
+                .stream()
+                .filter(swc -> swc.getSpouse().isPresent())
+                .filter(swc -> swc.getSpouse().get().getId().equals(personB.getId()))
+                .findFirst();
+        if (spouseWithChildren.isPresent()) {
+            return Relationship
+                    .empty(personA)
+                    .increaseWithPerson(
+                            personB,
+                            TreeTraversalDirection.SAME,
+                            false,
+                            null,
+                            Set.of(),
+                            List.of(personA.getId()));
+        }
+
+        Optional<EnrichedPersonWithReference> childWithReference = personA
+                .getSpousesWithChildren()
+                .stream()
+                .map(EnrichedSpouseWithChildren::getChildrenWithReference)
+                .flatMap(List::stream)
+                .filter(cwr -> cwr.person().getId().equals(personB.getId()))
+                .findFirst();
+        if (childWithReference.isPresent()) {
+            return Relationship
+                    .empty(personA)
+                    .increaseWithPerson(
+                            personB,
+                            TreeTraversalDirection.DESC,
+                            false,
+                            childWithReference
+                                    .get()
+                                    .referenceType()
+                                    .map(PersonService::resolveAdoptionType)
+                                    .orElse(null),
+                            Set.of(),
+                            List.of(personA.getId()));
+        }
+
+        return null;
     }
 
     private record RelativeAndDirection(

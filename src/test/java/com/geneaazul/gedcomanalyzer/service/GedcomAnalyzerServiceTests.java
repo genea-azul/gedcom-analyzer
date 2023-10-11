@@ -5,9 +5,12 @@ import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
+import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.Surname;
+import com.geneaazul.gedcomanalyzer.model.dto.RelationshipDto;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.DateUtils.AstrologicalSign;
+import com.geneaazul.gedcomanalyzer.utils.PathUtils;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -322,6 +325,34 @@ public class GedcomAnalyzerServiceTests {
                                 .collect(Collectors.joining(", "))
                         + "  --  "
                         + relationships.findFirst().person()));
+    }
+
+    @Disabled
+    @Test
+    @SuppressWarnings("DataFlowIssue")
+    public void getShortestPathsToPersons() {
+        EnrichedPerson person = gedcom.getPersonById("I4");
+        Pair<Map<String, Integer>, Map<String, List<String>>> distancesAndPaths = PathUtils.calculateShortestPathFromSource(gedcom, person);
+
+        System.out.println("\ngetShortestPathsToPersons:");
+        System.out.println("distance from I4 to I1 (" + gedcom.getPersonById("I1").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I1"));
+        System.out.println("distance from I4 to I2 (" + gedcom.getPersonById("I2").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I2"));
+        System.out.println("distance from I4 to I3 (" + gedcom.getPersonById("I3").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I3"));
+        System.out.println("distance from I4 to I4 (" + gedcom.getPersonById("I4").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I4"));
+        System.out.println("distance from I4 to I5 (" + gedcom.getPersonById("I5").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I5"));
+        System.out.println("distance from I4 to I6 (" + gedcom.getPersonById("I6").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I6"));
+        System.out.println("distance from I4 to Papa Franc.: " + distancesAndPaths.getLeft().get("I525113"));
+        System.out.println("distance from I4 to JM de Rosas: " + distancesAndPaths.getLeft().get("I542961"));
+
+        List<String> shortestPath = distancesAndPaths.getRight().getOrDefault("I525113", List.of());
+        for (int i = 0; i < shortestPath.size() - 1; i++) {
+            EnrichedPerson personA = gedcom.getPersonById(shortestPath.get(i));
+            EnrichedPerson personB = gedcom.getPersonById(shortestPath.get(i + 1));
+            Relationship relationship = personService.getRelationshipBetween(personB, personA);
+            RelationshipDto relationshipDto = relationshipMapper.toRelationshipDto(relationship, false);
+            FormattedRelationship formattedRelationship = relationshipMapper.formatInSpanish(relationshipDto, 0, false);
+            System.out.println(personA.getDisplayName() + " " + formattedRelationship.relationshipDesc() + " de " + personB.getDisplayName());
+        }
     }
 
 }
