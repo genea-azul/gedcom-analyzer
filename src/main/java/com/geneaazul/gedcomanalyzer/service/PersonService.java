@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -342,7 +343,7 @@ public class PersonService {
 
         List<String> singleRelatedPersonIds = List.of(person.getId());
 
-        List<Optional<String>> previousPersonParents =
+        List<Optional<String>> previousPersonNonAdoptiveParents =
                 (direction == TreeTraversalDirection.ASC
                         && previousPersonId != null
                         && !person.getSpousesWithChildren().isEmpty())
@@ -350,8 +351,10 @@ public class PersonService {
                         .getSpousesWithChildren()
                         .stream()
                         .filter(spouseWithChildren -> spouseWithChildren
-                                .getChildren()
+                                .getChildrenWithReference()
                                 .stream()
+                                .filter(cwr -> cwr.referenceType().isEmpty())
+                                .map(EnrichedPersonWithReference::person)
                                 .map(EnrichedPerson::getId)
                                 .anyMatch(previousPersonId::equals))
                         .map(EnrichedSpouseWithChildren::getSpouse)
@@ -393,7 +396,7 @@ public class PersonService {
                                             .map(childWithReference -> new RelativeAndDirection(
                                                     childWithReference.person(),
                                                     TreeTraversalDirection.DESC,
-                                                    previousPersonParents != null && !previousPersonParents
+                                                    previousPersonNonAdoptiveParents != null && !previousPersonNonAdoptiveParents
                                                             .contains(spouseWithChildren.getSpouse().map(EnrichedPerson::getId)),
                                                     childWithReference
                                                             .referenceType()
@@ -432,19 +435,20 @@ public class PersonService {
 
     public Relationship getRelationshipBetween(EnrichedPerson personA, EnrichedPerson personB) {
 
-        Optional<EnrichedPersonWithReference> personWithReference = personA
+        Optional<EnrichedPersonWithReference> parentWithReference = personA
                 .getParentsWithReference()
                 .stream()
                 .filter(pwr -> pwr.person().getId().equals(personB.getId()))
-                .findFirst();
-        if (personWithReference.isPresent()) {
+                // Prefer non-adoptive parent
+                .min(Comparator.comparingInt(cwr -> cwr.referenceType().map(ReferenceType::ordinal).get()));
+        if (parentWithReference.isPresent()) {
             return Relationship
                     .empty(personA)
                     .increaseWithPerson(
                             personB,
                             TreeTraversalDirection.ASC,
                             false,
-                            personWithReference
+                            parentWithReference
                                     .get()
                                     .referenceType()
                                     .map(PersonService::resolveAdoptionType)
@@ -477,7 +481,8 @@ public class PersonService {
                 .map(EnrichedSpouseWithChildren::getChildrenWithReference)
                 .flatMap(List::stream)
                 .filter(cwr -> cwr.person().getId().equals(personB.getId()))
-                .findFirst();
+                // Prefer non-adoptive child
+                .min(Comparator.comparingInt(cwr -> cwr.referenceType().map(ReferenceType::ordinal).get()));
         if (childWithReference.isPresent()) {
             return Relationship
                     .empty(personA)

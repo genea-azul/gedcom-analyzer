@@ -314,7 +314,7 @@ public class GedcomAnalyzerService {
                             0,
                             p -> p.getSurname()
                                     .map(Surname::value)
-                                    .orElse("Undefined"));
+                                    .orElse("<undefined>"));
                     Map<String, Integer> cardinality = CollectionUtils.getCardinalityMap(surnames);
                     return Map.entry(
                             person,

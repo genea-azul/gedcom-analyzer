@@ -343,6 +343,7 @@ public class GedcomAnalyzerServiceTests {
         System.out.println("distance from I4 to I6 (" + gedcom.getPersonById("I6").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I6"));
         System.out.println("distance from I4 to Papa Franc.: " + distancesAndPaths.getLeft().get("I525113"));
         System.out.println("distance from I4 to JM de Rosas: " + distancesAndPaths.getLeft().get("I542961"));
+        System.out.println("distance from I4 to Man Belgran: " + distancesAndPaths.getLeft().get("I543016"));
 
         List<String> shortestPath = distancesAndPaths.getRight().getOrDefault("I525113", List.of());
         for (int i = 0; i < shortestPath.size() - 1; i++) {
@@ -351,7 +352,11 @@ public class GedcomAnalyzerServiceTests {
             Relationship relationship = personService.getRelationshipBetween(personB, personA);
             RelationshipDto relationshipDto = relationshipMapper.toRelationshipDto(relationship, false);
             FormattedRelationship formattedRelationship = relationshipMapper.formatInSpanish(relationshipDto, 0, false);
-            System.out.println(personA.getDisplayName() + " " + formattedRelationship.relationshipDesc() + " de " + personB.getDisplayName());
+            if (i == 0) {
+                System.out.println(personA.getDisplayName());
+            }
+            System.out.println("  " + formattedRelationship.relationshipDesc() + " de");
+            System.out.println(personB.getDisplayName());
         }
     }
 

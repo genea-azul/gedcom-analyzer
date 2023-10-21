@@ -35,7 +35,7 @@ public record FormattedRelationship(
                 this.personCountryOfBirth,
                 this.adoption,
                 this.treeSide,
-                this.relationshipDesc + " / " + this.relationshipDesc,
+                this.relationshipDesc + " / " + other.relationshipDesc,
                 this.isObfuscated);
     }
 
