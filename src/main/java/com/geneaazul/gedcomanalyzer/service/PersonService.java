@@ -147,12 +147,18 @@ public class PersonService {
         List<String> ancestryCountries = RelationshipUtils.getAncestryCountries(lastRelationships);
         AncestryGenerations ancestryGenerations = RelationshipUtils.getAncestryGenerations(lastRelationships);
         Optional<Relationship> maxDistantRelationship = RelationshipUtils.getMaxDistantRelationship(lastRelationships);
+        List<EnrichedPerson> distinguishedPersons = lastRelationships
+                .stream()
+                .map(Relationship::person)
+                .filter(EnrichedPerson::isDistinguishedPerson)
+                .toList();
 
         person.setPersonsCountInTree(relationships.size());
         person.setSurnamesCountInTree(surnamesCount);
         person.setAncestryCountries(ancestryCountries);
         person.setAncestryGenerations(ancestryGenerations);
         person.setMaxDistantRelationship(maxDistantRelationship);
+        person.setDistinguishedPersonsInTree(distinguishedPersons);
 
         return relationships;
     }

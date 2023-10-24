@@ -574,8 +574,9 @@ var getPersonComponent = function(person, index) {
     var hasAncestryGenerations = person.ancestryGenerations != null
             && (person.ancestryGenerations.ascending > 0 || person.ancestryGenerations.directDescending > 0);
     var hasMaxDistantRelationship = person.maxDistantRelationship != null;
+    var hasDistinguishedPersonsInTree = person.distinguishedPersonsInTree != null && person.distinguishedPersonsInTree.length > 0;
 
-    if (hasPersonsCountInTree || hasSurnamesCountInTree || hasAncestryGenerations || hasMaxDistantRelationship) {
+    if (hasPersonsCountInTree || hasSurnamesCountInTree || hasAncestryGenerations || hasMaxDistantRelationship || hasDistinguishedPersonsInTree) {
         var $treeInfo = $("<ul>")
             .addClass("mb-0");
 
@@ -615,6 +616,23 @@ var getPersonComponent = function(person, index) {
                         .append(
                             $("<li>")
                                 .html(displayNameInSpanish(person.maxDistantRelationship.personName))));
+        }
+
+        if (hasDistinguishedPersonsInTree) {
+            var $distinguished = $("<ul>")
+                .addClass("mb-0");
+
+            person.distinguishedPersonsInTree.forEach((distinguishedPerson, index) => {
+                $distinguished.append(
+                    $("<li>")
+                        .html(distinguishedPerson));
+            });
+
+            $treeInfo
+                .append(
+                    $("<li>")
+                        .html("Personas destacadas en su &aacute;rbol:"))
+                .append($distinguished);
         }
 
         $cardBody.append(

@@ -51,6 +51,7 @@ public class EnrichedPerson {
     private final Optional<Place> placeOfDeath;
     private final boolean isAlive;
     private final Optional<Age> age;
+    private final boolean isDistinguishedPerson;
 
     // Custom event facts and tag extensions
     private List<EventFact> customEventFacts;
@@ -76,6 +77,8 @@ public class EnrichedPerson {
     private AncestryGenerations ancestryGenerations;
     @Setter
     private Optional<Relationship> maxDistantRelationship;
+    @Setter
+    private List<EnrichedPerson> distinguishedPersonsInTree;
 
     private EnrichedPerson(Person person, EnrichedGedcom gedcom) {
         this.properties = gedcom.getProperties();
@@ -101,6 +104,7 @@ public class EnrichedPerson {
         isAlive = PersonUtils.isAlive(person);
         age = Age.of(dateOfBirth, dateOfDeath
                 .or(() -> isAlive ? Optional.of(Date.now(properties.getZoneId())) : Optional.empty()));
+        isDistinguishedPerson = PersonUtils.isDistinguishedPerson(person);
     }
 
     public static EnrichedPerson of(Person legacyPerson, EnrichedGedcom gedcom) {
