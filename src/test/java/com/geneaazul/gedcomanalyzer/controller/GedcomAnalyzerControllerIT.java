@@ -36,7 +36,6 @@ public class GedcomAnalyzerControllerIT extends AbstractControllerIT {
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.personsCount", is(9)))
-                .andExpect(jsonPath("$.familiesCount", is(5)))
                 .andExpect(jsonPath("$.personDuplicates", hasSize(0)))
                 .andExpect(jsonPath("$.invalidAlivePersons", hasSize(0)));
     }
@@ -57,7 +56,6 @@ public class GedcomAnalyzerControllerIT extends AbstractControllerIT {
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.personsCount", is(5)))
-                .andExpect(jsonPath("$.familiesCount", is(3)))
                 .andExpect(jsonPath("$.personDuplicates", hasSize(0)))
                 .andExpect(jsonPath("$.invalidAlivePersons", hasSize(0)));
     }

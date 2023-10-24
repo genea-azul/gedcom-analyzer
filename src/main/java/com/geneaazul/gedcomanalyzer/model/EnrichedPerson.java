@@ -5,12 +5,12 @@ import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.utils.FamilyUtils;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
-import com.geneaazul.gedcomanalyzer.utils.PlaceUtils;
 import com.geneaazul.gedcomanalyzer.utils.StreamUtils;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folg.gedcom.model.EventFact;
+import org.folg.gedcom.model.Gedcom;
 import org.folg.gedcom.model.GedcomTag;
 import org.folg.gedcom.model.Person;
 
@@ -34,7 +34,7 @@ import lombok.Setter;
 public class EnrichedPerson {
 
     // Constructor properties
-    private final Person person;
+    private final Person legacyPerson;
     private final EnrichedGedcom gedcom;
     private final GedcomAnalyzerProperties properties;
 
@@ -47,15 +47,11 @@ public class EnrichedPerson {
     private final Optional<String> aka;
     private final Optional<Date> dateOfBirth;
     private final Optional<Date> dateOfDeath;
-    private final Optional<String> placeOfBirth;
-    private final Optional<String> placeOfDeath;
+    private final Optional<Place> placeOfBirth;
+    private final Optional<Place> placeOfDeath;
     private final boolean isAlive;
     private final Optional<Age> age;
-
-    // Search values
-    private final Optional<String> placeOfBirthForSearch;
-    private final Optional<String> countryOfBirth;
-    private final Optional<String> countryOfDeath;
+    private final boolean isDistinguishedPerson;
 
     // Custom event facts and tag extensions
     private List<EventFact> customEventFacts;
@@ -66,7 +62,7 @@ public class EnrichedPerson {
     private List<EnrichedPersonWithReference> parentsWithReference;
     private List<EnrichedSpouseWithChildren> spousesWithChildren;
     private List<EnrichedPerson> parents;
-    private List<EnrichedPerson> siblings;
+    private List<EnrichedPerson> allSiblings;
     private List<EnrichedPerson> spouses;
     private List<EnrichedPerson> children;
 
@@ -81,11 +77,13 @@ public class EnrichedPerson {
     private AncestryGenerations ancestryGenerations;
     @Setter
     private Optional<Relationship> maxDistantRelationship;
+    @Setter
+    private List<EnrichedPerson> distinguishedPersonsInTree;
 
     private EnrichedPerson(Person person, EnrichedGedcom gedcom) {
-        this.person = person;
-        this.gedcom = gedcom;
         this.properties = gedcom.getProperties();
+        this.legacyPerson = properties.isKeepReferenceToLegacyGedcom() ? person : null;
+        this.gedcom = gedcom;
 
         id = person.getId();
         uuid = UUID.randomUUID();
@@ -95,31 +93,33 @@ public class EnrichedPerson {
         displayName = PersonUtils.getDisplayName(person);
         aka = PersonUtils.getAka(person)
                 .filter(akaName -> !akaName.equals(displayName));
-        dateOfBirth = PersonUtils.getDateOfBirth(person).flatMap(Date::parse);
-        dateOfDeath = PersonUtils.getDateOfDeath(person).flatMap(Date::parse);
-        placeOfBirth = PersonUtils.getPlaceOfBirth(person);
-        placeOfDeath = PersonUtils.getPlaceOfDeath(person);
+        dateOfBirth = PersonUtils.getDateOfBirth(person)
+                .flatMap(Date::parse);
+        dateOfDeath = PersonUtils.getDateOfDeath(person)
+                .flatMap(Date::parse);
+        placeOfBirth = PersonUtils.getPlaceOfBirth(person)
+                .map(place -> Place.of(place, gedcom.getPlaces()));
+        placeOfDeath = PersonUtils.getPlaceOfDeath(person)
+                .map(place -> Place.of(place, gedcom.getPlaces()));
         isAlive = PersonUtils.isAlive(person);
         age = Age.of(dateOfBirth, dateOfDeath
                 .or(() -> isAlive ? Optional.of(Date.now(properties.getZoneId())) : Optional.empty()));
-
-        placeOfBirthForSearch = placeOfBirth
-                .map(PlaceUtils::removeLastParenthesis);
-        countryOfBirth = placeOfBirthForSearch
-                .map(PlaceUtils::getCountry);
-        countryOfDeath = placeOfBirth
-                .map(PlaceUtils::removeLastParenthesis)
-                .map(PlaceUtils::getCountry);
+        isDistinguishedPerson = PersonUtils.isDistinguishedPerson(person);
     }
 
-    public static EnrichedPerson of(Person person, EnrichedGedcom gedcom) {
-        return new EnrichedPerson(person, gedcom);
+    public static EnrichedPerson of(Person legacyPerson, EnrichedGedcom gedcom) {
+        return new EnrichedPerson(legacyPerson, gedcom);
     }
 
-    public void enrichFamily(Map<String, EnrichedPerson> enrichedPeopleIndex) {
-        parentsWithReference = toEnrichedPeopleWithReference(PersonUtils.getParentsWithReference(person, gedcom.getGedcom()), enrichedPeopleIndex, null);
-        spousesWithChildren = toEnrichedSpousesWithChildren(PersonUtils.getSpousesWithChildren(person, gedcom.getGedcom()), enrichedPeopleIndex);
-        siblings = toEnrichedPeople(PersonUtils.getSiblings(person, gedcom.getGedcom()), enrichedPeopleIndex, PersonUtils.DATES_COMPARATOR);
+    public Optional<Person> getLegacyPerson() {
+        return Optional.ofNullable(legacyPerson);
+    }
+
+    public void enrichFamily(Gedcom legacyGedcom, Map<String, EnrichedPerson> enrichedPeopleIndex) {
+        Person legacyPerson = legacyGedcom.getPerson(id);
+        parentsWithReference = toEnrichedPeopleWithReference(PersonUtils.getParentsWithReference(legacyPerson, legacyGedcom), enrichedPeopleIndex, null);
+        spousesWithChildren = toEnrichedSpousesWithChildren(PersonUtils.getSpousesWithChildren(legacyPerson, legacyGedcom, gedcom.getPlaces()), enrichedPeopleIndex);
+        allSiblings = toEnrichedPeople(PersonUtils.getAllSiblings(legacyPerson, legacyGedcom), enrichedPeopleIndex, PersonUtils.DATES_COMPARATOR);
 
         parents = parentsWithReference
                 .stream()
@@ -203,14 +203,34 @@ public class EnrichedPerson {
                 .toList();
     }
 
-    public void analyzeCustomEventFactsAndTagExtensions() {
-        customEventFacts = PersonUtils.getCustomEventFacts(person);
-        familyCustomEventFacts =  person.getSpouseFamilies(gedcom.getGedcom())
-                .stream()
-                .map(FamilyUtils::getCustomEventFacts)
-                .flatMap(List::stream)
+    public List<Place> getPlacesOfAnyEvent() {
+        return Stream.concat(
+                Stream
+                        .of(
+                                this.placeOfBirth,
+                                this.placeOfDeath),
+                this.spousesWithChildren
+                        .stream()
+                        .flatMap(spouseWithChildren -> Stream
+                                .of(
+                                        spouseWithChildren.getPlaceOfPartners(),
+                                        spouseWithChildren.getPlaceOfSeparation())))
+                .flatMap(Optional::stream)
+                .distinct()
                 .toList();
-        tagExtensions = PersonUtils.getTagExtensions(person);
+    }
+
+    public void analyzeCustomEventFactsAndTagExtensions(Gedcom gedcom) {
+        getLegacyPerson()
+                .ifPresent(person -> {
+                    customEventFacts = PersonUtils.getCustomEventFacts(person);
+                    familyCustomEventFacts =  person.getSpouseFamilies(gedcom)
+                            .stream()
+                            .map(FamilyUtils::getCustomEventFacts)
+                            .flatMap(List::stream)
+                            .toList();
+                    tagExtensions = PersonUtils.getTagExtensions(person);
+                });
     }
 
     public boolean equalsSex(EnrichedPerson other) {
@@ -218,22 +238,39 @@ public class EnrichedPerson {
     }
 
     public boolean matchesGivenNameAndSurname(EnrichedPerson other) {
-        return matchesGivenNameAndSurname(GivenNameAndSurname.of(other.givenName, other.surname));
+        return matchesGivenNameAndSurname(GivenNameAndSurname.of(other.givenName, other.surname, other.aka));
     }
 
     public boolean matchesGivenNameAndSurname(GivenNameAndSurname givenNameAndSurname) {
-        return GivenNameAndSurname.of(this.givenName, this.surname).matches(givenNameAndSurname);
+        return GivenNameAndSurname.of(this.givenName, this.surname, this.aka).matches(givenNameAndSurname);
     }
 
-    public boolean matchesParents(EnrichedPerson other) {
-        return matchesPersonsBySexAndName(this.parents, other.parents, true);
+    public boolean matchesOptionalGivenNameAndSurname(EnrichedPerson other) {
+        return matchesOptionalGivenNameAndSurname(GivenNameAndSurname.of(other.givenName, other.surname, other.aka));
     }
 
-    public boolean matchesSpouses(EnrichedPerson other) {
-        return matchesPersonsBySexAndName(this.spouses, other.spouses, false);
+    public boolean matchesOptionalGivenNameAndSurname(GivenNameAndSurname givenNameAndSurname) {
+        return GivenNameAndSurname.of(this.givenName, this.surname, this.aka).matchesWithOptionalGivenName(givenNameAndSurname);
     }
 
-    private static boolean matchesPersonsBySexAndName(List<EnrichedPerson> persons1, List<EnrichedPerson> persons2, boolean isAllMatch) {
+    public boolean matchesAllParents(EnrichedPerson other) {
+        return matchesPersonsBySexAndName(this.parents, other.parents, true, false);
+    }
+
+    public boolean matchesAnySpouses(EnrichedPerson other) {
+        return matchesPersonsBySexAndName(this.spouses, other.spouses, false, false);
+    }
+
+    public boolean matchesAnySpousesWithOptionalGivenName(EnrichedPerson other) {
+        return matchesPersonsBySexAndName(this.spouses, other.spouses, false, true);
+    }
+
+    private static boolean matchesPersonsBySexAndName(
+            List<EnrichedPerson> persons1,
+            List<EnrichedPerson> persons2,
+            boolean isAllMatch,
+            boolean isOptionalGivenNameMatch) {
+
         if (persons1.isEmpty() || persons2.isEmpty() || isAllMatch && persons1.size() > persons2.size()) {
             return false;
         }
@@ -242,7 +279,8 @@ public class EnrichedPerson {
                 .stream()
                 .anyMatch(person2
                         -> person1.equalsSex(person2)
-                        && person1.matchesGivenNameAndSurname(person2));
+                        && (!isOptionalGivenNameMatch && person1.matchesGivenNameAndSurname(person2)
+                                || isOptionalGivenNameMatch && person1.matchesOptionalGivenNameAndSurname(person2)));
 
         return isAllMatch
                 ? persons1
@@ -340,8 +378,8 @@ public class EnrichedPerson {
                 + " - " + StringUtils.rightPad(displayName, 36)
                 + " - " + StringUtils.leftPad(dateOfBirth.map(Date::format).orElse(""), 11)
                 + " - " + StringUtils.leftPad(dateOfDeath.map(Date::format).orElse(""), 11)
-                + " - " + StringUtils.rightPad(placeOfBirth.map(place -> StringUtils.substring(place, 0, 36)).orElse(""), 36)
-                + " - " + StringUtils.rightPad(placeOfDeath.map(place -> StringUtils.substring(place, 0, 36)).orElse(""), 36)
+                + " - " + StringUtils.rightPad(placeOfBirth.map(place -> StringUtils.substring(place.name(), 0, 36)).orElse(""), 36)
+                + " - " + StringUtils.rightPad(placeOfDeath.map(place -> StringUtils.substring(place.name(), 0, 36)).orElse(""), 36)
                 + " - " + StringUtils.rightPad(parents
                         .stream()
                         .map(EnrichedPerson::getDisplayName)

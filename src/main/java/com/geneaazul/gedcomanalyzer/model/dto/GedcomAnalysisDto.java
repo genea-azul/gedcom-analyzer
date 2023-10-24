@@ -21,8 +21,6 @@ public class GedcomAnalysisDto {
     @ToString.Include
     private Integer personsCount;
     @ToString.Include
-    private Integer familiesCount;
-    @ToString.Include
     private List<PersonDuplicateDto> personDuplicates;
     @ToString.Include
     private List<PersonDto> invalidAlivePersons;

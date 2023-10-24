@@ -2,6 +2,7 @@ package com.geneaazul.gedcomanalyzer.utils;
 
 import com.geneaazul.gedcomanalyzer.model.AncestryGenerations;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.Surname;
 
@@ -22,8 +23,9 @@ public class RelationshipUtils {
         return relationships
                 .stream()
                 .map(Relationship::person)
-                .map(EnrichedPerson::getCountryOfBirth)
+                .map(EnrichedPerson::getPlaceOfBirth)
                 .flatMap(Optional::stream)
+                .map(Place::country)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -74,7 +76,8 @@ public class RelationshipUtils {
                         (s, r) -> (r.isDirect() && r.getGeneration() >= 0 && !r.isInLaw())
                                 ? r
                                         .person()
-                                        .getCountryOfBirth()
+                                        .getPlaceOfBirth()
+                                        .map(Place::country)
                                         .map(country -> SetUtils.add(s, country))
                                         .orElse(s)
                                 : s,

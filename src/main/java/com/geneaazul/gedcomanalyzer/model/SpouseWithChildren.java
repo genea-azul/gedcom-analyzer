@@ -14,7 +14,7 @@ public record SpouseWithChildren(
         boolean isSeparated,
         Optional<Date> dateOfPartners,
         Optional<Date> dateOfSeparation,
-        Optional<String> placeOfPartners,
-        Optional<String> placeOfSeparation) {
+        Optional<Place> placeOfPartners,
+        Optional<Place> placeOfSeparation) {
 
 }

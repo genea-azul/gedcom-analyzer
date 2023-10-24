@@ -9,6 +9,7 @@ import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.GivenNameAndSurname;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResult;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResults;
+import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
@@ -39,6 +40,7 @@ import java.util.stream.Stream;
 
 import jakarta.annotation.Nullable;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -73,13 +75,15 @@ public class SearchService {
                         || this.evalPersonName(person, EnrichedPerson::getGivenName, name -> NameUtils.simplifyName(name.value()), personGivenNameStr, exactMatch))
                 .filter(person
                         -> personSurnameStr == null
-                        || this.evalPersonName(person, EnrichedPerson::getSurname, name -> NameUtils.simplifyName(name.value()), personSurnameStr, exactMatch))
+                        || this.evalPersonName(person, EnrichedPerson::getSurname, name -> NameUtils.simplifyName(name.value()), personSurnameStr, exactMatch)
+                        || this.evalSpouseName(person, EnrichedPerson::getAka, NameUtils::simplifyName, personSurnameStr, exactMatch))
                 .filter(person
                         -> spouseGivenNameStr == null
                         || this.evalSpouseName(person, EnrichedPerson::getGivenName, name -> NameUtils.simplifyName(name.value()), spouseGivenNameStr, exactMatch))
                 .filter(person
                         -> spouseSurnameStr == null
-                        || this.evalSpouseName(person, EnrichedPerson::getSurname, name -> NameUtils.simplifyName(name.value()), spouseSurnameStr, exactMatch))
+                        || this.evalSpouseName(person, EnrichedPerson::getSurname, name -> NameUtils.simplifyName(name.value()), spouseSurnameStr, exactMatch)
+                        || this.evalSpouseName(person, EnrichedPerson::getAka, NameUtils::simplifyName, spouseSurnameStr, exactMatch))
                 .toList();
     }
 
@@ -112,7 +116,11 @@ public class SearchService {
     /**
      * .
      */
-    public List<EnrichedPerson> findPersonsByMonthAndDayOfDeath(Month month, int day, SexType sex, List<EnrichedPerson> people) {
+    public List<EnrichedPerson> findPersonsByMonthAndDayOfDeath(
+            Month month,
+            int day,
+            @Nullable SexType sex,
+            List<EnrichedPerson> people) {
         return people
                 .stream()
                 .filter(person -> !person.isAlive())
@@ -128,7 +136,7 @@ public class SearchService {
      * .
      */
     public List<EnrichedPerson> findPersonsByPlaceOfBirth(
-            @Nullable String placeOfBirth,
+            @NonNull String placeOfBirth,
             @Nullable Boolean isAlive,
             @Nullable SexType sex,
             List<EnrichedPerson> people) {
@@ -136,26 +144,50 @@ public class SearchService {
                 .stream()
                 .filter(person -> isAlive == null || isAlive == person.isAlive())
                 .filter(person -> sex == null || sex == person.getSex())
-                .filter(person
-                        -> placeOfBirth == null && person.getPlaceOfBirthForSearch().isEmpty()
-                        || placeOfBirth != null && person
-                                .getPlaceOfBirthForSearch()
-                                .map(pob -> pob.endsWith(placeOfBirth))
-                                .orElse(false))
+                .filter(person -> person
+                        .getPlaceOfBirth()
+                        .map(Place::forSearch)
+                        .map(pob -> pob.endsWith(placeOfBirth))
+                        .orElse(false))
                 .toList();
     }
 
     /**
      * .
      */
-    public List<EnrichedPerson> findPersonsByPlaceOfDeath(String placeOfDeath, SexType sex, List<EnrichedPerson> people) {
+    public List<EnrichedPerson> findPersonsByPlaceOfDeath(
+            @NonNull String placeOfDeath,
+            @Nullable SexType sex,
+            List<EnrichedPerson> people) {
         return people
                 .stream()
                 .filter(person -> !person.isAlive())
                 .filter(person -> sex == null || sex == person.getSex())
-                .filter(person -> person.getPlaceOfBirthForSearch()
+                .filter(person -> person
+                        .getPlaceOfDeath()
+                        .map(Place::forSearch)
                         .map(pod -> pod.endsWith(placeOfDeath))
                         .orElse(false))
+                .toList();
+    }
+
+    /**
+     * .
+     */
+    public List<EnrichedPerson> findPersonsByPlaceOfAnyEvent(
+            @NonNull String placeOfEvent,
+            @Nullable Boolean isAlive,
+            @Nullable SexType sex,
+            List<EnrichedPerson> people) {
+        return people
+                .stream()
+                .filter(person -> isAlive == null || isAlive == person.isAlive())
+                .filter(person -> sex == null || sex == person.getSex())
+                .filter(person -> person
+                        .getPlacesOfAnyEvent()
+                        .stream()
+                        .map(Place::forSearch)
+                        .anyMatch(place -> place.endsWith(placeOfEvent)))
                 .toList();
     }
 
@@ -170,8 +202,8 @@ public class SearchService {
                                 .anyMatch(parent
                                         -> isDateOfBirthBefore(parent, properties.getParentMinDateOfBirth())
                                         || isDateOfDeathBefore(parent, properties.getParentMinDateOfDeath()))
-                        // Compare siblings
-                        || person.getSiblings()
+                        // Compare all siblings (full and half)
+                        || person.getAllSiblings()
                                 .stream()
                                 .anyMatch(sibling
                                         -> isDateOfBirthBefore(sibling, properties.getSiblingMinDateOfBirth())
@@ -220,11 +252,11 @@ public class SearchService {
     public List<EnrichedPerson> findPersonsWithNoCountryButParentsWithCountry(List<EnrichedPerson> people) {
         return people
                 .stream()
-                .filter(person -> person.getCountryOfBirth().isEmpty()
+                .filter(person -> person.getPlaceOfBirth().isEmpty()
                         && !person.getParents().isEmpty()
                         && person.getParents()
                                 .stream()
-                                .allMatch(parent -> parent.getCountryOfBirth().isPresent()))
+                                .allMatch(parent -> parent.getPlaceOfBirth().isPresent()))
                 .toList();
     }
 
@@ -280,8 +312,8 @@ public class SearchService {
         }
 
         boolean bothHaveParents = !person.getParents().isEmpty() && !compare.getParents().isEmpty();
-        boolean pMatchesParents = person.matchesParents(compare);
-        boolean cMatchesParents = compare.matchesParents(person);
+        boolean pMatchesParents = person.matchesAllParents(compare);
+        boolean cMatchesParents = compare.matchesAllParents(person);
         boolean matchesParents = bothHaveParents && (pMatchesParents || cMatchesParents);
         boolean fullMatchesParents = bothHaveParents && pMatchesParents && cMatchesParents;
 
@@ -310,12 +342,18 @@ public class SearchService {
 
                 // Look for matching spouses
                 boolean bothHaveSpouses = !person.getSpouses().isEmpty() && !compare.getSpouses().isEmpty();
-                boolean pMatchesSpouses = person.matchesSpouses(compare);
-                boolean cMatchesSpouses = compare.matchesSpouses(person);
-                boolean matchesSpouses = bothHaveSpouses && (pMatchesSpouses || cMatchesSpouses);
+                if (bothHaveSpouses) {
+                    boolean pMatchesSpouses = person.matchesAnySpouses(compare);
+                    boolean cMatchesSpouses = compare.matchesAnySpouses(person);
+                    if (pMatchesSpouses || cMatchesSpouses) {
+                        return 50;
+                    }
 
-                if (matchesSpouses) {
-                    return 50;
+                    boolean pMatchesSpousesWithOptionalGivenName = person.matchesAnySpousesWithOptionalGivenName(compare);
+                    boolean cMatchesSpousesWithOptionalGivenName = compare.matchesAnySpousesWithOptionalGivenName(person);
+                    if (pMatchesSpousesWithOptionalGivenName || cMatchesSpousesWithOptionalGivenName) {
+                        return 51;
+                    }
                 }
             }
 
@@ -629,9 +667,10 @@ public class SearchService {
                 .filter(person -> isAlive == null || isAlive == person.isAlive())
                 .filter(person -> sex == null || sex == person.getSex())
                 .filter(person
-                        -> countryOfBirth == null && person.getCountryOfBirth().isEmpty()
+                        -> countryOfBirth == null && person.getPlaceOfBirth().isEmpty()
                         || countryOfBirth != null && person
-                                .getCountryOfBirth()
+                                .getPlaceOfBirth()
+                                .map(Place::country)
                                 .map(countryOfBirth::equals)
                                 .orElse(false))
                 .toList();
@@ -669,8 +708,6 @@ public class SearchService {
                     .distinct()
                     .sorted()
                     .toList();
-
-            // System.out.println(expectedSpelledWithAccentsGivenNames);
 
             misspelledGivenNames = Stream
                     .concat(

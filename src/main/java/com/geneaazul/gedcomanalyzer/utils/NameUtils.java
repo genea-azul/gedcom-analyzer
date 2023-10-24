@@ -29,10 +29,13 @@ public class NameUtils {
 
     private static final Pattern NORMALIZED_NAME_SEPARATOR_PATTERN = Pattern.compile("-");
 
+    private static final String[] GIVEN_NAME_COMMON_EXTRAS = new String[]{ " cadette", " cadet", " dite ", " dit " };
+    private static final String[] GIVEN_NAME_COMMON_EXTRAS_REPLACEMENT = new String[]{ "", "", " ", " " };
+
     private static final Pattern SURNAME_COMMON_CONNECTOR_PATTERN =
             Pattern.compile("^([^ ]+)(?: (de|der|la|los|las|san))+ (.+)$");
     private static final Pattern SURNAME_COMMON_PREFIX_PATTERN =
-            Pattern.compile("^([a-z]|ahets|de|del|di|della|delle|dall|das|dos|du|la|le|lo|mc|mac|oro|san|santo|saint|sainte|van|vander|von) +(.*)$");
+            Pattern.compile("^([a-z]|ahets|de|del|di|della|delle|dall|das|dos|du|la|le|lo|mc|mac|oro|san|sant|santo|saint|sainte|st|van|vander|von) +(.*)$");
     private static final Pattern SURNAME_DOUBLE_LETTERS_PATTERN = Pattern.compile("([a-z])\\1+");
     private static final Pattern SURNAME_VOWELS_ENDING_PATTERN = Pattern.compile("[aeiou]+$");
     private static final String SURNAME_VOWELS_ENDING_REPLACEMENT = "_";
@@ -61,6 +64,11 @@ public class NameUtils {
         if (givenName == null) {
             return null;
         }
+        if (StringUtils.containsAny(givenName, GIVEN_NAME_COMMON_EXTRAS)) {
+            givenName = StringUtils.replaceEach(givenName, GIVEN_NAME_COMMON_EXTRAS, GIVEN_NAME_COMMON_EXTRAS_REPLACEMENT);
+            givenName = RegExUtils.replaceAll(givenName, NAME_MULTIPLE_SPACES_PATTERN, " ");
+            givenName = StringUtils.trimToNull(givenName);
+        }
         if (sex == null) {
             return givenName;
         }
@@ -82,6 +90,9 @@ public class NameUtils {
     public static String normalizeSurnameToMainWord(
             @Nullable String surname,
             Map<String, String> normalizedSurnamesMap) {
+        if (surname == null) {
+            return null;
+        }
         surname = RegExUtils.replaceAll(surname, SURNAME_COMMON_CONNECTOR_PATTERN, "$1$2$3");
         surname = RegExUtils.replaceAll(surname, SURNAME_COMMON_PREFIX_PATTERN, "$1$2");
         surname = StringUtils.substringBefore(surname, " ");

@@ -7,6 +7,7 @@ import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResults;
+import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Reference;
 import com.geneaazul.gedcomanalyzer.model.Relationships;
 import com.geneaazul.gedcomanalyzer.model.Surname;
@@ -87,8 +88,7 @@ public class GedcomAnalyzerService {
 
         log.info("Gedcom analyzed: {}", gedcom.getGedcomName());
         return GedcomAnalysisDto.builder()
-                .personsCount(gedcom.getGedcom().getPeople().size())
-                .familiesCount(gedcom.getGedcom().getFamilies().size())
+                .personsCount(gedcom.getPeople().size())
                 .personDuplicates(personDuplicatesDto)
                 .invalidAlivePersons(invalidAlivePersonsDto)
                 .build();
@@ -314,7 +314,7 @@ public class GedcomAnalyzerService {
                             0,
                             p -> p.getSurname()
                                     .map(Surname::value)
-                                    .orElse("Undefined"));
+                                    .orElse("<undefined>"));
                     Map<String, Integer> cardinality = CollectionUtils.getCardinalityMap(surnames);
                     return Map.entry(
                             person,
@@ -342,7 +342,8 @@ public class GedcomAnalyzerService {
         List<String> placesOfBirth = people
                 .stream()
                 .map(EnrichedPerson::getPlaceOfBirth)
-                .map(countryOfBirth -> countryOfBirth.or(() -> includeEmptyValues ? Optional.of("<no place>") : Optional.empty()))
+                .map(opt -> opt.map(Place::name))
+                .map(placeOfBirth -> placeOfBirth.or(() -> includeEmptyValues ? Optional.of("<no place>") : Optional.empty()))
                 .flatMap(Optional::stream)
                 .toList();
 
@@ -363,7 +364,8 @@ public class GedcomAnalyzerService {
 
         List<String> countriesOfBirth = people
                 .stream()
-                .map(EnrichedPerson::getCountryOfBirth)
+                .map(EnrichedPerson::getPlaceOfBirth)
+                .map(opt -> opt.map(Place::country))
                 .map(countryOfBirth -> countryOfBirth.or(() -> includeEmptyValues ? Optional.of("<no country>") : Optional.empty()))
                 .flatMap(Optional::stream)
                 .toList();
@@ -381,10 +383,13 @@ public class GedcomAnalyzerService {
     /**
      * .
      */
-    public List<SurnamesCardinality> getSurnamesCardinalityByPlaceOfBirth(List<EnrichedPerson> people, String placeOfBirth) {
+    public List<SurnamesCardinality> getSurnamesCardinalityByPlaceOfBirth(
+            List<EnrichedPerson> people,
+            String placeOfBirth,
+            @Nullable Boolean isAlive) {
 
         List<Surname> surnamesByPlaceOfBirth = searchService
-                .findPersonsByPlaceOfBirth(placeOfBirth, null, null, people)
+                .findPersonsByPlaceOfBirth(placeOfBirth, isAlive, null, people)
                 .stream()
                 .map(EnrichedPerson::getSurname)
                 .flatMap(Optional::stream)
@@ -629,18 +634,6 @@ public class GedcomAnalyzerService {
         }
 
         return List.copyOf(results);
-    }
-
-    /**
-     *
-     */
-    public EnrichedGedcom extractSubGedcom(EnrichedPerson person) {
-        Gedcom subGedcom = person.getGedcom().getGedcom();
-        String subGedcomName = person.getSurname()
-                .map(Surname::value)
-                .map(surname -> surname + "-tree")
-                .orElse("sub-gedcom");
-        return EnrichedGedcom.of(subGedcom, subGedcomName, person.getProperties());
     }
 
 }

@@ -46,5 +46,6 @@ public class PersonDto {
     private AncestryGenerationsDto ancestryGenerations;
     @ToString.Include
     private RelationshipDto maxDistantRelationship;
+    private List<String> distinguishedPersonsInTree;
 
 }

@@ -46,7 +46,7 @@ public class PlaceUtils {
             return "EU.";
         }
         if (country.startsWith("Países Bajos")) {
-            return "Hol";
+            return "PB.";
         }
         if (country.startsWith("República Dominicana")) {
             return "Dom";
