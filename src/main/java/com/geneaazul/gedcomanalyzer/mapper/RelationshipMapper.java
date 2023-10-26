@@ -120,7 +120,7 @@ public class RelationshipMapper {
         String adoption = Optional.ofNullable(relationship.getAdoptionType())
                 .map(AdoptionType::name)
                 .orElse(null);
-        String distinguishedPerson = relationship.getIsDistinguishedPerson() ? "★" : " ";
+        String distinguishedPerson = relationship.getIsDistinguishedPerson() ? "★" : "";
         String relationshipDesc = displayRelationshipInSpanish(relationship, onlySecondaryDescription);
         return new FormattedRelationship(
                 String.valueOf(index),

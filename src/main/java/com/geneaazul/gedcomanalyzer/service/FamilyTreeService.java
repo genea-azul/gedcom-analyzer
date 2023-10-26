@@ -242,7 +242,7 @@ public class FamilyTreeService {
         lines = peopleInPage
                 .stream()
                 .map(FormattedRelationship::personName)
-                .map(name -> StringUtils.substring(name, 0, 42))
+                .map(name -> StringUtils.substring(name, 0, 43))
                 .toArray(String[]::new);
         writeText(stream, light, size1, space1, 155f, yPos, lines);
 
