@@ -52,7 +52,7 @@ public class FamilyTreeService {
             PDFont italic = loadFont(document, EmbeddedFontsConfig.Font.ROBOTO_LIGHT_ITALIC);
             PDFont mono = loadFont(document, EmbeddedFontsConfig.Font.EVERSON_MONO);
 
-            int maxPersonsInFirstPage = 36;
+            int maxPersonsInFirstPage = 35;
             int maxPersonsInNextPages = 59;
 
             boolean isAnyPersonObfuscated = peopleInTree
@@ -113,26 +113,30 @@ public class FamilyTreeService {
                 //noinspection DataFlowIssue
                 legendIndX = 25f;
                 legendSepX = 85f;
-                float legendSepY = 26.4f;
+                float legendSepY = 39.6f;
 
                 writeText(stream, text -> "I".equals(text) ? italic : light, 11f, 1.2f, legendX, legendY,
                         new String[] { null, "~" },
                         new String[] { null, "----" },
+                        new String[] { null, "*" },
                         new String[] { null, "<nombre privado>" },
                         new String[] { "I", "relación en cursiva" });
                 writeText(stream, light, 11f, 1.2f, legendX + legendIndX, legendY,
                         "año de nacimiento aproximado",
-                        "año de nacimiento de persona viva o cercana a la persona principal");
+                        "año de nacimiento de persona viva o cercana a la persona principal",
+                        "persona destacada");
                 writeText(stream, light, 11f, 1.2f, legendX + legendIndX + legendSepX, legendY + legendSepY,
                         "nombre de persona viva o cercana a la persona principal",
                         "relación familar dada a través de una rama adoptiva");
 
-                writeText(stream, bold, 12.5f, 1.2f, 30f, 245f,
+                legendX = 30f;
+                legendY = 258.2f;
+
+                writeText(stream, bold, 12.5f, 1.2f, legendX, legendY,
                         "Árbol genealógico de " + person.getDisplayName());
 
-                //noinspection DataFlowIssue
-                legendX = 50f;
-                legendY = 265f;
+                legendX = legendX + 20f;
+                legendY = legendY + 20f;
                 legendSepY = 70f;
 
                 writeText(stream, light, 11f, 1.3f, legendX, legendY,
@@ -202,9 +206,11 @@ public class FamilyTreeService {
 
         float size1 = 10.5f;
         float size2 = 9.2f;
+        float size3 = 12.0f;
 
         float space1 = 1.15f;
         float space2 = size1 * space1 / size2;
+        float space3 = size1 * space1 / size3;
 
         String[] lines = peopleInPage
                 .stream()
@@ -239,6 +245,12 @@ public class FamilyTreeService {
                 .map(name -> StringUtils.substring(name, 0, 42))
                 .toArray(String[]::new);
         writeText(stream, light, size1, space1, 155f, yPos, lines);
+
+        lines = peopleInPage
+                .stream()
+                .map(FormattedRelationship::distinguishedPerson)
+                .toArray(String[]::new);
+        writeText(stream, mono, size3, space3, 360f, yPos, lines);
 
         lines = peopleInPage
                 .stream()

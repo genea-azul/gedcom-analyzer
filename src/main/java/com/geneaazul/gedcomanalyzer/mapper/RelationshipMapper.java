@@ -102,6 +102,7 @@ public class RelationshipMapper {
                 .adoptionType(relationship.adoptionType())
                 .spouseSex(spouseSex)
                 .isSeparated(isSeparated)
+                .isDistinguishedPerson(relationship.person().isDistinguishedPerson())
                 .treeSides(relationship.treeSides())
                 .isObfuscated(obfuscateCondition)
                 .build();
@@ -119,6 +120,7 @@ public class RelationshipMapper {
         String adoption = Optional.ofNullable(relationship.getAdoptionType())
                 .map(AdoptionType::name)
                 .orElse(null);
+        String distinguishedPerson = relationship.getIsDistinguishedPerson() ? "★" : " ";
         String relationshipDesc = displayRelationshipInSpanish(relationship, onlySecondaryDescription);
         return new FormattedRelationship(
                 String.valueOf(index),
@@ -128,6 +130,7 @@ public class RelationshipMapper {
                 personYearOfBirth,
                 personCountryOfBirth,
                 adoption,
+                distinguishedPerson,
                 treeSide,
                 relationshipDesc,
                 relationship.getIsObfuscated());

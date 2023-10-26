@@ -12,6 +12,7 @@ public record FormattedRelationship(
         String personYearOfBirth,
         String personCountryOfBirth,
         String adoption,
+        String distinguishedPerson,
         String treeSide,
         String relationshipDesc,
         boolean isObfuscated) {
@@ -34,6 +35,7 @@ public record FormattedRelationship(
                 this.personYearOfBirth,
                 this.personCountryOfBirth,
                 this.adoption,
+                this.distinguishedPerson,
                 this.treeSide,
                 this.relationshipDesc + " / " + other.relationshipDesc,
                 this.isObfuscated);
