@@ -49,7 +49,10 @@ public class PlaceUtils {
             return "PB.";
         }
         if (country.startsWith("República Dominicana")) {
-            return "Dom";
+            return "RD.";
+        }
+        if (country.startsWith("Reino Unido")) {
+            return "RU.";
         }
         if (country.startsWith("Océano Atlántico")) {
             return "OA.";
