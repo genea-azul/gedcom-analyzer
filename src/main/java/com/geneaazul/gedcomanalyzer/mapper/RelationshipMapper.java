@@ -23,6 +23,9 @@ import jakarta.annotation.Nullable;
 @Component
 public class RelationshipMapper {
 
+    private static final String SEX_SUFFIX_M_VALUE = "o";
+    private static final String SEX_SUFFIX_F_VALUE = "a";
+
     public RelationshipDto toRelationshipDto(
             @Nullable Relationship relationship,
             boolean obfuscateCondition) {
@@ -218,7 +221,7 @@ public class RelationshipMapper {
         if (relationship.getReferenceType() == ReferenceType.PARENT) {
             if (relationship.getGeneration() == 1) {
                 String sexSuffix = getSexSuffixInSpanish(relationship);
-                String relationshipName = sexSuffix.equals("o") ? "padre" : "madre";
+                String relationshipName = sexSuffix.equals(SEX_SUFFIX_M_VALUE) ? "padre" : "madre";
                 String adoptionSuffix = getAdoptionSuffixInSpanish(relationship.getAdoptionType(), sexSuffix);
                 return spousePrefix + relationshipName + adoptionSuffix;
             }
@@ -411,9 +414,9 @@ public class RelationshipMapper {
 
     private String getSexSuffixInSpanish(RelationshipDto relationship) {
         if (relationship.getIsInLaw()) {
-            return (relationship.getSpouseSex() == SexType.M ? "o" : "a");
+            return (relationship.getSpouseSex() == SexType.M ? SEX_SUFFIX_M_VALUE : SEX_SUFFIX_F_VALUE);
         } else {
-            return (relationship.getPersonSex() == SexType.M ? "o" : "a");
+            return (relationship.getPersonSex() == SexType.M ? SEX_SUFFIX_M_VALUE : SEX_SUFFIX_F_VALUE);
         }
     }
 
@@ -422,28 +425,28 @@ public class RelationshipMapper {
             return "";
         }
         if (grade == 2) {
-            return " segund" + sexSuffix;
+            return " 2d" + sexSuffix;
         }
         if (grade == 3) {
-            return " tercer" + sexSuffix;
+            return " 3r" + sexSuffix;
         }
         if (grade == 4) {
-            return " cuart" + sexSuffix;
+            return " 4t" + sexSuffix;
         }
         if (grade == 5) {
-            return " quint" + sexSuffix;
+            return " 5t" + sexSuffix;
         }
         if (grade == 6) {
-            return " sext" + sexSuffix;
+            return " 6t" + sexSuffix;
         }
         if (grade == 7) {
-            return " séptim" + sexSuffix;
+            return " 7m" + sexSuffix;
         }
         if (grade == 8) {
-            return " octav" + sexSuffix;
+            return " 8v" + sexSuffix;
         }
         if (grade == 9) {
-            return " noven" + sexSuffix;
+            return " 9n" + sexSuffix;
         }
         return " de " + grade + "° grado";
     }

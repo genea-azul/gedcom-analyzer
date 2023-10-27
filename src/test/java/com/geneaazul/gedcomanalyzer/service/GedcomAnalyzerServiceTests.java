@@ -313,18 +313,24 @@ public class GedcomAnalyzerServiceTests {
         personService
                 .getPeopleInTree(person, false, false)
                 .stream()
-                .sorted()
+                // Order internal elements of each relationship group: first not-in-law, then in-law
+                .map(relationships -> {
+                    if (relationships.size() == 2 && relationships.findFirst().isInLaw()) {
+                        return List.of(relationships.findLast(), relationships.findFirst());
+                    }
+                    return List.copyOf(relationships.getOrderedRelationships());
+                })
+                .sorted(Comparator.comparing(relationships -> relationships.get(0)))
                 .limit(50)
                 .forEach(relationships -> System.out.println(
                         relationships
-                                .getOrderedRelationships()
                                 .stream()
                                 .map(r -> relationshipMapper.toRelationshipDto(r, false))
                                 .map(r -> relationshipMapper.formatInSpanish(r, 0, false))
                                 .map(FormattedRelationship::toString)
                                 .collect(Collectors.joining(", "))
                         + "  --  "
-                        + relationships.findFirst().person()));
+                        + relationships.get(0).person()));
     }
 
     @Disabled

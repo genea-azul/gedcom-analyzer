@@ -37,7 +37,7 @@ public record FormattedRelationship(
                 this.adoption,
                 this.distinguishedPerson,
                 this.treeSide,
-                this.relationshipDesc + " / " + other.relationshipDesc,
+                this.relationshipDesc + " | " + other.relationshipDesc,
                 this.isObfuscated);
     }
 

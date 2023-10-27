@@ -8,7 +8,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.util.Assert;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -28,7 +27,7 @@ import lombok.ToString;
 @Getter
 @RequiredArgsConstructor(staticName = "of")
 @ToString(onlyExplicitlyIncluded = true)
-public class Relationships implements Comparable<Relationships> {
+public class Relationships {
 
     @ToString.Include
     private final String personId;
@@ -105,6 +104,10 @@ public class Relationships implements Comparable<Relationships> {
 
     public Relationship findLast() {
         return orderedRelationships.last();
+    }
+
+    public int size() {
+        return orderedRelationships.size();
     }
 
     public Optional<Relationship> findFirstNotInLaw() {
@@ -198,13 +201,6 @@ public class Relationships implements Comparable<Relationships> {
 
         return Pair.of(result, treeSides.isEmpty() ? null : treeSides);
     }
-
-    @Override
-    public int compareTo(Relationships other) {
-        return RELATIONSHIP_COMPARATOR.compare(this.findFirst(), other.findFirst());
-    }
-
-    private static final Comparator<Relationship> RELATIONSHIP_COMPARATOR = Comparator.nullsFirst(Comparator.naturalOrder());
 
     /**
      *

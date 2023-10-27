@@ -206,11 +206,13 @@ public class FamilyTreeService {
 
         float size1 = 10.5f;
         float size2 = 9.2f;
-        float size3 = 12.0f;
+        float size3 = 12.5f;
+        float size4 = 8.6f;
 
         float space1 = 1.15f;
         float space2 = size1 * space1 / size2;
         float space3 = size1 * space1 / size3;
+        float space4 = size1 * space1 / size4;
 
         String[] lines = peopleInPage
                 .stream()
@@ -262,7 +264,7 @@ public class FamilyTreeService {
                 .stream()
                 .map(relationship -> new String[] { relationship.adoption(), relationship.relationshipDesc() })
                 .toArray(String[][]::new);
-        writeText(stream, text -> StringUtils.isNotBlank(text) ? italic : light, size2, space2, 375f, yPos, linesWithCond);
+        writeText(stream, text -> StringUtils.isNotBlank(text) ? italic : light, size4, space4, 375f, yPos, linesWithCond);
 
         writeText(stream, font, 12f, 1.2f, 500f, 780f, "Página " + pageNum);
 
