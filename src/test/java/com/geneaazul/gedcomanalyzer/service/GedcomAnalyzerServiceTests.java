@@ -103,7 +103,7 @@ public class GedcomAnalyzerServiceTests {
     public void findSurnamesByPattern() {
         System.out.println("\nfindSurnamesByPattern:");
         searchService
-                .findSurnamesByPattern("^[dD]el ", gedcom.getPeople())
+                .findSurnamesByPattern(" [dD]el ", gedcom.getPeople())
                 .stream()
                 .map(Surname::value)
                 .forEach(System.out::println);
