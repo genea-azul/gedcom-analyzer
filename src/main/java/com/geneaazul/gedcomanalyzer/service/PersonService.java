@@ -19,8 +19,8 @@ import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.model.dto.TreeSideType;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
-import com.geneaazul.gedcomanalyzer.utils.RelationshipUtils;
 import com.geneaazul.gedcomanalyzer.utils.NameUtils;
+import com.geneaazul.gedcomanalyzer.utils.RelationshipUtils;
 import com.geneaazul.gedcomanalyzer.utils.SetUtils;
 
 import org.apache.commons.lang3.mutable.MutableInt;

@@ -12,8 +12,8 @@ import com.geneaazul.gedcomanalyzer.model.PersonComparisonResults;
 import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
-import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 import com.geneaazul.gedcomanalyzer.utils.NameUtils;
+import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;

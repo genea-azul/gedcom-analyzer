@@ -45,6 +45,7 @@ public class EnrichedPerson {
     private final Optional<Surname> surname;
     private final String displayName;
     private final Optional<String> aka;
+    private final Optional<ProfilePicture> profilePicture;
     private final Optional<Date> dateOfBirth;
     private final Optional<Date> dateOfDeath;
     private final Optional<Place> placeOfBirth;
@@ -93,6 +94,7 @@ public class EnrichedPerson {
         displayName = PersonUtils.getDisplayName(person);
         aka = PersonUtils.getAka(person)
                 .filter(akaName -> !akaName.equals(displayName));
+        profilePicture = PersonUtils.getProfilePicture(person);
         dateOfBirth = PersonUtils.getDateOfBirth(person)
                 .flatMap(Date::parse);
         dateOfDeath = PersonUtils.getDateOfDeath(person)

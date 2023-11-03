@@ -1,7 +1,5 @@
 package com.geneaazul.gedcomanalyzer.model;
 
-import com.geneaazul.gedcomanalyzer.utils.PlaceUtils;
-
 import java.util.List;
 import java.util.Optional;
 

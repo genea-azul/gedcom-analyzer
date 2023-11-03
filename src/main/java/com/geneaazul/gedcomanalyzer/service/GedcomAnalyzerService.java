@@ -21,9 +21,9 @@ import com.geneaazul.gedcomanalyzer.utils.DateUtils;
 import com.geneaazul.gedcomanalyzer.utils.EnumCollectionUtils;
 import com.geneaazul.gedcomanalyzer.utils.FamilyUtils;
 import com.geneaazul.gedcomanalyzer.utils.MapUtils;
+import com.geneaazul.gedcomanalyzer.utils.NameUtils;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 import com.geneaazul.gedcomanalyzer.utils.RelationshipUtils;
-import com.geneaazul.gedcomanalyzer.utils.NameUtils;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;

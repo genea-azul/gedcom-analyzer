@@ -7,6 +7,8 @@ import com.geneaazul.gedcomanalyzer.model.EnrichedSpouseWithChildren;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResult;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResults;
 import com.geneaazul.gedcomanalyzer.model.Place;
+import com.geneaazul.gedcomanalyzer.model.ProfilePicture;
+import com.geneaazul.gedcomanalyzer.model.dto.NameAndPictureDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateCompareDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateDto;
@@ -47,10 +49,18 @@ public class PersonMapper {
         boolean obfuscateLiving = obfuscationType != ObfuscationType.NONE;
         boolean obfuscateName = obfuscateLiving && obfuscationType != ObfuscationType.SKIP_MAIN_PERSON_NAME;
 
+        List<PersonWithReferenceDto> parents = toPersonWithReferenceDto(
+                person.getParentsWithReference(),
+                obfuscateLiving,
+                person.isAlive());
+
         List<SpouseWithChildrenDto> spouses = toSpouseWithChildrenDto(
                 person.getSpousesWithChildren(),
                 obfuscateLiving,
                 person.isAlive());
+
+        List<NameAndPictureDto> distinguishedPersonsInTree = toNameAndPictureDto(
+                person.getDistinguishedPersonsInTree());
 
         return PersonDto.builder()
                 .uuid(person.getUuid())
@@ -59,6 +69,9 @@ public class PersonMapper {
                 .name(PersonUtils.obfuscateName(person, obfuscateName && person.isAlive()))
                 .aka(person.getAka()
                         .filter(aka -> !(obfuscateName && person.isAlive()))
+                        .orElse(null))
+                .profilePicture(person.getProfilePicture()
+                        .map(ProfilePicture::file)
                         .orElse(null))
                 .dateOfBirth(person.getDateOfBirth()
                         .map(date -> DateUtils.obfuscateDate(date, obfuscateLiving && person.isAlive()))
@@ -69,10 +82,7 @@ public class PersonMapper {
                 .dateOfDeath(person.getDateOfDeath()
                         .map(Date::format)
                         .orElse(null))
-                .parents(toPersonWithReferenceDto(
-                        person.getParentsWithReference(),
-                        obfuscateLiving,
-                        person.isAlive()))
+                .parents(parents)
                 .spouses(spouses)
                 .personsCountInTree(person.getPersonsCountInTree())
                 .surnamesCountInTree(person.getSurnamesCountInTree())
@@ -88,12 +98,20 @@ public class PersonMapper {
                                 maxDistantRelationship,
                                 obfuscateLiving && (person.isAlive() || maxDistantRelationship.person().isAlive())))
                         .orElse(null))
-                .distinguishedPersonsInTree(person
-                        .getDistinguishedPersonsInTree()
-                        .stream()
-                        .map(EnrichedPerson::getDisplayName)
-                        .toList())
+                .distinguishedPersonsInTree(distinguishedPersonsInTree)
                 .build();
+    }
+
+    private List<NameAndPictureDto> toNameAndPictureDto(List<EnrichedPerson> people) {
+        return people
+                .stream()
+                .map(person -> NameAndPictureDto.builder()
+                        .name(person.getDisplayName())
+                        .file(person.getProfilePicture()
+                                .map(ProfilePicture::file)
+                                .orElse(null))
+                        .build())
+                .toList();
     }
 
     public List<SpouseWithChildrenDto> toSpouseWithChildrenDto(
