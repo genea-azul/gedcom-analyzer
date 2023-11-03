@@ -619,20 +619,43 @@ var getPersonComponent = function(person, index) {
         }
 
         if (hasDistinguishedPersonsInTree) {
-            var $distinguished = $("<ul>")
+            var $distinguishedPeople = $("<div>")
                 .addClass("mb-0");
 
-            person.distinguishedPersonsInTree.forEach((distinguishedPerson, index) => {
-                $distinguished.append(
-                    $("<li>")
-                        .html(distinguishedPerson));
+            person.distinguishedPersonsInTree.forEach((nameAndPicture, index) => {
+                var $profileImage = (nameAndPicture.file)
+                    ? $("<img>")
+                        .attr("src", nameAndPicture.file)
+                        .attr("alt", nameAndPicture.name + " (profile picture)")
+                        .addClass("profile-picture-small")
+                    : $("<i>")
+                        .attr("style", "font-size: 32px")
+                        .addClass("bi bi-person");
+
+                var $distinguishedPerson = $("<div>")
+                    .addClass("mb-1")
+                    .append(
+                        $("<div>")
+                            .addClass("row gx-1")
+                            .append(
+                                $("<div>")
+                                    .addClass("col-3 col-sm-2 d-flex align-items-center justify-content-center")
+                                    .attr("style", "height: 50px")
+                                    .html($profileImage))
+                            .append(
+                                $("<div>")
+                                    .addClass("col-9 col-sm-10 d-flex align-items-center")
+                                    .text(nameAndPicture.name)));
+
+                $distinguishedPeople
+                    .append($distinguishedPerson);
             });
 
             $treeInfo
                 .append(
                     $("<li>")
                         .html("Personas destacadas relacionadas:"))
-                .append($distinguished);
+                .append($distinguishedPeople);
         }
 
         $cardBody.append(

@@ -337,6 +337,30 @@ public class NameUtilsTests {
                     Surname matching = PersonUtils.getShortenedSurnameMainWord("Peuvrié", properties.getNormalizedSurnamesMap()).orElse(null);
                     assertThat(surname.matches(matching)).isTrue();
                 });
+
+        name.setSurname("de las Cuevas");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("de las Cuevas");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("delascuevas");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("delascuevas");
+
+                    Surname matching = PersonUtils.getShortenedSurnameMainWord("Cuevas", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(matching)).isFalse();
+                });
+
+        name.setSurname("de la Cuadra");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("de la Cuadra");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("delacuadra");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("delacuadr_");
+
+                    Surname matching = PersonUtils.getShortenedSurnameMainWord("Cuadra", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(matching)).isFalse();
+                });
     }
 
 }

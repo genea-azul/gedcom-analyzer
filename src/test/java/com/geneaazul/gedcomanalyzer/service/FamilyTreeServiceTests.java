@@ -44,9 +44,9 @@ public class FamilyTreeServiceTests {
         MutableInt index = new MutableInt(1);
         List<FormattedRelationship> peopleInTree = relationshipsList
                 .stream()
-                .sorted()
                 .map(Relationships::findFirst)
-                .map(relationship -> relationshipMapper.toRelationshipDto(relationship, true))
+                .sorted()
+                .map(relationship -> relationshipMapper.toRelationshipDto(relationship, false))
                 .map(relationship -> relationshipMapper.formatInSpanish(relationship, index.getAndIncrement(), true))
                 .toList();
 

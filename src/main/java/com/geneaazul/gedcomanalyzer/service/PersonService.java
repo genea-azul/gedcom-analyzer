@@ -19,8 +19,8 @@ import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.model.dto.TreeSideType;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
-import com.geneaazul.gedcomanalyzer.utils.RelationshipUtils;
 import com.geneaazul.gedcomanalyzer.utils.NameUtils;
+import com.geneaazul.gedcomanalyzer.utils.RelationshipUtils;
 import com.geneaazul.gedcomanalyzer.utils.SetUtils;
 
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -79,9 +79,21 @@ public class PersonService {
             MutableInt index = new MutableInt(1);
             List<FormattedRelationship> peopleInTree = relationshipsList
                     .stream()
-                    .sorted()
+                    // Make sure each relationship group has 1 or 2 elements (usually an in-law and a not-in-law relationship)
+                    .peek(relationships -> {
+                        if (relationships.size() == 0 || relationships.size() > 2) {
+                            throw new UnsupportedOperationException("Something is wrong");
+                        }
+                    })
+                    // Order internal elements of each relationship group: first not-in-law, then in-law
+                    .map(relationships -> {
+                        if (relationships.size() == 2 && relationships.findFirst().isInLaw()) {
+                            return List.of(relationships.findLast(), relationships.findFirst());
+                        }
+                        return List.copyOf(relationships.getOrderedRelationships());
+                    })
+                    .sorted(Comparator.comparing(relationships -> relationships.get(0)))
                     .map(relationships -> relationships
-                            .getOrderedRelationships()
                             .stream()
                             .map(relationship -> relationshipMapper.toRelationshipDto(
                                     relationship,
@@ -89,20 +101,13 @@ public class PersonService {
                                             // don't obfuscate root person
                                             && !relationship.person().getId().equals(person.getId())
                                             && (person.isAlive() && relationship.getDistance() <= MAX_DISTANCE_TO_OBFUSCATE
-                                            || relationship.person().isAlive())))
+                                                    || relationship.person().isAlive())))
                             .map(relationship -> relationshipMapper.formatInSpanish(relationship, index.getAndIncrement(), true))
                             .toList())
-                    .map(formattedRelationships -> {
-                        if (formattedRelationships.size() > 2 || formattedRelationships.isEmpty()) {
-                            throw new UnsupportedOperationException("Something is wrong");
-                        }
-                        if (formattedRelationships.size() == 1) {
-                            return formattedRelationships.get(0);
-                        }
-                        FormattedRelationship first = formattedRelationships.get(0);
-                        FormattedRelationship second = formattedRelationships.get(1);
-                        return first.mergeRelationshipDesc(second);
-                    })
+                    .map(formattedRelationships -> formattedRelationships
+                            .stream()
+                            .reduce(FormattedRelationship::mergeRelationshipDesc)
+                            .orElseThrow())
                     .toList();
 
             try {

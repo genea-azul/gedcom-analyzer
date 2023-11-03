@@ -5,6 +5,7 @@ import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.NameAndSex;
 import com.geneaazul.gedcomanalyzer.model.Place;
+import com.geneaazul.gedcomanalyzer.model.ProfilePicture;
 import com.geneaazul.gedcomanalyzer.model.SpouseWithChildren;
 import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
@@ -67,6 +68,7 @@ public class PersonUtils {
      */
     public static final String FORMER_NAME_TAG = "_FORMERNAME";
     public static final String UPDATED_TAG = "_UPD";
+    public static final String PERSONAL_PHOTO_TAG = "_PERSONALPHOTO";
 
     public static boolean isAlive(Person person) {
         return !isDead(person);
@@ -231,6 +233,20 @@ public class PersonUtils {
                                 .findFirst())
                         .map(GedcomTag::getValue))
                 .map(StringUtils::trimToNull);
+    }
+
+    public static Optional<ProfilePicture> getProfilePicture(Person person) {
+        return person.getMedia()
+                .stream()
+                .filter(media -> media.getExtensions()
+                        .values()
+                        .stream()
+                        .map(gedcomTags -> (List<?>) gedcomTags)
+                        .flatMap(List::stream)
+                        .map(gedcomTag -> (GedcomTag) gedcomTag)
+                        .anyMatch(gedcomTag -> gedcomTag.getTag().equals(PERSONAL_PHOTO_TAG)))
+                .map(media -> new ProfilePicture(media.getFormat(), media.getFile()))
+                .findFirst();
     }
 
     public static Optional<String> getDateOfBirth(Person person) {

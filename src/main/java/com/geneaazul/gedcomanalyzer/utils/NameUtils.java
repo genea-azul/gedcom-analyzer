@@ -29,11 +29,11 @@ public class NameUtils {
 
     private static final Pattern NORMALIZED_NAME_SEPARATOR_PATTERN = Pattern.compile("-");
 
-    private static final String[] GIVEN_NAME_COMMON_EXTRAS = new String[]{ " cadette", " cadet", " dite ", " dit " };
-    private static final String[] GIVEN_NAME_COMMON_EXTRAS_REPLACEMENT = new String[]{ "", "", " ", " " };
+    private static final String[] GIVEN_NAME_COMMON_EXTRAS = new String[]{ " cadette", " cadete", " cadet", " dite ", " dit " };
+    private static final String[] GIVEN_NAME_COMMON_EXTRAS_REPLACEMENT = new String[]{ "", "", "", " ", " " };
 
     private static final Pattern SURNAME_COMMON_CONNECTOR_PATTERN =
-            Pattern.compile("^([^ ]+)(?: (de|der|la|los|las|san))+ (.+)$");
+            Pattern.compile("^([^ ]+)(?: (de|del|der|la|los|las|san))+ (.+)$");
     private static final Pattern SURNAME_COMMON_PREFIX_PATTERN =
             Pattern.compile("^([a-z]|ahets|de|del|di|della|delle|dall|das|dos|du|la|le|lo|mc|mac|oro|san|sant|santo|saint|sainte|st|van|vander|von) +(.*)$");
     private static final Pattern SURNAME_DOUBLE_LETTERS_PATTERN = Pattern.compile("([a-z])\\1+");

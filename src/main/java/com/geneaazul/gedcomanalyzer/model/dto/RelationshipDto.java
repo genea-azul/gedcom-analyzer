@@ -32,6 +32,7 @@ public class RelationshipDto {
     private AdoptionType adoptionType;
     private SexType spouseSex;
     private Boolean isSeparated;
+    private Boolean isDistinguishedPerson;
     private Set<TreeSideType> treeSides;
     private Boolean isObfuscated;
 
@@ -50,6 +51,7 @@ public class RelationshipDto {
                 + (adoptionType == null ? "      " : adoptionType) + ", "
                 + spouseSex + ", "
                 + (isSeparated ? " " + isSeparated : isSeparated) + ", "
+                + (isDistinguishedPerson ? " " + isDistinguishedPerson : isDistinguishedPerson) + ", "
                 + treeSides + "]";
     }
 

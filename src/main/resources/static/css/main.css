@@ -9,3 +9,8 @@
 .card-label-max-width {
     max-width: 147px !important;
 }
+
+.profile-picture-small {
+    max-width: 50px !important;
+    max-height: 50px !important;
+}

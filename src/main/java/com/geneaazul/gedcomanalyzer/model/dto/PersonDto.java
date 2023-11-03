@@ -30,6 +30,8 @@ public class PersonDto {
     @ToString.Include
     private String aka;
     @ToString.Include
+    private String profilePicture;
+    @ToString.Include
     private String dateOfBirth;
     @ToString.Include
     private String placeOfBirth;
@@ -46,6 +48,6 @@ public class PersonDto {
     private AncestryGenerationsDto ancestryGenerations;
     @ToString.Include
     private RelationshipDto maxDistantRelationship;
-    private List<String> distinguishedPersonsInTree;
+    private List<NameAndPictureDto> distinguishedPersonsInTree;
 
 }
