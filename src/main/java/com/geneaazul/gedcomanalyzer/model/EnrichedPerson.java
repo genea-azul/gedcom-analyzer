@@ -80,6 +80,8 @@ public class EnrichedPerson {
     private Optional<Relationship> maxDistantRelationship;
     @Setter
     private List<EnrichedPerson> distinguishedPersonsInTree;
+    @Setter
+    private Integer orderKey;
 
     private EnrichedPerson(Person person, EnrichedGedcom gedcom) {
         this.properties = gedcom.getProperties();

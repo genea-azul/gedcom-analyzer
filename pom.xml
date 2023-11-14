@@ -26,6 +26,7 @@
     <icu.version>73.1</icu.version>
     <pdfbox.version>3.0.0-alpha3</pdfbox.version>
     <commons-collections4.version>4.4</commons-collections4.version>
+    <commons-csv.version>1.10.0</commons-csv.version>
     <commons-io.version>2.12.0</commons-io.version>
     <commons-lang3.version>3.12.0</commons-lang3.version>
     <commons-text.version>1.10.0</commons-text.version>
@@ -116,6 +117,11 @@
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
       <version>${commons-collections4.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-csv</artifactId>
+      <version>${commons-csv.version}</version>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>

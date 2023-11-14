@@ -3,6 +3,7 @@ package com.geneaazul.gedcomanalyzer.service;
 import com.geneaazul.gedcomanalyzer.mapper.GedcomMapper;
 import com.geneaazul.gedcomanalyzer.mapper.ObfuscationType;
 import com.geneaazul.gedcomanalyzer.mapper.PersonMapper;
+import com.geneaazul.gedcomanalyzer.mapper.PyvisMapper;
 import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
@@ -26,6 +27,8 @@ import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 import com.geneaazul.gedcomanalyzer.utils.RelationshipUtils;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -40,6 +43,11 @@ import org.folg.gedcom.model.SpouseRef;
 import org.folg.gedcom.model.Visitor;
 import org.springframework.stereotype.Service;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -71,6 +79,7 @@ public class GedcomAnalyzerService {
     private final GedcomHolder gedcomHolder;
     private final PersonMapper personMapper;
     private final GedcomMapper gedcomMapper;
+    private final PyvisMapper pyvisMapper;
 
     public GedcomMetadataDto getGedcomMetadata() {
         EnrichedGedcom gedcom = gedcomHolder.getGedcom();
@@ -634,6 +643,165 @@ public class GedcomAnalyzerService {
         }
 
         return List.copyOf(results);
+    }
+
+    public void exportToPyvisNodesCSV(Path path, List<EnrichedPerson> people) throws IOException {
+
+        String[] HEADERS = {"id", "label", "title", "color", "size"};
+
+        Map<String, String[]> countryColorsMap = Map.of(
+                "Argentina", new String[] {"#9AE4FF", "#74ACDF"},
+                "Italia", new String[] {"#00B65A", "#008C45"},
+                "Francia", new String[] {"#0071DA", "#0055A4"},
+                "España", new String[] {"#E61C21", "#AD1519"},
+                "Inglaterra", new String[] {"#E61C21", "#AD1519"},
+                "Irlanda", new String[] {"#E61C21", "#AD1519"},
+                "Países Bajos", new String[] {"#E61C21", "#AD1519"});
+
+        String defaultLabel = "?";
+        String[] defaultColors = new String[] {"#000000", "#666666"};
+        double defaultSize = 25;
+
+        String coupleNodeColor = "#000000";
+        double coupleNodeSize = 7.5;
+
+        CSVFormat csvFormat = CSVFormat.DEFAULT.builder()
+                .setHeader(HEADERS)
+                .build();
+
+        Set<String> idsToExport = people
+                .stream()
+                .map(EnrichedPerson::getId)
+                .collect(Collectors.toUnmodifiableSet());
+
+        try (FileWriter fw = new FileWriter(path.toFile(), StandardCharsets.UTF_8);
+             CSVPrinter printer = new CSVPrinter(fw, csvFormat)) {
+
+            people.forEach(person -> {
+                try {
+                    String[] scvRecord = pyvisMapper.toPyvisNodeCsvRecord(
+                            person,
+                            countryColorsMap,
+                            defaultLabel,
+                            defaultColors,
+                            defaultSize);
+                    printer.printRecord((Object[]) scvRecord);
+
+                    person
+                            .getSpousesWithChildren()
+                            .stream()
+                            .filter(swc -> swc.getSpouse().isPresent())
+                            .filter(swc -> idsToExport.contains(swc.getSpouse().get().getId()))
+                            .filter(swc -> person.getOrderKey().compareTo(swc.getSpouse().get().getOrderKey()) < 0)
+                            .filter(swc -> hasChildrenToExport(swc.getChildren(), idsToExport))
+                            .forEach(swc -> {
+                                try {
+                                    String[] coupleCsvRecord = pyvisMapper.toPyvisCoupleNodeCsvRecord(
+                                            person,
+                                            swc.getSpouse().get(),
+                                            false,
+                                            defaultLabel,
+                                            coupleNodeColor,
+                                            coupleNodeSize);
+                                    printer.printRecord((Object[]) coupleCsvRecord);
+                                } catch (IOException e) {
+                                    throw new UncheckedIOException(e);
+                                }
+                            });
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            });
+        }
+    }
+
+    public void exportToPyvisEdgesCSV(Path path, List<EnrichedPerson> people) throws IOException {
+
+        String[] HEADERS = {"source", "target", "title", "weight", "width"};
+
+        String separatedTitle = "ex-pareja";
+        String adoptedTitle = "adoptivo";
+        double coupleWeight = 2.5;
+        double coupleWidth = 5;
+        double defaultWeight = 1;
+        double defaultWidth = 1.5;
+
+        CSVFormat csvFormat = CSVFormat.DEFAULT.builder()
+                .setHeader(HEADERS)
+                .build();
+
+        Set<String> idsToExport = people
+                .stream()
+                .map(EnrichedPerson::getId)
+                .collect(Collectors.toUnmodifiableSet());
+
+        try (FileWriter fw = new FileWriter(path.toFile(), StandardCharsets.UTF_8);
+             CSVPrinter printer = new CSVPrinter(fw, csvFormat)) {
+
+            Set<String> processedChildren = new HashSet<>();
+
+            people.forEach(person -> {
+                person
+                        .getSpousesWithChildren()
+                        .stream()
+                        .filter(swc -> swc.getSpouse().isPresent())
+                        .filter(swc -> idsToExport.contains(swc.getSpouse().get().getId()))
+                        .filter(swc -> hasChildrenToExport(swc.getChildren(), idsToExport)
+                                || person.getOrderKey().compareTo(swc.getSpouse().get().getOrderKey()) < 0)
+                        .forEach(swc -> {
+                            try {
+                                String[] coupleCsvRecord = pyvisMapper.toPyvisSpouseEdgeCsvRecord(
+                                        person,
+                                        swc.getSpouse().get(),
+                                        !hasChildrenToExport(swc.getChildren(), idsToExport),
+                                        swc.isSeparated(),
+                                        separatedTitle,
+                                        coupleWeight,
+                                        coupleWidth);
+                                printer.printRecord((Object[]) coupleCsvRecord);
+                            } catch (IOException e) {
+                                throw new UncheckedIOException(e);
+                            }
+                        });
+
+                person
+                        .getSpousesWithChildren()
+                        .stream()
+                        .filter(swc -> swc.getSpouse().isEmpty() || idsToExport.contains(swc.getSpouse().get().getId()))
+                        .filter(swc -> hasChildrenToExport(swc.getChildren(), idsToExport))
+                        .forEach(swc -> {
+                            String sourceId = swc.getSpouse().isEmpty()
+                                    ? person.getId()
+                                    : pyvisMapper.buildCoupleNodeId(person, swc.getSpouse().get(), false);
+                            swc.getChildrenWithReference()
+                                    .stream()
+                                    .filter(cwr -> idsToExport.contains(cwr.person().getId()))
+                                    .filter(cwr -> !processedChildren.contains(sourceId + "|" + cwr.person().getId()))
+                                    .forEach(cwr -> {
+                                        try {
+                                            String[] childCsvRecord = pyvisMapper.toPyvisChildEdgeCsvRecord(
+                                                    sourceId,
+                                                    cwr.person().getId(),
+                                                    cwr.referenceType().isPresent(),
+                                                    adoptedTitle,
+                                                    defaultWeight,
+                                                    defaultWidth);
+                                            printer.printRecord((Object[]) childCsvRecord);
+                                            processedChildren.add(sourceId + "|" + cwr.person().getId());
+                                        } catch (IOException e) {
+                                            throw new UncheckedIOException(e);
+                                        }
+                                    });
+                        });
+            });
+        }
+    }
+
+    private boolean hasChildrenToExport(List<EnrichedPerson> children, Set<String> idsToExport) {
+        return !children.isEmpty()
+                && children
+                        .stream()
+                        .anyMatch(child -> idsToExport.contains(child.getId()));
     }
 
 }
