@@ -53,6 +53,7 @@ public class PersonService {
     private static final int MAX_DISTANCE_TO_OBFUSCATE = 3;
 
     private final FamilyTreeService familyTreeService;
+    private final PyvisNetworkService pyvisNetworkService;
     private final GedcomHolder gedcomHolder;
     private final GedcomAnalyzerProperties properties;
     private final RelationshipMapper relationshipMapper;
@@ -140,6 +141,53 @@ public class PersonService {
                 .orElse("genea-azul");
     }
 
+    public void generatePyvisNetwork(UUID personUuid, boolean obfuscateLiving) {
+
+        EnrichedGedcom gedcom = gedcomHolder.getGedcom();
+        EnrichedPerson person = gedcom.getPersonByUuid(personUuid);
+        if (person == null) {
+            return;
+        }
+
+        String fileId = getFamilyTreeFileId(person);
+        String suffix = obfuscateLiving ? "" : "_visible";
+
+        Path path = properties
+                .getTempDir()
+                .resolve("pyvis-networks")
+                .resolve(fileId + "_" + personUuid + suffix + ".html");
+
+        if (!Files.exists(path)) {
+            List<Relationships> relationshipsList = setTransientProperties(person, false);
+
+            MutableInt index = new MutableInt(1);
+            List<EnrichedPerson> peopleInTree = relationshipsList
+                    .stream()
+                    // Make sure each relationship group has 1 or 2 elements (usually an in-law and a not-in-law relationship)
+                    .peek(relationships -> {
+                        if (relationships.size() == 0 || relationships.size() > 2) {
+                            throw new UnsupportedOperationException("Something is wrong");
+                        }
+                    })
+                    // Order internal elements of each relationship group: first not-in-law, then in-law
+                    .map(relationships -> {
+                        if (relationships.size() == 2 && relationships.findFirst().isInLaw()) {
+                            return List.of(relationships.findLast(), relationships.findFirst());
+                        }
+                        return List.copyOf(relationships.getOrderedRelationships());
+                    })
+                    .sorted(Comparator.comparing(relationships -> relationships.get(0)))
+                    .map(relationships -> relationships.get(0).person())
+                    .toList();
+
+            try {
+                pyvisNetworkService.generateNetworkHTML(path, person, peopleInTree);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+    }
+
     public List<Relationships> setTransientProperties(EnrichedPerson person, boolean excludeRootPerson) {
         List<Relationships> relationships = getPeopleInTree(person, excludeRootPerson, false);
         List<Relationship> lastRelationships = relationships
@@ -164,6 +212,7 @@ public class PersonService {
         person.setAncestryGenerations(ancestryGenerations);
         person.setMaxDistantRelationship(maxDistantRelationship);
         person.setDistinguishedPersonsInTree(distinguishedPersons);
+        person.setOrderKey(null);
 
         return relationships;
     }

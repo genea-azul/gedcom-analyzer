@@ -5,6 +5,9 @@
 # Maven files
 target/
 
+# Python files
+venv/
+
 # Compiled class file
 *.class
 

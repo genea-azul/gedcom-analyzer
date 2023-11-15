@@ -49,6 +49,8 @@ public class GedcomAnalyzerServiceTests {
     @Autowired
     private PersonService personService;
     @Autowired
+    private PyvisNetworkService pyvisNetworkService;
+    @Autowired
     private RelationshipMapper relationshipMapper;
 
     private EnrichedGedcom gedcom;
@@ -433,13 +435,13 @@ public class GedcomAnalyzerServiceTests {
         Path nodesPath = gedcom.getProperties()
                 .getTempDir()
                 .resolve("test_pyvis_nodes_export.csv");
-        gedcomAnalyzerService
+        pyvisNetworkService
                 .exportToPyvisNodesCSV(nodesPath, people);
 
         Path edgesPath = gedcom.getProperties()
                 .getTempDir()
                 .resolve("test_pyvis_edges_export.csv");
-        gedcomAnalyzerService
+        pyvisNetworkService
                 .exportToPyvisEdgesCSV(edgesPath, people);
     }
 

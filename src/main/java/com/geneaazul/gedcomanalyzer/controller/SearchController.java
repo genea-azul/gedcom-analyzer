@@ -89,6 +89,8 @@ public class SearchController {
                 .filter(id -> properties.isStoreFamilySearch())
                 .ifPresent(id -> familyService.updateSearchIsMatch(id, searchFamilyResult.getPeople().size() > 0));
 
+        // Queue FamilyTree and PyvisNetwork generation
+
         return searchFamilyResult;
     }
 

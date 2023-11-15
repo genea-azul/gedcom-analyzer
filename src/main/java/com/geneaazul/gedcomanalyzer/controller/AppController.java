@@ -5,6 +5,7 @@ import com.geneaazul.gedcomanalyzer.service.DockerService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -32,6 +33,19 @@ public class AppController {
                 "obfuscateLiving", obfuscateLiving);
         return new ModelAndView("index", params);
     }
+
+    @GetMapping("/family-tree/{personUuid}")
+    public ModelAndView searchFamily(@PathVariable String personUuid) {
+        Map<String, ?> params = Map.of(
+                "projectVersion", projectVersion,
+                "personUuid", personUuid);
+        return new ModelAndView("pyvis-network/nodes", params);
+    }
+
+    /*@GetMapping("/family-tree/{personUuid}/nodes")
+    public String snippet(@PathVariable String personUuid) {
+        return "nodes.html";
+    }*/
 
     @GetMapping("/search-family/latest")
     public ModelAndView searchFamily() {

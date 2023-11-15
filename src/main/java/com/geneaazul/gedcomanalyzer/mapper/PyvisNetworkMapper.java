@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class PyvisMapper {
+public class PyvisNetworkMapper {
 
     private final RelationshipMapper relationshipMapper;
 
