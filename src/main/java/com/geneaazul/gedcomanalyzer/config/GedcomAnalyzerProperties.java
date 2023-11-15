@@ -38,6 +38,9 @@ public class GedcomAnalyzerProperties {
     private Duration googleDriveConnectTimeout = Duration.ofMillis(3000);
     private Duration googleDriveReadTimeout = Duration.ofMillis(3000);
 
+    private Path pyvisNetworkExportScriptPath = Path.of("src/main/scripts/pyvis_network.py");
+    private Integer maxPyvisNetworkNodesToExport = 200;
+
     private int maxClientRequestsCountThreshold = 12;
     private int maxClientRequestsHoursThreshold = 1;
 

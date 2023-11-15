@@ -1,9 +1,8 @@
 package com.geneaazul.gedcomanalyzer.service;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
-import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
-import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
+import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.Relationships;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 
@@ -21,41 +20,54 @@ import java.util.List;
 @SpringBootTest
 @EnableConfigurationProperties
 @ActiveProfiles("test")
-@SuppressWarnings("DataFlowIssue")
-public class FamilyTreeServiceTests {
+public class PyvisNetworkServiceTests {
 
     @Autowired
     private GedcomHolder gedcomHolder;
     @Autowired
     private PersonService personService;
     @Autowired
-    private FamilyTreeService familyTreeService;
-    @Autowired
-    private RelationshipMapper relationshipMapper;
+    private PyvisNetworkService pyvisNetworkService;
     @Autowired
     private GedcomAnalyzerProperties properties;
 
     @Test
-    public void testExportToPDF() throws IOException {
+    public void testGenerateNetworkHTML() throws IOException {
 
         EnrichedPerson person = gedcomHolder.getGedcom().getPersonById("I4");
         List<Relationships> relationshipsList = personService.setTransientProperties(person, false);
 
         MutableInt index = new MutableInt(1);
-        List<FormattedRelationship> peopleInTree = relationshipsList
+        List<EnrichedPerson> peopleInTree = relationshipsList
                 .stream()
                 .map(Relationships::findLast)
                 .sorted()
-                .peek(relationship -> relationship.person().setOrderKey(index.getAndIncrement()))
-                .map(relationship -> relationshipMapper.toRelationshipDto(relationship, false))
-                .map(relationship -> relationshipMapper.formatInSpanish(relationship, true))
+                .limit(100)
+                .map(Relationship::person)
+                .peek(p -> p.setOrderKey(index.getAndIncrement()))
                 .toList();
 
-        Path path = properties
+        Path htmlPyvisNetworkFilePath = properties
                 .getTempDir()
                 .resolve("family-trees")
-                .resolve("export_to_pdf_test.pdf");
-        familyTreeService.exportToPDF(path, person, peopleInTree);
+                .resolve("export_to_html_test.html");
+
+        Path csvPyvisNetworkNodesFilePath = properties
+                .getTempDir()
+                .resolve("family-trees")
+                .resolve("export_to_csv_nodes_test.csv");
+
+        Path csvPyvisNetworkEdgesFilePath = properties
+                .getTempDir()
+                .resolve("family-trees")
+                .resolve("export_to_csv_edges_test.csv");
+
+        pyvisNetworkService.generateNetworkHTML(
+                htmlPyvisNetworkFilePath,
+                csvPyvisNetworkNodesFilePath,
+                csvPyvisNetworkEdgesFilePath,
+                false,
+                peopleInTree);
     }
 
 }

@@ -18,6 +18,7 @@ import lombok.Setter;
 @Builder
 public class RelationshipDto {
 
+    private Integer personIndex;
     private SexType personSex;
     private Boolean personIsAlive;
     private String personName;
@@ -39,6 +40,7 @@ public class RelationshipDto {
     @Override
     public String toString() {
         return "["
+                + personIndex + ", "
                 + personSex + ", "
                 + (personIsAlive ? "A" : "D") + ", "
                 + StringUtils.leftPad(personName, 26) + ", "

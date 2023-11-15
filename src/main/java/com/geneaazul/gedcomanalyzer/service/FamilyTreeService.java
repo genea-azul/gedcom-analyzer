@@ -2,12 +2,25 @@ package com.geneaazul.gedcomanalyzer.service;
 
 import com.geneaazul.gedcomanalyzer.config.EmbeddedFontsConfig;
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
+import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
+import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.FamilyTree;
 import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
+import com.geneaazul.gedcomanalyzer.model.GivenName;
+import com.geneaazul.gedcomanalyzer.model.Relationship;
+import com.geneaazul.gedcomanalyzer.model.Relationships;
+import com.geneaazul.gedcomanalyzer.model.Surname;
+import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
+import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
+import com.geneaazul.gedcomanalyzer.task.FamilyTreeTask;
+import com.geneaazul.gedcomanalyzer.task.FamilyTreeTaskParams;
+import com.geneaazul.gedcomanalyzer.utils.NameUtils;
 import com.geneaazul.gedcomanalyzer.utils.PlaceUtils;
 
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -16,30 +29,249 @@ import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FamilyTreeService {
 
+    private static final int MAX_DISTANCE_TO_OBFUSCATE = 3;
     @SuppressWarnings("unused")
     private static final float A4_MAX_OFFSET_X = 590f;
     private static final float A4_MAX_OFFSET_Y = 830f;
 
     private final GedcomAnalyzerProperties properties;
+    private final GedcomHolder gedcomHolder;
+    private final PersonService personService;
+    private final PyvisNetworkService pyvisNetworkService;
+    private final ExecutorService familyTreeExecutorService;
+    private final RelationshipMapper relationshipMapper;
     private final Map<EmbeddedFontsConfig.Font, String> embeddedFonts;
+
+    public void queueFamilyTreeGeneration(List<PersonDto> people, boolean obfuscateLiving) {
+        List<UUID> peopleUuids = people
+                .stream()
+                .map(PersonDto::getUuid)
+                .toList();
+        FamilyTreeTaskParams taskParams = new FamilyTreeTaskParams(peopleUuids, obfuscateLiving);
+        FamilyTreeTask task = new FamilyTreeTask(taskParams, this);
+        familyTreeExecutorService.submit(task);
+    }
+
+    public void generateFamilyTree(List<UUID> personUuids, boolean obfuscateLiving) {
+        personUuids
+                .forEach(personUuid -> {
+                    EnrichedGedcom gedcom = gedcomHolder.getGedcom();
+                    EnrichedPerson person = gedcom.getPersonByUuid(personUuid);
+                    if (person == null) {
+                        return;
+                    }
+
+                    String fileId = getFamilyTreeFileId(person);
+                    String suffix = obfuscateLiving ? "" : "_visible";
+
+                    Path pdfExportFilePath = properties
+                            .getTempDir()
+                            .resolve("family-trees")
+                            .resolve(fileId + "_" + personUuid + suffix + ".pdf");
+
+                    Path htmlPyvisNetworkFilePath = properties
+                            .getTempDir()
+                            .resolve("family-trees")
+                            .resolve(fileId + "_" + personUuid + suffix + ".html");
+
+                    Path csvPyvisNetworkNodesFilePath = properties
+                            .getTempDir()
+                            .resolve("family-trees")
+                            .resolve(fileId + "_nodes_" + personUuid + suffix + ".csv");
+
+                    Path csvPyvisNetworkEdgesFilePath = properties
+                            .getTempDir()
+                            .resolve("family-trees")
+                            .resolve(fileId + "_edges_" + personUuid + suffix + ".csv");
+
+                    if (Files.exists(pdfExportFilePath) && Files.exists(htmlPyvisNetworkFilePath)) {
+                        return;
+                    }
+
+                    List<List<Relationship>> relationshipsWithNotInLawPriority = getRelationshipsWithNotInLawPriority(person);
+
+                    exportToPDF(
+                            pdfExportFilePath,
+                            person,
+                            obfuscateLiving,
+                            relationshipsWithNotInLawPriority);
+
+                    exportToPyvisNetworkHTML(
+                            htmlPyvisNetworkFilePath,
+                            csvPyvisNetworkNodesFilePath,
+                            csvPyvisNetworkEdgesFilePath,
+                            obfuscateLiving,
+                            relationshipsWithNotInLawPriority);
+                });
+    }
+
+    private List<List<Relationship>> getRelationshipsWithNotInLawPriority(EnrichedPerson person) {
+        List<Relationships> relationshipsList = personService.setTransientProperties(person, false);
+
+        MutableInt orderKey = new MutableInt(1);
+
+        return relationshipsList
+                .stream()
+                // Make sure each relationship group has 1 or 2 elements (usually an in-law and a not-in-law relationship)
+                .peek(relationships -> {
+                    if (relationships.size() == 0 || relationships.size() > 2) {
+                        throw new UnsupportedOperationException("Something is wrong");
+                    }
+                })
+                // Order internal elements of each relationship group: first not-in-law, then in-law
+                .map(relationships -> {
+                    if (relationships.size() == 2 && relationships.findFirst().isInLaw()) {
+                        return List.of(relationships.findLast(), relationships.findFirst());
+                    }
+                    return List.copyOf(relationships.getOrderedRelationships());
+                })
+                .sorted(Comparator.comparing(relationships -> relationships.get(0)))
+                .peek(relationships -> relationships.get(0).person().setOrderKey(orderKey.getAndIncrement()))
+                .toList();
+    }
+
+    private void exportToPDF(
+            Path pdfExportFilePath,
+            EnrichedPerson person,
+            boolean obfuscateLiving,
+            List<List<Relationship>> relationshipsWithNotInLawPriority) {
+
+        if (Files.exists(pdfExportFilePath)) {
+            return;
+        }
+
+        List<FormattedRelationship> peopleInTree = relationshipsWithNotInLawPriority
+                .stream()
+                .map(relationships -> relationships
+                        .stream()
+                        .map(relationship -> relationshipMapper.toRelationshipDto(
+                                relationship,
+                                obfuscateLiving
+                                        // don't obfuscate root person
+                                        && !relationship.person().getId().equals(person.getId())
+                                        && (person.isAlive() && relationship.getDistance() <= MAX_DISTANCE_TO_OBFUSCATE
+                                                || relationship.person().isAlive())))
+                        .map(relationship -> relationshipMapper.formatInSpanish(relationship, true))
+                        .toList())
+                .map(formattedRelationships -> formattedRelationships
+                        .stream()
+                        .reduce(FormattedRelationship::mergeRelationshipDesc)
+                        .orElseThrow())
+                .toList();
+
+        try {
+            exportToPDF(pdfExportFilePath, person, peopleInTree);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    private void exportToPyvisNetworkHTML(
+            Path htmlPyvisNetworkFilePath,
+            Path csvPyvisNetworkNodesFilePath,
+            Path csvPyvisNetworkEdgesFilePath,
+            boolean obfuscateLiving,
+            List<List<Relationship>> relationshipsWithNotInLawPriority) {
+
+        if (Files.exists(htmlPyvisNetworkFilePath)) {
+            return;
+        }
+
+        List<EnrichedPerson> peopleToExport = relationshipsWithNotInLawPriority
+                .stream()
+                .limit(properties.getMaxPyvisNetworkNodesToExport())
+                .map(relationships -> relationships.get(0))
+                .map(Relationship::person)
+                .toList();
+
+        try {
+            pyvisNetworkService.generateNetworkHTML(
+                    htmlPyvisNetworkFilePath,
+                    csvPyvisNetworkNodesFilePath,
+                    csvPyvisNetworkEdgesFilePath,
+                    obfuscateLiving,
+                    peopleToExport);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    public Optional<FamilyTree> getFamilyTree(UUID personUuid, boolean obfuscateLiving) {
+
+        EnrichedGedcom gedcom = gedcomHolder.getGedcom();
+        EnrichedPerson person = gedcom.getPersonByUuid(personUuid);
+        if (person == null) {
+            return Optional.empty();
+        }
+
+        String fileId = getFamilyTreeFileId(person);
+        String suffix = obfuscateLiving ? "" : "_visible";
+
+        Path path = properties
+                .getTempDir()
+                .resolve("family-trees")
+                .resolve(fileId + "_" + personUuid + suffix + ".pdf");
+
+        if (!Files.exists(path)) {
+            List<List<Relationship>> relationshipsWithNotInLawPriority = getRelationshipsWithNotInLawPriority(person);
+
+            exportToPDF(
+                    path,
+                    person,
+                    obfuscateLiving,
+                    relationshipsWithNotInLawPriority);
+        }
+
+        return Optional.of(new FamilyTree(
+                person,
+                "genea_azul_arbol_" + fileId + ".pdf",
+                path,
+                MediaType.APPLICATION_PDF,
+                new Locale("es", "AR")));
+    }
+
+    private String getFamilyTreeFileId(EnrichedPerson person) {
+        return Stream.of(
+                        person
+                                .getGivenName()
+                                .map(GivenName::value),
+                        person
+                                .getSurname()
+                                .map(Surname::value))
+                .flatMap(Optional::stream)
+                .reduce((n1, n2) -> n1 + "_" + n2)
+                .map(NameUtils::simplifyName)
+                .map(name -> name.replaceAll(" ", "_"))
+                .orElse("genea-azul");
+    }
 
     public void exportToPDF(Path path, EnrichedPerson person, List<FormattedRelationship> peopleInTree) throws IOException {
 

@@ -14,7 +14,6 @@ import com.geneaazul.gedcomanalyzer.utils.DateUtils.AstrologicalSign;
 import com.geneaazul.gedcomanalyzer.utils.PathUtils;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -24,8 +23,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.time.Month;
 import java.util.Comparator;
 import java.util.List;
@@ -48,8 +45,6 @@ public class GedcomAnalyzerServiceTests {
     private SearchService searchService;
     @Autowired
     private PersonService personService;
-    @Autowired
-    private PyvisNetworkService pyvisNetworkService;
     @Autowired
     private RelationshipMapper relationshipMapper;
 
@@ -331,7 +326,7 @@ public class GedcomAnalyzerServiceTests {
                         relationships
                                 .stream()
                                 .map(r -> relationshipMapper.toRelationshipDto(r, false))
-                                .map(r -> relationshipMapper.formatInSpanish(r, 0, false))
+                                .map(r -> relationshipMapper.formatInSpanish(r, false))
                                 .map(FormattedRelationship::toString)
                                 .collect(Collectors.joining(", "))
                         + "  --  "
@@ -372,7 +367,7 @@ public class GedcomAnalyzerServiceTests {
             EnrichedPerson personB = gedcom.getPersonById(shortestPath.get(i + 1));
             Relationship relationship = personService.getRelationshipBetween(personB, personA);
             RelationshipDto relationshipDto = relationshipMapper.toRelationshipDto(relationship, false);
-            FormattedRelationship formattedRelationship = relationshipMapper.formatInSpanish(relationshipDto, 0, false);
+            FormattedRelationship formattedRelationship = relationshipMapper.formatInSpanish(relationshipDto, false);
             if (i == 0) {
                 System.out.println(displayPersonInfo(personA));
             }
@@ -408,41 +403,6 @@ public class GedcomAnalyzerServiceTests {
             return displayName + "  (" + dateStr + ")";
         }
         return displayName + "  (" + dateStr + ", " + person.getPlaceOfBirth().map(Place::country).orElseThrow() + ")";
-    }
-
-    @Test
-    public void findExportToPyvisCSVs() throws IOException {
-        System.out.println("\nfindExportToPyvisCSVs:");
-
-        EnrichedPerson person = Objects.requireNonNull(gedcom.getPersonById("I4"));
-
-        MutableInt orderCount = new MutableInt(0);
-        List<EnrichedPerson> people = personService
-                .getPeopleInTree(person, false, false)
-                .stream()
-                .map(relationships -> {
-                    if (relationships.size() == 2 && relationships.findFirst().isInLaw()) {
-                        return relationships.findLast();
-                    }
-                    return relationships.findFirst();
-                })
-                .sorted()
-                .map(Relationship::person)
-                .limit(1200)
-                .peek(p -> p.setOrderKey(orderCount.getAndIncrement()))
-                .toList();
-
-        Path nodesPath = gedcom.getProperties()
-                .getTempDir()
-                .resolve("test_pyvis_nodes_export.csv");
-        pyvisNetworkService
-                .exportToPyvisNodesCSV(nodesPath, people);
-
-        Path edgesPath = gedcom.getProperties()
-                .getTempDir()
-                .resolve("test_pyvis_edges_export.csv");
-        pyvisNetworkService
-                .exportToPyvisEdgesCSV(edgesPath, people);
     }
 
 }

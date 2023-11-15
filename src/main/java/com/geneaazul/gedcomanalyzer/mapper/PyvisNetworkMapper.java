@@ -23,6 +23,7 @@ public class PyvisNetworkMapper {
 
     public String[] toPyvisNodeCsvRecord(
             EnrichedPerson person,
+            boolean obfuscateLiving,
             Map<String, String[]> countryColorsMap,
             String defaultLabel,
             String[] defaultColors,
@@ -31,6 +32,7 @@ public class PyvisNetworkMapper {
                 person.getId(),
                 getPyvisNodeLabel(person, defaultLabel),
                 getPyvisNodeTitle(person),
+                "star",
                 person.getPlaceOfBirth()
                         .map(Place::country)
                         .map(countryColorsMap::get)
@@ -73,6 +75,7 @@ public class PyvisNetworkMapper {
             EnrichedPerson person,
             EnrichedPerson spouse,
             boolean noChildren,
+            boolean obfuscateLiving,
             String defaultLabel,
             String color,
             double size) {
@@ -87,6 +90,7 @@ public class PyvisNetworkMapper {
                 nodeId,
                 personSurname + " - " + spouseSurname,
                 person.getDisplayName() + " - " + spouse.getDisplayName(),
+                "star",
                 color,
                 String.valueOf(size)
         };

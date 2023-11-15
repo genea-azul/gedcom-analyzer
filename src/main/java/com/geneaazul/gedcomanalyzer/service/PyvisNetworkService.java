@@ -1,13 +1,17 @@
 package com.geneaazul.gedcomanalyzer.service;
 
+import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.mapper.PyvisNetworkMapper;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.PumpStreamHandler;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -26,33 +30,22 @@ import lombok.RequiredArgsConstructor;
 public class PyvisNetworkService {
 
     private final PyvisNetworkMapper pyvisNetworkMapper;
+    private final GedcomAnalyzerProperties properties;
 
     public void generateNetworkHTML(
-            Path path,
-            EnrichedPerson person,
+            Path htmlPyvisNetworkFilePath,
+            Path csvPyvisNetworkNodesFilePath,
+            Path csvPyvisNetworkEdgesFilePath,
+            boolean obfuscateLiving,
             List<EnrichedPerson> peopleInTree) throws IOException {
-
-        MutableInt orderCount = new MutableInt(0);
-        List<EnrichedPerson> peopleToExport = peopleInTree
-                .stream()
-                .limit(1200)
-                .peek(p -> p.setOrderKey(orderCount.getAndIncrement()))
-                .toList();
-
-        Path nodesPath = path
-                .getParent()
-                .resolve("test_pyvis_nodes_export.csv");
-        exportToPyvisNodesCSV(nodesPath, peopleToExport);
-
-        Path edgesPath = path
-                .getParent()
-                .resolve("test_pyvis_edges_export.csv");
-        exportToPyvisEdgesCSV(edgesPath, peopleToExport);
+        exportToPyvisNodesCSV(csvPyvisNetworkNodesFilePath, peopleInTree, obfuscateLiving);
+        exportToPyvisEdgesCSV(csvPyvisNetworkEdgesFilePath, peopleInTree);
+        exportToPyvisNetworkHTML(htmlPyvisNetworkFilePath, csvPyvisNetworkNodesFilePath, csvPyvisNetworkEdgesFilePath);
     }
 
-    public void exportToPyvisNodesCSV(Path path, List<EnrichedPerson> people) throws IOException {
+    public void exportToPyvisNodesCSV(Path path, List<EnrichedPerson> people, boolean obfuscateLiving) throws IOException {
 
-        String[] HEADERS = {"id", "label", "title", "color", "size"};
+        String[] HEADERS = {"id", "label", "title", "shape", "color", "size"};
 
         Map<String, String[]> countryColorsMap = Map.of(
                 "Argentina", new String[] {"#9AE4FF", "#74ACDF"},
@@ -86,6 +79,7 @@ public class PyvisNetworkService {
                 try {
                     String[] scvRecord = pyvisNetworkMapper.toPyvisNodeCsvRecord(
                             person,
+                            obfuscateLiving,
                             countryColorsMap,
                             defaultLabel,
                             defaultColors,
@@ -105,6 +99,7 @@ public class PyvisNetworkService {
                                             person,
                                             swc.getSpouse().get(),
                                             false,
+                                            obfuscateLiving,
                                             defaultLabel,
                                             coupleNodeColor,
                                             coupleNodeSize);
@@ -207,6 +202,32 @@ public class PyvisNetworkService {
                 && children
                 .stream()
                 .anyMatch(child -> idsToExport.contains(child.getId()));
+    }
+
+    private void exportToPyvisNetworkHTML(
+            Path htmlPyvisNetworkFilePath,
+            Path csvPyvisNetworkNodesFilePath,
+            Path csvPyvisNetworkEdgesFilePath) throws IOException {
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream);
+
+        Path path = properties.getPyvisNetworkExportScriptPath();
+
+        DefaultExecutor executor = new DefaultExecutor();
+        executor.setStreamHandler(streamHandler);
+
+        CommandLine commandLine = CommandLine
+                .parse("py " + path.toAbsolutePath().normalize())
+                .addArgument(htmlPyvisNetworkFilePath.getParent().toAbsolutePath().normalize().toString(), true)
+                .addArgument(htmlPyvisNetworkFilePath.getFileName().toString(), true)
+                .addArgument(csvPyvisNetworkNodesFilePath.getFileName().toString(), true)
+                .addArgument(csvPyvisNetworkEdgesFilePath.getFileName().toString(), true);
+
+        System.out.println(commandLine.toString());
+        int exitCode = executor.execute(commandLine);
+        System.out.println(exitCode);
+        System.out.println(outputStream);
     }
 
 }

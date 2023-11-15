@@ -10,7 +10,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesResultDto;
 import com.geneaazul.gedcomanalyzer.service.DockerService;
 import com.geneaazul.gedcomanalyzer.service.FamilyService;
-import com.geneaazul.gedcomanalyzer.service.PersonService;
+import com.geneaazul.gedcomanalyzer.service.FamilyTreeService;
 import com.geneaazul.gedcomanalyzer.service.SurnameService;
 import com.geneaazul.gedcomanalyzer.utils.InetAddressUtils;
 
@@ -49,9 +49,9 @@ public class SearchController {
 
     private final FamilyService familyService;
     private final SurnameService surnameService;
-    private final PersonService personService;
     private final GedcomAnalyzerProperties properties;
     private final DockerService dockerService;
+    private final FamilyTreeService familyTreeService;
 
     @PostMapping("/family")
     public SearchFamilyResultDto searchFamily(
@@ -89,7 +89,10 @@ public class SearchController {
                 .filter(id -> properties.isStoreFamilySearch())
                 .ifPresent(id -> familyService.updateSearchIsMatch(id, searchFamilyResult.getPeople().size() > 0));
 
-        // Queue FamilyTree and PyvisNetwork generation
+        // Queue PDF Family Tree and HTML Pyvis Network generation
+        familyTreeService.queueFamilyTreeGeneration(
+                searchFamilyResult.getPeople(),
+                searchFamilyDto.getObfuscateLiving());
 
         return searchFamilyResult;
     }
@@ -154,7 +157,7 @@ public class SearchController {
             @RequestParam(defaultValue = BooleanUtils.TRUE) Boolean obfuscateLiving,
             HttpServletRequest request) throws IOException {
 
-        Optional<FamilyTree> maybeFamilyTree = personService.getFamilyTree(personUuid, Boolean.TRUE.equals(obfuscateLiving));
+        Optional<FamilyTree> maybeFamilyTree = familyTreeService.getFamilyTree(personUuid, Boolean.TRUE.equals(obfuscateLiving));
 
         if (maybeFamilyTree.isEmpty()) {
             return ResponseEntity.badRequest()
