@@ -83,6 +83,7 @@ public class RelationshipMapper {
         }
 
         return RelationshipDto.builder()
+                .personIndex(relationship.person().getOrderKey())
                 .personSex(relationship.person().getSex())
                 .personIsAlive(relationship.person().isAlive())
                 .personName(PersonUtils.obfuscateName(relationship.person(), obfuscateCondition))

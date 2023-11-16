@@ -5,11 +5,9 @@ import com.geneaazul.gedcomanalyzer.mapper.PyvisNetworkMapper;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
-import com.geneaazul.gedcomanalyzer.service.PersonService;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
+import com.geneaazul.gedcomanalyzer.utils.PythonUtils;
 
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Service;
 
 import org.apache.commons.csv.CSVFormat;
@@ -27,80 +25,72 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
-public class NetworkFamilyTreeService extends FamilyTreeService {
+@RequiredArgsConstructor
+public class NetworkFamilyTreeService implements FamilyTreeService {
 
     private final GedcomHolder gedcomHolder;
+    private final FamilyTreeHelper familyTreeHelper;
     private final PyvisNetworkMapper pyvisNetworkMapper;
     private final GedcomAnalyzerProperties properties;
 
-    public NetworkFamilyTreeService(
-            PersonService personService,
-            GedcomHolder gedcomHolder,
-            PyvisNetworkMapper pyvisNetworkMapper,
-            GedcomAnalyzerProperties properties) {
-        super(personService);
-        this.gedcomHolder = gedcomHolder;
-        this.pyvisNetworkMapper = pyvisNetworkMapper;
-        this.properties = properties;
-    }
-
-    public Path getNetworkHtmlFile(
-            UUID personUuid,
-            boolean obfuscateLiving) {
-
-        EnrichedGedcom gedcom = gedcomHolder.getGedcom();
-        EnrichedPerson person = gedcom.getPersonByUuid(personUuid);
-
-        if (person == null) {
-            return null;
-        }
-
-        return getNetworkHtmlFile(person, obfuscateLiving);
-    }
-
     public Path getNetworkHtmlFile(
             EnrichedPerson person,
-            boolean obfuscateLiving) {
-
-        String fileId = getFamilyTreeFileId(person);
-        String suffix = obfuscateLiving ? "" : "_visible";
+            String familyTreeFileIdPrefix,
+            String familyTreeFileSuffix) {
 
         return properties
                 .getTempDir()
                 .resolve("family-trees")
-                .resolve(fileId + "_" + person.getUuid() + suffix + ".html");
+                .resolve(familyTreeFileIdPrefix + "_" + person.getUuid() + familyTreeFileSuffix + ".html");
+    }
+
+    @Override
+    public boolean isMissingFamilyTree(
+            EnrichedPerson person,
+            String familyTreeFileIdPrefix,
+            String familyTreeFileSuffix,
+            boolean obfuscateLiving) {
+
+        Path htmlPyvisNetworkFilePath = getNetworkHtmlFile(
+                person,
+                familyTreeFileIdPrefix,
+                familyTreeFileSuffix);
+
+        return Files.notExists(htmlPyvisNetworkFilePath);
     }
 
     @Override
     public void generateFamilyTree(
             EnrichedPerson person,
-            boolean obfuscateLiving) {
+            String familyTreeFileIdPrefix,
+            String familyTreeFileSuffix,
+            boolean obfuscateLiving,
+            List<List<Relationship>> relationshipsWithNotInLawPriority) {
 
-        String fileId = getFamilyTreeFileId(person);
-        String suffix = obfuscateLiving ? "" : "_visible";
-
-        Path htmlPyvisNetworkFilePath = getNetworkHtmlFile(person, obfuscateLiving);
-
-        if (Files.exists(htmlPyvisNetworkFilePath)) {
-            return;
-        }
+        Path htmlPyvisNetworkFilePath = getNetworkHtmlFile(
+                person,
+                familyTreeFileIdPrefix,
+                familyTreeFileSuffix);
 
         Path csvPyvisNetworkNodesFilePath = properties
                 .getTempDir()
                 .resolve("family-trees")
-                .resolve(fileId + "_nodes_" + person.getUuid() + suffix + ".csv");
+                .resolve(familyTreeFileIdPrefix + "_nodes_" + person.getUuid() + familyTreeFileSuffix + ".csv");
 
         Path csvPyvisNetworkEdgesFilePath = properties
                 .getTempDir()
                 .resolve("family-trees")
-                .resolve(fileId + "_edges_" + person.getUuid() + suffix + ".csv");
+                .resolve(familyTreeFileIdPrefix + "_edges_" + person.getUuid() + familyTreeFileSuffix + ".csv");
 
-        List<EnrichedPerson> peopleToExport = getRelationshipsWithNotInLawPriority(person)
+        List<EnrichedPerson> peopleToExport = relationshipsWithNotInLawPriority
                 .stream()
                 .limit(properties.getMaxPyvisNetworkNodesToExport())
                 .map(relationships -> relationships.get(0))
@@ -117,6 +107,39 @@ public class NetworkFamilyTreeService extends FamilyTreeService {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    public Optional<Path> getFamilyTree(
+            UUID personUuid,
+            boolean obfuscateLiving) {
+
+        EnrichedGedcom gedcom = gedcomHolder.getGedcom();
+        EnrichedPerson person = gedcom.getPersonByUuid(personUuid);
+        if (person == null) {
+            return Optional.empty();
+        }
+
+        String familyTreeFileIdPrefix = familyTreeHelper.getFamilyTreeFileId(person);
+        String familyTreeFileSuffix = obfuscateLiving ? "" : "_visible";
+
+        Path htmlPyvisNetworkFilePath = getNetworkHtmlFile(
+                person,
+                familyTreeFileIdPrefix,
+                familyTreeFileSuffix);
+
+        if (Files.notExists(htmlPyvisNetworkFilePath)) {
+            List<List<Relationship>> relationshipsWithNotInLawPriority = familyTreeHelper
+                    .getRelationshipsWithNotInLawPriority(person);
+
+            generateFamilyTree(
+                    person,
+                    familyTreeFileIdPrefix,
+                    familyTreeFileSuffix,
+                    obfuscateLiving,
+                    relationshipsWithNotInLawPriority);
+        }
+
+        return Optional.of(htmlPyvisNetworkFilePath);
     }
 
     public void generateNetworkHTML(
@@ -210,7 +233,9 @@ public class NetworkFamilyTreeService extends FamilyTreeService {
 
         String[] HEADERS = {"source", "target", "title", "weight", "width"};
 
+        String defaultSpouseTitle = "pareja de";
         String separatedTitle = "ex-pareja";
+        String defaultChildTitle = "hijo";
         String adoptedTitle = "adoptivo";
         double coupleWeight = 2.5;
         double coupleWidth = 5;
@@ -246,6 +271,7 @@ public class NetworkFamilyTreeService extends FamilyTreeService {
                                         swc.getSpouse().get(),
                                         !hasChildrenToExport(swc.getChildren(), idsToExport),
                                         swc.isSeparated(),
+                                        defaultSpouseTitle,
                                         separatedTitle,
                                         coupleWeight,
                                         coupleWidth);
@@ -273,7 +299,9 @@ public class NetworkFamilyTreeService extends FamilyTreeService {
                                             String[] childCsvRecord = pyvisNetworkMapper.toPyvisChildEdgeCsvRecord(
                                                     sourceId,
                                                     cwr.person().getId(),
+                                                    swc.getSpouse().isEmpty(),
                                                     cwr.referenceType().isPresent(),
+                                                    defaultChildTitle,
                                                     adoptedTitle,
                                                     defaultWeight,
                                                     defaultWidth);
@@ -300,11 +328,16 @@ public class NetworkFamilyTreeService extends FamilyTreeService {
             Path csvPyvisNetworkNodesFilePath,
             Path csvPyvisNetworkEdgesFilePath) throws IOException {
 
-        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-        Resource resource = resolver.getResource(properties.getPyvisNetworkExportScriptPath());
+        String python3Command = PythonUtils.getPython3Command();
+
+        Path scriptPath = properties
+                .getTempDir()
+                .resolve(properties.getPyvisNetworkExportScriptPath())
+                .toAbsolutePath()
+                .normalize();
 
         CommandLine commandLine = CommandLine
-                .parse("python3 " + resource.getURI().getPath())
+                .parse(python3Command + " " + scriptPath)
                 .addArgument(htmlPyvisNetworkFilePath.getParent().toAbsolutePath().normalize().toString(), true)
                 .addArgument(htmlPyvisNetworkFilePath.getFileName().toString(), true)
                 .addArgument(csvPyvisNetworkNodesFilePath.getFileName().toString(), true)
@@ -320,14 +353,11 @@ public class NetworkFamilyTreeService extends FamilyTreeService {
                     "<script src=\"lib/bindings/utils.js\"></script>",
                     "<script src=\"/js/family-tree/utils.js\"></script>");
             content = content.replace(
-                    "<center>\n"
-                            + "<h1></h1>\n"
-                            + "</center>",
+                    "<h1></h1>",
                     "");
+            // Twice same sentence
             content = content.replace(
-                    "        <center>\n"
-                            + "          <h1></h1>\n"
-                            + "        </center>",
+                    "<h1></h1>",
                     "");
             content = content.replace(
                     "height: 600px;",

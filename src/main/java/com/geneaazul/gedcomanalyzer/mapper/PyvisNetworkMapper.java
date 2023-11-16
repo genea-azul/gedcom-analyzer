@@ -108,6 +108,7 @@ public class PyvisNetworkMapper {
             EnrichedPerson spouse,
             boolean noChildren,
             boolean separated,
+            String defaultTitle,
             String separatedTitle,
             double weight,
             double width) {
@@ -117,7 +118,7 @@ public class PyvisNetworkMapper {
                 coupleNodeId,
                 separated
                         ? separatedTitle
-                        : null,
+                        : (noChildren ? defaultTitle : null),
                 String.valueOf(weight),
                 String.valueOf(width)
         };
@@ -126,16 +127,18 @@ public class PyvisNetworkMapper {
     public String[] toPyvisChildEdgeCsvRecord(
             String sourceId,
             String childId,
+            boolean singleParent,
             boolean adopted,
+            String defaultTitle,
             String adoptedTitle,
             double weight,
             double width) {
         return new String[] {
                 sourceId,
                 childId,
-                adopted
-                        ? adoptedTitle
-                        : null,
+                singleParent
+                        ? defaultTitle
+                        : (adopted ? adoptedTitle : null),
                 String.valueOf(weight),
                 String.valueOf(width)
         };

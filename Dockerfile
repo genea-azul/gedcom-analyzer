@@ -11,6 +11,7 @@ RUN pip3 install --no-cache --upgrade pip setuptools pyvis==0.3.1 pandas==2.1.3
 
 # stage 2
 FROM jre-py as jre-py-app
+
 VOLUME /tmp
 COPY target/*.jar app.jar
 ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar /app.jar"]

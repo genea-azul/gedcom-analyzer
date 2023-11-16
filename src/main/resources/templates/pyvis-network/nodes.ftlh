@@ -22,7 +22,11 @@
 
   <body class="container-fluid">
     <div class="min-vh-100 d-flex flex-column">
-      <embed type="text/html" src="/family-tree/${personUuid}/network" /> <!-- TODO add obfuscate param -->
+      <#if obfuscateLiving == true>
+        <embed type="text/html" src="/family-tree/${personUuid}/network" />
+      <#else>
+        <embed type="text/html" src="/family-tree/${personUuid}/network?f=0" />
+      </#if>
     </div>
   </body>
 

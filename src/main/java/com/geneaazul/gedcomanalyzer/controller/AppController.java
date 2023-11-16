@@ -19,12 +19,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.annotation.Nullable;
+import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class AppController {
@@ -46,7 +50,7 @@ public class AppController {
     }
 
     @GetMapping("/family-tree/{personUuid}")
-    public ModelAndView searchFamily(
+    public ModelAndView familyTreeView(
             @PathVariable UUID personUuid,
             @RequestParam @Nullable String f) {
         boolean obfuscateLiving = !"0".equals(f);
@@ -58,18 +62,33 @@ public class AppController {
     }
 
     @GetMapping("/family-tree/{personUuid}/network")
-    public ResponseEntity<String> networkFamilyTree(
+    public ResponseEntity<String> networkFamilyTreeView(
             @PathVariable UUID personUuid,
-            @RequestParam @Nullable String f) throws IOException {
+            @RequestParam @Nullable String f,
+            HttpServletRequest request) throws IOException {
         boolean obfuscateLiving = !"0".equals(f);
-        Path htmlFile = networkFamilyTreeService
-                .getNetworkHtmlFile(personUuid, obfuscateLiving);
+
+        Optional<Path> maybeFamilyTree = networkFamilyTreeService
+                .getFamilyTree(personUuid, obfuscateLiving);
+
+        if (maybeFamilyTree.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .contentType(MediaType.TEXT_HTML)
+                    .body("Invalid person!");
+        }
+
+        log.info("Network family tree [ personUuid={}, obfuscateLiving={}, httpRequestId={} ]",
+                personUuid,
+                obfuscateLiving,
+                request.getRequestId());
+
+        Path familyTree = maybeFamilyTree.get();
 
         return ResponseEntity.ok()
-                .contentLength(Files.size(htmlFile))
+                .contentLength(Files.size(familyTree))
                 .contentType(MediaType.TEXT_HTML)
                 .cacheControl(CacheControl.maxAge(Duration.ofDays(365)))
-                .body(Files.readString(htmlFile, StandardCharsets.UTF_8));
+                .body(Files.readString(familyTree, StandardCharsets.UTF_8));
     }
 
     @GetMapping("/search-family/latest")

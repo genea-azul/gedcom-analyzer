@@ -88,5 +88,4 @@ net.set_options('''
   }
 ''')
 
-print('Generate HTML file')
 net.show(exportFile)

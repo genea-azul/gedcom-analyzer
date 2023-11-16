@@ -8,7 +8,6 @@ import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.FamilyTree;
 import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
-import com.geneaazul.gedcomanalyzer.service.PersonService;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.PlaceUtils;
 
@@ -40,8 +39,11 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
-public class PlainFamilyTreeService extends FamilyTreeService {
+@RequiredArgsConstructor
+public class PlainFamilyTreeService implements FamilyTreeService {
 
     private static final int MAX_DISTANCE_TO_OBFUSCATE = 3;
     @SuppressWarnings("unused")
@@ -49,47 +51,92 @@ public class PlainFamilyTreeService extends FamilyTreeService {
     private static final float A4_MAX_OFFSET_Y = 830f;
 
     private final GedcomHolder gedcomHolder;
+    private final FamilyTreeHelper familyTreeHelper;
     private final RelationshipMapper relationshipMapper;
     private final Map<EmbeddedFontsConfig.Font, String> embeddedFonts;
     private final GedcomAnalyzerProperties properties;
 
-    public PlainFamilyTreeService(
-            PersonService personService,
-            GedcomHolder gedcomHolder,
-            RelationshipMapper relationshipMapper,
-            Map<EmbeddedFontsConfig.Font, String> embeddedFonts,
-            GedcomAnalyzerProperties properties) {
-        super(personService);
-        this.gedcomHolder = gedcomHolder;
-        this.relationshipMapper = relationshipMapper;
-        this.embeddedFonts = embeddedFonts;
-        this.properties = properties;
+    public Path getExportPdfFile(
+            EnrichedPerson person,
+            String familyTreeFileIdPrefix,
+            String familyTreeFileSuffix) {
+
+        return properties
+                .getTempDir()
+                .resolve("family-trees")
+                .resolve(familyTreeFileIdPrefix + "_" + person.getUuid() + familyTreeFileSuffix + ".pdf");
+    }
+
+    @Override
+    public boolean isMissingFamilyTree(
+            EnrichedPerson person,
+            String familyTreeFileIdPrefix,
+            String familyTreeFileSuffix,
+            boolean obfuscateLiving) {
+
+        Path pdfExportFilePath = getExportPdfFile(
+                person,
+                familyTreeFileIdPrefix,
+                familyTreeFileSuffix);
+
+        return Files.notExists(pdfExportFilePath);
     }
 
     @Override
     public void generateFamilyTree(
             EnrichedPerson person,
-            boolean obfuscateLiving) {
+            String familyTreeFileIdPrefix,
+            String familyTreeFileSuffix,
+            boolean obfuscateLiving,
+            List<List<Relationship>> relationshipsWithNotInLawPriority) {
 
-        String fileId = getFamilyTreeFileId(person);
-        String suffix = obfuscateLiving ? "" : "_visible";
-
-        Path pdfExportFilePath = properties
-                .getTempDir()
-                .resolve("family-trees")
-                .resolve(fileId + "_" + person.getUuid() + suffix + ".pdf");
-
-        if (Files.exists(pdfExportFilePath)) {
-            return;
-        }
-
-        List<List<Relationship>> relationshipsWithNotInLawPriority = getRelationshipsWithNotInLawPriority(person);
+        Path pdfExportFilePath = getExportPdfFile(
+                person,
+                familyTreeFileIdPrefix,
+                familyTreeFileSuffix);
 
         exportToPDF(
                 pdfExportFilePath,
                 person,
                 obfuscateLiving,
                 relationshipsWithNotInLawPriority);
+    }
+
+    public Optional<FamilyTree> getFamilyTree(
+            UUID personUuid,
+            boolean obfuscateLiving) {
+
+        EnrichedGedcom gedcom = gedcomHolder.getGedcom();
+        EnrichedPerson person = gedcom.getPersonByUuid(personUuid);
+        if (person == null) {
+            return Optional.empty();
+        }
+
+        String familyTreeFileIdPrefix = familyTreeHelper.getFamilyTreeFileId(person);
+        String familyTreeFileSuffix = obfuscateLiving ? "" : "_visible";
+
+        Path path = getExportPdfFile(
+                person,
+                familyTreeFileIdPrefix,
+                familyTreeFileSuffix);
+
+        if (Files.notExists(path)) {
+            List<List<Relationship>> relationshipsWithNotInLawPriority = familyTreeHelper
+                    .getRelationshipsWithNotInLawPriority(person);
+
+            exportToPDF(
+                    path,
+                    person,
+                    obfuscateLiving,
+                    relationshipsWithNotInLawPriority);
+        }
+
+        return Optional.of(new FamilyTree(
+                person,
+                "genea_azul_arbol_" + familyTreeFileIdPrefix + ".pdf",
+                path,
+                MediaType.APPLICATION_PDF,
+                new Locale("es", "AR")));
     }
 
     private void exportToPDF(
@@ -122,40 +169,6 @@ public class PlainFamilyTreeService extends FamilyTreeService {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-    }
-
-    public Optional<FamilyTree> getFamilyTree(UUID personUuid, boolean obfuscateLiving) {
-
-        EnrichedGedcom gedcom = gedcomHolder.getGedcom();
-        EnrichedPerson person = gedcom.getPersonByUuid(personUuid);
-        if (person == null) {
-            return Optional.empty();
-        }
-
-        String fileId = getFamilyTreeFileId(person);
-        String suffix = obfuscateLiving ? "" : "_visible";
-
-        Path path = properties
-                .getTempDir()
-                .resolve("family-trees")
-                .resolve(fileId + "_" + personUuid + suffix + ".pdf");
-
-        if (!Files.exists(path)) {
-            List<List<Relationship>> relationshipsWithNotInLawPriority = getRelationshipsWithNotInLawPriority(person);
-
-            exportToPDF(
-                    path,
-                    person,
-                    obfuscateLiving,
-                    relationshipsWithNotInLawPriority);
-        }
-
-        return Optional.of(new FamilyTree(
-                person,
-                "genea_azul_arbol_" + fileId + ".pdf",
-                path,
-                MediaType.APPLICATION_PDF,
-                new Locale("es", "AR")));
     }
 
     public void exportToPDF(Path path, EnrichedPerson person, List<FormattedRelationship> peopleInTree) throws IOException {

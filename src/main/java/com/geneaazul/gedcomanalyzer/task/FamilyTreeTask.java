@@ -20,7 +20,7 @@ public class FamilyTreeTask implements Runnable {
                     taskParams.obfuscateLiving(),
                     taskParams.types());
 
-            familyTreeManager.generateFamilyTree(
+            familyTreeManager.generateFamilyTrees(
                     taskParams.personUuids(),
                     taskParams.obfuscateLiving(),
                     taskParams.types());

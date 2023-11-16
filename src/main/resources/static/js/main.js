@@ -254,7 +254,7 @@ $(document).ready(function() {
                     setTimeout(function() {
                         enableFamilyTreeSearch(resultComponentLocator);
                         enableFamilyTreeView(resultComponentLocator);
-                    }, 1500);
+                    }, 1750);
                 }
 
                 var surnamesInRequest = getSurnamesInRequest(searchFamilyRequest);
@@ -718,7 +718,8 @@ var getPersonComponent = function(person, index) {
                         .addClass("btn btn-sm btn-dark view-family-tree-btn disabled")
                         .attr("id", "view-family-tree-btn-" + person.uuid)
                         .attr("role", "button")
-                        .attr("href", "/family-tree/" + person.uuid) // TODO add obfuscate param
+                        .attr("href", "/family-tree/" + person.uuid
+                            + (new URLSearchParams(window.location.search).get("f") !== "0" ? "" : "?f=0"))
                         .attr("target", "_blank")
                         .html("Ver &aacute;rbol geneal&oacute;gico online")))
         .append(

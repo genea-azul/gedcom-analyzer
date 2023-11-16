@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -49,9 +50,16 @@ public class StorageConfig {
     }
 
     @Bean
+    public GedcomHolder gedcomHolder(
+            StorageService storageService,
+            ExecutorService singleThreadExecutorService) {
+        return new GedcomHolder(storageService, singleThreadExecutorService);
+    }
+
+    @Bean
     @Profile("!test")
-    public GedcomHolder gedcomHolder(StorageService storageService) {
-        return new GedcomHolder(storageService, Executors.newSingleThreadExecutor());
+    public ExecutorService singleThreadExecutorService() {
+        return Executors.newSingleThreadExecutor();
     }
 
 }
