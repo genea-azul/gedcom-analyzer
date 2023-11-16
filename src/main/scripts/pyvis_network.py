@@ -1,6 +1,7 @@
-from pyvis.network import Network
+import os
 import pandas as pd
-import sys, os
+import sys
+from pyvis.network import Network
 
 if __name__ == "__main__":
     workingDir = sys.argv[1]
@@ -12,15 +13,14 @@ os.chdir(workingDir)
 
 net = Network(directed=True) #, filter_menu=True
 
-print('Read nodes CSV file')
 nodes = pd.read_csv(nodesFile, na_filter=False)
-print('Read edges CSV file')
 edges = pd.read_csv(edgesFile, na_filter=False)
 
 node_ids = nodes['id']
 node_labels = nodes['label']
 node_titles = nodes['title']
 node_shapes = nodes['shape']
+node_border_widths = nodes['borderWidth']
 node_colors = nodes['color']
 node_sizes = nodes['size']
 
@@ -30,21 +30,23 @@ edge_titles = edges['title']
 edge_weights = edges['weight']
 edge_widths = edges['width']
 
-node_data = zip(node_ids, node_labels, node_titles, node_shapes, node_colors, node_sizes)
+node_data = zip(node_ids, node_labels, node_titles, node_shapes, node_border_widths, node_colors, node_sizes)
 edge_data = zip(edge_sources, edge_targets, edge_titles, edge_weights, edge_widths)
 
-print('Add nodes to network')
 for node in node_data:
     id = node[0]
     label = node[1]
     title = node[2]
     shape = node[3]
-    color = node[4]
-    size = node[5]
+    border_width = node[4]
+    color = node[5]
+    size = node[6]
 
-    net.add_node(id, label=label, title=title, shape=shape, color=color, size=size)
+    if not shape:
+        net.add_node(id, label=label, title=title, borderWidth=border_width, color=color, size=size)
+    else:
+        net.add_node(id, label=label, title=title, shape=shape, borderWidth=border_width, color=color, size=size)
 
-print('Add edges to network')
 for edge in edge_data:
     source = edge[0]
     target = edge[1]

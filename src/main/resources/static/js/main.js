@@ -718,7 +718,7 @@ var getPersonComponent = function(person, index) {
                         .addClass("btn btn-sm btn-dark view-family-tree-btn disabled")
                         .attr("id", "view-family-tree-btn-" + person.uuid)
                         .attr("role", "button")
-                        .attr("href", "/family-tree/" + person.uuid)
+                        .attr("href", "/family-tree/" + person.uuid) // TODO add obfuscate param
                         .attr("target", "_blank")
                         .html("Ver &aacute;rbol geneal&oacute;gico online")))
         .append(

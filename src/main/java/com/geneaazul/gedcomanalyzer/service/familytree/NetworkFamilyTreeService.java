@@ -1,36 +1,123 @@
-package com.geneaazul.gedcomanalyzer.service;
+package com.geneaazul.gedcomanalyzer.service.familytree;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.mapper.PyvisNetworkMapper;
+import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.Relationship;
+import com.geneaazul.gedcomanalyzer.service.PersonService;
+import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
+
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.stereotype.Service;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
-import org.apache.commons.exec.PumpStreamHandler;
-import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
-import lombok.RequiredArgsConstructor;
-
 @Service
-@RequiredArgsConstructor
-public class PyvisNetworkService {
+public class NetworkFamilyTreeService extends FamilyTreeService {
 
+    private final GedcomHolder gedcomHolder;
     private final PyvisNetworkMapper pyvisNetworkMapper;
     private final GedcomAnalyzerProperties properties;
+
+    public NetworkFamilyTreeService(
+            PersonService personService,
+            GedcomHolder gedcomHolder,
+            PyvisNetworkMapper pyvisNetworkMapper,
+            GedcomAnalyzerProperties properties) {
+        super(personService);
+        this.gedcomHolder = gedcomHolder;
+        this.pyvisNetworkMapper = pyvisNetworkMapper;
+        this.properties = properties;
+    }
+
+    public Path getNetworkHtmlFile(
+            UUID personUuid,
+            boolean obfuscateLiving) {
+
+        EnrichedGedcom gedcom = gedcomHolder.getGedcom();
+        EnrichedPerson person = gedcom.getPersonByUuid(personUuid);
+
+        if (person == null) {
+            return null;
+        }
+
+        return getNetworkHtmlFile(person, obfuscateLiving);
+    }
+
+    public Path getNetworkHtmlFile(
+            EnrichedPerson person,
+            boolean obfuscateLiving) {
+
+        String fileId = getFamilyTreeFileId(person);
+        String suffix = obfuscateLiving ? "" : "_visible";
+
+        return properties
+                .getTempDir()
+                .resolve("family-trees")
+                .resolve(fileId + "_" + person.getUuid() + suffix + ".html");
+    }
+
+    @Override
+    public void generateFamilyTree(
+            EnrichedPerson person,
+            boolean obfuscateLiving) {
+
+        String fileId = getFamilyTreeFileId(person);
+        String suffix = obfuscateLiving ? "" : "_visible";
+
+        Path htmlPyvisNetworkFilePath = getNetworkHtmlFile(person, obfuscateLiving);
+
+        if (Files.exists(htmlPyvisNetworkFilePath)) {
+            return;
+        }
+
+        Path csvPyvisNetworkNodesFilePath = properties
+                .getTempDir()
+                .resolve("family-trees")
+                .resolve(fileId + "_nodes_" + person.getUuid() + suffix + ".csv");
+
+        Path csvPyvisNetworkEdgesFilePath = properties
+                .getTempDir()
+                .resolve("family-trees")
+                .resolve(fileId + "_edges_" + person.getUuid() + suffix + ".csv");
+
+        List<EnrichedPerson> peopleToExport = getRelationshipsWithNotInLawPriority(person)
+                .stream()
+                .limit(properties.getMaxPyvisNetworkNodesToExport())
+                .map(relationships -> relationships.get(0))
+                .map(Relationship::person)
+                .toList();
+
+        try {
+            generateNetworkHTML(
+                    htmlPyvisNetworkFilePath,
+                    csvPyvisNetworkNodesFilePath,
+                    csvPyvisNetworkEdgesFilePath,
+                    obfuscateLiving,
+                    peopleToExport);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
 
     public void generateNetworkHTML(
             Path htmlPyvisNetworkFilePath,
@@ -45,7 +132,7 @@ public class PyvisNetworkService {
 
     public void exportToPyvisNodesCSV(Path path, List<EnrichedPerson> people, boolean obfuscateLiving) throws IOException {
 
-        String[] HEADERS = {"id", "label", "title", "shape", "color", "size"};
+        String[] HEADERS = {"id", "label", "title", "shape", "borderWidth", "color", "size"};
 
         Map<String, String[]> countryColorsMap = Map.of(
                 "Argentina", new String[] {"#9AE4FF", "#74ACDF"},
@@ -57,9 +144,11 @@ public class PyvisNetworkService {
                 "Países Bajos", new String[] {"#E61C21", "#AD1519"});
 
         String defaultLabel = "?";
+        double defaultNodeBorderWidth = 2;
         String[] defaultColors = new String[] {"#000000", "#666666"};
         double defaultSize = 25;
 
+        double coupleNodeBorderWidth = 1;
         String coupleNodeColor = "#000000";
         double coupleNodeSize = 7.5;
 
@@ -82,6 +171,7 @@ public class PyvisNetworkService {
                             obfuscateLiving,
                             countryColorsMap,
                             defaultLabel,
+                            defaultNodeBorderWidth,
                             defaultColors,
                             defaultSize);
                     printer.printRecord((Object[]) scvRecord);
@@ -101,6 +191,7 @@ public class PyvisNetworkService {
                                             false,
                                             obfuscateLiving,
                                             defaultLabel,
+                                            coupleNodeBorderWidth,
                                             coupleNodeColor,
                                             coupleNodeSize);
                                     printer.printRecord((Object[]) coupleCsvRecord);
@@ -209,25 +300,50 @@ public class PyvisNetworkService {
             Path csvPyvisNetworkNodesFilePath,
             Path csvPyvisNetworkEdgesFilePath) throws IOException {
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream);
-
-        Path path = properties.getPyvisNetworkExportScriptPath();
-
-        DefaultExecutor executor = new DefaultExecutor();
-        executor.setStreamHandler(streamHandler);
+        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+        Resource resource = resolver.getResource(properties.getPyvisNetworkExportScriptPath());
 
         CommandLine commandLine = CommandLine
-                .parse("py " + path.toAbsolutePath().normalize())
+                .parse("python3 " + resource.getURI().getPath())
                 .addArgument(htmlPyvisNetworkFilePath.getParent().toAbsolutePath().normalize().toString(), true)
                 .addArgument(htmlPyvisNetworkFilePath.getFileName().toString(), true)
                 .addArgument(csvPyvisNetworkNodesFilePath.getFileName().toString(), true)
                 .addArgument(csvPyvisNetworkEdgesFilePath.getFileName().toString(), true);
 
-        System.out.println(commandLine.toString());
-        int exitCode = executor.execute(commandLine);
-        System.out.println(exitCode);
-        System.out.println(outputStream);
+        DefaultExecutor executor = new DefaultExecutor();
+        executor.execute(commandLine);
+
+        if (Files.exists(htmlPyvisNetworkFilePath)) {
+            Charset charset = StandardCharsets.UTF_8;
+            String content = Files.readString(htmlPyvisNetworkFilePath, charset);
+            content = content.replace(
+                    "<script src=\"lib/bindings/utils.js\"></script>",
+                    "<script src=\"/js/family-tree/utils.js\"></script>");
+            content = content.replace(
+                    "<center>\n"
+                            + "<h1></h1>\n"
+                            + "</center>",
+                    "");
+            content = content.replace(
+                    "        <center>\n"
+                            + "          <h1></h1>\n"
+                            + "        </center>",
+                    "");
+            content = content.replace(
+                    "height: 600px;",
+                    "height: 100%;");
+            // Twice same sentence
+            content = content.replace(
+                    "height: 600px;",
+                    "height: 100%;");
+            content = content.replace(
+                    "border: 1px solid lightgray;",
+                    "border: 0px; padding: 0px;");
+            content = content.replace(
+                    "<div class=\"card\" style=\"width: 100%\">",
+                    "<div class=\"card\" style=\"width: 100%; height: 100%; border: 0px;\">");
+            Files.writeString(htmlPyvisNetworkFilePath, content, charset);
+        }
     }
 
 }

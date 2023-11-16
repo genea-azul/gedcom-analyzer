@@ -22,20 +22,8 @@
 
   <body class="container-fluid">
     <div class="min-vh-100 d-flex flex-column">
-      <embed type="text/html" src="/nodes.html?${personUuid}" />
+      <embed type="text/html" src="/family-tree/${personUuid}/network" /> <!-- TODO add obfuscate param -->
     </div>
   </body>
-<!--
-<div class="card" style="width: 100%; min-height: 100vh; ">
-             #mynetwork {
-                 width: 100%;
-                 height: 100%;
-                 background-color: #ffffff;
-                 border: 0px solid lightgray;
-                 position: relative;
-                 float: left;
-                 padding: 0px !important
-             }
--->
 
 </html>

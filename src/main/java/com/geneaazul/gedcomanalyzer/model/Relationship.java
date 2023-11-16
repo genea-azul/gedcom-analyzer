@@ -4,8 +4,9 @@ import com.geneaazul.gedcomanalyzer.model.dto.AdoptionType;
 import com.geneaazul.gedcomanalyzer.model.dto.TreeSideType;
 import com.geneaazul.gedcomanalyzer.utils.CollectionComparator;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.util.Assert;
+
+import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.Collection;
 import java.util.Comparator;

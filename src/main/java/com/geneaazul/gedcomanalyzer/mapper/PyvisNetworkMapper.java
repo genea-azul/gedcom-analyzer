@@ -5,8 +5,9 @@ import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Surname;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
+
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
 import java.util.Optional;
@@ -26,13 +27,17 @@ public class PyvisNetworkMapper {
             boolean obfuscateLiving,
             Map<String, String[]> countryColorsMap,
             String defaultLabel,
+            double borderWidth,
             String[] defaultColors,
             double size) {
         return new String[] {
                 person.getId(),
                 getPyvisNodeLabel(person, defaultLabel),
                 getPyvisNodeTitle(person),
-                "star",
+                person.isDistinguishedPerson()
+                        ? "star"
+                        : null,
+                String.valueOf(borderWidth),
                 person.getPlaceOfBirth()
                         .map(Place::country)
                         .map(countryColorsMap::get)
@@ -77,6 +82,7 @@ public class PyvisNetworkMapper {
             boolean noChildren,
             boolean obfuscateLiving,
             String defaultLabel,
+            double borderWidth,
             String color,
             double size) {
         String nodeId = buildCoupleNodeId(person, spouse, noChildren);
@@ -90,7 +96,8 @@ public class PyvisNetworkMapper {
                 nodeId,
                 personSurname + " - " + spouseSurname,
                 person.getDisplayName() + " - " + spouse.getDisplayName(),
-                "star",
+                "triangle",
+                String.valueOf(borderWidth),
                 color,
                 String.valueOf(size)
         };

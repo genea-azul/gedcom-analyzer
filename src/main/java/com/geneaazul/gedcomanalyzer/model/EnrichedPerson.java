@@ -228,7 +228,7 @@ public class EnrichedPerson {
         getLegacyPerson()
                 .ifPresent(person -> {
                     customEventFacts = PersonUtils.getCustomEventFacts(person);
-                    familyCustomEventFacts =  person.getSpouseFamilies(gedcom)
+                    familyCustomEventFacts = person.getSpouseFamilies(gedcom)
                             .stream()
                             .map(FamilyUtils::getCustomEventFacts)
                             .flatMap(List::stream)

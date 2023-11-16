@@ -22,13 +22,6 @@ public class Reference {
 
     private final ReferenceType targetType;
 
-    @Override
-    public String toString() {
-        return "["
-                + sourceType + "(" + getId(source) + getDisplayValue(source, "-") + ") -> "
-                + targetType + "(" + getId(target) + getDisplayValue(target, "-") + ")]";
-    }
-
     private static String getId(PersonFamilyCommonContainer personOrFamily) {
         if (personOrFamily instanceof Person) {
             return ((Person) personOrFamily).getId();
@@ -45,6 +38,13 @@ public class Reference {
             return prefix + displayValue;
         }
         return "";
+    }
+
+    @Override
+    public String toString() {
+        return "["
+                + sourceType + "(" + getId(source) + getDisplayValue(source, "-") + ") -> "
+                + targetType + "(" + getId(target) + getDisplayValue(target, "-") + ")]";
     }
 
 }

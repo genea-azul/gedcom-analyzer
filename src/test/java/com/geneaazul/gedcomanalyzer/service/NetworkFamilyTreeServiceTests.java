@@ -4,14 +4,16 @@ import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.Relationships;
+import com.geneaazul.gedcomanalyzer.service.familytree.NetworkFamilyTreeService;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 
-import org.apache.commons.lang3.mutable.MutableInt;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+
+import org.apache.commons.lang3.mutable.MutableInt;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -20,14 +22,14 @@ import java.util.List;
 @SpringBootTest
 @EnableConfigurationProperties
 @ActiveProfiles("test")
-public class PyvisNetworkServiceTests {
+public class NetworkFamilyTreeServiceTests {
 
     @Autowired
     private GedcomHolder gedcomHolder;
     @Autowired
     private PersonService personService;
     @Autowired
-    private PyvisNetworkService pyvisNetworkService;
+    private NetworkFamilyTreeService networkFamilyTreeService;
     @Autowired
     private GedcomAnalyzerProperties properties;
 
@@ -62,7 +64,7 @@ public class PyvisNetworkServiceTests {
                 .resolve("family-trees")
                 .resolve("export_to_csv_edges_test.csv");
 
-        pyvisNetworkService.generateNetworkHTML(
+        networkFamilyTreeService.generateNetworkHTML(
                 htmlPyvisNetworkFilePath,
                 csvPyvisNetworkNodesFilePath,
                 csvPyvisNetworkEdgesFilePath,

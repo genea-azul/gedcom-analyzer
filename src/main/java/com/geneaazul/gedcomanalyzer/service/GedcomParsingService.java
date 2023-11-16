@@ -3,12 +3,13 @@ package com.geneaazul.gedcomanalyzer.service;
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folg.gedcom.model.Gedcom;
 import org.folg.gedcom.parser.ModelParser;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import org.xml.sax.SAXParseException;
 
 import java.io.ByteArrayInputStream;

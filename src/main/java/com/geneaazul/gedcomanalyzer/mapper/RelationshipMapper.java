@@ -68,7 +68,7 @@ public class RelationshipMapper {
                 //noinspection DataFlowIssue
                 spouseSex = spouse.getSex();
                 isSeparated = relationship
-                    .person()
+                        .person()
                         .getSpousesWithChildren()
                         .stream()
                         .filter(spouseWithChildren -> spouseWithChildren

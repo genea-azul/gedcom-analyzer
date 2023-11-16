@@ -69,7 +69,7 @@ public class PathUtils {
     private static String getLowestDistanceNodeId(Set<String> unsettledNodes, Map<String, Integer> distances) {
         String lowestDistanceNode = null;
         int lowestDistance = Integer.MAX_VALUE;
-        for (String node: unsettledNodes) {
+        for (String node : unsettledNodes) {
             int nodeDistance = distances.getOrDefault(node, Integer.MAX_VALUE);
             if (nodeDistance < lowestDistance) {
                 lowestDistance = nodeDistance;

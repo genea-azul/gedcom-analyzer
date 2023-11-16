@@ -13,8 +13,9 @@ import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 import com.geneaazul.gedcomanalyzer.utils.StreamUtils;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.Year;
 import java.util.Arrays;

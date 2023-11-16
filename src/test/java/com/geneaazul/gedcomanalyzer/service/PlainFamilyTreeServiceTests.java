@@ -5,14 +5,16 @@ import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
 import com.geneaazul.gedcomanalyzer.model.Relationships;
+import com.geneaazul.gedcomanalyzer.service.familytree.PlainFamilyTreeService;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 
-import org.apache.commons.lang3.mutable.MutableInt;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+
+import org.apache.commons.lang3.mutable.MutableInt;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -22,14 +24,14 @@ import java.util.List;
 @EnableConfigurationProperties
 @ActiveProfiles("test")
 @SuppressWarnings("DataFlowIssue")
-public class FamilyTreeServiceTests {
+public class PlainFamilyTreeServiceTests {
 
     @Autowired
     private GedcomHolder gedcomHolder;
     @Autowired
     private PersonService personService;
     @Autowired
-    private FamilyTreeService familyTreeService;
+    private PlainFamilyTreeService plainFamilyTreeService;
     @Autowired
     private RelationshipMapper relationshipMapper;
     @Autowired
@@ -55,7 +57,7 @@ public class FamilyTreeServiceTests {
                 .getTempDir()
                 .resolve("family-trees")
                 .resolve("export_to_pdf_test.pdf");
-        familyTreeService.exportToPDF(path, person, peopleInTree);
+        plainFamilyTreeService.exportToPDF(path, person, peopleInTree);
     }
 
 }
