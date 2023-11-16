@@ -150,6 +150,12 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
             Path csvPyvisNetworkEdgesFilePath,
             boolean obfuscateLiving,
             List<EnrichedPerson> peopleInTree) throws IOException {
+        log.info("Generating Network family tree HTML");
+
+        // Make sure target directory exists
+        Files.createDirectories(htmlPyvisNetworkFilePath.getParent());
+
+        // Generate files
         exportToPyvisNodesCSV(csvPyvisNetworkNodesFilePath, peopleInTree, obfuscateLiving);
         exportToPyvisEdgesCSV(csvPyvisNetworkEdgesFilePath, peopleInTree);
         exportToPyvisNetworkHTML(htmlPyvisNetworkFilePath, csvPyvisNetworkNodesFilePath, csvPyvisNetworkEdgesFilePath);
@@ -334,7 +340,7 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
 
         Path scriptPath = properties
                 .getTempDir()
-                .resolve(properties.getPyvisNetworkExportScriptPath())
+                .resolve(properties.getPyvisNetworkExportScriptFilename())
                 .toAbsolutePath()
                 .normalize();
 

@@ -42,10 +42,18 @@ public class FamilyTreeConfig {
     public void extractPyvisNetworkScript() {
         singleThreadExecutorService.submit(() -> {
             try {
+                Path familyTreeTempDir = properties
+                        .getTempDir()
+                        .resolve("family-trees");
+                Files.createDirectories(familyTreeTempDir);
+
                 PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-                Resource resource = resolver.getResource(properties.getPyvisNetworkExportScriptPath());
-                Files.createDirectories(properties.getTempDir());
-                Path newScriptPath = properties.getTempDir().resolve(properties.getPyvisNetworkExportScriptPath());
+                Resource resource = resolver.getResource(properties.getPyvisNetworkExportScriptFilename());
+
+                Path newScriptPath = properties
+                        .getTempDir()
+                        .resolve(properties.getPyvisNetworkExportScriptFilename());
+
                 Files.copy(resource.getInputStream(), newScriptPath, StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);

@@ -40,7 +40,9 @@ import java.util.UUID;
 import java.util.function.Function;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PlainFamilyTreeService implements FamilyTreeService {
@@ -144,6 +146,7 @@ public class PlainFamilyTreeService implements FamilyTreeService {
             EnrichedPerson person,
             boolean obfuscateLiving,
             List<List<Relationship>> relationshipsWithNotInLawPriority) {
+        log.info("Generating Export family tree PDF");
 
         List<FormattedRelationship> peopleInTree = relationshipsWithNotInLawPriority
                 .stream()
