@@ -31,7 +31,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NetworkFamilyTreeService implements FamilyTreeService {
@@ -346,34 +348,53 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
         DefaultExecutor executor = new DefaultExecutor();
         executor.execute(commandLine);
 
-        if (Files.exists(htmlPyvisNetworkFilePath)) {
-            Charset charset = StandardCharsets.UTF_8;
-            String content = Files.readString(htmlPyvisNetworkFilePath, charset);
-            content = content.replace(
-                    "<script src=\"lib/bindings/utils.js\"></script>",
-                    "<script src=\"/js/family-tree/utils.js\"></script>");
-            content = content.replace(
-                    "<h1></h1>",
-                    "");
-            // Twice same sentence
-            content = content.replace(
-                    "<h1></h1>",
-                    "");
-            content = content.replace(
-                    "height: 600px;",
-                    "height: 100%;");
-            // Twice same sentence
-            content = content.replace(
-                    "height: 600px;",
-                    "height: 100%;");
-            content = content.replace(
-                    "border: 1px solid lightgray;",
-                    "border: 0px; padding: 0px;");
-            content = content.replace(
-                    "<div class=\"card\" style=\"width: 100%\">",
-                    "<div class=\"card\" style=\"width: 100%; height: 100%; border: 0px;\">");
-            Files.writeString(htmlPyvisNetworkFilePath, content, charset);
+        if (Files.notExists(htmlPyvisNetworkFilePath)) {
+            log.error("File is missing [ path={} ]", htmlPyvisNetworkFilePath);
+            return;
         }
+
+        Charset charset = StandardCharsets.UTF_8;
+        String content = Files.readString(htmlPyvisNetworkFilePath, charset);
+
+        content = content.replace(
+                "<script src=\"lib/bindings/utils.js\"></script>",
+                "<script src=\"/js/family-tree/utils.js\"></script>");
+
+        content = content.replace(
+                "<h1></h1>",
+                "");
+        // Twice same sentence
+        content = content.replace(
+                "<h1></h1>",
+                "");
+        content = content.replace(
+                "height: 600px;",
+                "height: 100%;");
+        // Twice same sentence
+        content = content.replace(
+                "height: 600px;",
+                "height: 100%;");
+        content = content.replace(
+                "border: 1px solid lightgray;",
+                "border: 0px; padding: 0px;");
+        content = content.replace(
+                "<div class=\"card\" style=\"width: 100%\">",
+                "<div class=\"card\" style=\"width: 100%; height: 100%; border: 0px;\">");
+
+        content = content.replace(
+                "font-size:22px;",
+                "display: none;");
+        content = content.replace(
+                "width:500px;",
+                "width: 95%;");
+        content = content.replace(
+                "top:400px;",
+                "top: 40%;");
+        content = content.replace(
+                "width:600px;",
+                "width: 50%;");
+
+        Files.writeString(htmlPyvisNetworkFilePath, content, charset);
     }
 
 }

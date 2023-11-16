@@ -1,6 +1,9 @@
 package com.geneaazul.gedcomanalyzer.service;
 
+import com.geneaazul.gedcomanalyzer.mapper.ObfuscationType;
+import com.geneaazul.gedcomanalyzer.mapper.PersonMapper;
 import com.geneaazul.gedcomanalyzer.model.AncestryGenerations;
+import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPersonWithReference;
 import com.geneaazul.gedcomanalyzer.model.EnrichedSpouseWithChildren;
@@ -8,9 +11,11 @@ import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.Relationships;
 import com.geneaazul.gedcomanalyzer.model.TreeTraversalDirection;
 import com.geneaazul.gedcomanalyzer.model.dto.AdoptionType;
+import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.model.dto.TreeSideType;
+import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.RelationshipUtils;
 import com.geneaazul.gedcomanalyzer.utils.SetUtils;
 
@@ -22,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import jakarta.annotation.Nullable;
@@ -32,6 +38,16 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class PersonService {
+
+    private final GedcomHolder gedcomHolder;
+    private final PersonMapper personMapper;
+
+    public Optional<PersonDto> getPersonDto(UUID personUuid) {
+        EnrichedGedcom gedcom = gedcomHolder.getGedcom();
+        EnrichedPerson person = gedcom.getPersonByUuid(personUuid);
+        return Optional.ofNullable(person)
+                .map(p -> personMapper.toPersonDto(p, ObfuscationType.SKIP_MAIN_PERSON_NAME));
+    }
 
     public List<Relationships> setTransientProperties(EnrichedPerson person, boolean excludeRootPerson) {
         List<Relationships> relationships = getPeopleInTree(person, excludeRootPerson, false);

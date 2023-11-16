@@ -38,6 +38,10 @@ public class FamilyTreeManager {
             boolean obfuscateLiving,
             List<FamilyTreeType> types) {
 
+        if (people.isEmpty()) {
+            return;
+        }
+
         List<UUID> peopleUuids = people
                 .stream()
                 .map(PersonDto::getUuid)

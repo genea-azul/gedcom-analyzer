@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.ZonedDateTime;
 import java.util.Objects;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -41,7 +42,10 @@ public class GedcomParsingService {
 
     public EnrichedGedcom parse(Path gedcomPath) throws IOException, SAXParseException {
         Gedcom gedcom = parseGedcom(gedcomPath.toFile());
-        return EnrichedGedcom.of(gedcom, gedcomPath.toString(), properties);
+        ZonedDateTime gedcomModifiedTime = Files.getLastModifiedTime(gedcomPath)
+                .toInstant()
+                .atZone(properties.getZoneId());
+        return EnrichedGedcom.of(gedcom, gedcomPath.toString(), gedcomModifiedTime, properties);
     }
 
     public EnrichedGedcom parse(byte[] gedcomBytes, String gedcomName) throws SAXParseException, IOException {
