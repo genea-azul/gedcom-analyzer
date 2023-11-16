@@ -19,13 +19,13 @@ import lombok.extern.slf4j.Slf4j;
 public class GedcomHolder {
 
     private final StorageService storageService;
-    private final ExecutorService gedcomHolderExecutorService;
+    private final ExecutorService singleThreadExecutorService;
 
     private final LinkedBlockingQueue<EnrichedGedcom> gedcomQueue = new LinkedBlockingQueue<>();
 
     public EnrichedGedcom getGedcom() {
         try {
-            EnrichedGedcom gedcom = gedcomQueue.poll(10, TimeUnit.SECONDS);
+            EnrichedGedcom gedcom = gedcomQueue.poll(30, TimeUnit.SECONDS);
 
             if (gedcom != null) {
                 gedcomQueue.offer(gedcom);
@@ -55,13 +55,13 @@ public class GedcomHolder {
 
     @PostConstruct
     public void postConstruct() {
-        gedcomHolderExecutorService.submit(() -> reloadFromStorage(false));
+        singleThreadExecutorService.submit(() -> reloadFromStorage(false));
     }
 
     @PreDestroy
     public void preDestroy() {
         gedcomQueue.clear();
-        gedcomHolderExecutorService.shutdownNow();
+        singleThreadExecutorService.shutdownNow();
     }
 
 }

@@ -6,14 +6,14 @@ import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchPersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.CheckForNull;
+import java.util.Optional;
 
 import jakarta.annotation.Nullable;
 

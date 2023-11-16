@@ -13,15 +13,16 @@ import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.DateUtils.AstrologicalSign;
 import com.geneaazul.gedcomanalyzer.utils.PathUtils;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.time.Month;
 import java.util.Comparator;
@@ -326,7 +327,7 @@ public class GedcomAnalyzerServiceTests {
                         relationships
                                 .stream()
                                 .map(r -> relationshipMapper.toRelationshipDto(r, false))
-                                .map(r -> relationshipMapper.formatInSpanish(r, 0, false))
+                                .map(r -> relationshipMapper.formatInSpanish(r, false))
                                 .map(FormattedRelationship::toString)
                                 .collect(Collectors.joining(", "))
                         + "  --  "
@@ -367,7 +368,7 @@ public class GedcomAnalyzerServiceTests {
             EnrichedPerson personB = gedcom.getPersonById(shortestPath.get(i + 1));
             Relationship relationship = personService.getRelationshipBetween(personB, personA);
             RelationshipDto relationshipDto = relationshipMapper.toRelationshipDto(relationship, false);
-            FormattedRelationship formattedRelationship = relationshipMapper.formatInSpanish(relationshipDto, 0, false);
+            FormattedRelationship formattedRelationship = relationshipMapper.formatInSpanish(relationshipDto, false);
             if (i == 0) {
                 System.out.println(displayPersonInfo(personA));
             }

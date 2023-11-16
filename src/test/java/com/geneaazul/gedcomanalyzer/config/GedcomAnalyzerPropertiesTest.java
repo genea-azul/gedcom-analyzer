@@ -1,23 +1,24 @@
 package com.geneaazul.gedcomanalyzer.config;
 
-import static com.geneaazul.gedcomanalyzer.utils.EntryStreamTestUtils.assertEqualMappingKey;
-import static com.geneaazul.gedcomanalyzer.utils.EntryStreamTestUtils.assertNotEqualMappingKey;
-import static com.geneaazul.gedcomanalyzer.utils.EntryStreamUtils.entryValueMapper;
-import static com.geneaazul.gedcomanalyzer.utils.EntryStreamUtils.mappingEntry;
-import static com.geneaazul.gedcomanalyzer.utils.EntryStreamUtils.unaryEntry;
-
 import com.geneaazul.gedcomanalyzer.model.NameAndSex;
 import com.geneaazul.gedcomanalyzer.utils.EntryStreamTestUtils;
 import com.geneaazul.gedcomanalyzer.utils.NameUtils;
 
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import org.junit.jupiter.api.Test;
+
 import java.util.Map;
 import java.util.stream.Stream;
+
+import static com.geneaazul.gedcomanalyzer.utils.EntryStreamTestUtils.assertEqualMappingKey;
+import static com.geneaazul.gedcomanalyzer.utils.EntryStreamTestUtils.assertNotEqualMappingKey;
+import static com.geneaazul.gedcomanalyzer.utils.EntryStreamUtils.entryValueMapper;
+import static com.geneaazul.gedcomanalyzer.utils.EntryStreamUtils.mappingEntry;
+import static com.geneaazul.gedcomanalyzer.utils.EntryStreamUtils.unaryEntry;
 
 @SpringBootTest
 @EnableConfigurationProperties

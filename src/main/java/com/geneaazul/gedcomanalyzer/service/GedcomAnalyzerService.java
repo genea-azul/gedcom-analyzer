@@ -25,6 +25,8 @@ import com.geneaazul.gedcomanalyzer.utils.NameUtils;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 import com.geneaazul.gedcomanalyzer.utils.RelationshipUtils;
 
+import org.springframework.stereotype.Service;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -38,7 +40,6 @@ import org.folg.gedcom.model.Person;
 import org.folg.gedcom.model.SpouseFamilyRef;
 import org.folg.gedcom.model.SpouseRef;
 import org.folg.gedcom.model.Visitor;
-import org.springframework.stereotype.Service;
 
 import java.time.Month;
 import java.util.ArrayList;
@@ -216,7 +217,8 @@ public class GedcomAnalyzerService {
                 .peek(place -> {
                     if (!reversePlace) {
                         ArrayUtils.reverse(place);
-                    }})
+                    }
+                })
                 .map(place -> StringUtils.join(place, ", "))
                 .toList();
     }

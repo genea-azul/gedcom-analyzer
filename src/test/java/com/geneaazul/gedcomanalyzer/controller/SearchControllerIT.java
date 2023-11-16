@@ -1,16 +1,5 @@
 package com.geneaazul.gedcomanalyzer.controller;
 
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doReturn;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.geneaazul.gedcomanalyzer.domain.SearchFamily;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyResultDto;
@@ -18,9 +7,6 @@ import com.geneaazul.gedcomanalyzer.model.dto.SearchPersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageImpl;
@@ -31,12 +17,27 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.Test;
+
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doReturn;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Slf4j
 public class SearchControllerIT extends AbstractControllerIT {
@@ -144,7 +145,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                         .isMatch(false)
                         .isReviewed(null)
                         .build()
-                ))
+        ))
                 .when(searchFamilyRepository)
                 .findById(1L);
 

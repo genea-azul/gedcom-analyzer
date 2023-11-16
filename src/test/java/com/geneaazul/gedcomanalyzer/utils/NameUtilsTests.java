@@ -1,18 +1,19 @@
 package com.geneaazul.gedcomanalyzer.utils;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.Surname;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import org.folg.gedcom.model.EventFact;
 import org.folg.gedcom.model.Name;
 import org.folg.gedcom.model.Person;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @EnableConfigurationProperties

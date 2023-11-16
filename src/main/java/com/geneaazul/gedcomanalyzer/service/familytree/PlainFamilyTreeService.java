@@ -1,10 +1,20 @@
-package com.geneaazul.gedcomanalyzer.service;
+package com.geneaazul.gedcomanalyzer.service.familytree;
 
 import com.geneaazul.gedcomanalyzer.config.EmbeddedFontsConfig;
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
+import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
+import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.FamilyTree;
 import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
+import com.geneaazul.gedcomanalyzer.model.Relationship;
+import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.PlaceUtils;
+
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
 
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -14,32 +24,152 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class FamilyTreeService {
+public class PlainFamilyTreeService implements FamilyTreeService {
 
+    private static final int MAX_DISTANCE_TO_OBFUSCATE = 3;
     @SuppressWarnings("unused")
     private static final float A4_MAX_OFFSET_X = 590f;
     private static final float A4_MAX_OFFSET_Y = 830f;
 
-    private final GedcomAnalyzerProperties properties;
+    private final GedcomHolder gedcomHolder;
+    private final FamilyTreeHelper familyTreeHelper;
+    private final RelationshipMapper relationshipMapper;
     private final Map<EmbeddedFontsConfig.Font, String> embeddedFonts;
+    private final GedcomAnalyzerProperties properties;
+
+    public Path getExportPdfFile(
+            EnrichedPerson person,
+            String familyTreeFileIdPrefix,
+            String familyTreeFileSuffix) {
+
+        return properties
+                .getTempDir()
+                .resolve("family-trees")
+                .resolve(familyTreeFileIdPrefix + "_" + person.getUuid() + familyTreeFileSuffix + ".pdf");
+    }
+
+    @Override
+    public boolean isMissingFamilyTree(
+            EnrichedPerson person,
+            String familyTreeFileIdPrefix,
+            String familyTreeFileSuffix,
+            boolean obfuscateLiving) {
+
+        Path pdfExportFilePath = getExportPdfFile(
+                person,
+                familyTreeFileIdPrefix,
+                familyTreeFileSuffix);
+
+        return Files.notExists(pdfExportFilePath);
+    }
+
+    @Override
+    public void generateFamilyTree(
+            EnrichedPerson person,
+            String familyTreeFileIdPrefix,
+            String familyTreeFileSuffix,
+            boolean obfuscateLiving,
+            List<List<Relationship>> relationshipsWithNotInLawPriority) {
+
+        Path pdfExportFilePath = getExportPdfFile(
+                person,
+                familyTreeFileIdPrefix,
+                familyTreeFileSuffix);
+
+        exportToPDF(
+                pdfExportFilePath,
+                person,
+                obfuscateLiving,
+                relationshipsWithNotInLawPriority);
+    }
+
+    public Optional<FamilyTree> getFamilyTree(
+            UUID personUuid,
+            boolean obfuscateLiving) {
+
+        EnrichedGedcom gedcom = gedcomHolder.getGedcom();
+        EnrichedPerson person = gedcom.getPersonByUuid(personUuid);
+        if (person == null) {
+            return Optional.empty();
+        }
+
+        String familyTreeFileIdPrefix = familyTreeHelper.getFamilyTreeFileId(person);
+        String familyTreeFileSuffix = obfuscateLiving ? "" : "_visible";
+
+        Path path = getExportPdfFile(
+                person,
+                familyTreeFileIdPrefix,
+                familyTreeFileSuffix);
+
+        if (Files.notExists(path)) {
+            List<List<Relationship>> relationshipsWithNotInLawPriority = familyTreeHelper
+                    .getRelationshipsWithNotInLawPriority(person);
+
+            exportToPDF(
+                    path,
+                    person,
+                    obfuscateLiving,
+                    relationshipsWithNotInLawPriority);
+        }
+
+        return Optional.of(new FamilyTree(
+                person,
+                "genea_azul_arbol_" + familyTreeFileIdPrefix + ".pdf",
+                path,
+                MediaType.APPLICATION_PDF,
+                new Locale("es", "AR")));
+    }
+
+    private void exportToPDF(
+            Path pdfExportFilePath,
+            EnrichedPerson person,
+            boolean obfuscateLiving,
+            List<List<Relationship>> relationshipsWithNotInLawPriority) {
+
+        List<FormattedRelationship> peopleInTree = relationshipsWithNotInLawPriority
+                .stream()
+                .map(relationships -> relationships
+                        .stream()
+                        .map(relationship -> relationshipMapper.toRelationshipDto(
+                                relationship,
+                                obfuscateLiving
+                                        // don't obfuscate root person
+                                        && !relationship.person().getId().equals(person.getId())
+                                        && (person.isAlive() && relationship.getDistance() <= MAX_DISTANCE_TO_OBFUSCATE
+                                                || relationship.person().isAlive())))
+                        .map(relationship -> relationshipMapper.formatInSpanish(relationship, true))
+                        .toList())
+                .map(formattedRelationships -> formattedRelationships
+                        .stream()
+                        .reduce(FormattedRelationship::mergeRelationshipDesc)
+                        .orElseThrow())
+                .toList();
+
+        try {
+            exportToPDF(pdfExportFilePath, person, peopleInTree);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
 
     public void exportToPDF(Path path, EnrichedPerson person, List<FormattedRelationship> peopleInTree) throws IOException {
 

@@ -15,10 +15,11 @@ import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.utils.NameUtils;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 
+import org.springframework.stereotype.Service;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.Month;
@@ -542,7 +543,7 @@ public class SearchService {
                 .stream()
                 .map(pSex -> findPersonsByNameAndAnyRelative(
                         () -> GivenNameAndSurname.of(personGivenName, personSurname, pSex, properties),
-                        surname-> gedcom.getPersonsBySurnameMainWordAndSex(surname, pSex),
+                        surname -> gedcom.getPersonsBySurnameMainWordAndSex(surname, pSex),
                         () -> Optional.of(List.of(
                                 GivenNameAndSurname.of(parent1GivenName, parent1Surname, parent1Sex, properties),
                                 GivenNameAndSurname.of(parent2GivenName, parent2Surname, parent2Sex, properties))),
@@ -736,12 +737,12 @@ public class SearchService {
         return filteredPeople
                 .stream()
                 .filter(person -> person.getGivenName()
-                                .map(GivenName::value)
-                                .stream()
-                                .flatMap(givenName -> Arrays.stream(givenName.split(" ")))
-                                .map(givenName -> StringUtils.stripStart(givenName, "("))
-                                .map(givenName -> StringUtils.stripEnd(givenName, ")"))
-                                .anyMatch(misspelledGivenNames::contains))
+                        .map(GivenName::value)
+                        .stream()
+                        .flatMap(givenName -> Arrays.stream(givenName.split(" ")))
+                        .map(givenName -> StringUtils.stripStart(givenName, "("))
+                        .map(givenName -> StringUtils.stripEnd(givenName, ")"))
+                        .anyMatch(misspelledGivenNames::contains))
                 .toList();
     }
 

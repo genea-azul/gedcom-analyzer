@@ -3,9 +3,10 @@ package com.geneaazul.gedcomanalyzer.model;
 import com.geneaazul.gedcomanalyzer.model.dto.TreeSideType;
 import com.geneaazul.gedcomanalyzer.utils.SetUtils;
 
+import org.springframework.util.Assert;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.util.Assert;
 
 import java.util.Collection;
 import java.util.List;

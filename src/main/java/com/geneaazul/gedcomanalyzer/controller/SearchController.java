@@ -2,6 +2,7 @@ package com.geneaazul.gedcomanalyzer.controller;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.FamilyTree;
+import com.geneaazul.gedcomanalyzer.model.FamilyTreeType;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDetailsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyResultDto;
@@ -10,12 +11,11 @@ import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesResultDto;
 import com.geneaazul.gedcomanalyzer.service.DockerService;
 import com.geneaazul.gedcomanalyzer.service.FamilyService;
-import com.geneaazul.gedcomanalyzer.service.PersonService;
 import com.geneaazul.gedcomanalyzer.service.SurnameService;
+import com.geneaazul.gedcomanalyzer.service.familytree.FamilyTreeManager;
+import com.geneaazul.gedcomanalyzer.service.familytree.PlainFamilyTreeService;
 import com.geneaazul.gedcomanalyzer.utils.InetAddressUtils;
 
-import org.apache.commons.lang3.BooleanUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -28,6 +28,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -49,9 +52,10 @@ public class SearchController {
 
     private final FamilyService familyService;
     private final SurnameService surnameService;
-    private final PersonService personService;
     private final GedcomAnalyzerProperties properties;
     private final DockerService dockerService;
+    private final FamilyTreeManager familyTreeManager;
+    private final PlainFamilyTreeService plainFamilyTreeService;
 
     @PostMapping("/family")
     public SearchFamilyResultDto searchFamily(
@@ -88,6 +92,12 @@ public class SearchController {
         searchId
                 .filter(id -> properties.isStoreFamilySearch())
                 .ifPresent(id -> familyService.updateSearchIsMatch(id, searchFamilyResult.getPeople().size() > 0));
+
+        // Queue PDF Family Tree and HTML Pyvis Network generation
+        familyTreeManager.queueFamilyTreeGeneration(
+                searchFamilyResult.getPeople(),
+                searchFamilyDto.getObfuscateLiving(),
+                List.of(FamilyTreeType.values()));
 
         return searchFamilyResult;
     }
@@ -152,7 +162,8 @@ public class SearchController {
             @RequestParam(defaultValue = BooleanUtils.TRUE) Boolean obfuscateLiving,
             HttpServletRequest request) throws IOException {
 
-        Optional<FamilyTree> maybeFamilyTree = personService.getFamilyTree(personUuid, Boolean.TRUE.equals(obfuscateLiving));
+        Optional<FamilyTree> maybeFamilyTree = plainFamilyTreeService
+                .getFamilyTree(personUuid, Boolean.TRUE.equals(obfuscateLiving));
 
         if (maybeFamilyTree.isEmpty()) {
             return ResponseEntity.badRequest()

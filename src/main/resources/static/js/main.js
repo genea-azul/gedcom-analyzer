@@ -253,7 +253,8 @@ $(document).ready(function() {
                 } else {
                     setTimeout(function() {
                         enableFamilyTreeSearch(resultComponentLocator);
-                    }, 1500);
+                        enableFamilyTreeView(resultComponentLocator);
+                    }, 1750);
                 }
 
                 var surnamesInRequest = getSurnamesInRequest(searchFamilyRequest);
@@ -308,7 +309,14 @@ var enableFamilyTreeSearch = function(resultComponentLocator) {
         .removeClass("btn-dark")
         .addClass("btn-outline-light")
         .removeClass("disabled");
-}
+};
+
+var enableFamilyTreeView = function(resultComponentLocator) {
+    $(resultComponentLocator + " .view-family-tree-btn")
+        .removeClass("btn-dark")
+        .addClass("btn-outline-light")
+        .removeClass("disabled");
+};
 
 var searchSurnames = function(surnames) {
     var surnamesComponentLocator = "#searchSurnamesResultCard div.card-body";
@@ -701,7 +709,19 @@ var getPersonComponent = function(person, index) {
                                 errorLocator: "#search-family-tree-error-" + person.uuid
                             },
                             searchFamilyTree)
-                        .html("Descargar &aacute;rbol")))
+                        .html("Descargar listado de familiares (PDF)")))
+        .append(
+            $("<div>")
+                .addClass("mt-1 text-center")
+                .html(
+                    $("<a>")
+                        .addClass("btn btn-sm btn-dark view-family-tree-btn disabled")
+                        .attr("id", "view-family-tree-btn-" + person.uuid)
+                        .attr("role", "button")
+                        .attr("href", "/family-tree/" + person.uuid
+                            + (new URLSearchParams(window.location.search).get("f") !== "0" ? "" : "?f=0"))
+                        .attr("target", "_blank")
+                        .html("Ver &aacute;rbol geneal&oacute;gico online")))
         .append(
             $("<div>")
                 .addClass("d-none text-center mt-2")

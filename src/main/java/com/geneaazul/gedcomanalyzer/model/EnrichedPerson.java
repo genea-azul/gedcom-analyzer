@@ -80,6 +80,8 @@ public class EnrichedPerson {
     private Optional<Relationship> maxDistantRelationship;
     @Setter
     private List<EnrichedPerson> distinguishedPersonsInTree;
+    @Setter
+    private Integer orderKey;
 
     private EnrichedPerson(Person person, EnrichedGedcom gedcom) {
         this.properties = gedcom.getProperties();
@@ -226,7 +228,7 @@ public class EnrichedPerson {
         getLegacyPerson()
                 .ifPresent(person -> {
                     customEventFacts = PersonUtils.getCustomEventFacts(person);
-                    familyCustomEventFacts =  person.getSpouseFamilies(gedcom)
+                    familyCustomEventFacts = person.getSpouseFamilies(gedcom)
                             .stream()
                             .map(FamilyUtils::getCustomEventFacts)
                             .flatMap(List::stream)

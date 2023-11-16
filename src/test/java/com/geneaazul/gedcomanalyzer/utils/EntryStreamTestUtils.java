@@ -1,11 +1,11 @@
 package com.geneaazul.gedcomanalyzer.utils;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.Map;
 import java.util.function.Function;
 
 import lombok.experimental.UtilityClass;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @UtilityClass
 public class EntryStreamTestUtils {

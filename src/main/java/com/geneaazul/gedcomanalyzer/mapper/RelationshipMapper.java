@@ -68,7 +68,7 @@ public class RelationshipMapper {
                 //noinspection DataFlowIssue
                 spouseSex = spouse.getSex();
                 isSeparated = relationship
-                    .person()
+                        .person()
                         .getSpousesWithChildren()
                         .stream()
                         .filter(spouseWithChildren -> spouseWithChildren
@@ -83,6 +83,7 @@ public class RelationshipMapper {
         }
 
         return RelationshipDto.builder()
+                .personIndex(relationship.person().getOrderKey())
                 .personSex(relationship.person().getSex())
                 .personIsAlive(relationship.person().isAlive())
                 .personName(PersonUtils.obfuscateName(relationship.person(), obfuscateCondition))
@@ -111,7 +112,10 @@ public class RelationshipMapper {
                 .build();
     }
 
-    public FormattedRelationship formatInSpanish(RelationshipDto relationship, int index, boolean onlySecondaryDescription) {
+    public FormattedRelationship formatInSpanish(RelationshipDto relationship, boolean onlySecondaryDescription) {
+        String personIndex = Optional.ofNullable(relationship.getPersonIndex())
+                .map(String::valueOf)
+                .orElse(null);
         String personSex = displaySex(relationship.getPersonSex());
         String treeSide = displayTreeSide(relationship.getTreeSides());
         String personIsAlive = relationship.getPersonIsAlive() ? " " : "✝";
@@ -126,7 +130,7 @@ public class RelationshipMapper {
         String distinguishedPerson = relationship.getIsDistinguishedPerson() ? "★" : "";
         String relationshipDesc = displayRelationshipInSpanish(relationship, onlySecondaryDescription);
         return new FormattedRelationship(
-                String.valueOf(index),
+                personIndex,
                 personName,
                 personSex,
                 personIsAlive,
