@@ -41,6 +41,7 @@ public class PyvisNetworkMapper {
                 person.getPlaceOfBirth()
                         .map(Place::country)
                         .map(countryColorsMap::get)
+                        .filter(countryColors -> StringUtils.isNotEmpty(countryColors[0]))
                         .map(countryColors -> person.isAlive()
                                 ? countryColors[0]
                                 : countryColors[1])

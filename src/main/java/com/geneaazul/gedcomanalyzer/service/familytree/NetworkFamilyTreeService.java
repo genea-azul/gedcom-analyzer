@@ -165,18 +165,52 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
 
         String[] HEADERS = {"id", "label", "title", "shape", "borderWidth", "color", "size"};
 
-        Map<String, String[]> countryColorsMap = Map.of(
-                "Argentina", new String[] {"#9AE4FF", "#74ACDF"},
-                "Italia", new String[] {"#00B65A", "#008C45"},
-                "Francia", new String[] {"#0071DA", "#0055A4"},
-                "España", new String[] {"#E61C21", "#AD1519"},
-                "Inglaterra", new String[] {"#E61C21", "#AD1519"},
-                "Irlanda", new String[] {"#E61C21", "#AD1519"},
-                "Países Bajos", new String[] {"#E61C21", "#AD1519"});
+        Map<String, String[]> countryColorsMap = Map.ofEntries(
+                Map.entry("Alemania", new String[] {"#FFF40F", "#FFCC00"}),
+                Map.entry("Argentina", new String[] {"#8BCEFF", "#74ACDF"}),
+                Map.entry("Austria", new String[] {"", ""}),
+                Map.entry("Bolivia", new String[] {"#923D", "#F4E400"}),
+                Map.entry("Brasil", new String[] {"#2E8D", "#FFDF00"}),
+                Map.entry("Bulgaria", new String[] {"", ""}),
+                Map.entry("Bélgica", new String[] {"#FFFF2B", "#FDDA24"}),
+                Map.entry("Checoslovaquia", new String[] {"#145297", "#11457E"}),
+                Map.entry("Chile", new String[] {"#0F44C7", "#0039A6"}),
+                Map.entry("China", new String[] {"", ""}),
+                Map.entry("Croacia", new String[] {"#1B1BB4", "#171796"}),
+                Map.entry("Dinamarca", new String[] {"#F01337", "#C8102E"}),
+                Map.entry("Ecuador", new String[] {"", ""}),
+                Map.entry("Escocia", new String[] {"#0F70DC", "#005EB8"}),
+                Map.entry("España", new String[] {"#CF191E", "#AD1519"}),
+                Map.entry("Estados Unidos", new String[] {"#484684", "#3C3B6E"}),
+                Map.entry("Francia", new String[] {"#0F66C4", "#0055A4"}),
+                Map.entry("Guatemala", new String[] {"", ""}),
+                Map.entry("Hungría", new String[] {"", ""}),
+                Map.entry("Inglaterra", new String[] {"#F7142B", "#CE1124"}),
+                Map.entry("Irlanda", new String[] {"#FFA34A", "#FF883E"}),
+                Map.entry("Irlanda del Norte", new String[] {"", ""}),
+                Map.entry("Italia", new String[] {"#0FA852", "#008C45"}),
+                Map.entry("Jamaica", new String[] {"", ""}),
+                Map.entry("Japón", new String[] {"#E10F36", "#BC002D"}),
+                Map.entry("Líbano", new String[] {"#0FC860", "#00A750"}),
+                Map.entry("Marruecos", new String[] {"#0F753D", "#006233"}),
+                Map.entry("Nicaragua", new String[] {"", ""}),
+                Map.entry("Océano Atlántico", new String[] {"", ""}),
+                Map.entry("Paraguay", new String[] {"#0F43C9", "#0038A8"}),
+                Map.entry("Países Bajos", new String[] {"#24559F", "#1E4785"}),
+                Map.entry("Perú", new String[] {"#FF132A", "#D91023"}),
+                Map.entry("Polonia", new String[] {"#FF1848", "#DC143C"}),
+                Map.entry("Portugal", new String[] {"#0F7A0F", "#006600"}),
+                Map.entry("República Dominicana", new String[] {"", ""}),
+                Map.entry("Rusia", new String[] {"#0F3CC0", "#0032A0"}),
+                Map.entry("Siria", new String[] {"#0F9249", "#007A3D"}),
+                Map.entry("Sudáfrica", new String[] {"", ""}),
+                Map.entry("Suiza", new String[] {"#FF3102", "#DA2902"}),
+                Map.entry("Uruguay", new String[] {"#8CCCFF", "#75AADB"}),
+                Map.entry("Yugoslavia", new String[] {"#0F43B0", "#003893"}));
 
         String defaultLabel = "?";
         double defaultNodeBorderWidth = 2;
-        String[] defaultColors = new String[] {"#000000", "#666666"};
+        String[] defaultColors = new String[] {"#666666", "#B7B7B7"};
         double defaultSize = 25;
 
         double coupleNodeBorderWidth = 1;
@@ -388,6 +422,15 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                 "<div class=\"card\" style=\"width: 100%; height: 100%; border: 0px;\">");
 
         content = content.replace(
+                "var width = Math.max(minWidth,maxWidth * widthFactor);",
+                "var width = Math.max(10, Math.round(widthFactor*100));");
+        content = content.replace(
+                ".getElementById('bar').style.width = width + 'px';",
+                ".getElementById('bar').style.width = width + '%';");
+        content = content.replace(
+                ".getElementById('bar').style.width = '496px';",
+                ".getElementById('bar').style.width = '100%';");
+        content = content.replace(
                 "font-size:22px;",
                 "display: none;");
         content = content.replace(
@@ -399,6 +442,9 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
         content = content.replace(
                 "width:600px;",
                 "width: 50%;");
+        content = content.replace(
+                "height:44px;",
+                "height:54px;");
 
         Files.writeString(htmlPyvisNetworkFilePath, content, charset);
     }
