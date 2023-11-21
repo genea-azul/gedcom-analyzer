@@ -146,7 +146,7 @@ public class PlainFamilyTreeService implements FamilyTreeService {
             EnrichedPerson person,
             boolean obfuscateLiving,
             List<List<Relationship>> relationshipsWithNotInLawPriority) {
-        log.info("Generating Export family tree PDF");
+        log.info("Generating Plain family tree PDF");
 
         List<FormattedRelationship> peopleInTree = relationshipsWithNotInLawPriority
                 .stream()

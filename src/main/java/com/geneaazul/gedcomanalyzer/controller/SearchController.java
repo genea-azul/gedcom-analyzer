@@ -177,7 +177,7 @@ public class SearchController {
         headers.add(HttpHeaders.CONTENT_LANGUAGE, familyTree.locale().toString());
         headers.add("File-Name", familyTree.filename());
 
-        log.info("Search family tree [ personUuid={}, personId={}, obfuscateLiving={}, httpRequestId={} ]",
+        log.info("Plain family tree [ personUuid={}, personId={}, obfuscateLiving={}, httpRequestId={} ]",
                 personUuid,
                 familyTree.person().getId(),
                 obfuscateLiving,
