@@ -299,6 +299,16 @@ public class GedcomAnalyzerServiceTests {
     }
 
     @Test
+    public void findDistinguishedPersons() {
+        System.out.println("\nfindDistinguishedPersons:");
+        gedcom
+                .getPeople()
+                .stream()
+                .filter(EnrichedPerson::isDistinguishedPerson)
+                .forEach(System.out::println);
+    }
+
+    @Test
     public void getPeopleInTree() {
         EnrichedPerson person = Objects.requireNonNull(gedcom.getPersonById("I4"));
         personService.setTransientProperties(person, true);
