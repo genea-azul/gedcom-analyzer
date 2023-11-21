@@ -99,7 +99,7 @@ public class AppControllerIT extends AbstractControllerIT {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andReturn();
 
-        log.info(url + " response: {}", result.getResponse().getContentAsString(StandardCharsets.ISO_8859_1).substring(0, 50));
+        log.info(url + " response:\n{}", result.getResponse().getContentAsString(StandardCharsets.ISO_8859_1).substring(0, 50));
 
         url = "/family-tree/" + personUuid + "/network";
         result = mvc.perform(get(url)
@@ -109,7 +109,7 @@ public class AppControllerIT extends AbstractControllerIT {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andReturn();
 
-        log.info(url + " response: {}", result.getResponse().getContentAsString(StandardCharsets.ISO_8859_1).substring(0, 50));
+        log.info(url + " response:\n{}", result.getResponse().getContentAsString(StandardCharsets.ISO_8859_1).substring(0, 50));
     }
 
 }

@@ -107,7 +107,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                 .andExpect(jsonPath("$.people", hasSize(2)))
                 .andReturn();
 
-        log.info(url + " response: {}", result.getResponse().getContentAsString(StandardCharsets.UTF_8));
+        log.info(url + " response:\n{}", result.getResponse().getContentAsString(StandardCharsets.UTF_8));
     }
 
     @Test
@@ -133,7 +133,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andReturn();
 
-        log.info(url + " response: {}", result.getResponse().getContentAsString(StandardCharsets.UTF_8));
+        log.info(url + " response:\n{}", result.getResponse().getContentAsString(StandardCharsets.UTF_8));
     }
 
     @Test
@@ -156,7 +156,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                 .andExpect(jsonPath("$.isReviewed", is(true)))
                 .andReturn();
 
-        log.info(url + " response: {}", result.getResponse().getContentAsString(StandardCharsets.UTF_8));
+        log.info(url + " response:\n{}", result.getResponse().getContentAsString(StandardCharsets.UTF_8));
     }
 
     @Test
@@ -180,7 +180,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                 .andExpect(jsonPath("$.surnames", hasSize(3)))
                 .andReturn();
 
-        log.info(url + " response: {}", result.getResponse().getContentAsString(StandardCharsets.UTF_8));
+        log.info(url + " response:\n{}", result.getResponse().getContentAsString(StandardCharsets.UTF_8));
     }
 
     @Test
@@ -201,6 +201,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                         .givenName(fatherGivenName)
                         .sex(SexType.M)
                         .build())
+                .obfuscateLiving(false)
                 .build();
 
         doReturn(SearchFamily.builder()
@@ -224,6 +225,9 @@ public class SearchControllerIT extends AbstractControllerIT {
 
         UUID personUuid = searchFamilyResult.getPeople().get(0).getUuid();
 
+        /*
+         * Test download plain family tree PDF
+         */
         url = "/api/search/family-tree/" + personUuid + "/plain";
         MvcResult result = mvc.perform(get(url)
                         .queryParam("obfuscateLiving", "false")
@@ -232,7 +236,20 @@ public class SearchControllerIT extends AbstractControllerIT {
                 .andExpect(content().contentType(MediaType.APPLICATION_PDF))
                 .andReturn();
 
-        log.info(url + " response: {}", result.getResponse().getContentAsString(StandardCharsets.ISO_8859_1).substring(0, 50));
+        log.info(url + " response:\n{}", result.getResponse().getContentAsString(StandardCharsets.ISO_8859_1).substring(0, 50));
+
+        /*
+         * Test view network family tree HTML
+         */
+        url = "/family-tree/" + personUuid + "/network";
+        result = mvc.perform(get(url)
+                        .queryParam("f", "0")
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.TEXT_HTML))
+                .andReturn();
+
+        log.info(url + " response:\n{}", result.getResponse().getContentAsString(StandardCharsets.ISO_8859_1).substring(0, 50));
     }
 
 }
