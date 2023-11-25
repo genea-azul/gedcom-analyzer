@@ -53,6 +53,7 @@ public class EnrichedPerson {
     private final boolean isAlive;
     private final Optional<Age> age;
     private final boolean isDistinguishedPerson;
+    private final boolean isDisappearedPerson;
 
     // Custom event facts and tag extensions
     private List<EventFact> customEventFacts;
@@ -109,6 +110,7 @@ public class EnrichedPerson {
         age = Age.of(dateOfBirth, dateOfDeath
                 .or(() -> isAlive ? Optional.of(Date.now(properties.getZoneId())) : Optional.empty()));
         isDistinguishedPerson = PersonUtils.isDistinguishedPerson(person);
+        isDisappearedPerson = PersonUtils.isDisappearedPerson(person);
     }
 
     public static EnrichedPerson of(Person legacyPerson, EnrichedGedcom gedcom) {

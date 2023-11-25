@@ -309,6 +309,16 @@ public class GedcomAnalyzerServiceTests {
     }
 
     @Test
+    public void findDisappearedPersons() {
+        System.out.println("\nfindDisappearedPersons:");
+        gedcom
+                .getPeople()
+                .stream()
+                .filter(EnrichedPerson::isDisappearedPerson)
+                .forEach(System.out::println);
+    }
+
+    @Test
     public void getPeopleInTree() {
         EnrichedPerson person = Objects.requireNonNull(gedcom.getPersonById("I4"));
         personService.setTransientProperties(person, true);

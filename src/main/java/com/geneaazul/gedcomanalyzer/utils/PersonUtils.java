@@ -62,6 +62,7 @@ public class PersonUtils {
     public static final Set<String> SEX_TAGS = Set.of("SEX");
     public static final Set<String> EVENT_TAGS = Set.of("EVEN", "EVENT");
     public static final Set<String> ETHNICITY_EVENT_TYPES = Set.of("ETHN", "ETHNICITY", "Grupo étnico");
+    public static final Set<String> DISAPPEARED_PERSON_EVENT_TYPES = Set.of("Enforced disappearance", "Desaparición forzada");
     public static final Set<String> COMMENT_EVENT_TYPES = Set.of("Comment");
     public static final Set<String> DISTINGUISHED_PERSON_COMMENT_VALUES = Set.of("Personalidad destacada");
 
@@ -109,6 +110,14 @@ public class PersonUtils {
                         -> EVENT_TAGS.contains(eventFact.getTag())
                         && COMMENT_EVENT_TYPES.contains(eventFact.getType())
                         && DISTINGUISHED_PERSON_COMMENT_VALUES.contains(eventFact.getValue()));
+    }
+
+    public static boolean isDisappearedPerson(Person person) {
+        return person.getEventsFacts()
+                .stream()
+                .anyMatch(eventFact
+                        -> EVENT_TAGS.contains(eventFact.getTag())
+                        && DISAPPEARED_PERSON_EVENT_TYPES.contains(eventFact.getType()));
     }
 
     public static SexType getSex(Person person) {
