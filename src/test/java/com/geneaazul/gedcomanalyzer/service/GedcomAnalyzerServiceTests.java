@@ -9,6 +9,7 @@ import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.model.dto.RelationshipDto;
+import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.DateUtils.AstrologicalSign;
 import com.geneaazul.gedcomanalyzer.utils.PathUtils;
@@ -203,6 +204,19 @@ public class GedcomAnalyzerServiceTests {
         System.out.println("\nfindPersonsByPlaceOfBirth:");
         searchService
                 .findPersonsByPlaceOfBirth("Latina, Lazio, Italia", null, null, gedcom.getPeople())
+                .forEach(System.out::println);
+    }
+
+    @Test
+    public void findPersonsByMonthAndDayOfBirth() {
+        System.out.println("\nfindPersonsByMonthAndDayOfBirth:");
+        List<EnrichedPerson> people = searchService.findPersonsByName(
+                "Emma",
+                null,
+                SexType.F,
+                gedcom);
+        searchService
+                .findPersonsByMonthAndDayOfDeath(Month.AUGUST, 22, null, people)
                 .forEach(System.out::println);
     }
 
