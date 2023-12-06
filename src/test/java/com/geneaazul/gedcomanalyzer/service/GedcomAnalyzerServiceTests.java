@@ -202,8 +202,9 @@ public class GedcomAnalyzerServiceTests {
     @Test
     public void findPersonsByPlaceOfBirth() {
         System.out.println("\nfindPersonsByPlaceOfBirth:");
+        List<EnrichedPerson> people = searchService.findPersonsBySurname("Arbío", null, gedcom);
         searchService
-                .findPersonsByPlaceOfBirth("Latina, Lazio, Italia", null, null, gedcom.getPeople())
+                .findPersonsByPlaceOfBirth("Argentina", null, null, people)
                 .forEach(System.out::println);
     }
 
