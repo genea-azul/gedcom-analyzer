@@ -13,7 +13,7 @@ import com.geneaazul.gedcomanalyzer.service.DockerService;
 import com.geneaazul.gedcomanalyzer.service.FamilyService;
 import com.geneaazul.gedcomanalyzer.service.SurnameService;
 import com.geneaazul.gedcomanalyzer.service.familytree.FamilyTreeManager;
-import com.geneaazul.gedcomanalyzer.service.familytree.PlainFamilyTreeService;
+import com.geneaazul.gedcomanalyzer.service.familytree.PlainFamilyTreePdfService;
 import com.geneaazul.gedcomanalyzer.utils.InetAddressUtils;
 
 import org.springframework.core.io.PathResource;
@@ -55,7 +55,7 @@ public class SearchController {
     private final GedcomAnalyzerProperties properties;
     private final DockerService dockerService;
     private final FamilyTreeManager familyTreeManager;
-    private final PlainFamilyTreeService plainFamilyTreeService;
+    private final PlainFamilyTreePdfService plainFamilyTreePdfService;
 
     @PostMapping("/family")
     public SearchFamilyResultDto searchFamily(
@@ -91,13 +91,13 @@ public class SearchController {
 
         searchId
                 .filter(id -> properties.isStoreFamilySearch())
-                .ifPresent(id -> familyService.updateSearchIsMatch(id, searchFamilyResult.getPeople().size() > 0));
+                .ifPresent(id -> familyService.updateSearchIsMatch(id, !searchFamilyResult.getPeople().isEmpty()));
 
         // Queue PDF Family Tree and HTML Pyvis Network generation
         familyTreeManager.queueFamilyTreeGeneration(
                 searchFamilyResult.getPeople(),
                 searchFamilyDto.getObfuscateLiving(),
-                List.of(FamilyTreeType.values()));
+                List.of(FamilyTreeType.PLAIN_PDF, FamilyTreeType.NETWORK));
 
         return searchFamilyResult;
     }
@@ -162,7 +162,7 @@ public class SearchController {
             @RequestParam(defaultValue = BooleanUtils.TRUE) Boolean obfuscateLiving,
             HttpServletRequest request) throws IOException {
 
-        Optional<FamilyTree> maybeFamilyTree = plainFamilyTreeService
+        Optional<FamilyTree> maybeFamilyTree = plainFamilyTreePdfService
                 .getFamilyTree(personUuid, Boolean.TRUE.equals(obfuscateLiving));
 
         if (maybeFamilyTree.isEmpty()) {

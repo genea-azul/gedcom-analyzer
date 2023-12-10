@@ -4,10 +4,12 @@ import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.mapper.PyvisNetworkMapper;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.FamilyTree;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.PythonUtils;
 
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 import org.apache.commons.csv.CSVFormat;
@@ -24,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -111,7 +114,8 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
         }
     }
 
-    public Optional<Path> getFamilyTree(
+    @Override
+    public Optional<FamilyTree> getFamilyTree(
             UUID personUuid,
             boolean obfuscateLiving) {
 
@@ -141,7 +145,12 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                     relationshipsWithNotInLawPriority);
         }
 
-        return Optional.of(htmlPyvisNetworkFilePath);
+        return Optional.of(new FamilyTree(
+                person,
+                "genea_azul_arbol_" + familyTreeFileIdPrefix + ".html",
+                htmlPyvisNetworkFilePath,
+                MediaType.TEXT_HTML,
+                new Locale("es", "AR")));
     }
 
     public void generateNetworkHTML(

@@ -9,6 +9,7 @@ import com.geneaazul.gedcomanalyzer.service.PersonService;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -23,24 +24,28 @@ import java.util.List;
 @SpringBootTest
 @EnableConfigurationProperties
 @ActiveProfiles("test")
-@SuppressWarnings("DataFlowIssue")
-public class PlainFamilyTreeServiceTests {
+public class PlainFamilyTreeTxtServiceTests {
 
     @Autowired
     private GedcomHolder gedcomHolder;
     @Autowired
     private PersonService personService;
     @Autowired
-    private PlainFamilyTreeService plainFamilyTreeService;
+    private PlainFamilyTreeTxtService plainFamilyTreeTxtService;
     @Autowired
     private RelationshipMapper relationshipMapper;
     @Autowired
     private GedcomAnalyzerProperties properties;
 
+    @Value("${obfuscate-condition:false}")
+    private boolean obfuscateCondition;
+
     @Test
-    public void testExportToPDF() throws IOException {
+    public void testExportToTXT() throws IOException {
 
         EnrichedPerson person = gedcomHolder.getGedcom().getPersonById("I4");
+        assert person != null;
+
         List<Relationships> relationshipsList = personService.setTransientProperties(person, false);
 
         MutableInt index = new MutableInt(1);
@@ -49,15 +54,15 @@ public class PlainFamilyTreeServiceTests {
                 .map(Relationships::findLast)
                 .sorted()
                 .peek(relationship -> relationship.person().setOrderKey(index.getAndIncrement()))
-                .map(relationship -> relationshipMapper.toRelationshipDto(relationship, false))
-                .map(relationship -> relationshipMapper.formatInSpanish(relationship, true))
+                .map(relationship -> relationshipMapper.toRelationshipDto(relationship, obfuscateCondition))
+                .map(relationship -> relationshipMapper.formatInSpanish(relationship, false))
                 .toList();
 
         Path path = properties
                 .getTempDir()
                 .resolve("family-trees")
-                .resolve("export_to_pdf_test.pdf");
-        plainFamilyTreeService.exportToPDF(path, person, peopleInTree);
+                .resolve("export_to_txt_test.txt");
+        plainFamilyTreeTxtService.exportToTXT(path, person, peopleInTree);
     }
 
 }

@@ -3,7 +3,8 @@ package com.geneaazul.gedcomanalyzer.config;
 import com.geneaazul.gedcomanalyzer.model.FamilyTreeType;
 import com.geneaazul.gedcomanalyzer.service.familytree.FamilyTreeService;
 import com.geneaazul.gedcomanalyzer.service.familytree.NetworkFamilyTreeService;
-import com.geneaazul.gedcomanalyzer.service.familytree.PlainFamilyTreeService;
+import com.geneaazul.gedcomanalyzer.service.familytree.PlainFamilyTreePdfService;
+import com.geneaazul.gedcomanalyzer.service.familytree.PlainFamilyTreeTxtService;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,10 +32,12 @@ public class FamilyTreeConfig {
 
     @Bean
     public Map<FamilyTreeType, FamilyTreeService> familyTreeServiceByType(
-            PlainFamilyTreeService plainFamilyTreeService,
+            PlainFamilyTreePdfService plainFamilyTreePdfService,
+            PlainFamilyTreeTxtService plainFamilyTreeTxtService,
             NetworkFamilyTreeService networkFamilyTreeService) {
         return Map.of(
-                FamilyTreeType.PLAIN, plainFamilyTreeService,
+                FamilyTreeType.PLAIN_PDF, plainFamilyTreePdfService,
+                FamilyTreeType.PLAIN_TXT, plainFamilyTreeTxtService,
                 FamilyTreeType.NETWORK, networkFamilyTreeService);
     }
 

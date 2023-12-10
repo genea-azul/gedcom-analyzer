@@ -1,5 +1,6 @@
 package com.geneaazul.gedcomanalyzer.controller;
 
+import com.geneaazul.gedcomanalyzer.model.FamilyTree;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
 import com.geneaazul.gedcomanalyzer.service.DockerService;
 import com.geneaazul.gedcomanalyzer.service.PersonService;
@@ -18,7 +19,6 @@ import org.springframework.web.servlet.ModelAndView;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
@@ -78,7 +78,7 @@ public class AppController {
             HttpServletRequest request) throws IOException {
         boolean obfuscateLiving = !"0".equals(f);
 
-        Optional<Path> maybeFamilyTree = networkFamilyTreeService
+        Optional<FamilyTree> maybeFamilyTree = networkFamilyTreeService
                 .getFamilyTree(personUuid, obfuscateLiving);
 
         if (maybeFamilyTree.isEmpty()) {
@@ -93,13 +93,13 @@ public class AppController {
                 obfuscateLiving,
                 request.getRequestId());
 
-        Path familyTree = maybeFamilyTree.get();
+        FamilyTree familyTree = maybeFamilyTree.get();
 
         return ResponseEntity.ok()
-                .contentLength(Files.size(familyTree))
-                .contentType(MediaType.TEXT_HTML)
+                .contentLength(Files.size(familyTree.path()))
+                .contentType(familyTree.mediaType())
                 .cacheControl(CacheControl.maxAge(Duration.ofDays(365)))
-                .body(Files.readString(familyTree, StandardCharsets.UTF_8));
+                .body(Files.readString(familyTree.path(), StandardCharsets.UTF_8));
     }
 
     @GetMapping("/search-family/latest")

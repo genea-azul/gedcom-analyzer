@@ -1,5 +1,5 @@
 package com.geneaazul.gedcomanalyzer.model;
 
 public enum FamilyTreeType {
-    PLAIN, NETWORK
+    PLAIN_PDF, PLAIN_TXT, NETWORK
 }
