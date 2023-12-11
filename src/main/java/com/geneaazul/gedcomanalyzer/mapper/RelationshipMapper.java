@@ -287,18 +287,25 @@ public class RelationshipMapper {
             Assert.isTrue(!relationship.getIsHalf(), "isHalf should be false");
 
             // Special case for child's spouse naming
-            if (relationship.getGeneration() == 1) {
+            if (relationship.getGeneration() <= 3) {
                 if (relationship.getIsInLaw()
                         && relationship.getAdoptionType() == null
                         && relationship.getPersonSex() != SexType.U) {
-                    return relationship.getPersonSex() == SexType.M
-                            ? separated + "yerno"
-                            : separated + "nuera";
+                    String relationshipName = relationship.getPersonSex() == SexType.M ? "yerno" : "nuera";
+                    String relationshipNamePrefix = switch (relationship.getGeneration()) {
+                        case 2 -> "pro";
+                        case 3 -> "ab";
+                        default -> "";
+                    };
+                    return separated + relationshipNamePrefix + relationshipName;
                 }
-                String sexSuffix = getSexSuffixInSpanish(relationship);
-                String relationshipName = getRelationshipNameInSpanish(relationship.getGeneration(), sexSuffix, Sort.Direction.DESC);
-                String adoptionSuffix = getAdoptionSuffixInSpanish(relationship.getAdoptionType(), sexSuffix);
-                return spousePrefix + relationshipName + adoptionSuffix;
+
+                if (relationship.getGeneration() == 1) {
+                    String sexSuffix = getSexSuffixInSpanish(relationship);
+                    String relationshipName = getRelationshipNameInSpanish(relationship.getGeneration(), sexSuffix, Sort.Direction.DESC);
+                    String adoptionSuffix = getAdoptionSuffixInSpanish(relationship.getAdoptionType(), sexSuffix);
+                    return spousePrefix + relationshipName + adoptionSuffix;
+                }
             }
 
             String sexSuffix = getSexSuffixInSpanish(relationship);
