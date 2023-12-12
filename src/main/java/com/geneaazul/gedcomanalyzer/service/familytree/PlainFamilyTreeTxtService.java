@@ -54,7 +54,7 @@ public class PlainFamilyTreeTxtService extends PlainFamilyTreeService {
                 .stream()
                 .map(relationships -> relationships
                         .stream()
-                        .map(relationship -> relationshipMapper.toRelationshipDto(relationship, false))
+                        .map(relationship -> relationshipMapper.toRelationshipDto(relationship, obfuscateLiving))
                         .map(relationship -> relationshipMapper.formatInSpanish(relationship, false))
                         .toList())
                 .map(frs -> frs
@@ -70,7 +70,7 @@ public class PlainFamilyTreeTxtService extends PlainFamilyTreeService {
         }
     }
 
-    public void exportToTXT(
+    private void exportToTXT(
             Path exportFilePath,
             EnrichedPerson person,
             List<FormattedRelationship> peopleInTree) throws IOException {

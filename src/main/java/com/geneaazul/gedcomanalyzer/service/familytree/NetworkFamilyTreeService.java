@@ -12,6 +12,7 @@ import com.geneaazul.gedcomanalyzer.utils.PythonUtils;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.exec.CommandLine;
@@ -95,29 +96,19 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                 .resolve("family-trees")
                 .resolve(familyTreeFileIdPrefix + "_edges_" + person.getUuid() + familyTreeFileSuffix + ".csv");
 
-        List<EnrichedPerson> peopleToExport = relationshipsWithNotInLawPriority
-                .stream()
-                .limit(properties.getMaxPyvisNetworkNodesToExport())
-                .map(relationships -> relationships.get(0))
-                .map(Relationship::person)
-                .toList();
-
-        try {
-            generateNetworkHTML(
-                    htmlPyvisNetworkFilePath,
-                    csvPyvisNetworkNodesFilePath,
-                    csvPyvisNetworkEdgesFilePath,
-                    obfuscateLiving,
-                    peopleToExport);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        generate(
+                htmlPyvisNetworkFilePath,
+                csvPyvisNetworkNodesFilePath,
+                csvPyvisNetworkEdgesFilePath,
+                obfuscateLiving,
+                relationshipsWithNotInLawPriority);
     }
 
     @Override
     public Optional<FamilyTree> getFamilyTree(
             UUID personUuid,
-            boolean obfuscateLiving) {
+            boolean obfuscateLiving,
+            boolean forceRewrite) {
 
         EnrichedGedcom gedcom = gedcomHolder.getGedcom();
         EnrichedPerson person = gedcom.getPersonByUuid(personUuid);
@@ -133,7 +124,7 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                 familyTreeFileIdPrefix,
                 familyTreeFileSuffix);
 
-        if (Files.notExists(htmlPyvisNetworkFilePath)) {
+        if (forceRewrite || Files.notExists(htmlPyvisNetworkFilePath)) {
             List<List<Relationship>> relationshipsWithNotInLawPriority = familyTreeHelper
                     .getRelationshipsWithNotInLawPriority(person);
 
@@ -153,13 +144,40 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                 new Locale("es", "AR")));
     }
 
-    public void generateNetworkHTML(
+    @VisibleForTesting
+    protected void generate(
+            Path htmlPyvisNetworkFilePath,
+            Path csvPyvisNetworkNodesFilePath,
+            Path csvPyvisNetworkEdgesFilePath,
+            boolean obfuscateLiving,
+            List<List<Relationship>> peopleInTree) {
+        log.info("Generating Network family tree HTML");
+
+        List<EnrichedPerson> peopleToExport = peopleInTree
+                .stream()
+                .limit(properties.getMaxPyvisNetworkNodesToExport())
+                .map(relationships -> relationships.get(0))
+                .map(Relationship::person)
+                .toList();
+
+        try {
+            generateNetworkHTML(
+                    htmlPyvisNetworkFilePath,
+                    csvPyvisNetworkNodesFilePath,
+                    csvPyvisNetworkEdgesFilePath,
+                    obfuscateLiving,
+                    peopleToExport);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    private void generateNetworkHTML(
             Path htmlPyvisNetworkFilePath,
             Path csvPyvisNetworkNodesFilePath,
             Path csvPyvisNetworkEdgesFilePath,
             boolean obfuscateLiving,
             List<EnrichedPerson> peopleInTree) throws IOException {
-        log.info("Generating Network family tree HTML");
 
         // Make sure target directory exists
         Files.createDirectories(htmlPyvisNetworkFilePath.getParent());

@@ -41,10 +41,12 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
 
-    private static final int MAX_DISTANCE_TO_OBFUSCATE = 3;
     @SuppressWarnings("unused")
     private static final float A4_MAX_OFFSET_X = 590f;
     private static final float A4_MAX_OFFSET_Y = 830f;
+
+    private static final int MAX_DISTANCE_TO_OBFUSCATE = 3;
+    private static final int MAX_PERSON_NAME_LENGTH = 48;
 
     private final RelationshipMapper relationshipMapper;
     private final Map<EmbeddedFontsConfig.Font, String> embeddedFonts;
@@ -99,7 +101,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
         }
     }
 
-    public void exportToPDF(
+    private void exportToPDF(
             Path exportFilePath,
             EnrichedPerson person,
             List<FormattedRelationship> peopleInTree) throws IOException {
@@ -120,12 +122,15 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                     .stream()
                     .anyMatch(FormattedRelationship::isObfuscated);
 
+            PDImageXObject logoImage = loadImage(document, "images/logo-bw-small.png");
+
             writeFirstPage(
                     document,
                     person,
                     peopleInTree,
                     maxPersonsInFirstPage,
                     isAnyPersonObfuscated,
+                    logoImage,
                     font,
                     bold,
                     light,
@@ -162,6 +167,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                     person,
                     nextPages.size(),
                     isAnyPersonObfuscated,
+                    logoImage,
                     font,
                     bold,
                     light,
@@ -181,6 +187,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             List<FormattedRelationship> peopleInTree,
             int maxPersonsInFirstPage,
             boolean isAnyPersonObfuscated,
+            PDImageXObject logoImage,
             PDFont font,
             PDFont bold,
             PDFont light,
@@ -191,10 +198,13 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
         document.addPage(firstPage);
 
         try (PDPageContentStream stream = new PDPageContentStream(document, firstPage)) {
+
+            drawLogoImage(stream, logoImage, A4_MAX_OFFSET_X - 160f, 10f);
+
             writeText(stream, bold, 16f, 1.2f, 30f, 40f,
-                    "Genea Azul - Estudio de Genealogía Azuleña");
+                    "Genea Azul");
             writeText(stream, font, 11.5f, 1.2f, 30f, 60f,
-                    "geneaazul.com.ar  -  en redes sociales: @genea.azul");
+                    "sitio web: geneaazul.com.ar  -  en redes sociales: @genea.azul");
 
             float legendX = 30f;
             float legendY = 95f;
@@ -233,6 +243,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             EnrichedPerson person,
             int nextPagesCount,
             boolean isAnyPersonObfuscated,
+            PDImageXObject logoImage,
             PDFont font,
             PDFont bold,
             PDFont light,
@@ -243,10 +254,13 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
         document.addPage(lastPage);
 
         try (PDPageContentStream stream = new PDPageContentStream(document, lastPage)) {
+
+            drawLogoImage(stream, logoImage, A4_MAX_OFFSET_X - 160f, 10f);
+
             writeText(stream, bold, 16f, 1.2f, 30f, 40f,
-                    "Genea Azul - Estudio de Genealogía Azuleña");
+                    "Genea Azul");
             writeText(stream, font, 11.5f, 1.2f, 30f, 60f,
-                    "geneaazul.com.ar  -  en redes sociales: @genea.azul");
+                    "sitio web: geneaazul.com.ar  -  en redes sociales: @genea.azul");
 
             writeText(stream, bold, 12.5f, 1.2f, 30f, 95f,
                     "Leyenda:");
@@ -314,9 +328,9 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             legendSepX = 15f;
             legendSepY = -10f; // text over the image
 
-            // Original image size: 3554 x 3212
+            // Original image size: 1422 x 1285
             float imageWidth = 500f;
-            float imageHeight = 451.89f;
+            float imageHeight = 1285f * imageWidth / 1422f;
             float imagePosY = A4_MAX_OFFSET_Y - imageHeight - legendY - legendSepY;
 
             PDImageXObject relationshipsImage = loadImage(document, "images/relationships-graph.png");
@@ -335,6 +349,15 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                         "Para revelar las datos privados de las personas ponete en contacto con nosotros (no tiene costo).");
             }
         }
+    }
+
+    private void drawLogoImage(PDPageContentStream stream, PDImageXObject image, float x, float y) throws IOException {
+        // Original image size: 502 x 264
+        float imageWidth = 120f;
+        float imageHeight = 264f * imageWidth / 502f;
+        float imagePosY = A4_MAX_OFFSET_Y - imageHeight - y;
+
+        stream.drawImage(image, x, imagePosY, imageWidth, imageHeight);
     }
 
     private void writePeopleInPage(
@@ -389,9 +412,9 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
         lines = peopleInPage
                 .stream()
                 .map(FormattedRelationship::personName)
-                .map(name -> StringUtils.substring(name, 0, 43))
+                .map(name -> StringUtils.substring(name, 0, MAX_PERSON_NAME_LENGTH))
                 .toArray(String[]::new);
-        writeText(stream, light, size1, space1, 155f, yPos, lines);
+        writeText(stream, light, size2, space2, 155f, yPos, lines);
 
         lines = peopleInPage
                 .stream()

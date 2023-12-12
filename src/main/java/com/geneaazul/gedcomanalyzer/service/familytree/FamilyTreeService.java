@@ -25,6 +25,7 @@ public interface FamilyTreeService {
 
     Optional<FamilyTree> getFamilyTree(
             UUID personUuid,
-            boolean obfuscateLiving);
+            boolean obfuscateLiving,
+            boolean forceRewrite);
 
 }

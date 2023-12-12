@@ -79,7 +79,8 @@ public abstract class PlainFamilyTreeService implements FamilyTreeService {
     @Override
     public Optional<FamilyTree> getFamilyTree(
             UUID personUuid,
-            boolean obfuscateLiving) {
+            boolean obfuscateLiving,
+            boolean forceRewrite) {
 
         EnrichedGedcom gedcom = gedcomHolder.getGedcom();
         EnrichedPerson person = gedcom.getPersonByUuid(personUuid);
@@ -95,13 +96,14 @@ public abstract class PlainFamilyTreeService implements FamilyTreeService {
                 familyTreeFileIdPrefix,
                 familyTreeFileSuffix);
 
-        if (Files.notExists(exportFilePath)) {
+        if (forceRewrite || Files.notExists(exportFilePath)) {
             List<List<Relationship>> relationshipsWithNotInLawPriority = familyTreeHelper
                     .getRelationshipsWithNotInLawPriority(person);
 
-            export(
-                    exportFilePath,
+            generateFamilyTree(
                     person,
+                    familyTreeFileIdPrefix,
+                    familyTreeFileSuffix,
                     obfuscateLiving,
                     relationshipsWithNotInLawPriority);
         }

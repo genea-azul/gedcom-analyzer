@@ -79,7 +79,7 @@ public class AppController {
         boolean obfuscateLiving = !"0".equals(f);
 
         Optional<FamilyTree> maybeFamilyTree = networkFamilyTreeService
-                .getFamilyTree(personUuid, obfuscateLiving);
+                .getFamilyTree(personUuid, obfuscateLiving, false);
 
         if (maybeFamilyTree.isEmpty()) {
             return ResponseEntity.badRequest()

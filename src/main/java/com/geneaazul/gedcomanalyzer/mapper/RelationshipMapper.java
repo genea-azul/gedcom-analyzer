@@ -268,7 +268,7 @@ public class RelationshipMapper {
             String sexSuffix = getSexSuffixInSpanish(relationship);
 
             String or = "";
-            if (relationship.getGeneration() >= 10) {
+            if (relationship.getGeneration() >= 11) {
                 String relationshipNameOr = "ancestro directo de " + relationship.getGeneration() + " generaciones";
                 or = spousePrefix + relationshipNameOr;
                 if (onlySecondaryDescription) {
@@ -311,7 +311,7 @@ public class RelationshipMapper {
             String sexSuffix = getSexSuffixInSpanish(relationship);
 
             String or = "";
-            if (relationship.getGeneration() >= 10) {
+            if (relationship.getGeneration() >= 11) {
                 String relationshipNameOr = "descendiente directo de " + relationship.getGeneration() + " generaciones";
                 or = spousePrefix + relationshipNameOr;
                 if (onlySecondaryDescription) {

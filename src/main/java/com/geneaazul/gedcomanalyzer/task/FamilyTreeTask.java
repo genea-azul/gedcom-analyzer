@@ -15,24 +15,28 @@ public class FamilyTreeTask implements Runnable {
     @Override
     public void run() {
         try {
-            log.info("Executing task [ persons={}, obfuscateLiving={}, types={} ]",
+            log.info("Executing task [ persons={}, obfuscateLiving={}, forceRewrite={}, types={} ]",
                     taskParams.personUuids(),
                     taskParams.obfuscateLiving(),
+                    taskParams.forceRewrite(),
                     taskParams.types());
 
             familyTreeManager.generateFamilyTrees(
                     taskParams.personUuids(),
                     taskParams.obfuscateLiving(),
+                    taskParams.forceRewrite(),
                     taskParams.types());
 
-            log.info("Task completed [ persons={}, obfuscateLiving={}, types={} ]",
+            log.info("Task completed [ persons={}, obfuscateLiving={}, forceRewrite={}, types={} ]",
                     taskParams.personUuids(),
                     taskParams.obfuscateLiving(),
+                    taskParams.forceRewrite(),
                     taskParams.types());
         } catch (Throwable t) {
-            log.error("Error while executing task [ persons={}, obfuscateLiving={}, types={} ]",
+            log.error("Error while executing task [ persons={}, obfuscateLiving={}, forceRewrite={}, types={} ]",
                     taskParams.personUuids(),
                     taskParams.obfuscateLiving(),
+                    taskParams.forceRewrite(),
                     taskParams.types(),
                     t);
         }

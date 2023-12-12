@@ -81,9 +81,10 @@ public class SearchController {
 
         SearchFamilyResultDto searchFamilyResult = familyService.search(searchFamilyDto);
 
-        log.info("Search family [ searchId={}, obfuscateLiving={}, peopleInResult={}, potentialResults={}, errors={}, httpRequestId={} ]",
+        log.info("Search family [ searchId={}, obfuscateLiving={}, forceRewrite={}, peopleInResult={}, potentialResults={}, errors={}, httpRequestId={} ]",
                 searchId.orElse(null),
                 searchFamilyDto.getObfuscateLiving(),
+                searchFamilyDto.getIsForceRewrite(),
                 searchFamilyResult.getPeople().size(),
                 searchFamilyResult.getPotentialResults(),
                 searchFamilyResult.getErrors().size(),
@@ -97,6 +98,7 @@ public class SearchController {
         familyTreeManager.queueFamilyTreeGeneration(
                 searchFamilyResult.getPeople(),
                 searchFamilyDto.getObfuscateLiving(),
+                searchFamilyDto.getIsForceRewrite(),
                 List.of(FamilyTreeType.PLAIN_PDF, FamilyTreeType.NETWORK));
 
         return searchFamilyResult;
@@ -156,14 +158,18 @@ public class SearchController {
         return searchSurnamesResult;
     }
 
-    @GetMapping("/family-tree/{personUuid}/plain")
-    public ResponseEntity<Resource> getPlainFamilyTree(
+    @GetMapping("/family-tree/{personUuid}/plainPdf")
+    public ResponseEntity<Resource> getPlainFamilyTreePdf(
             @PathVariable UUID personUuid,
-            @RequestParam(defaultValue = BooleanUtils.TRUE) Boolean obfuscateLiving,
+            @RequestParam @Nullable Boolean obfuscateLiving,
+            @RequestParam @Nullable Boolean forceRewrite,
             HttpServletRequest request) throws IOException {
 
         Optional<FamilyTree> maybeFamilyTree = plainFamilyTreePdfService
-                .getFamilyTree(personUuid, Boolean.TRUE.equals(obfuscateLiving));
+                .getFamilyTree(
+                        personUuid,
+                        BooleanUtils.isNotFalse(obfuscateLiving),
+                        BooleanUtils.isTrue(forceRewrite));
 
         if (maybeFamilyTree.isEmpty()) {
             return ResponseEntity.badRequest()
@@ -177,10 +183,11 @@ public class SearchController {
         headers.add(HttpHeaders.CONTENT_LANGUAGE, familyTree.locale().toString());
         headers.add("File-Name", familyTree.filename());
 
-        log.info("Plain family tree [ personUuid={}, personId={}, obfuscateLiving={}, httpRequestId={} ]",
+        log.info("Plain family tree [ personUuid={}, personId={}, obfuscateLiving={}, forceRewrite={}, httpRequestId={} ]",
                 personUuid,
                 familyTree.person().getId(),
                 obfuscateLiving,
+                forceRewrite,
                 request.getRequestId());
 
         PathResource resource = new PathResource(familyTree.path());

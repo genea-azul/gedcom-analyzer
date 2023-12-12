@@ -90,6 +90,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                         .build())
                 .contact("juan.perez@gmail.com")
                 .obfuscateLiving(false)
+                .isForceRewrite(true)
                 .build();
 
         doReturn(SearchFamily.builder()
@@ -202,6 +203,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                         .sex(SexType.M)
                         .build())
                 .obfuscateLiving(false)
+                .isForceRewrite(true)
                 .build();
 
         doReturn(SearchFamily.builder()
@@ -228,9 +230,10 @@ public class SearchControllerIT extends AbstractControllerIT {
         /*
          * Test download plain family tree PDF
          */
-        url = "/api/search/family-tree/" + personUuid + "/plain";
+        url = "/api/search/family-tree/" + personUuid + "/plainPdf";
         MvcResult result = mvc.perform(get(url)
                         .queryParam("obfuscateLiving", "false")
+                        .queryParam("forceRewrite", "false") // already forced in previous search
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_PDF))

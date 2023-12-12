@@ -13,6 +13,7 @@ import com.geneaazul.gedcomanalyzer.task.FamilyTreeTaskParams;
 
 import org.springframework.stereotype.Service;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.util.Comparator;
@@ -36,6 +37,7 @@ public class FamilyTreeManager {
     public void queueFamilyTreeGeneration(
             List<PersonDto> people,
             boolean obfuscateLiving,
+            boolean forceRewrite,
             List<FamilyTreeType> types) {
 
         if (people.isEmpty()) {
@@ -47,7 +49,7 @@ public class FamilyTreeManager {
                 .map(PersonDto::getUuid)
                 .toList();
 
-        FamilyTreeTaskParams taskParams = new FamilyTreeTaskParams(peopleUuids, obfuscateLiving, types);
+        FamilyTreeTaskParams taskParams = new FamilyTreeTaskParams(peopleUuids, obfuscateLiving, forceRewrite, types);
         FamilyTreeTask task = new FamilyTreeTask(taskParams, this);
         singleThreadExecutorService.submit(task);
     }
@@ -55,6 +57,7 @@ public class FamilyTreeManager {
     public void generateFamilyTrees(
             List<UUID> personUuids,
             boolean obfuscateLiving,
+            boolean forceRewrite,
             List<FamilyTreeType> types) {
 
         personUuids
@@ -71,7 +74,7 @@ public class FamilyTreeManager {
                     List<FamilyTreeService> familyTreeServices = types
                             .stream()
                             .map(this::getFamilyTreeServiceByType)
-                            .filter(familyTreeService -> familyTreeService.isMissingFamilyTree(
+                            .filter(familyTreeService -> forceRewrite || familyTreeService.isMissingFamilyTree(
                                     person,
                                     familyTreeFileIdPrefix,
                                     familyTreeFileSuffix,
@@ -99,7 +102,8 @@ public class FamilyTreeManager {
         return familyTreeServiceByType.get(type);
     }
 
-    private List<List<Relationship>> getRelationshipsWithNotInLawPriority(EnrichedPerson person) {
+    @VisibleForTesting
+    protected List<List<Relationship>> getRelationshipsWithNotInLawPriority(EnrichedPerson person) {
         List<Relationships> relationshipsList = personService.setTransientProperties(person, false);
 
         MutableInt orderKey = new MutableInt(1);

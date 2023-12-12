@@ -261,7 +261,7 @@ public class RelationshipMapperTests {
     }
 
     @Test
-    public void testFormatInSpanish_Parent_8_InLaw_Adopt_Sep() {
+    public void testFormatInSpanish_Parent_11_InLaw_Adopt_Sep() {
         RelationshipDto relationshipDto = RelationshipDto.builder()
                 .personIndex(1)
                 .personSex(SexType.M)
@@ -271,7 +271,7 @@ public class RelationshipMapperTests {
                 .personYearOfBirthIsAbout(true)
                 .personCountryOfBirth("Argentina")
                 .referenceType(ReferenceType.PARENT)
-                .generation(8)
+                .generation(11)
                 .grade(0)
                 .isInLaw(true)
                 .isHalf(false)
@@ -295,7 +295,7 @@ public class RelationshipMapperTests {
                 "ADOPTIVE",
                 "★",
                 "→",
-                "ex-pareja de heptabuela",
+                "ex-pareja de decabuela  (ex-pareja de ancestro directo de 11 generaciones)",
                 false));
     }
 
@@ -491,6 +491,45 @@ public class RelationshipMapperTests {
                 "★",
                 "↘",
                 "ex-pareja de heptanieta",
+                false));
+    }
+
+    @Test
+    public void testFormatInSpanish_Child_11_InLaw_Adopt_Sep() {
+        RelationshipDto relationshipDto = RelationshipDto.builder()
+                .personIndex(1)
+                .personSex(SexType.M)
+                .personIsAlive(false)
+                .personName("Juan \"Loco\" Pérez")
+                .personYearOfBirth(1823)
+                .personYearOfBirthIsAbout(true)
+                .personCountryOfBirth("Argentina")
+                .referenceType(ReferenceType.CHILD)
+                .generation(11)
+                .grade(0)
+                .isInLaw(true)
+                .isHalf(false)
+                .adoptionType(AdoptionType.ADOPTIVE)
+                .spouseSex(SexType.F)
+                .isSeparated(true)
+                .isDistinguishedPerson(true)
+                .treeSides(Set.of(TreeSideType.DESCENDANT, TreeSideType.MOTHER))
+                .isObfuscated(false)
+                .build();
+
+        FormattedRelationship formattedRelationship = relationshipMapper.formatInSpanish(relationshipDto, false);
+
+        assertThat(formattedRelationship).isEqualTo(new FormattedRelationship(
+                "1",
+                "Juan \"Loco\" Pérez",
+                "♂",
+                "✝",
+                "~1823",
+                "Argentina",
+                "ADOPTIVE",
+                "★",
+                "↘",
+                "ex-pareja de decanieta  (ex-pareja de descendiente directo de 11 generaciones)",
                 false));
     }
 
