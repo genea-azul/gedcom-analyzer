@@ -13,7 +13,7 @@ import com.geneaazul.gedcomanalyzer.service.DockerService;
 import com.geneaazul.gedcomanalyzer.service.FamilyService;
 import com.geneaazul.gedcomanalyzer.service.SurnameService;
 import com.geneaazul.gedcomanalyzer.service.familytree.FamilyTreeManager;
-import com.geneaazul.gedcomanalyzer.service.familytree.PlainFamilyTreeService;
+import com.geneaazul.gedcomanalyzer.service.familytree.PlainFamilyTreePdfService;
 import com.geneaazul.gedcomanalyzer.utils.InetAddressUtils;
 
 import org.springframework.core.io.PathResource;
@@ -55,7 +55,7 @@ public class SearchController {
     private final GedcomAnalyzerProperties properties;
     private final DockerService dockerService;
     private final FamilyTreeManager familyTreeManager;
-    private final PlainFamilyTreeService plainFamilyTreeService;
+    private final PlainFamilyTreePdfService plainFamilyTreePdfService;
 
     @PostMapping("/family")
     public SearchFamilyResultDto searchFamily(
@@ -81,9 +81,10 @@ public class SearchController {
 
         SearchFamilyResultDto searchFamilyResult = familyService.search(searchFamilyDto);
 
-        log.info("Search family [ searchId={}, obfuscateLiving={}, peopleInResult={}, potentialResults={}, errors={}, httpRequestId={} ]",
+        log.info("Search family [ searchId={}, obfuscateLiving={}, forceRewrite={}, peopleInResult={}, potentialResults={}, errors={}, httpRequestId={} ]",
                 searchId.orElse(null),
                 searchFamilyDto.getObfuscateLiving(),
+                searchFamilyDto.getIsForceRewrite(),
                 searchFamilyResult.getPeople().size(),
                 searchFamilyResult.getPotentialResults(),
                 searchFamilyResult.getErrors().size(),
@@ -91,13 +92,14 @@ public class SearchController {
 
         searchId
                 .filter(id -> properties.isStoreFamilySearch())
-                .ifPresent(id -> familyService.updateSearchIsMatch(id, searchFamilyResult.getPeople().size() > 0));
+                .ifPresent(id -> familyService.updateSearchIsMatch(id, !searchFamilyResult.getPeople().isEmpty()));
 
         // Queue PDF Family Tree and HTML Pyvis Network generation
         familyTreeManager.queueFamilyTreeGeneration(
                 searchFamilyResult.getPeople(),
                 searchFamilyDto.getObfuscateLiving(),
-                List.of(FamilyTreeType.values()));
+                searchFamilyDto.getIsForceRewrite(),
+                List.of(FamilyTreeType.PLAIN_PDF, FamilyTreeType.NETWORK));
 
         return searchFamilyResult;
     }
@@ -156,14 +158,18 @@ public class SearchController {
         return searchSurnamesResult;
     }
 
-    @GetMapping("/family-tree/{personUuid}/plain")
-    public ResponseEntity<Resource> getPlainFamilyTree(
+    @GetMapping("/family-tree/{personUuid}/plainPdf")
+    public ResponseEntity<Resource> getPlainFamilyTreePdf(
             @PathVariable UUID personUuid,
-            @RequestParam(defaultValue = BooleanUtils.TRUE) Boolean obfuscateLiving,
+            @RequestParam @Nullable Boolean obfuscateLiving,
+            @RequestParam @Nullable Boolean forceRewrite,
             HttpServletRequest request) throws IOException {
 
-        Optional<FamilyTree> maybeFamilyTree = plainFamilyTreeService
-                .getFamilyTree(personUuid, Boolean.TRUE.equals(obfuscateLiving));
+        Optional<FamilyTree> maybeFamilyTree = plainFamilyTreePdfService
+                .getFamilyTree(
+                        personUuid,
+                        BooleanUtils.isNotFalse(obfuscateLiving),
+                        BooleanUtils.isTrue(forceRewrite));
 
         if (maybeFamilyTree.isEmpty()) {
             return ResponseEntity.badRequest()
@@ -177,10 +183,11 @@ public class SearchController {
         headers.add(HttpHeaders.CONTENT_LANGUAGE, familyTree.locale().toString());
         headers.add("File-Name", familyTree.filename());
 
-        log.info("Search family tree [ personUuid={}, personId={}, obfuscateLiving={}, httpRequestId={} ]",
+        log.info("Plain family tree [ personUuid={}, personId={}, obfuscateLiving={}, forceRewrite={}, httpRequestId={} ]",
                 personUuid,
                 familyTree.person().getId(),
                 obfuscateLiving,
+                forceRewrite,
                 request.getRequestId());
 
         PathResource resource = new PathResource(familyTree.path());

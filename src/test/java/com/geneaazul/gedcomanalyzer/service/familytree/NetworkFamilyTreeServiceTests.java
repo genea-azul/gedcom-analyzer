@@ -1,21 +1,18 @@
-package com.geneaazul.gedcomanalyzer.service;
+package com.geneaazul.gedcomanalyzer.service.familytree;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
-import com.geneaazul.gedcomanalyzer.model.Relationships;
-import com.geneaazul.gedcomanalyzer.service.familytree.NetworkFamilyTreeService;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import org.apache.commons.lang3.mutable.MutableInt;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -27,27 +24,22 @@ public class NetworkFamilyTreeServiceTests {
     @Autowired
     private GedcomHolder gedcomHolder;
     @Autowired
-    private PersonService personService;
-    @Autowired
     private NetworkFamilyTreeService networkFamilyTreeService;
+    @Autowired
+    private FamilyTreeManager familyTreeManager;
     @Autowired
     private GedcomAnalyzerProperties properties;
 
+    @Value("${obfuscate-condition:false}")
+    private boolean obfuscateCondition;
+
     @Test
-    public void testGenerateNetworkHTML() throws IOException {
+    public void testGenerateNetworkHTML() {
 
         EnrichedPerson person = gedcomHolder.getGedcom().getPersonById("I4");
-        List<Relationships> relationshipsList = personService.setTransientProperties(person, false);
+        assert person != null;
 
-        MutableInt index = new MutableInt(1);
-        List<EnrichedPerson> peopleInTree = relationshipsList
-                .stream()
-                .map(Relationships::findLast)
-                .sorted()
-                .limit(100)
-                .map(Relationship::person)
-                .peek(p -> p.setOrderKey(index.getAndIncrement()))
-                .toList();
+        List<List<Relationship>> relationshipsList = familyTreeManager.getRelationshipsWithNotInLawPriority(person);
 
         Path htmlPyvisNetworkFilePath = properties
                 .getTempDir()
@@ -64,12 +56,12 @@ public class NetworkFamilyTreeServiceTests {
                 .resolve("family-trees")
                 .resolve("export_to_csv_edges_test.csv");
 
-        networkFamilyTreeService.generateNetworkHTML(
+        networkFamilyTreeService.generate(
                 htmlPyvisNetworkFilePath,
                 csvPyvisNetworkNodesFilePath,
                 csvPyvisNetworkEdgesFilePath,
                 false,
-                peopleInTree);
+                relationshipsList);
     }
 
 }

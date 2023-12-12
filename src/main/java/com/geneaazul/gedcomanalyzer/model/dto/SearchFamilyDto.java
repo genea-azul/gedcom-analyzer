@@ -48,5 +48,7 @@ public class SearchFamilyDto {
     private String contact;
     @Builder.Default
     private Boolean obfuscateLiving = true;
+    @Builder.Default
+    private Boolean isForceRewrite = false;
 
 }

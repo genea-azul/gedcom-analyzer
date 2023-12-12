@@ -320,7 +320,7 @@ public class NameUtilsTests {
                 .get()
                 .satisfies(surname -> {
                     assertThat(surname.value()).isEqualTo("de Etxegaray");
-                    assertThat(surname.normalizedMainWord()).isEqualTo("etchegar_");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("etchegarai");
                     assertThat(surname.shortenedMainWord()).isEqualTo("etchegar_");
 
                     Surname matching = PersonUtils.getShortenedSurnameMainWord("Etchegaray", properties.getNormalizedSurnamesMap()).orElse(null);

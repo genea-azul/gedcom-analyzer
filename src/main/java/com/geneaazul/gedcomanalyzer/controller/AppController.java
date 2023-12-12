@@ -1,6 +1,9 @@
 package com.geneaazul.gedcomanalyzer.controller;
 
+import com.geneaazul.gedcomanalyzer.model.FamilyTree;
+import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
 import com.geneaazul.gedcomanalyzer.service.DockerService;
+import com.geneaazul.gedcomanalyzer.service.PersonService;
 import com.geneaazul.gedcomanalyzer.service.familytree.NetworkFamilyTreeService;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -16,7 +19,6 @@ import org.springframework.web.servlet.ModelAndView;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
@@ -34,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AppController {
 
     private final DockerService dockerService;
+    private final PersonService personService;
     private final NetworkFamilyTreeService networkFamilyTreeService;
 
     @Value("${project.version}")
@@ -54,9 +57,16 @@ public class AppController {
             @PathVariable UUID personUuid,
             @RequestParam @Nullable String f) {
         boolean obfuscateLiving = !"0".equals(f);
+
+        String personDisplayName = personService
+                .getPersonDto(personUuid)
+                .map(PersonDto::getName)
+                .orElse("?");
+
         Map<String, ?> params = Map.of(
                 "projectVersion", projectVersion,
                 "personUuid", personUuid,
+                "personDisplayName", personDisplayName,
                 "obfuscateLiving", obfuscateLiving);
         return new ModelAndView("pyvis-network/nodes", params);
     }
@@ -68,13 +78,14 @@ public class AppController {
             HttpServletRequest request) throws IOException {
         boolean obfuscateLiving = !"0".equals(f);
 
-        Optional<Path> maybeFamilyTree = networkFamilyTreeService
-                .getFamilyTree(personUuid, obfuscateLiving);
+        Optional<FamilyTree> maybeFamilyTree = networkFamilyTreeService
+                .getFamilyTree(personUuid, obfuscateLiving, false);
 
         if (maybeFamilyTree.isEmpty()) {
             return ResponseEntity.badRequest()
                     .contentType(MediaType.TEXT_HTML)
-                    .body("Invalid person!");
+                    .cacheControl(CacheControl.noCache())
+                    .body("<h4>Identificador de persona inv&aacute;lido.</h4>");
         }
 
         log.info("Network family tree [ personUuid={}, obfuscateLiving={}, httpRequestId={} ]",
@@ -82,13 +93,13 @@ public class AppController {
                 obfuscateLiving,
                 request.getRequestId());
 
-        Path familyTree = maybeFamilyTree.get();
+        FamilyTree familyTree = maybeFamilyTree.get();
 
         return ResponseEntity.ok()
-                .contentLength(Files.size(familyTree))
-                .contentType(MediaType.TEXT_HTML)
+                .contentLength(Files.size(familyTree.path()))
+                .contentType(familyTree.mediaType())
                 .cacheControl(CacheControl.maxAge(Duration.ofDays(365)))
-                .body(Files.readString(familyTree, StandardCharsets.UTF_8));
+                .body(Files.readString(familyTree.path(), StandardCharsets.UTF_8));
     }
 
     @GetMapping("/search-family/latest")

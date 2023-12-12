@@ -4,12 +4,15 @@ import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.mapper.PyvisNetworkMapper;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.FamilyTree;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.PythonUtils;
 
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.exec.CommandLine;
@@ -24,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -31,7 +35,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NetworkFamilyTreeService implements FamilyTreeService {
@@ -90,7 +96,64 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                 .resolve("family-trees")
                 .resolve(familyTreeFileIdPrefix + "_edges_" + person.getUuid() + familyTreeFileSuffix + ".csv");
 
-        List<EnrichedPerson> peopleToExport = relationshipsWithNotInLawPriority
+        generate(
+                htmlPyvisNetworkFilePath,
+                csvPyvisNetworkNodesFilePath,
+                csvPyvisNetworkEdgesFilePath,
+                obfuscateLiving,
+                relationshipsWithNotInLawPriority);
+    }
+
+    @Override
+    public Optional<FamilyTree> getFamilyTree(
+            UUID personUuid,
+            boolean obfuscateLiving,
+            boolean forceRewrite) {
+
+        EnrichedGedcom gedcom = gedcomHolder.getGedcom();
+        EnrichedPerson person = gedcom.getPersonByUuid(personUuid);
+        if (person == null) {
+            return Optional.empty();
+        }
+
+        String familyTreeFileIdPrefix = familyTreeHelper.getFamilyTreeFileId(person);
+        String familyTreeFileSuffix = obfuscateLiving ? "" : "_visible";
+
+        Path htmlPyvisNetworkFilePath = getNetworkHtmlFile(
+                person,
+                familyTreeFileIdPrefix,
+                familyTreeFileSuffix);
+
+        if (forceRewrite || Files.notExists(htmlPyvisNetworkFilePath)) {
+            List<List<Relationship>> relationshipsWithNotInLawPriority = familyTreeHelper
+                    .getRelationshipsWithNotInLawPriority(person);
+
+            generateFamilyTree(
+                    person,
+                    familyTreeFileIdPrefix,
+                    familyTreeFileSuffix,
+                    obfuscateLiving,
+                    relationshipsWithNotInLawPriority);
+        }
+
+        return Optional.of(new FamilyTree(
+                person,
+                "genea_azul_arbol_" + familyTreeFileIdPrefix + ".html",
+                htmlPyvisNetworkFilePath,
+                MediaType.TEXT_HTML,
+                new Locale("es", "AR")));
+    }
+
+    @VisibleForTesting
+    protected void generate(
+            Path htmlPyvisNetworkFilePath,
+            Path csvPyvisNetworkNodesFilePath,
+            Path csvPyvisNetworkEdgesFilePath,
+            boolean obfuscateLiving,
+            List<List<Relationship>> peopleInTree) {
+        log.info("Generating Network family tree HTML");
+
+        List<EnrichedPerson> peopleToExport = peopleInTree
                 .stream()
                 .limit(properties.getMaxPyvisNetworkNodesToExport())
                 .map(relationships -> relationships.get(0))
@@ -109,45 +172,17 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
         }
     }
 
-    public Optional<Path> getFamilyTree(
-            UUID personUuid,
-            boolean obfuscateLiving) {
-
-        EnrichedGedcom gedcom = gedcomHolder.getGedcom();
-        EnrichedPerson person = gedcom.getPersonByUuid(personUuid);
-        if (person == null) {
-            return Optional.empty();
-        }
-
-        String familyTreeFileIdPrefix = familyTreeHelper.getFamilyTreeFileId(person);
-        String familyTreeFileSuffix = obfuscateLiving ? "" : "_visible";
-
-        Path htmlPyvisNetworkFilePath = getNetworkHtmlFile(
-                person,
-                familyTreeFileIdPrefix,
-                familyTreeFileSuffix);
-
-        if (Files.notExists(htmlPyvisNetworkFilePath)) {
-            List<List<Relationship>> relationshipsWithNotInLawPriority = familyTreeHelper
-                    .getRelationshipsWithNotInLawPriority(person);
-
-            generateFamilyTree(
-                    person,
-                    familyTreeFileIdPrefix,
-                    familyTreeFileSuffix,
-                    obfuscateLiving,
-                    relationshipsWithNotInLawPriority);
-        }
-
-        return Optional.of(htmlPyvisNetworkFilePath);
-    }
-
-    public void generateNetworkHTML(
+    private void generateNetworkHTML(
             Path htmlPyvisNetworkFilePath,
             Path csvPyvisNetworkNodesFilePath,
             Path csvPyvisNetworkEdgesFilePath,
             boolean obfuscateLiving,
             List<EnrichedPerson> peopleInTree) throws IOException {
+
+        // Make sure target directory exists
+        Files.createDirectories(htmlPyvisNetworkFilePath.getParent());
+
+        // Generate files
         exportToPyvisNodesCSV(csvPyvisNetworkNodesFilePath, peopleInTree, obfuscateLiving);
         exportToPyvisEdgesCSV(csvPyvisNetworkEdgesFilePath, peopleInTree);
         exportToPyvisNetworkHTML(htmlPyvisNetworkFilePath, csvPyvisNetworkNodesFilePath, csvPyvisNetworkEdgesFilePath);
@@ -157,18 +192,52 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
 
         String[] HEADERS = {"id", "label", "title", "shape", "borderWidth", "color", "size"};
 
-        Map<String, String[]> countryColorsMap = Map.of(
-                "Argentina", new String[] {"#9AE4FF", "#74ACDF"},
-                "Italia", new String[] {"#00B65A", "#008C45"},
-                "Francia", new String[] {"#0071DA", "#0055A4"},
-                "España", new String[] {"#E61C21", "#AD1519"},
-                "Inglaterra", new String[] {"#E61C21", "#AD1519"},
-                "Irlanda", new String[] {"#E61C21", "#AD1519"},
-                "Países Bajos", new String[] {"#E61C21", "#AD1519"});
+        Map<String, String[]> countryColorsMap = Map.ofEntries(
+                Map.entry("Alemania", new String[] {"#FFF40F", "#FFCC00"}),
+                Map.entry("Argentina", new String[] {"#8BCEFF", "#74ACDF"}),
+                Map.entry("Austria", new String[] {"", ""}),
+                Map.entry("Bolivia", new String[] {"#923D", "#F4E400"}),
+                Map.entry("Brasil", new String[] {"#2E8D", "#FFDF00"}),
+                Map.entry("Bulgaria", new String[] {"", ""}),
+                Map.entry("Bélgica", new String[] {"#FFFF2B", "#FDDA24"}),
+                Map.entry("Checoslovaquia", new String[] {"#145297", "#11457E"}),
+                Map.entry("Chile", new String[] {"#0F44C7", "#0039A6"}),
+                Map.entry("China", new String[] {"", ""}),
+                Map.entry("Croacia", new String[] {"#1B1BB4", "#171796"}),
+                Map.entry("Dinamarca", new String[] {"#F01337", "#C8102E"}),
+                Map.entry("Ecuador", new String[] {"", ""}),
+                Map.entry("Escocia", new String[] {"#0F70DC", "#005EB8"}),
+                Map.entry("España", new String[] {"#CF191E", "#AD1519"}),
+                Map.entry("Estados Unidos", new String[] {"#484684", "#3C3B6E"}),
+                Map.entry("Francia", new String[] {"#0F66C4", "#0055A4"}),
+                Map.entry("Guatemala", new String[] {"", ""}),
+                Map.entry("Hungría", new String[] {"", ""}),
+                Map.entry("Inglaterra", new String[] {"#F7142B", "#CE1124"}),
+                Map.entry("Irlanda", new String[] {"#FFA34A", "#FF883E"}),
+                Map.entry("Irlanda del Norte", new String[] {"", ""}),
+                Map.entry("Italia", new String[] {"#0FA852", "#008C45"}),
+                Map.entry("Jamaica", new String[] {"", ""}),
+                Map.entry("Japón", new String[] {"#E10F36", "#BC002D"}),
+                Map.entry("Líbano", new String[] {"#0FC860", "#00A750"}),
+                Map.entry("Marruecos", new String[] {"#0F753D", "#006233"}),
+                Map.entry("Nicaragua", new String[] {"", ""}),
+                Map.entry("Océano Atlántico", new String[] {"", ""}),
+                Map.entry("Paraguay", new String[] {"#0F43C9", "#0038A8"}),
+                Map.entry("Países Bajos", new String[] {"#24559F", "#1E4785"}),
+                Map.entry("Perú", new String[] {"#FF132A", "#D91023"}),
+                Map.entry("Polonia", new String[] {"#FF1848", "#DC143C"}),
+                Map.entry("Portugal", new String[] {"#0F7A0F", "#006600"}),
+                Map.entry("República Dominicana", new String[] {"", ""}),
+                Map.entry("Rusia", new String[] {"#0F3CC0", "#0032A0"}),
+                Map.entry("Siria", new String[] {"#0F9249", "#007A3D"}),
+                Map.entry("Sudáfrica", new String[] {"", ""}),
+                Map.entry("Suiza", new String[] {"#FF3102", "#DA2902"}),
+                Map.entry("Uruguay", new String[] {"#8CCCFF", "#75AADB"}),
+                Map.entry("Yugoslavia", new String[] {"#0F43B0", "#003893"}));
 
         String defaultLabel = "?";
         double defaultNodeBorderWidth = 2;
-        String[] defaultColors = new String[] {"#000000", "#666666"};
+        String[] defaultColors = new String[] {"#666666", "#B7B7B7"};
         double defaultSize = 25;
 
         double coupleNodeBorderWidth = 1;
@@ -332,7 +401,7 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
 
         Path scriptPath = properties
                 .getTempDir()
-                .resolve(properties.getPyvisNetworkExportScriptPath())
+                .resolve(properties.getPyvisNetworkExportScriptFilename())
                 .toAbsolutePath()
                 .normalize();
 
@@ -346,34 +415,65 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
         DefaultExecutor executor = new DefaultExecutor();
         executor.execute(commandLine);
 
-        if (Files.exists(htmlPyvisNetworkFilePath)) {
-            Charset charset = StandardCharsets.UTF_8;
-            String content = Files.readString(htmlPyvisNetworkFilePath, charset);
-            content = content.replace(
-                    "<script src=\"lib/bindings/utils.js\"></script>",
-                    "<script src=\"/js/family-tree/utils.js\"></script>");
-            content = content.replace(
-                    "<h1></h1>",
-                    "");
-            // Twice same sentence
-            content = content.replace(
-                    "<h1></h1>",
-                    "");
-            content = content.replace(
-                    "height: 600px;",
-                    "height: 100%;");
-            // Twice same sentence
-            content = content.replace(
-                    "height: 600px;",
-                    "height: 100%;");
-            content = content.replace(
-                    "border: 1px solid lightgray;",
-                    "border: 0px; padding: 0px;");
-            content = content.replace(
-                    "<div class=\"card\" style=\"width: 100%\">",
-                    "<div class=\"card\" style=\"width: 100%; height: 100%; border: 0px;\">");
-            Files.writeString(htmlPyvisNetworkFilePath, content, charset);
+        if (Files.notExists(htmlPyvisNetworkFilePath)) {
+            log.error("File is missing [ path={} ]", htmlPyvisNetworkFilePath);
+            return;
         }
+
+        Charset charset = StandardCharsets.UTF_8;
+        String content = Files.readString(htmlPyvisNetworkFilePath, charset);
+
+        content = content.replace(
+                "<script src=\"lib/bindings/utils.js\"></script>",
+                "<script src=\"/js/family-tree/utils.js\"></script>");
+
+        content = content.replace(
+                "<h1></h1>",
+                "");
+        // Twice same sentence
+        content = content.replace(
+                "<h1></h1>",
+                "");
+        content = content.replace(
+                "height: 600px;",
+                "height: 100%;");
+        // Twice same sentence
+        content = content.replace(
+                "height: 600px;",
+                "height: 100%;");
+        content = content.replace(
+                "border: 1px solid lightgray;",
+                "border: 0px; padding: 0px;");
+        content = content.replace(
+                "<div class=\"card\" style=\"width: 100%\">",
+                "<div class=\"card\" style=\"width: 100%; height: 100%; border: 0px;\">");
+
+        content = content.replace(
+                "var width = Math.max(minWidth,maxWidth * widthFactor);",
+                "var width = Math.max(10, Math.round(widthFactor*100));");
+        content = content.replace(
+                ".getElementById('bar').style.width = width + 'px';",
+                ".getElementById('bar').style.width = width + '%';");
+        content = content.replace(
+                ".getElementById('bar').style.width = '496px';",
+                ".getElementById('bar').style.width = '100%';");
+        content = content.replace(
+                "font-size:22px;",
+                "display: none;");
+        content = content.replace(
+                "width:500px;",
+                "width: 95%;");
+        content = content.replace(
+                "top:400px;",
+                "top: 40%;");
+        content = content.replace(
+                "width:600px;",
+                "width: 50%;");
+        content = content.replace(
+                "height:44px;",
+                "height:54px;");
+
+        Files.writeString(htmlPyvisNetworkFilePath, content, charset);
     }
 
 }

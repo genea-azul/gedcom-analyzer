@@ -117,6 +117,24 @@ public class SearchService {
     /**
      * .
      */
+    public List<EnrichedPerson> findPersonsByMonthAndDayOfBirth(
+            Month month,
+            int day,
+            @Nullable SexType sex,
+            List<EnrichedPerson> people) {
+        return people
+                .stream()
+                .filter(person -> sex == null || sex == person.getSex())
+                .filter(person -> person.getDateOfBirth()
+                        .filter(Date::isFullDate)
+                        .map(dob -> dob.getMonth() == month && dob.getDay() == day)
+                        .orElse(false))
+                .toList();
+    }
+
+    /**
+     * .
+     */
     public List<EnrichedPerson> findPersonsByMonthAndDayOfDeath(
             Month month,
             int day,
@@ -358,6 +376,7 @@ public class SearchService {
                 }
             }
 
+        // They both have dob or dod set
         } else {
             if (person.matchesDateOfBirthByDay(compare)) {
                 if (!(bothHaveParents && !matchesParents && !person.equalsDateOfBirthByDay(compare))) {

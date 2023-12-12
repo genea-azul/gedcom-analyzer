@@ -357,7 +357,7 @@ var searchFamilyTree = function(event) {
     var obfuscate = (filter !== "0" ? "" : "?obfuscateLiving=false");
 
     var domain = window.location.protocol + '//' + window.location.host;
-    var win = window.open(domain + "/api/search/family-tree/" + event.data.personUuid + "/plain" + obfuscate, "_blank");
+    var win = window.open(domain + "/api/search/family-tree/" + event.data.personUuid + "/plainPdf" + obfuscate, "_blank");
     if (!win) {
         handleError("El navegador bloque&oacute; la descarga, por favor intent&aacute; desde otro como Chrome.", event.data.errorLocator);
     }

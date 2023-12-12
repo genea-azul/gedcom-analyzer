@@ -6,8 +6,8 @@ import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folg.gedcom.model.Gedcom;
 
-import javax.annotation.CheckForNull;
 import java.time.Year;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +17,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import javax.annotation.CheckForNull;
+
+import jakarta.annotation.Nullable;
+
 import lombok.Getter;
 
 @Getter
@@ -24,6 +28,8 @@ public class EnrichedGedcom {
 
     private final Gedcom legacyGedcom;
     private final String gedcomName;
+    @Nullable
+    private final ZonedDateTime modifiedDateTime;
     private final GedcomAnalyzerProperties properties;
 
     private final List<EnrichedPerson> people;
@@ -37,9 +43,15 @@ public class EnrichedGedcom {
 
     private final Map<String, Place> places = new HashMap<>();
 
-    private EnrichedGedcom(Gedcom legacyGedcom, String gedcomName, GedcomAnalyzerProperties properties) {
+    private EnrichedGedcom(
+            Gedcom legacyGedcom,
+            String gedcomName,
+            @Nullable ZonedDateTime modifiedDateTime,
+            GedcomAnalyzerProperties properties) {
+
         this.legacyGedcom = properties.isKeepReferenceToLegacyGedcom() ? legacyGedcom : null;
         this.gedcomName = gedcomName;
+        this.modifiedDateTime = modifiedDateTime;
         this.properties = properties;
 
         this.people = getEnrichedPeople(legacyGedcom);
@@ -73,8 +85,19 @@ public class EnrichedGedcom {
                 person -> person.getDateOfDeath().orElse(null));
     }
 
-    public static EnrichedGedcom of(Gedcom legacyGedcom, String gedcomName, GedcomAnalyzerProperties properties) {
-        return new EnrichedGedcom(legacyGedcom, gedcomName, properties);
+    public static EnrichedGedcom of(
+            Gedcom legacyGedcom,
+            String gedcomName,
+            ZonedDateTime modifiedDateTime,
+            GedcomAnalyzerProperties properties) {
+        return new EnrichedGedcom(legacyGedcom, gedcomName, modifiedDateTime, properties);
+    }
+
+    public static EnrichedGedcom of(
+            Gedcom legacyGedcom,
+            String gedcomName,
+            GedcomAnalyzerProperties properties) {
+        return new EnrichedGedcom(legacyGedcom, gedcomName, null, properties);
     }
 
     public Optional<Gedcom> getLegacyGedcom() {

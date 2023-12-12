@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
+import jakarta.annotation.Nullable;
+
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -102,7 +104,10 @@ public class PersonMapper {
                 .build();
     }
 
-    private List<NameAndPictureDto> toNameAndPictureDto(List<EnrichedPerson> people) {
+    private List<NameAndPictureDto> toNameAndPictureDto(@Nullable List<EnrichedPerson> people) {
+        if (people == null) {
+            return List.of();
+        }
         return people
                 .stream()
                 .map(person -> NameAndPictureDto.builder()

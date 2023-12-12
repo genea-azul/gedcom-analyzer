@@ -25,6 +25,7 @@ import org.folg.gedcom.model.Name;
 import org.folg.gedcom.model.ParentFamilyRef;
 import org.folg.gedcom.model.Person;
 
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -33,6 +34,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -60,6 +62,7 @@ public class PersonUtils {
     public static final Set<String> SEX_TAGS = Set.of("SEX");
     public static final Set<String> EVENT_TAGS = Set.of("EVEN", "EVENT");
     public static final Set<String> ETHNICITY_EVENT_TYPES = Set.of("ETHN", "ETHNICITY", "Grupo étnico");
+    public static final Set<String> DISAPPEARED_PERSON_EVENT_TYPES = Set.of("Enforced disappearance", "Desaparición forzada");
     public static final Set<String> COMMENT_EVENT_TYPES = Set.of("Comment");
     public static final Set<String> DISTINGUISHED_PERSON_COMMENT_VALUES = Set.of("Personalidad destacada");
 
@@ -69,6 +72,24 @@ public class PersonUtils {
     public static final String FORMER_NAME_TAG = "_FORMERNAME";
     public static final String UPDATED_TAG = "_UPD";
     public static final String PERSONAL_PHOTO_TAG = "_PERSONALPHOTO";
+
+    public static UUID getUuid(
+            Person person,
+            @Nullable ZonedDateTime modifiedDateTime) {
+
+        long personId = Optional.of(person.getId())
+                .map(id -> id.startsWith("I") ? id.substring(1) : id)
+                .filter(StringUtils::isNumeric)
+                .map(Long::valueOf)
+                .map(id -> (modifiedDateTime != null) ? id * (modifiedDateTime.getNano() / 1_000) : id)
+                .orElseGet(() -> (long) (Math.random() * Long.MAX_VALUE));
+
+        long timestamp = Optional.ofNullable(modifiedDateTime)
+                .map(ZonedDateTime::toEpochSecond)
+                .orElseGet(() -> (long) (Math.random() * Long.MAX_VALUE));
+
+        return new UUID(personId, timestamp);
+    }
 
     public static boolean isAlive(Person person) {
         return !isDead(person);
@@ -89,6 +110,14 @@ public class PersonUtils {
                         -> EVENT_TAGS.contains(eventFact.getTag())
                         && COMMENT_EVENT_TYPES.contains(eventFact.getType())
                         && DISTINGUISHED_PERSON_COMMENT_VALUES.contains(eventFact.getValue()));
+    }
+
+    public static boolean isDisappearedPerson(Person person) {
+        return person.getEventsFacts()
+                .stream()
+                .anyMatch(eventFact
+                        -> EVENT_TAGS.contains(eventFact.getTag())
+                        && DISAPPEARED_PERSON_EVENT_TYPES.contains(eventFact.getType()));
     }
 
     public static SexType getSex(Person person) {
