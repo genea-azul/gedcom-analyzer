@@ -87,14 +87,19 @@ public class DockerService {
             return;
         }
 
-        log.info("Updating Docker image: {}", appContainerImageName);
+        log.info("Update Docker image: {}", appContainerImageName);
         executeAsyncDockerCmd(
                 DockerClient::pullImageCmd,
                 new PullImageResultCallback(),
                 appContainerImageName,
                 imagePullTimeout);
 
-        log.info("Restarting Docker container: {}", appContainerName);
+        log.info("Start Docker container: {}", dbContainerName);
+        executeSyncDockerCmd(
+                DockerClient::startContainerCmd,
+                dbContainerName);
+
+        log.info("Restart Docker container: {}", appContainerName);
         singleThreadExecutorService.submit(
                 () -> executeSyncDockerCmd(
                         DockerClient::restartContainerCmd,
