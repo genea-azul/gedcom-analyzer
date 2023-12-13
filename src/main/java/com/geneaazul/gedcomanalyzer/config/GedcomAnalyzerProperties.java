@@ -28,7 +28,7 @@ import lombok.Setter;
 public class GedcomAnalyzerProperties {
 
     private ZoneId zoneId = ZoneId.of("America/Argentina/Buenos_Aires");
-    private Locale locale = new Locale("es", "AR");
+    private Locale locale = Locale.of("es", "AR");
 
     private Path tempDir = Path.of("../gedcoms/temp");
     private String tempUploadedGedcomDirPrefix = "gedcomfile_";

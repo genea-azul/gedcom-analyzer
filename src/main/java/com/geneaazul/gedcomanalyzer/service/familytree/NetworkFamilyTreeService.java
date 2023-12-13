@@ -27,7 +27,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -141,7 +140,7 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                 "genea_azul_arbol_" + familyTreeFileIdPrefix + ".html",
                 htmlPyvisNetworkFilePath,
                 MediaType.TEXT_HTML,
-                new Locale("es", "AR")));
+                properties.getLocale()));
     }
 
     @VisibleForTesting

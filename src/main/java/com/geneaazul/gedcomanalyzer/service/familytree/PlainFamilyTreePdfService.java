@@ -217,12 +217,12 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             float legendSepY = 70f;
 
             writeText(stream, light, 11f, 1.3f, legendX, legendY,
-                    "Personas: " + person.getPersonsCountInTree(),
-                    "Apellidos (en caso de apellidos compuestos sólo se considera el primero): " + person.getSurnamesCountInTree(),
-                    "Generaciones: " + person.getAncestryGenerations().getTotalGenerations()
-                            + " (ascendencia: " + person.getAncestryGenerations().ascending()
-                            + ", descendencia: " + person.getAncestryGenerations().directDescending() + ")",
-                    "Países en su ascendencia: " + (person.getAncestryCountries().isEmpty() ? "-" : String.join(", ", person.getAncestryCountries())));
+                    "Personas:  " + person.getPersonsCountInTree(),
+                    "Apellidos (en caso de apellidos compuestos sólo se considera el primero):  " + person.getSurnamesCountInTree(),
+                    "Generaciones:  " + person.getAncestryGenerations().getTotalGenerations()
+                            + "  (ascendencia directa: " + person.getAncestryGenerations().ascending()
+                            + ", descendencia directa: " + person.getAncestryGenerations().directDescending() + ")",
+                    "Países en su ascendencia:  " + (person.getAncestryCountries().isEmpty() ? "-" : String.join(", ", person.getAncestryCountries())));
 
             writePeopleInPage(
                     stream,

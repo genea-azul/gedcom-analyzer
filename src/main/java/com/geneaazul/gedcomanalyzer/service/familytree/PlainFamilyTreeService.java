@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -113,7 +112,7 @@ public abstract class PlainFamilyTreeService implements FamilyTreeService {
                 "genea_azul_arbol_" + familyTreeFileIdPrefix + "." + exportFileExtension,
                 exportFilePath,
                 exportFileMediaType,
-                new Locale("es", "AR")));
+                properties.getLocale()));
     }
 
     private Path getExportFilePath(
