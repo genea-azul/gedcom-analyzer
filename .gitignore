@@ -1,6 +1,8 @@
 # IntelliJ files
 .idea
+*.iws
 *.iml
+*.ipr
 
 # Maven files
 target/
@@ -33,3 +35,8 @@ hs_err_pid*
 
 # MacOS files
 .DS_Store
+
+# To keep
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/

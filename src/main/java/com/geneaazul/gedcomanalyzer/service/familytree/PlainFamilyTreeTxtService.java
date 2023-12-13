@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -75,7 +76,18 @@ public class PlainFamilyTreeTxtService extends PlainFamilyTreeService {
             EnrichedPerson person,
             List<FormattedRelationship> peopleInTree) throws IOException {
 
-        List<String> lines = peopleInTree
+        Stream<String> header = Stream.of(
+                "Árbol genealógico de " + person.getDisplayName(),
+                "",
+                "Personas:  " + person.getPersonsCountInTree(),
+                "Apellidos (en caso de apellidos compuestos sólo se considera el primero):  " + person.getSurnamesCountInTree(),
+                "Generaciones:  " + person.getAncestryGenerations().getTotalGenerations()
+                        + "  (ascendencia directa: " + person.getAncestryGenerations().ascending()
+                        + ", descendencia directa: " + person.getAncestryGenerations().directDescending() + ")",
+                "Países en su ascendencia:  " + (person.getAncestryCountries().isEmpty() ? "-" : String.join(", ", person.getAncestryCountries())),
+                "");
+
+        Stream<String> people = peopleInTree
                 .stream()
                 .map(fr -> String.format("%4s. %1s %1s %1s %-3.3s %5s  %-50.50s %1s • %s%s",
                         StringUtils.defaultString(fr.index()),
@@ -87,8 +99,9 @@ public class PlainFamilyTreeTxtService extends PlainFamilyTreeService {
                         StringUtils.defaultString(fr.personName()),
                         StringUtils.defaultString(fr.distinguishedPerson()),
                         StringUtils.defaultString(fr.relationshipDesc()),
-                        fr.adoption() != null ? "  [rama adoptiva]" : ""))
-                .toList();
+                        fr.adoption() != null ? "  [rama adoptiva]" : ""));
+
+        List<String> lines = Stream.concat(header, people).toList();
         Files.write(exportFilePath, lines, StandardCharsets.UTF_8);
     }
 
