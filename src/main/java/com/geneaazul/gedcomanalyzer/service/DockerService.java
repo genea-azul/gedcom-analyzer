@@ -97,13 +97,17 @@ public class DockerService {
                     appContainerImageName,
                     imagePullTimeout);
         } catch (NotModifiedException e) {
-            log.info("Docker image not modified [ name={} ]", appContainerImageName);
+            log.info("Docker image already up-to-date [ name={} ]", appContainerImageName);
         }
 
-        log.info("Start Docker container [ name={} ]", dbContainerName);
-        executeSyncDockerCmd(
-                DockerClient::startContainerCmd,
-                dbContainerName);
+        try {
+            log.info("Start Docker container [ name={} ]", dbContainerName);
+            executeSyncDockerCmd(
+                    DockerClient::startContainerCmd,
+                    dbContainerName);
+        } catch (NotModifiedException e) {
+            log.info("Docker container already started [ name={} ]", appContainerImageName);
+        }
 
         log.info("Restart Docker container [ name={} ]", appContainerName);
         singleThreadExecutorService.submit(
