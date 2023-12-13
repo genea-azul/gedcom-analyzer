@@ -1,6 +1,7 @@
 package com.geneaazul.gedcomanalyzer.service.storage;
 
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
+import com.geneaazul.gedcomanalyzer.utils.ThreadUtils;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -55,7 +56,9 @@ public class GedcomHolder {
 
     @PostConstruct
     public void postConstruct() {
-        singleThreadExecutorService.submit(() -> reloadFromStorage(false));
+        singleThreadExecutorService.submit(() -> ThreadUtils.sleepSecondsAndThen(
+                10,
+                () -> reloadFromStorage(false)));
     }
 
     @PreDestroy

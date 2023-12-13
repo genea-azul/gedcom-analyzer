@@ -1,5 +1,7 @@
 package com.geneaazul.gedcomanalyzer.service;
 
+import com.geneaazul.gedcomanalyzer.utils.ThreadUtils;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -109,17 +111,11 @@ public class DockerService {
         }
 
         log.info("Restart Docker container [ name={} ]", appContainerName);
-        singleThreadExecutorService.submit(
-                () -> {
-                    try {
-                        Thread.sleep(500L);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                    executeSyncDockerCmd(
-                            DockerClient::restartContainerCmd,
-                            appContainerName);
-                });
+        singleThreadExecutorService.submit(() -> ThreadUtils.sleepMillisAndThen(
+                500,
+                () -> executeSyncDockerCmd(
+                        DockerClient::restartContainerCmd,
+                        appContainerName)));
     }
 
     private <T, V extends SyncDockerCmd<T>> void executeSyncDockerCmd(BiFunction<DockerClient, String, V> containerCmd, String containerName) {
