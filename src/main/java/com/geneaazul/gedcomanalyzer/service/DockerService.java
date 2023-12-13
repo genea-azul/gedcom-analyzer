@@ -4,11 +4,18 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.async.ResultCallback;
+import com.github.dockerjava.api.command.AsyncDockerCmd;
 import com.github.dockerjava.api.command.InspectContainerResponse;
+import com.github.dockerjava.api.command.PullImageResultCallback;
 import com.github.dockerjava.api.command.SyncDockerCmd;
+import com.github.dockerjava.api.model.ResponseItem;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -22,12 +29,22 @@ public class DockerService {
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private final Optional<DockerClient> dockerClient;
+    private final ExecutorService singleThreadExecutorService;
+
+    @Value("${docker.app-container.name:gedcom-analyzer-app}")
+    private String appContainerName;
+
+    @Value("${docker.app-container.image.name:geneaazul/gedcom-analyzer:latest}")
+    private String appContainerImageName;
 
     @Value("${docker.db-container.name:gedcom-analyzer-db}")
     private String dbContainerName;
 
     @Value("${docker.db-container.max-idle-time:600000}")
-    private long dbContainerMaxIdleTime;
+    private Duration dbContainerMaxIdleTime;
+
+    @Value("${docker.image.pull-timeout:3000}")
+    private Duration imagePullTimeout;
 
     private Instant lastStartDbContainerRequest = null;
 
@@ -65,6 +82,25 @@ public class DockerService {
         }
     }
 
+    public void deployDockerCompose() throws InterruptedException {
+        if (dockerClient.isEmpty()) {
+            return;
+        }
+
+        log.info("Updating Docker image: {}", appContainerImageName);
+        executeAsyncDockerCmd(
+                DockerClient::pullImageCmd,
+                new PullImageResultCallback(),
+                appContainerImageName,
+                imagePullTimeout);
+
+        log.info("Restarting Docker container: {}", appContainerName);
+        singleThreadExecutorService.submit(
+                () -> executeSyncDockerCmd(
+                        DockerClient::restartContainerCmd,
+                        appContainerName));
+    }
+
     private <T, V extends SyncDockerCmd<T>> void executeSyncDockerCmd(BiFunction<DockerClient, String, V> containerCmd, String containerName) {
         executeSyncDockerCmd(containerCmd, containerName, Function.identity());
     }
@@ -76,6 +112,19 @@ public class DockerService {
         }
     }
 
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
+    private <C extends AsyncDockerCmd<C, R>, R extends ResponseItem, A extends ResultCallback.Adapter<R>> void executeAsyncDockerCmd(
+            BiFunction<DockerClient, String, C> containerCmd,
+            A callback,
+            String containerName,
+            Duration timeout) throws InterruptedException {
+        try (var dockerCmd = containerCmd.apply(dockerClient.get(), containerName)) {
+            dockerCmd
+                    .exec(callback)
+                    .awaitCompletion(timeout.toMillis(), TimeUnit.MILLISECONDS);
+        }
+    }
+
     public void stopDbContainerWhenIdle() {
         if (isDbContainerIdleTimeExceeded()) {
             stopDbContainer();
@@ -84,7 +133,7 @@ public class DockerService {
 
     private boolean isDbContainerIdleTimeExceeded() {
         return lastStartDbContainerRequest == null
-                || lastStartDbContainerRequest.plusMillis(dbContainerMaxIdleTime).isBefore(Instant.now());
+                || lastStartDbContainerRequest.plusMillis(dbContainerMaxIdleTime.toMillis()).isBefore(Instant.now());
     }
 
     private static boolean isContainerStarted(InspectContainerResponse.ContainerState containerState) {
