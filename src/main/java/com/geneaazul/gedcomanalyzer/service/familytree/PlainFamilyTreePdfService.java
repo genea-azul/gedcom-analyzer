@@ -164,7 +164,6 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
 
             writeLastPage(
                     document,
-                    person,
                     nextPages.size(),
                     isAnyPersonObfuscated,
                     logoImage,
@@ -240,7 +239,6 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
 
     private void writeLastPage(
             PDDocument document,
-            EnrichedPerson person,
             int nextPagesCount,
             boolean isAnyPersonObfuscated,
             PDImageXObject logoImage,
@@ -501,7 +499,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
     private PDImageXObject loadImage(PDDocument document, String imagePath) throws IOException {
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         Resource resource = resolver.getResource(imagePath);
-        return PDImageXObject.createFromFileByExtension(resource.getFile(), document);
+        return PDImageXObject.createFromByteArray(document, resource.getContentAsByteArray(), imagePath);
     }
 
     private static String leftPadFixedWidth(String value, @SuppressWarnings("SameParameterValue") int width) {
