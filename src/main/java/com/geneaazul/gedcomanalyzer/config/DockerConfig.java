@@ -22,9 +22,7 @@ import java.time.Duration;
 import jakarta.annotation.PreDestroy;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Configuration
 @EnableScheduling
 @ConditionalOnProperty(name = "docker.enabled", havingValue = "true")
@@ -52,9 +50,8 @@ public class DockerConfig {
                 .build();
 
         DockerClient dockerClient = DockerClientImpl.getInstance(config, httpClient);
-        log.info("Ping Docker host: {}", dockerHostUri);
         dockerClient.pingCmd().exec();
-        log.info("Docker host ok");
+
         return dockerClient;
     }
 

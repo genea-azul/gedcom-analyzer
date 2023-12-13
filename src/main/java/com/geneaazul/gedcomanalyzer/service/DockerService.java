@@ -9,6 +9,7 @@ import com.github.dockerjava.api.command.AsyncDockerCmd;
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.command.PullImageResultCallback;
 import com.github.dockerjava.api.command.SyncDockerCmd;
+import com.github.dockerjava.api.exception.NotModifiedException;
 import com.github.dockerjava.api.model.AuthResponse;
 import com.github.dockerjava.api.model.ResponseItem;
 
@@ -44,7 +45,7 @@ public class DockerService {
     @Value("${docker.db-container.max-idle-time:600000}")
     private Duration dbContainerMaxIdleTime;
 
-    @Value("${docker.image.pull-timeout:3000}")
+    @Value("${docker.image.pull-timeout:120000}")
     private Duration imagePullTimeout;
 
     private Instant lastStartDbContainerRequest = null;
@@ -62,7 +63,7 @@ public class DockerService {
                 InspectContainerResponse::getState);
 
         if (!isContainerStarted(containerState)) {
-            log.info("Starting DB container {}", dbContainerName);
+            log.info("Starting DB container [ name={} ]", dbContainerName);
             executeSyncDockerCmd(DockerClient::startContainerCmd, dbContainerName);
         }
     }
@@ -78,7 +79,7 @@ public class DockerService {
                 InspectContainerResponse::getState);
 
         if (isContainerStarted(containerState)) {
-            log.info("Stopping DB container {}", dbContainerName);
+            log.info("Stopping DB container [ name={} ]", dbContainerName);
             executeSyncDockerCmd(DockerClient::stopContainerCmd, dbContainerName);
         }
     }
@@ -88,35 +89,27 @@ public class DockerService {
             return;
         }
 
-        String authStatus = executeSyncDockerCmd(
-                DockerClient::authCmd,
-                AuthResponse::getStatus);
-        log.info("Docker auth status: {}", authStatus);
+        try {
+            log.info("Update Docker image [ name={} ]", appContainerImageName);
+            executeAsyncDockerCmd(
+                    DockerClient::pullImageCmd,
+                    new PullImageResultCallback(),
+                    appContainerImageName,
+                    imagePullTimeout);
+        } catch (NotModifiedException e) {
+            log.info("Docker image not modified [ name={} ]", appContainerImageName);
+        }
 
-        log.info("Update Docker image: {}", appContainerImageName);
-        executeAsyncDockerCmd(
-                DockerClient::pullImageCmd,
-                new PullImageResultCallback(),
-                appContainerImageName,
-                imagePullTimeout);
-
-        log.info("Start Docker container: {}", dbContainerName);
+        log.info("Start Docker container [ name={} ]", dbContainerName);
         executeSyncDockerCmd(
                 DockerClient::startContainerCmd,
                 dbContainerName);
 
-        log.info("Restart Docker container: {}", appContainerName);
+        log.info("Restart Docker container [ name={} ]", appContainerName);
         singleThreadExecutorService.submit(
                 () -> executeSyncDockerCmd(
                         DockerClient::restartContainerCmd,
                         appContainerName));
-    }
-
-    @SuppressWarnings("OptionalGetWithoutIsPresent")
-    private <T, V extends SyncDockerCmd<T>, U> U executeSyncDockerCmd(Function<DockerClient, V> containerCmd, Function<T, U> map) {
-        try (var dockerCmd = containerCmd.apply(dockerClient.get())) {
-            return map.apply(dockerCmd.exec());
-        }
     }
 
     private <T, V extends SyncDockerCmd<T>> void executeSyncDockerCmd(BiFunction<DockerClient, String, V> containerCmd, String containerName) {
