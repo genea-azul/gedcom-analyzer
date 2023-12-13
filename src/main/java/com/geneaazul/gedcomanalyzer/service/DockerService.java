@@ -9,6 +9,7 @@ import com.github.dockerjava.api.command.AsyncDockerCmd;
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.command.PullImageResultCallback;
 import com.github.dockerjava.api.command.SyncDockerCmd;
+import com.github.dockerjava.api.model.AuthResponse;
 import com.github.dockerjava.api.model.ResponseItem;
 
 import java.time.Duration;
@@ -87,6 +88,11 @@ public class DockerService {
             return;
         }
 
+        String authStatus = executeSyncDockerCmd(
+                DockerClient::authCmd,
+                AuthResponse::getStatus);
+        log.info("Docker auth status: {}", authStatus);
+
         log.info("Update Docker image: {}", appContainerImageName);
         executeAsyncDockerCmd(
                 DockerClient::pullImageCmd,
@@ -104,6 +110,13 @@ public class DockerService {
                 () -> executeSyncDockerCmd(
                         DockerClient::restartContainerCmd,
                         appContainerName));
+    }
+
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
+    private <T, V extends SyncDockerCmd<T>, U> U executeSyncDockerCmd(Function<DockerClient, V> containerCmd, Function<T, U> map) {
+        try (var dockerCmd = containerCmd.apply(dockerClient.get())) {
+            return map.apply(dockerCmd.exec());
+        }
     }
 
     private <T, V extends SyncDockerCmd<T>> void executeSyncDockerCmd(BiFunction<DockerClient, String, V> containerCmd, String containerName) {
