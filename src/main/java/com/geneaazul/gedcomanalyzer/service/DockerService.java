@@ -10,7 +10,6 @@ import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.command.PullImageResultCallback;
 import com.github.dockerjava.api.command.SyncDockerCmd;
 import com.github.dockerjava.api.exception.NotModifiedException;
-import com.github.dockerjava.api.model.AuthResponse;
 import com.github.dockerjava.api.model.ResponseItem;
 
 import java.time.Duration;
@@ -84,7 +83,7 @@ public class DockerService {
         }
     }
 
-    public void deployDockerCompose() throws InterruptedException {
+    public void deployDockerContainer() throws InterruptedException {
         if (dockerClient.isEmpty()) {
             return;
         }
@@ -106,14 +105,21 @@ public class DockerService {
                     DockerClient::startContainerCmd,
                     dbContainerName);
         } catch (NotModifiedException e) {
-            log.info("Docker container already started [ name={} ]", appContainerImageName);
+            log.info("Docker container already started [ name={} ]", dbContainerName);
         }
 
         log.info("Restart Docker container [ name={} ]", appContainerName);
         singleThreadExecutorService.submit(
-                () -> executeSyncDockerCmd(
-                        DockerClient::restartContainerCmd,
-                        appContainerName));
+                () -> {
+                    try {
+                        Thread.sleep(500L);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    executeSyncDockerCmd(
+                            DockerClient::restartContainerCmd,
+                            appContainerName);
+                });
     }
 
     private <T, V extends SyncDockerCmd<T>> void executeSyncDockerCmd(BiFunction<DockerClient, String, V> containerCmd, String containerName) {
