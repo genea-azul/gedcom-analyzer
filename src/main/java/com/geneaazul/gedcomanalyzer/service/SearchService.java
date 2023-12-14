@@ -2,6 +2,7 @@ package com.geneaazul.gedcomanalyzer.service;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.Age;
+import com.geneaazul.gedcomanalyzer.model.Aka;
 import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
@@ -77,14 +78,14 @@ public class SearchService {
                 .filter(person
                         -> personSurnameStr == null
                         || this.evalPersonName(person, EnrichedPerson::getSurname, name -> NameUtils.simplifyName(name.value()), personSurnameStr, exactMatch)
-                        || this.evalSpouseName(person, EnrichedPerson::getAka, NameUtils::simplifyName, personSurnameStr, exactMatch))
+                        || this.evalSpouseName(person, EnrichedPerson::getAka, Aka::simplified, personSurnameStr, exactMatch))
                 .filter(person
                         -> spouseGivenNameStr == null
                         || this.evalSpouseName(person, EnrichedPerson::getGivenName, name -> NameUtils.simplifyName(name.value()), spouseGivenNameStr, exactMatch))
                 .filter(person
                         -> spouseSurnameStr == null
                         || this.evalSpouseName(person, EnrichedPerson::getSurname, name -> NameUtils.simplifyName(name.value()), spouseSurnameStr, exactMatch)
-                        || this.evalSpouseName(person, EnrichedPerson::getAka, NameUtils::simplifyName, spouseSurnameStr, exactMatch))
+                        || this.evalSpouseName(person, EnrichedPerson::getAka, Aka::simplified, spouseSurnameStr, exactMatch))
                 .toList();
     }
 
@@ -368,8 +369,8 @@ public class SearchService {
                         return 50;
                     }
 
-                    boolean pMatchesSpousesWithOptionalGivenName = person.matchesAnySpousesWithOptionalGivenName(compare);
-                    boolean cMatchesSpousesWithOptionalGivenName = compare.matchesAnySpousesWithOptionalGivenName(person);
+                    boolean pMatchesSpousesWithOptionalGivenName = person.matchesAnySpousesWhenMissingGivenName(compare);
+                    boolean cMatchesSpousesWithOptionalGivenName = compare.matchesAnySpousesWhenMissingGivenName(person);
                     if (pMatchesSpousesWithOptionalGivenName || cMatchesSpousesWithOptionalGivenName) {
                         return 51;
                     }

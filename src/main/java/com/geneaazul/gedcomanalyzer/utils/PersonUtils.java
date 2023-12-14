@@ -1,5 +1,6 @@
 package com.geneaazul.gedcomanalyzer.utils;
 
+import com.geneaazul.gedcomanalyzer.model.Aka;
 import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.GivenName;
@@ -13,9 +14,10 @@ import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
 import org.apache.commons.collections4.ComparatorUtils;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.rng.UniformRandomProvider;
+import org.apache.commons.rng.simple.RandomSource;
 import org.folg.gedcom.model.EventFact;
 import org.folg.gedcom.model.ExtensionContainer;
 import org.folg.gedcom.model.Family;
@@ -73,6 +75,8 @@ public class PersonUtils {
     public static final String UPDATED_TAG = "_UPD";
     public static final String PERSONAL_PHOTO_TAG = "_PERSONALPHOTO";
 
+    private static final UniformRandomProvider RNG = RandomSource.JDK.create();
+
     public static UUID getUuid(
             Person person,
             @Nullable ZonedDateTime modifiedDateTime) {
@@ -82,11 +86,11 @@ public class PersonUtils {
                 .filter(StringUtils::isNumeric)
                 .map(Long::valueOf)
                 .map(id -> (modifiedDateTime != null) ? id * (modifiedDateTime.getNano() / 1_000) : id)
-                .orElseGet(() -> (long) (Math.random() * Long.MAX_VALUE));
+                .orElseGet(RNG::nextLong);
 
         long timestamp = Optional.ofNullable(modifiedDateTime)
                 .map(ZonedDateTime::toEpochSecond)
-                .orElseGet(() -> (long) (Math.random() * Long.MAX_VALUE));
+                .orElseGet(RNG::nextLong);
 
         return new UUID(personId, timestamp);
     }
@@ -262,6 +266,38 @@ public class PersonUtils {
                                 .findFirst())
                         .map(GedcomTag::getValue))
                 .map(StringUtils::trimToNull);
+    }
+
+    /**
+     * The main name's a.k.a. name (or former name).
+     */
+    public static Optional<Aka> getSimplifiedAka(
+            @Nullable String aka,
+            @Nullable SexType sex,
+            Map<NameAndSex, String> normalizedGivenNamesMap) {
+        return Optional.ofNullable(aka)
+                .map(NameUtils::simplifyNameWithAlphabetConversion)
+                .map(simplified -> {
+                    Optional<GivenName> tentativeGivenName = Optional.of(simplified)
+                            .map(s -> StringUtils.substringBeforeLast(s, " "))
+                            .filter(str -> !str.isEmpty())
+                            .flatMap(str -> PersonUtils.getNormalizedGivenName(str, sex, normalizedGivenNamesMap));
+                    return Aka.of(aka, simplified, tentativeGivenName);
+                });
+    }
+
+    /**
+     * The main name's a.k.a. name (or former name).
+     */
+    public static Optional<Aka> getSimplifiedAka(
+            Person person,
+            Map<NameAndSex, String> normalizedGivenNamesMap) {
+        Optional<String> aka = getAka(person);
+        SexType sex = PersonUtils.getSex(person);
+        return getSimplifiedAka(
+                aka.orElse(null),
+                sex,
+                normalizedGivenNamesMap);
     }
 
     public static Optional<ProfilePicture> getProfilePicture(Person person) {
@@ -500,7 +536,7 @@ public class PersonUtils {
                 .filter(StreamUtils.distinctByKey(spouseWithChildren -> spouseWithChildren
                         .spouse()
                         .map(Person::getId)
-                        .orElseGet(() -> String.valueOf(RandomUtils.nextInt()))))
+                        .orElseGet(() -> String.valueOf(RNG.nextInt()))))
                 .toList();
     }
 

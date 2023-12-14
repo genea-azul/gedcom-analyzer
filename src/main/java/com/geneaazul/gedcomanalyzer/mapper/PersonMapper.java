@@ -1,5 +1,6 @@
 package com.geneaazul.gedcomanalyzer.mapper;
 
+import com.geneaazul.gedcomanalyzer.model.Aka;
 import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPersonWithReference;
@@ -71,6 +72,7 @@ public class PersonMapper {
                 .name(PersonUtils.obfuscateName(person, obfuscateName && person.isAlive()))
                 .aka(person.getAka()
                         .filter(aka -> !(obfuscateName && person.isAlive()))
+                        .map(Aka::value)
                         .orElse(null))
                 .profilePicture(person.getProfilePicture()
                         .map(ProfilePicture::file)

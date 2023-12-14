@@ -12,7 +12,7 @@ import jakarta.annotation.Nullable;
 public record GivenNameAndSurname(
         @Nullable GivenName givenName,
         @Nullable Surname surname,
-        @Nullable String simplifiedAka) {
+        @Nullable Aka aka) {
 
     public boolean isAnyValueEmpty() {
         return givenName == null || surname == null;
@@ -46,23 +46,22 @@ public record GivenNameAndSurname(
             GedcomAnalyzerProperties properties) {
         Optional<GivenName> normalizedGivenName = PersonUtils.getNormalizedGivenName(givenName, sex, properties.getNormalizedGivenNamesMap());
         Optional<Surname> shortenedSurname = PersonUtils.getShortenedSurnameMainWord(surname, properties.getNormalizedSurnamesMap());
+        Optional<Aka> simplifiedAka = PersonUtils.getSimplifiedAka(aka, sex, properties.getNormalizedGivenNamesMap());
         return new GivenNameAndSurname(
                 normalizedGivenName.orElse(null),
                 shortenedSurname.orElse(null),
-                NameUtils.simplifyName(aka));
+                simplifiedAka.orElse(null));
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     public static GivenNameAndSurname of(
             Optional<GivenName> givenName,
             Optional<Surname> surname,
-            Optional<String> aka) {
+            Optional<Aka> aka) {
         return new GivenNameAndSurname(
                 givenName.orElse(null),
                 surname.orElse(null),
-                aka
-                        .map(NameUtils::simplifyName)
-                        .orElse(null));
+                aka.orElse(null));
     }
 
     public boolean matches(@Nullable GivenNameAndSurname other) {
@@ -72,33 +71,45 @@ public record GivenNameAndSurname(
         if (this.isAnyValueEmpty() || other.isAnyValueEmpty()) {
             return false;
         }
-        if (this.surname.matches(other.surname)
-                && this.givenName.matches(other.givenName)) {
+        boolean matchesSurname = this.surname.matches(other.surname);
+        if (matchesSurname && this.givenName.matches(other.givenName)) {
             return true;
         }
-        if (this.simplifiedAka != null) {
+        if (this.aka != null) {
+            if (matchesSurname
+                    && this.aka.tentativeGivenName()
+                            .map(tentative -> tentative.matches(other.givenName))
+                            .orElse(false)) {
+                return true;
+            }
             String simplifiedGivenName = NameUtils.simplifyName(other.givenName.value());
             String simplifiedSurname = NameUtils.simplifyName(other.surname.value());
-            if (this.simplifiedAka.contains(simplifiedGivenName) && this.simplifiedAka.contains(simplifiedSurname)) {
+            if (this.aka.simplified().contains(simplifiedGivenName) && this.aka.simplified().contains(simplifiedSurname)) {
                 return true;
             }
         }
-        if (other.simplifiedAka != null) {
+        if (other.aka != null) {
+            if (matchesSurname
+                    && other.aka.tentativeGivenName()
+                            .map(tentative -> tentative.matches(this.givenName))
+                            .orElse(false)) {
+                return true;
+            }
             String simplifiedGivenName = NameUtils.simplifyName(this.givenName.value());
             String simplifiedSurname = NameUtils.simplifyName(this.surname.value());
-            if (other.simplifiedAka.contains(simplifiedGivenName) && other.simplifiedAka.contains(simplifiedSurname)) {
+            if (other.aka.simplified().contains(simplifiedGivenName) && other.aka.simplified().contains(simplifiedSurname)) {
                 return true;
             }
         }
         return false;
     }
 
-    public boolean matchesWithOptionalGivenName(@Nullable GivenNameAndSurname other) {
+    public boolean matchesSurnameWhenMissingAnyGivenName(@Nullable GivenNameAndSurname other) {
         if (other == null) {
             return false;
         }
         if (!this.isGivenNameEmpty() && !other.isGivenNameEmpty()) {
-            return false; // cause it is not optional given name
+            return false; // cause it is not missing any given name
         }
         if (this.isSurnameEmpty() || other.isSurnameEmpty()) {
             return false;

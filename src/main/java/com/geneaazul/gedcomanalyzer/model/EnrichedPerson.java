@@ -44,7 +44,7 @@ public class EnrichedPerson {
     private final Optional<GivenName> givenName;
     private final Optional<Surname> surname;
     private final String displayName;
-    private final Optional<String> aka;
+    private final Optional<Aka> aka;
     private final Optional<ProfilePicture> profilePicture;
     private final Optional<Date> dateOfBirth;
     private final Optional<Date> dateOfDeath;
@@ -95,8 +95,8 @@ public class EnrichedPerson {
         givenName = PersonUtils.getNormalizedGivenName(person, properties.getNormalizedGivenNamesMap());
         surname = PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap());
         displayName = PersonUtils.getDisplayName(person);
-        aka = PersonUtils.getAka(person)
-                .filter(akaName -> !akaName.equals(displayName));
+        aka = PersonUtils.getSimplifiedAka(person, properties.getNormalizedGivenNamesMap())
+                .filter(a -> !a.simplified().equalsIgnoreCase(displayName));
         profilePicture = PersonUtils.getProfilePicture(person);
         dateOfBirth = PersonUtils.getDateOfBirth(person)
                 .flatMap(Date::parse);
@@ -251,12 +251,12 @@ public class EnrichedPerson {
         return GivenNameAndSurname.of(this.givenName, this.surname, this.aka).matches(givenNameAndSurname);
     }
 
-    public boolean matchesOptionalGivenNameAndSurname(EnrichedPerson other) {
-        return matchesOptionalGivenNameAndSurname(GivenNameAndSurname.of(other.givenName, other.surname, other.aka));
+    public boolean matchesSurnameWhenMissingAnyGivenName(EnrichedPerson other) {
+        return matchesSurnameWhenMissingAnyGivenName(GivenNameAndSurname.of(other.givenName, other.surname, other.aka));
     }
 
-    public boolean matchesOptionalGivenNameAndSurname(GivenNameAndSurname givenNameAndSurname) {
-        return GivenNameAndSurname.of(this.givenName, this.surname, this.aka).matchesWithOptionalGivenName(givenNameAndSurname);
+    public boolean matchesSurnameWhenMissingAnyGivenName(GivenNameAndSurname givenNameAndSurname) {
+        return GivenNameAndSurname.of(this.givenName, this.surname, this.aka).matchesSurnameWhenMissingAnyGivenName(givenNameAndSurname);
     }
 
     public boolean matchesAllParents(EnrichedPerson other) {
@@ -267,7 +267,7 @@ public class EnrichedPerson {
         return matchesPersonsBySexAndName(this.spouses, other.spouses, false, false);
     }
 
-    public boolean matchesAnySpousesWithOptionalGivenName(EnrichedPerson other) {
+    public boolean matchesAnySpousesWhenMissingGivenName(EnrichedPerson other) {
         return matchesPersonsBySexAndName(this.spouses, other.spouses, false, true);
     }
 
@@ -275,7 +275,7 @@ public class EnrichedPerson {
             List<EnrichedPerson> persons1,
             List<EnrichedPerson> persons2,
             boolean isAllMatch,
-            boolean isOptionalGivenNameMatch) {
+            boolean isMissingGivenNameMatch) {
 
         if (persons1.isEmpty() || persons2.isEmpty() || isAllMatch && persons1.size() > persons2.size()) {
             return false;
@@ -285,8 +285,8 @@ public class EnrichedPerson {
                 .stream()
                 .anyMatch(person2
                         -> person1.equalsSex(person2)
-                        && (!isOptionalGivenNameMatch && person1.matchesGivenNameAndSurname(person2)
-                                || isOptionalGivenNameMatch && person1.matchesOptionalGivenNameAndSurname(person2)));
+                        && (!isMissingGivenNameMatch && person1.matchesGivenNameAndSurname(person2)
+                                || isMissingGivenNameMatch && person1.matchesSurnameWhenMissingAnyGivenName(person2)));
 
         return isAllMatch
                 ? persons1

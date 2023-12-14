@@ -1,5 +1,7 @@
 package com.geneaazul.gedcomanalyzer.service;
 
+import com.geneaazul.gedcomanalyzer.utils.ThreadUtils;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -9,6 +11,7 @@ import com.github.dockerjava.api.command.AsyncDockerCmd;
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.command.PullImageResultCallback;
 import com.github.dockerjava.api.command.SyncDockerCmd;
+import com.github.dockerjava.api.exception.NotModifiedException;
 import com.github.dockerjava.api.model.ResponseItem;
 
 import java.time.Duration;
@@ -43,7 +46,7 @@ public class DockerService {
     @Value("${docker.db-container.max-idle-time:600000}")
     private Duration dbContainerMaxIdleTime;
 
-    @Value("${docker.image.pull-timeout:3000}")
+    @Value("${docker.image.pull-timeout:120000}")
     private Duration imagePullTimeout;
 
     private Instant lastStartDbContainerRequest = null;
@@ -61,7 +64,7 @@ public class DockerService {
                 InspectContainerResponse::getState);
 
         if (!isContainerStarted(containerState)) {
-            log.info("Starting DB container {}", dbContainerName);
+            log.info("Starting DB container [ name={} ]", dbContainerName);
             executeSyncDockerCmd(DockerClient::startContainerCmd, dbContainerName);
         }
     }
@@ -77,28 +80,42 @@ public class DockerService {
                 InspectContainerResponse::getState);
 
         if (isContainerStarted(containerState)) {
-            log.info("Stopping DB container {}", dbContainerName);
+            log.info("Stopping DB container [ name={} ]", dbContainerName);
             executeSyncDockerCmd(DockerClient::stopContainerCmd, dbContainerName);
         }
     }
 
-    public void deployDockerCompose() throws InterruptedException {
+    public void deployDockerContainer() throws InterruptedException {
         if (dockerClient.isEmpty()) {
             return;
         }
 
-        log.info("Updating Docker image: {}", appContainerImageName);
-        executeAsyncDockerCmd(
-                DockerClient::pullImageCmd,
-                new PullImageResultCallback(),
-                appContainerImageName,
-                imagePullTimeout);
+        try {
+            log.info("Update Docker image [ name={} ]", appContainerImageName);
+            executeAsyncDockerCmd(
+                    DockerClient::pullImageCmd,
+                    new PullImageResultCallback(),
+                    appContainerImageName,
+                    imagePullTimeout);
+        } catch (NotModifiedException e) {
+            log.info("Docker image already up-to-date [ name={} ]", appContainerImageName);
+        }
 
-        log.info("Restarting Docker container: {}", appContainerName);
-        singleThreadExecutorService.submit(
+        try {
+            log.info("Start Docker container [ name={} ]", dbContainerName);
+            executeSyncDockerCmd(
+                    DockerClient::startContainerCmd,
+                    dbContainerName);
+        } catch (NotModifiedException e) {
+            log.info("Docker container already started [ name={} ]", dbContainerName);
+        }
+
+        log.info("Restart Docker container [ name={} ]", appContainerName);
+        singleThreadExecutorService.submit(() -> ThreadUtils.sleepMillisAndThen(
+                500,
                 () -> executeSyncDockerCmd(
                         DockerClient::restartContainerCmd,
-                        appContainerName));
+                        appContainerName)));
     }
 
     private <T, V extends SyncDockerCmd<T>> void executeSyncDockerCmd(BiFunction<DockerClient, String, V> containerCmd, String containerName) {

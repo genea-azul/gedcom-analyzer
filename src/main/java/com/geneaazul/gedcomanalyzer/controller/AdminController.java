@@ -17,11 +17,11 @@ public class AdminController {
 
     private final DockerService dockerService;
 
-    @GetMapping("/docker-compose-deployment")
-    public void deployDockerCompose() throws InterruptedException {
-        log.info("Deploy Docker Compose with latest images");
-        dockerService.deployDockerCompose();
+    @GetMapping("/docker-container-deployment")
+    public String deployDockerContainer() throws InterruptedException {
+        log.info("Deploy Docker container with up-to-date image");
+        dockerService.deployDockerContainer();
+        return "Restarting Docker container..";
     }
-
 
 }

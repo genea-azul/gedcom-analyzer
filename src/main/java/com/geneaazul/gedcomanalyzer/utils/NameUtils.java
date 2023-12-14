@@ -42,16 +42,25 @@ public class NameUtils {
     private static final String[] SURNAME_REPLACEMENT_CHARS = new String[]{ "v", "c", "ge", "gi", "c", "c", "i", "s" };
 
     /**
-     * For givenName and surname.
+     * Usually sued for givenName and surname simplification.
      */
     @CheckForNull
     public static String simplifyName(@Nullable String name) {
-        name = AlphabetUtils.convertAnyToLatin(name);
         name = StringUtils.stripAccents(name);
         name = StringUtils.lowerCase(name);
         name = StringUtils.replaceEach(name, NAME_SEARCH_SPECIAL_CHARS, NAME_REPLACEMENT_SPECIAL_CHARS);
         name = RegExUtils.replaceAll(name, NAME_MULTIPLE_SPACES_PATTERN, " ");
         name = StringUtils.trimToNull(name);
+        return name;
+    }
+
+    /**
+     * Usually sued for a.k.a. simplification.
+     */
+    @CheckForNull
+    public static String simplifyNameWithAlphabetConversion(@Nullable String name) {
+        name = AlphabetUtils.convertAnyToLatin(name);
+        name = simplifyName(name);
         return name;
     }
 
