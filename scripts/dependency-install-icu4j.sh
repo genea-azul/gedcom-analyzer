@@ -7,6 +7,7 @@ projMvnRepo=./.mvn/repo
 artifactProjDir=../icu/icu4j
 artifactMvnRepoDir=/com/ibm/icu
 artifactVersion=74.2
+artifactGitMain=main
 artifactGitBranch=maint/maint-74
 
 # Update branch
@@ -15,6 +16,9 @@ git -C ${artifactProjDir} checkout ${artifactGitBranch} && git -C ${artifactProj
 
 # Build project
 ./mvnw clean package -DskipTests -f ${artifactProjDir}/pom.xml
+
+# Go back to main branch
+git -C ${artifactProjDir} checkout ${artifactGitMain}
 
 # Copy dependencies to local Maven repo
 ./mvnw install:install-file \

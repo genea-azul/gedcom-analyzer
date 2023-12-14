@@ -7,6 +7,7 @@ projMvnRepo=./.mvn/repo
 artifactProjDir=../gedcom5-java
 artifactMvnRepoDir=/org/familysearch/gedcom
 artifactVersion=1.14.0
+artifactGitMain=master
 artifactGitBranch=ee3c05fe306bdc396c4d3843746cb36c21168bf3
 
 # Update branch
@@ -15,6 +16,9 @@ git -C ${artifactProjDir} checkout ${artifactGitBranch} && git -C ${artifactProj
 
 # Build project
 ./mvnw clean package -DskipTests -f ${artifactProjDir}/pom.xml
+
+# Go back to main branch
+git -C ${artifactProjDir} checkout ${artifactGitMain}
 
 # Copy dependencies to local Maven repo
 ./mvnw install:install-file \
