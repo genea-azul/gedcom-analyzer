@@ -1,0 +1,4 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Thu Dec 14 13:43:28 ART 2023
+icu4j-core-74.2.jar>=
+icu4j-core-74.2.pom>=
