@@ -80,12 +80,12 @@ public class NameUtilsTests {
                     assertThat(givenName.searchPattern().toString()).isEqualTo("^(?=.*\\belisa\\b)(?=.*\\bisabel\\b)(?=.*\\bmaria\\b).*$");
                 });
 
-        name.setGiven("Валянціна");
+        name.setGiven("Valyantsina");
         sex.setValue("F");
         assertThat(PersonUtils.getNormalizedGivenName(person, properties.getNormalizedGivenNamesMap()))
                 .get()
                 .satisfies(givenName -> {
-                    assertThat(givenName.value()).isEqualTo("Валянціна");
+                    assertThat(givenName.value()).isEqualTo("Valyantsina");
                     assertThat(givenName.normalized()).isEqualTo("valentina");
                     assertThat(givenName.wordsCount()).isEqualTo(1);
                     assertThat(givenName.searchPattern().toString()).isEqualTo("\\bvalentina\\b");
