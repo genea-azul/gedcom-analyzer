@@ -4,8 +4,9 @@ import com.geneaazul.gedcomanalyzer.service.GedcomParsingService;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.service.storage.GoogleDriveStorageService;
 import com.geneaazul.gedcomanalyzer.service.storage.LocalStorageService;
-import com.geneaazul.gedcomanalyzer.service.storage.StorageService;
+import com.geneaazul.gedcomanalyzer.utils.ThreadUtils;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +16,9 @@ import org.springframework.context.annotation.Profile;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import jakarta.annotation.PostConstruct;
+
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -50,16 +54,27 @@ public class StorageConfig {
     }
 
     @Bean
-    public GedcomHolder gedcomHolder(
-            StorageService storageService,
-            ExecutorService singleThreadExecutorService) {
-        return new GedcomHolder(storageService, singleThreadExecutorService);
-    }
-
-    @Bean
     @Profile("!test")
     public ExecutorService singleThreadExecutorService() {
         return Executors.newSingleThreadExecutor();
+    }
+
+    @Configuration
+    @RequiredArgsConstructor
+    public static class SubConfig {
+
+        private final GedcomHolder gedcomHolder;
+        private final ExecutorService singleThreadExecutorService;
+
+        @Value("${gedcom.reload-delay-in-secs:8}")
+        private int gedcomReloadDelayInSecs;
+
+        @PostConstruct
+        public void postConstruct() {
+            singleThreadExecutorService.submit(() -> ThreadUtils.sleepSecondsAndThen(
+                    gedcomReloadDelayInSecs,
+                    () -> gedcomHolder.reloadFromStorage(false)));
+        }
     }
 
 }

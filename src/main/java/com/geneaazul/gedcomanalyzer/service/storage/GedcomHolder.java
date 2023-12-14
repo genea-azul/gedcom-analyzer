@@ -1,26 +1,25 @@
 package com.geneaazul.gedcomanalyzer.service.storage;
 
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
-import com.geneaazul.gedcomanalyzer.utils.ThreadUtils;
+
+import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Service
 @RequiredArgsConstructor
 public class GedcomHolder {
 
     private final StorageService storageService;
-    private final ExecutorService singleThreadExecutorService;
 
     private final LinkedBlockingQueue<EnrichedGedcom> gedcomQueue = new LinkedBlockingQueue<>();
 
@@ -54,17 +53,9 @@ public class GedcomHolder {
         }
     }
 
-    @PostConstruct
-    public void postConstruct() {
-        singleThreadExecutorService.submit(() -> ThreadUtils.sleepSecondsAndThen(
-                10,
-                () -> reloadFromStorage(false)));
-    }
-
     @PreDestroy
     public void preDestroy() {
         gedcomQueue.clear();
-        singleThreadExecutorService.shutdownNow();
     }
 
 }
