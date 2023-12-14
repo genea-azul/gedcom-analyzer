@@ -4,7 +4,7 @@
 userMvnRepo=~/.m2/repository
 projMvnRepo=./.mvn/repo
 
-artifactProjDir=../develop/icu/icu4j
+artifactProjDir=../icu/icu4j
 artifactMvnRepoDir=/com/ibm/icu
 artifactVersion=74.2
 artifactGitBranch=maint/maint-74

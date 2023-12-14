@@ -4,7 +4,7 @@
 userMvnRepo=~/.m2/repository
 projMvnRepo=./.mvn/repo
 
-artifactProjDir=../develop/gedcom5-java
+artifactProjDir=../gedcom5-java
 artifactMvnRepoDir=/org/familysearch/gedcom
 artifactVersion=1.14.0
 artifactGitBranch=ee3c05fe306bdc396c4d3843746cb36c21168bf3
