@@ -172,7 +172,7 @@ public class GedcomAnalyzerServiceTests {
     public void getSurnamesCardinalityByPlaceOfBirth() {
         System.out.println("\ngetSurnamesCardinalityByPlaceOfBirth:");
         gedcomAnalyzerService
-                .getSurnamesCardinalityByPlaceOfBirth(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", true)
+                .getSurnamesCardinalityByPlaceOfBirth(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null)
                 .stream()
                 .limit(150)
                 .forEach(cardinality -> System.out.println(
