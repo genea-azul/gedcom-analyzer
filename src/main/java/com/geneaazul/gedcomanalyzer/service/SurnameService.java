@@ -10,6 +10,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesResultDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
+import com.geneaazul.gedcomanalyzer.utils.NameUtils;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 import com.geneaazul.gedcomanalyzer.utils.StreamUtils;
 
@@ -49,7 +50,7 @@ public class SurnameService {
                 .map(surname -> {
                     List<EnrichedPerson> persons = searchPersonsBySurname(surname, gedcom);
 
-                    List<String> variants = getSurnameVariants(surname, persons);
+                    List<String> variants = getSurnameVariants(surname, persons, normalizedSurnamesMap);
 
                     List<String> countries = persons
                             .stream()
@@ -101,7 +102,8 @@ public class SurnameService {
 
     private List<String> getSurnameVariants(
             Surname surname,
-            List<EnrichedPerson> persons) {
+            List<EnrichedPerson> persons,
+            Map<String, String> normalizedSurnamesMap) {
         return persons
                 .stream()
                 .map(EnrichedPerson::getSurname)
@@ -111,18 +113,36 @@ public class SurnameService {
                 // Skip same surname
                 .filter(s -> !StringUtils.startsWithIgnoreCase(s.value(), surname.value()))
                 // Try to suppress compound surnames
-                .map(this::suppressCompoundSurname)
+                .map(s -> suppressCompoundSurname(s, normalizedSurnamesMap))
                 .distinct()
                 .sorted()
                 .toList();
     }
 
-    private String suppressCompoundSurname(Surname surname) {
-        if (surname.value().length() > surname.normalizedMainWord().length() + 4) {
-            return StringUtils.substringBeforeLast(surname.value(), " ");
-        } else {
-            return surname.value();
+    private String suppressCompoundSurname(
+            Surname surname,
+            Map<String, String> normalizedSurnamesMap) {
+
+        String value = surname.value();
+        String simplifed = NameUtils.simplifyName(surname.value());
+
+        if (simplifed == null) {
+            return value;
         }
+
+        while (simplifed.contains(" ")) {
+
+            simplifed = StringUtils.substringBeforeLast(simplifed, " ");
+            String normalized = NameUtils.normalizeSurnameToMainWord(simplifed, normalizedSurnamesMap);
+
+            if (!surname.normalizedMainWord().equals(normalized)) {
+                break;
+            }
+
+            value = StringUtils.substringBeforeLast(value, " ");
+        }
+
+        return value;
     }
 
     private List<EnrichedPerson> searchPersonsBySurname(

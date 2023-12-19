@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -329,6 +330,17 @@ public class GedcomAnalyzerServiceTests {
                 .getPeople()
                 .stream()
                 .filter(EnrichedPerson::isDistinguishedPerson)
+                .forEach(System.out::println);
+    }
+
+    @Test
+    public void findPeopleNonDistinguishedPersons() {
+        System.out.println("\nfindPeopleNonDistinguishedPersons:");
+        gedcom
+                .getPeople()
+                .stream()
+                .filter(person -> StringUtils.containsAnyIgnoreCase(person.getDisplayName(), "Mun.", "Pte.", "Diác.", "Padre ", "Sor ", "Mons.", "Cacique", "Gdor.", "Gdora.", "Bto.", "Bta.", "Cde.", "Cdesa.", "Pnt."))
+                .filter(Predicate.not(EnrichedPerson::isDistinguishedPerson))
                 .forEach(System.out::println);
     }
 

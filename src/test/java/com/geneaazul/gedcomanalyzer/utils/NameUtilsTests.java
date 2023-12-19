@@ -284,11 +284,11 @@ public class NameUtilsTests {
                 .get()
                 .satisfies(surname -> {
                     assertThat(surname.value()).isEqualTo("B. y Miñana González");
-                    assertThat(surname.normalizedMainWord()).isEqualTo("vi");
-                    assertThat(surname.shortenedMainWord()).isEqualTo("v_");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("v");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("v");
 
                     Surname matching = PersonUtils.getShortenedSurnameMainWord("B", properties.getNormalizedSurnamesMap()).orElse(null);
-                    assertThat(surname.matches(matching)).isFalse();
+                    assertThat(surname.matches(matching)).isTrue();
                 });
 
         name.setSurname("De los Heros");
@@ -361,6 +361,18 @@ public class NameUtilsTests {
 
                     Surname matching = PersonUtils.getShortenedSurnameMainWord("Cuadra", properties.getNormalizedSurnamesMap()).orElse(null);
                     assertThat(surname.matches(matching)).isFalse();
+                });
+
+        name.setSurname("de Burgos y Celis");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("de Burgos y Celis");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("vurgos");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("vurgos");
+
+                    Surname matching = PersonUtils.getShortenedSurnameMainWord("Burgos", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(matching)).isTrue();
                 });
     }
 
