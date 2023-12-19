@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.time.Month;
+import java.time.Year;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -226,6 +227,14 @@ public class GedcomAnalyzerServiceTests {
         System.out.println("\nfindPersonsByMonthAndDayOfDeath:");
         searchService
                 .findPersonsByMonthAndDayOfDeath(Month.APRIL, 2, null, gedcom.getPeople())
+                .forEach(System.out::println);
+    }
+
+    @Test
+    public void findPersonsByYearOfDeathAndNoParents() {
+        System.out.println("\nfindPersonsByYearOfDeathAndNoParents:");
+        searchService
+                .findPersonsByYearOfDeathAndNoParents(Year.of(2023), null, gedcom.getPeople())
                 .forEach(System.out::println);
     }
 
