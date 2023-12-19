@@ -34,7 +34,7 @@ public class NameUtils {
     private static final Pattern SURNAME_COMMON_CONNECTOR_PATTERN =
             Pattern.compile("^([^ ]+)(?: (de|del|der|la|los|las|san))+ (.+)$");
     private static final Pattern SURNAME_COMMON_PREFIX_PATTERN =
-            Pattern.compile("^([a-z]|ahets|de|del|di|della|delle|dall|das|dos|du|la|le|lo|mc|mac|oro|san|sant|santo|saint|sainte|st|van|vander|von) +(.*)$");
+            Pattern.compile("^([a-z]|ahets|de|del|di|della|delle|dall|das|dos|du|la|le|lo|mc|mac|oro|san|sant|santo|saint|sainte|st|van|vander|von) +((?!y +).*)$");
     private static final Pattern SURNAME_DOUBLE_LETTERS_PATTERN = Pattern.compile("([a-z])\\1+");
     private static final Pattern SURNAME_VOWELS_ENDING_PATTERN = Pattern.compile("[aeiou]+$");
     private static final String SURNAME_VOWELS_ENDING_REPLACEMENT = "_";

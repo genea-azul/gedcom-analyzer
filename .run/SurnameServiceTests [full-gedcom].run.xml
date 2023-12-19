@@ -1,0 +1,19 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="SurnameServiceTests [full-gedcom]" type="JUnit" factoryName="JUnit">
+    <module name="gedcom-analyzer" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="com.geneaazul.gedcomanalyzer.service.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <option name="PACKAGE_NAME" value="com.geneaazul.gedcomanalyzer.service" />
+    <option name="MAIN_CLASS_NAME" value="com.geneaazul.gedcomanalyzer.service.SurnameServiceTests" />
+    <option name="METHOD_NAME" value="" />
+    <option name="TEST_OBJECT" value="class" />
+    <option name="VM_PARAMETERS" value="-ea -Dgedcom-storage-local-path=../gedcoms/genea-azul-full-gedcom.ged" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
