@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -349,6 +350,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     private void drawLogoImage(PDPageContentStream stream, PDImageXObject image, float x, float y) throws IOException {
         // Original image size: 502 x 264
         float imageWidth = 120f;
@@ -380,57 +382,48 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
         float space3 = size1 * space1 / size3;
         float space4 = size1 * space1 / size4;
 
-        String[] lines = peopleInPage
-                .stream()
-                .map(relationship
-                        -> StringUtils.leftPad(relationship.index(), 4)
-                        + ". " + relationship.personSex()
-                        + " " + relationship.treeSide()
-                        + " " + relationship.personIsAlive())
-                .toArray(String[]::new);
-        writeText(stream, mono, size1, space1, 30f, yPos, lines);
+        MutableInt index = new MutableInt(0);
 
-        lines = peopleInPage
-                .stream()
-                .map(relationship -> rightPadFixedWidth(PlaceUtils.adjustCountryForReport(relationship.personCountryOfBirth()), 3))
-                .toArray(String[]::new);
-        writeText(stream, light, size2, space2, 102f, yPos, lines);
+        peopleInPage.forEach(relationship -> {
+            int lineIndex = index.getAndIncrement();
+            float lineYPos1 = yPos + (size1 * space1) * lineIndex;
+            float lineYPos2 = yPos + (size2 * space2) * lineIndex;
+            float lineYPos3 = yPos + (size3 * space3) * lineIndex;
+            float lineYPos4 = yPos + (size4 * space4) * lineIndex;
 
-        lines = peopleInPage
-                .stream()
-                .map(relationship -> {
-                    int padding = "----".equals(relationship.personYearOfBirth())
-                            ? 9
-                            : (StringUtils.startsWith(relationship.personYearOfBirth(), "~") ? 5 : 7);
-                    return leftPadFixedWidth(relationship.personYearOfBirth(), padding);
-                })
-                .toArray(String[]::new);
-        writeText(stream, light, size2, space2, 120f, yPos, lines);
+            String text1 = StringUtils.leftPad(relationship.index(), 4)
+                    + ". " + relationship.personSex()
+                    + " " + relationship.treeSide()
+                    + " " + relationship.personIsAlive();
 
-        lines = peopleInPage
-                .stream()
-                .map(FormattedRelationship::personName)
-                .map(name -> StringUtils.substring(name, 0, MAX_PERSON_NAME_LENGTH))
-                .toArray(String[]::new);
-        writeText(stream, light, size2, space2, 155f, yPos, lines);
+            String countryForReport = PlaceUtils.adjustCountryForReport(relationship.personCountryOfBirth());
+            String text2 = rightPadFixedWidth(countryForReport, 3);
 
-        lines = peopleInPage
-                .stream()
-                .map(FormattedRelationship::distinguishedPerson)
-                .toArray(String[]::new);
-        writeText(stream, mono, size3, space3, 360f, yPos, lines);
+            int padding = "----".equals(relationship.personYearOfBirth())
+                    ? 9
+                    : (StringUtils.startsWith(relationship.personYearOfBirth(), "~") ? 5 : 7);
+            String text3 = leftPadFixedWidth(relationship.personYearOfBirth(), padding);
 
-        lines = peopleInPage
-                .stream()
-                .map(relationship -> "• ")
-                .toArray(String[]::new);
-        writeText(stream, light, size2, space2, 370f, yPos, lines);
+            String text4 = StringUtils.substring(relationship.personName(), 0, MAX_PERSON_NAME_LENGTH);
 
-        String[][] linesWithCond = peopleInPage
-                .stream()
-                .map(relationship -> new String[] { relationship.adoption(), relationship.relationshipDesc() })
-                .toArray(String[][]::new);
-        writeText(stream, text -> StringUtils.isNotBlank(text) ? italic : light, size4, space4, 375f, yPos, linesWithCond);
+            String text5 = relationship.distinguishedPerson();
+
+            String text6 = "• ";
+
+            String[] text7 = new String[] { relationship.adoption(), relationship.relationshipDesc() };
+
+            try {
+                writeText(stream, mono, size1, space1, 30f, lineYPos1, text1);
+                writeText(stream, light, size2, space2, 102f, lineYPos2, text2);
+                writeText(stream, light, size2, space2, 120f, lineYPos2, text3);
+                writeText(stream, light, size2, space2, 155f, lineYPos2, text4);
+                writeText(stream, mono, size3, space3, 360f, lineYPos3, text5);
+                writeText(stream, light, size2, space2, 370f, lineYPos2, text6);
+                writeText(stream, text -> StringUtils.isNotBlank(text) ? italic : light, size4, space4, 375f, lineYPos4, text7);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
 
         writePageNumber(stream, font, pageNum);
 
@@ -444,7 +437,30 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
         }
     }
 
-    private void writeText(PDPageContentStream stream, PDFont font, float size, float space, float x, float y, String... texts) throws IOException {
+    private void writeText(
+            PDPageContentStream stream,
+            PDFont font,
+            float size,
+            float space,
+            float x,
+            float y,
+            String text) throws IOException {
+        stream.beginText();
+        stream.setFont(font, size);
+        stream.setLeading(size * space);
+        stream.newLineAtOffset(x, A4_MAX_OFFSET_Y - y);
+        stream.showText(text);
+        stream.endText();
+    }
+
+    private void writeText(
+            PDPageContentStream stream,
+            PDFont font,
+            float size,
+            float space,
+            float x,
+            float y,
+            String... texts) throws IOException {
         stream.beginText();
         stream.setFont(font, size);
         stream.setLeading(size * space);
@@ -456,6 +472,23 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
         stream.endText();
     }
 
+    private void writeText(
+            PDPageContentStream stream,
+            Function<String, PDFont> fontResolver,
+            float size,
+            float space,
+            @SuppressWarnings("SameParameterValue") float x,
+            float y,
+            String[] text) throws IOException {
+        stream.beginText();
+        stream.setLeading(size * space);
+        stream.newLineAtOffset(x, A4_MAX_OFFSET_Y - y);
+        stream.setFont(fontResolver.apply(text[0]), size);
+        stream.showText(text[1]);
+        stream.endText();
+    }
+
+    @SuppressWarnings("SameParameterValue")
     private void writeText(
             PDPageContentStream stream,
             Function<String, PDFont> fontResolver,

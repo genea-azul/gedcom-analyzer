@@ -128,7 +128,7 @@ public class SearchService {
                 .filter(person -> sex == null || sex == person.getSex())
                 .filter(person -> person.getDateOfBirth()
                         .filter(Date::isFullDate)
-                        .map(dob -> dob.getMonth() == month && dob.getDay() == day)
+                        .map(dob -> dob.getMonth().equals(month) && dob.getDay().equals(day))
                         .orElse(false))
                 .toList();
     }
@@ -147,8 +147,26 @@ public class SearchService {
                 .filter(person -> sex == null || sex == person.getSex())
                 .filter(person -> person.getDateOfDeath()
                         .filter(Date::isFullDate)
-                        .map(dob -> dob.getMonth() == month && dob.getDay() == day)
+                        .map(dob -> dob.getMonth().equals(month) && dob.getDay().equals(day))
                         .orElse(false))
+                .toList();
+    }
+
+    /**
+     * .
+     */
+    public List<EnrichedPerson> findPersonsByYearOfDeathAndNoParents(
+            Year year,
+            @Nullable SexType sex,
+            List<EnrichedPerson> people) {
+        return people
+                .stream()
+                .filter(person -> !person.isAlive())
+                .filter(person -> sex == null || sex == person.getSex())
+                .filter(person -> person.getDateOfDeath()
+                        .map(dob -> dob.getYear().equals(year))
+                        .orElse(false))
+                .filter(person -> person.getParents().isEmpty())
                 .toList();
     }
 

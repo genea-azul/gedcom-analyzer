@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="familytree in gedcom-analyzer [full-gedcom]" type="JUnit" factoryName="JUnit">
+    <module name="gedcom-analyzer" />
+    <option name="MAIN_CLASS_NAME" value="" />
+    <option name="METHOD_NAME" value="" />
+    <option name="TEST_OBJECT" value="directory" />
+    <option name="VM_PARAMETERS" value="-ea -Dobfuscate-condition=false -Dgedcom-storage-local-path=../gedcoms/genea-azul-full-gedcom.ged" />
+    <dir value="$PROJECT_DIR$/src/test/java/com/geneaazul/gedcomanalyzer/service/familytree" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
