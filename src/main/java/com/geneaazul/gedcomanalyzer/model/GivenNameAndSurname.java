@@ -2,7 +2,6 @@ package com.geneaazul.gedcomanalyzer.model;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
-import com.geneaazul.gedcomanalyzer.utils.NameUtils;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 
 import java.util.Optional;
@@ -82,9 +81,8 @@ public record GivenNameAndSurname(
                             .orElse(false)) {
                 return true;
             }
-            String simplifiedGivenName = NameUtils.simplifyName(other.givenName.value());
-            String simplifiedSurname = NameUtils.simplifyName(other.surname.value());
-            if (this.aka.simplified().contains(simplifiedGivenName) && this.aka.simplified().contains(simplifiedSurname)) {
+            if (this.aka.simplified().contains(other.givenName.simplified())
+                    && this.aka.simplified().contains(other.surname.simplified())) {
                 return true;
             }
         }
@@ -95,9 +93,8 @@ public record GivenNameAndSurname(
                             .orElse(false)) {
                 return true;
             }
-            String simplifiedGivenName = NameUtils.simplifyName(this.givenName.value());
-            String simplifiedSurname = NameUtils.simplifyName(this.surname.value());
-            if (other.aka.simplified().contains(simplifiedGivenName) && other.aka.simplified().contains(simplifiedSurname)) {
+            if (other.aka.simplified().contains(this.givenName.simplified())
+                    && other.aka.simplified().contains(this.surname.simplified())) {
                 return true;
             }
         }

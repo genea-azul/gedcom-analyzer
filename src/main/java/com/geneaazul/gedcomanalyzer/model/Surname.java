@@ -4,13 +4,22 @@ import jakarta.annotation.Nullable;
 
 public record Surname(
         String value,
+        String simplified,
         String normalizedMainWord,
         String shortenedMainWord) {
 
     private static final int MIN_LENGTH_FOR_NOT_AMBIGUOUS = 4;
 
-    public static Surname of(String value, String normalizedMainWord, String shortenedMainWord) {
-        return new Surname(value, normalizedMainWord, shortenedMainWord);
+    public static Surname of(
+            String value,
+            String simplified,
+            String normalizedMainWord,
+            String shortenedMainWord) {
+        return new Surname(
+                value,
+                simplified,
+                normalizedMainWord,
+                shortenedMainWord);
     }
 
     public boolean matches(@Nullable Surname other) {

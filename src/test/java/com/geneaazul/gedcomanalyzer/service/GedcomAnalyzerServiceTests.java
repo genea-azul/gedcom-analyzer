@@ -50,6 +50,8 @@ public class GedcomAnalyzerServiceTests {
     @Autowired
     private PersonService personService;
     @Autowired
+    private SurnameService surnameService;
+    @Autowired
     private RelationshipMapper relationshipMapper;
 
     private EnrichedGedcom gedcom;
@@ -172,19 +174,51 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void getSurnamesCardinalityByPlaceOfBirth() {
-        System.out.println("\ngetSurnamesCardinalityByPlaceOfBirth:");
+        System.out.println("\ngetSurnamesCardinalityByPlaceOfBirth (1):");
         gedcomAnalyzerService
                 .getSurnamesCardinalityByPlaceOfBirth(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null)
                 .stream()
-                .limit(150)
+                .limit(360)
+                .forEach(cardinality -> {
+
+                    List<String> variants = surnameService.getSurnameVariants(
+                            cardinality.mainSurname(),
+                            cardinality.variantsCardinality()
+                                    .stream()
+                                    .map(Pair::getLeft)
+                                    .toList(),
+                            gedcom.getProperties().getNormalizedSurnamesMap());
+
+                    System.out.println(
+                            cardinality.value()
+                            + " - "
+                            + cardinality.mainSurname().value()
+                            + (!variants.isEmpty()
+                                    ? variants
+                                            .stream()
+                                            .collect(Collectors.joining(", ", " (", ")"))
+                                    : ""));
+                });
+
+        /*
+        System.out.println("\ngetSurnamesCardinalityByPlaceOfBirth (2):");
+        gedcomAnalyzerService
+                .getSurnamesCardinalityByPlaceOfBirth(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null)
+                .stream()
+                .limit(360)
                 .forEach(cardinality -> System.out.println(
-                        cardinality.normalizedMainWord()
-                                + " - " + cardinality.cardinality()
-                                + " - " + cardinality.surnamesCardinality()
-                                        .stream()
-                                        .map(pair -> pair.getLeft() + " (" + pair.getRight() + ")")
-                                        .collect(Collectors.joining(", "))
-                                + " - Related: " + String.join(", ", cardinality.relatedNormalized())));
+                        cardinality.mainSurname().normalizedMainWord()
+                        + " - " + cardinality.value()
+                        + " - " + Stream.concat(
+                                        Stream.of(cardinality.mainSurname().value() + " (" + cardinality.mainSurnameCardinality() + ")"),
+                                        cardinality.variantsCardinality()
+                                                .stream()
+                                                .map(pair -> pair.getLeft() + " (" + pair.getRight() + ")"))
+                                .collect(Collectors.joining(", "))
+                        + (cardinality.relatedNormalized().isEmpty()
+                                ? ""
+                                : " - Related: " + String.join(", ", cardinality.relatedNormalized()))));
+         */
     }
 
     @Test

@@ -74,17 +74,17 @@ public class SearchService {
                 .stream()
                 .filter(person
                         -> personGivenNameStr == null
-                        || this.evalPersonName(person, EnrichedPerson::getGivenName, name -> NameUtils.simplifyName(name.value()), personGivenNameStr, exactMatch))
+                        || this.evalPersonName(person, EnrichedPerson::getGivenName, GivenName::simplified, personGivenNameStr, exactMatch))
                 .filter(person
                         -> personSurnameStr == null
-                        || this.evalPersonName(person, EnrichedPerson::getSurname, name -> NameUtils.simplifyName(name.value()), personSurnameStr, exactMatch)
+                        || this.evalPersonName(person, EnrichedPerson::getSurname, Surname::simplified, personSurnameStr, exactMatch)
                         || this.evalSpouseName(person, EnrichedPerson::getAka, Aka::simplified, personSurnameStr, exactMatch))
                 .filter(person
                         -> spouseGivenNameStr == null
-                        || this.evalSpouseName(person, EnrichedPerson::getGivenName, name -> NameUtils.simplifyName(name.value()), spouseGivenNameStr, exactMatch))
+                        || this.evalSpouseName(person, EnrichedPerson::getGivenName, GivenName::simplified, spouseGivenNameStr, exactMatch))
                 .filter(person
                         -> spouseSurnameStr == null
-                        || this.evalSpouseName(person, EnrichedPerson::getSurname, name -> NameUtils.simplifyName(name.value()), spouseSurnameStr, exactMatch)
+                        || this.evalSpouseName(person, EnrichedPerson::getSurname, Surname::simplified, spouseSurnameStr, exactMatch)
                         || this.evalSpouseName(person, EnrichedPerson::getAka, Aka::simplified, spouseSurnameStr, exactMatch))
                 .toList();
     }

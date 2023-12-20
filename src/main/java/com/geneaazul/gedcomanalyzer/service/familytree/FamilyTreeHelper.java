@@ -6,7 +6,6 @@ import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.Relationships;
 import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.service.PersonService;
-import com.geneaazul.gedcomanalyzer.utils.NameUtils;
 
 import org.springframework.stereotype.Service;
 
@@ -29,13 +28,12 @@ public class FamilyTreeHelper {
         return Stream.of(
                         person
                                 .getGivenName()
-                                .map(GivenName::value),
+                                .map(GivenName::simplified),
                         person
                                 .getSurname()
-                                .map(Surname::value))
+                                .map(Surname::simplified))
                 .flatMap(Optional::stream)
                 .reduce((n1, n2) -> n1 + "_" + n2)
-                .map(NameUtils::simplifyName)
                 .map(name -> name.replaceAll(" ", "_"))
                 .orElse("genea-azul");
     }
