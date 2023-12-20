@@ -92,9 +92,6 @@ public class DockerService {
 
         try {
             log.info("Update Docker image [ name={} ]", appContainerImageName);
-            executeSyncDockerCmd(
-                    DockerClient::removeImageCmd,
-                    appContainerImageName);
             executeAsyncDockerCmd(
                     DockerClient::pullImageCmd,
                     new PullImageResultCallback(),
