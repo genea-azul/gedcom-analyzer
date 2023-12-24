@@ -253,7 +253,7 @@ public class GedcomAnalyzerServiceTests {
                 SexType.F,
                 gedcom);
         searchService
-                .findPersonsByMonthAndDayOfDeath(Month.AUGUST, 22, null, people)
+                .findPersonsByMonthAndDayOfBirth(Month.AUGUST, 22, null, people)
                 .forEach(System.out::println);
     }
 
@@ -269,7 +269,7 @@ public class GedcomAnalyzerServiceTests {
     public void findPersonsByYearOfDeathAndNoParents() {
         System.out.println("\nfindPersonsByYearOfDeathAndNoParents:");
         searchService
-                .findPersonsByYearOfDeathAndNoParents(Year.of(2023), null, gedcom.getPeople())
+                .findPersonsByYearOfDeathAndNoParents(Year.of(2020), null, gedcom.getPeople())
                 .forEach(System.out::println);
     }
 
