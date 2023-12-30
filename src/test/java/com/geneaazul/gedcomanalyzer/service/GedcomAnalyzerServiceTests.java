@@ -5,6 +5,7 @@ import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
+import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.Surname;
@@ -445,20 +446,19 @@ public class GedcomAnalyzerServiceTests {
         System.out.println("distance from I4 to I4 (" + gedcom.getPersonById("I4").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I4"));
         System.out.println("distance from I4 to I5 (" + gedcom.getPersonById("I5").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I5"));
         System.out.println("distance from I4 to I6 (" + gedcom.getPersonById("I6").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I6"));
-        System.out.println("Papa Francisco: " + distancesAndPaths.getLeft().get("I525113"));
-        System.out.println("Juan Manuel de Rosas: " + distancesAndPaths.getLeft().get("I542961"));
-        System.out.println("Manuel Belgrano: " + distancesAndPaths.getLeft().get("I543016"));
-        System.out.println("Pedro Burgos: " + distancesAndPaths.getLeft().get("I518817"));
-        System.out.println("Cecilia Grierson: " + distancesAndPaths.getLeft().get("I529781"));
-        System.out.println("Luis Federico Leloir: " + distancesAndPaths.getLeft().get("I530512"));
-        System.out.println("María Aléx Urrutia Artieda: " + distancesAndPaths.getLeft().get("I516361"));
-        System.out.println("Félix Piazza: " + distancesAndPaths.getLeft().get("I503784"));
-        System.out.println("Cipriano Catriel: " + distancesAndPaths.getLeft().get("I511668"));
-        System.out.println("Alberto Otero Maffoni: " + distancesAndPaths.getLeft().get("I538453"));
-        System.out.println("Pablo Acosta: " + distancesAndPaths.getLeft().get("I530481"));
-        System.out.println("Argentina Diego: " + distancesAndPaths.getLeft().get("I516443"));
-        System.out.println();
 
+        System.out.println();
+        gedcom
+                .getPeople()
+                .stream()
+                .filter(EnrichedPerson::isDistinguishedPerson)
+                .sorted(Comparator
+                        .<EnrichedPerson, Integer>comparing(d -> distancesAndPaths.getLeft().get(d.getId()), Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(d -> d.getSurname().map(Surname::simplified).orElse(null), Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(d -> d.getGivenName().map(GivenName::simplified).orElse(null), Comparator.nullsLast(Comparator.naturalOrder())))
+                .forEach(distinguished -> System.out.println(StringUtils.rightPad(distinguished.getId(), 9) + distinguished.getDisplayName() + ": " + distancesAndPaths.getLeft().get(distinguished.getId())));
+
+        System.out.println();
         List<String> shortestPath = distancesAndPaths.getRight().getOrDefault("I525113", List.of());
         for (int i = 0; i < shortestPath.size() - 1; i++) {
             EnrichedPerson personA = gedcom.getPersonById(shortestPath.get(i));
