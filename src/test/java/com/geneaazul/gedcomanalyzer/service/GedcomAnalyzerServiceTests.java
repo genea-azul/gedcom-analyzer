@@ -63,7 +63,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void getMissingReferences() {
-        System.out.println("\ngetMissingReferences:");
+        System.out.println("getMissingReferences:");
         gedcomAnalyzerService
                 .getMissingReferences(gedcom.getLegacyGedcom().orElseThrow())
                 .forEach(System.out::println);
@@ -71,7 +71,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void findPersonsWithTagExtensions() {
-        System.out.println("\nfindPersonsWithTagExtensions:");
+        System.out.println("findPersonsWithTagExtensions:");
         gedcom.analyzeCustomEventFactsAndTagExtensions();
 
         searchService
@@ -81,7 +81,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void findPersonsWithNoCountryButParentsWithCountry() {
-        System.out.println("\nfindPersonsWithNoCountryButParentsWithCountry:");
+        System.out.println("findPersonsWithNoCountryButParentsWithCountry:");
         searchService
                 .findPersonsWithNoCountryButParentsWithCountry(gedcom.getPeople())
                 .forEach(System.out::println);
@@ -89,17 +89,24 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void getMostFrequentSurnamesByOrphanTree() {
-        System.out.println("\ngetMostFrequentSurnamesByOrphanTree:");
-        List<EnrichedPerson> persons1 = gedcomAnalyzerService
+        System.out.println("getMostFrequentSurnamesByOrphanTree:");
+        List<EnrichedPerson> persons = gedcomAnalyzerService
                 .getInitialPersonOfOrphanTrees(gedcom);
-        gedcomAnalyzerService
-                .getMostFrequentSurnamesByPersonSubTree(persons1)
+        Map<EnrichedPerson, Pair<String, Integer>> subTrees = gedcomAnalyzerService
+                .getMostFrequentSurnamesByPersonSubTree(persons);
+        subTrees
                 .forEach((person, pair) -> System.out.println(pair.getLeft() + " tree - (" + pair.getRight() + " persons) - Main person: " + person.getId() + " - " + person.getDisplayName()));
+        int personsCount = subTrees
+                .values()
+                .stream()
+                .mapToInt(Pair::getRight)
+                .sum();
+        System.out.println("Total persons: " + personsCount);
     }
 
     @Test
     public void findPersonsByNameAndSpouseName() {
-        System.out.println("\nfindPersonsByNameAndSpouseName:");
+        System.out.println("findPersonsByNameAndSpouseName:");
         searchService
                 .findPersonsByNameAndSpouseName(null, "Vazzano", null, "Bazzano", false, gedcom.getPeople())
                 .forEach(System.out::println);
@@ -107,7 +114,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void findSurnamesByPattern() {
-        System.out.println("\nfindSurnamesByPattern:");
+        System.out.println("findSurnamesByPattern:");
         searchService
                 .findSurnamesByPattern(" [dD]el ", gedcom.getPeople())
                 .stream()
@@ -117,7 +124,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void findAlivePersonsTooOldOrWithFamilyMembersTooOld() {
-        System.out.println("\nfindAlivePersonsTooOldOrWithFamilyMembersTooOld:");
+        System.out.println("findAlivePersonsTooOldOrWithFamilyMembersTooOld:");
         searchService
                 .findAlivePersonsTooOldOrWithFamilyMembersTooOld(gedcom.getPeople())
                 .forEach(System.out::println);
@@ -125,7 +132,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void findPersonsWithCustomEventFacts() {
-        System.out.println("\nfindPersonsWithCustomEventFacts:");
+        System.out.println("findPersonsWithCustomEventFacts:");
         gedcom.analyzeCustomEventFactsAndTagExtensions();
 
         searchService
@@ -140,7 +147,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void findPersonsWithMisspellingByPlaceOfBirth() {
-        System.out.println("\nfindPersonsWithMisspellingByPlaceOfBirth:");
+        System.out.println("findPersonsWithMisspellingByPlaceOfBirth:");
         searchService
                 .findPersonsWithMisspellingByPlaceOfBirth("Italia", null, null, gedcom.getPeople())
                 .forEach(System.out::println);
@@ -148,7 +155,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void getPlacesOfBirthCardinality() {
-        System.out.println("\ngetPlacesOfBirthCardinality:");
+        System.out.println("getPlacesOfBirthCardinality:");
         gedcomAnalyzerService
                 .getPlacesOfBirthCardinality(gedcom.getPeople(), true)
                 .stream()
@@ -158,7 +165,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void getCountriesOfBirthCardinality() {
-        System.out.println("\ngetCountriesOfBirthCardinality:");
+        System.out.println("getCountriesOfBirthCardinality:");
         gedcomAnalyzerService
                 .getCountriesOfBirthCardinality(gedcom.getPeople(), true)
                 .forEach(pair -> System.out.println(pair.getLeft() + " (" + pair.getRight() + ")"));
@@ -166,7 +173,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void getAllPlaces() {
-        System.out.println("\ngetAllPlaces:");
+        System.out.println("getAllPlaces:");
         gedcomAnalyzerService
                 .getAllPlaces(gedcom.getLegacyGedcom().orElseThrow(), true)
                 .forEach(System.out::println);
@@ -174,7 +181,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void getSurnamesCardinalityByPlaceOfBirth() {
-        System.out.println("\ngetSurnamesCardinalityByPlaceOfBirth (1):");
+        System.out.println("getSurnamesCardinalityByPlaceOfBirth (1):");
         gedcomAnalyzerService
                 .getSurnamesCardinalityByPlaceOfBirth(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null)
                 .stream()
@@ -201,7 +208,7 @@ public class GedcomAnalyzerServiceTests {
                 });
 
         /*
-        System.out.println("\ngetSurnamesCardinalityByPlaceOfBirth (2):");
+        System.out.println("getSurnamesCardinalityByPlaceOfBirth (2):");
         gedcomAnalyzerService
                 .getSurnamesCardinalityByPlaceOfBirth(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null)
                 .stream()
@@ -224,7 +231,7 @@ public class GedcomAnalyzerServiceTests {
     @Test
     @Disabled
     public void getAncestryCountriesCardinalityByPlaceOfBirth() {
-        System.out.println("\ngetAncestryCountriesCardinalityByPlaceOfBirth:");
+        System.out.println("getAncestryCountriesCardinalityByPlaceOfBirth:");
         gedcomAnalyzerService
                 .getAncestryCountriesCardinalityByPlaceOfBirth(gedcom.getPeople(), "Azul, Buenos Aires, Argentina")
                 .stream()
@@ -237,7 +244,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void findPersonsByPlaceOfBirth() {
-        System.out.println("\nfindPersonsByPlaceOfBirth:");
+        System.out.println("findPersonsByPlaceOfBirth:");
         List<EnrichedPerson> people = searchService.findPersonsBySurname("Arbío", null, gedcom);
         searchService
                 .findPersonsByPlaceOfBirth("Argentina", null, null, people)
@@ -246,7 +253,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void findPersonsByMonthAndDayOfBirth() {
-        System.out.println("\nfindPersonsByMonthAndDayOfBirth:");
+        System.out.println("findPersonsByMonthAndDayOfBirth:");
         List<EnrichedPerson> people = searchService.findPersonsByName(
                 "Emma",
                 null,
@@ -259,7 +266,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void findPersonsByMonthAndDayOfDeath() {
-        System.out.println("\nfindPersonsByMonthAndDayOfDeath:");
+        System.out.println("findPersonsByMonthAndDayOfDeath:");
         searchService
                 .findPersonsByMonthAndDayOfDeath(Month.APRIL, 2, null, gedcom.getPeople())
                 .forEach(System.out::println);
@@ -267,7 +274,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void findPersonsByYearOfDeathAndNoParents() {
-        System.out.println("\nfindPersonsByYearOfDeathAndNoParents:");
+        System.out.println("findPersonsByYearOfDeathAndNoParents:");
         searchService
                 .findPersonsByYearOfDeathAndNoParents(Year.of(2020), null, gedcom.getPeople())
                 .forEach(System.out::println);
@@ -275,7 +282,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void getAstrologicalSignsCardinalityByPlaceOfBirth() {
-        System.out.println("\ngetAstrologicalSignsCardinalityByPlaceOfBirth:");
+        System.out.println("getAstrologicalSignsCardinalityByPlaceOfBirth:");
         List<EnrichedPerson> personsByPlaceOfBirth = searchService
                 .findPersonsByPlaceOfBirth("Azul, Buenos Aires, Argentina", null, null, gedcom.getPeople());
         Pair<Optional<EnrichedPerson>, Optional<EnrichedPerson>> minMaxDateOfBirth = gedcomAnalyzerService.getMinMaxFullDateOfBirth(personsByPlaceOfBirth);
@@ -298,7 +305,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void getMonthOfDeathCardinalityByPlaceOfDeath() {
-        System.out.println("\ngetMonthOfDeathCardinalityByPlaceOfDeath:");
+        System.out.println("getMonthOfDeathCardinalityByPlaceOfDeath:");
         List<EnrichedPerson> personsByPlaceOfDeath = searchService
                 .findPersonsByPlaceOfDeath("Azul, Buenos Aires, Argentina", null, gedcom.getPeople());
         Pair<Optional<EnrichedPerson>, Optional<EnrichedPerson>> minMaxDateOfDeath = gedcomAnalyzerService.getMinMaxFullDateOfDeath(personsByPlaceOfDeath);
@@ -321,7 +328,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void findPersonsWithManyChildrenByPlaceOfBirth() {
-        System.out.println("\nfindPersonsWithManyChildrenByPlaceOfBirth:");
+        System.out.println("findPersonsWithManyChildrenByPlaceOfBirth:");
         Stream.concat(
                 searchService
                         .findPersonsByPlaceOfBirth("Azul, Buenos Aires, Argentina", true, null, gedcom.getPeople())
@@ -341,7 +348,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void findDuplicatedPersons() {
-        System.out.println("\nfindDuplicatedPersons:");
+        System.out.println("findDuplicatedPersons:");
         searchService
                 .findDuplicatedPersons(gedcom)
                 .forEach(personResults -> {
@@ -359,7 +366,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void findDistinguishedPersons() {
-        System.out.println("\nfindDistinguishedPersons:");
+        System.out.println("findDistinguishedPersons:");
         gedcom
                 .getPeople()
                 .stream()
@@ -369,7 +376,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void findPeopleNonDistinguishedPersons() {
-        System.out.println("\nfindPeopleNonDistinguishedPersons:");
+        System.out.println("findPeopleNonDistinguishedPersons:");
         gedcom
                 .getPeople()
                 .stream()
@@ -380,7 +387,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void findDisappearedPersons() {
-        System.out.println("\nfindDisappearedPersons:");
+        System.out.println("findDisappearedPersons:");
         gedcom
                 .getPeople()
                 .stream()
@@ -393,12 +400,12 @@ public class GedcomAnalyzerServiceTests {
         EnrichedPerson person = Objects.requireNonNull(gedcom.getPersonById("I4"));
         personService.setTransientProperties(person, true);
 
-        System.out.println("\nsetTransientProperties (excludeRootPerson):");
+        System.out.println("setTransientProperties (excludeRootPerson):");
         System.out.println("personsCountInTree: " + person.getPersonsCountInTree());
         System.out.println("surnamesCountInTree: " + person.getSurnamesCountInTree());
         System.out.println("ancestryCountries: " + person.getAncestryCountries());
         System.out.println("ancestryGenerations: " + person.getAncestryGenerations());
-        System.out.println("maxDistantRelationship: " + person.getMaxDistantRelationship());
+        System.out.println("maxDistantRelationship: " + person.getMaxDistantRelationship().orElse(null));
 
         System.out.println("\ngetPeopleInTree:");
         personService
@@ -431,7 +438,7 @@ public class GedcomAnalyzerServiceTests {
         EnrichedPerson person = gedcom.getPersonById("I4");
         Pair<Map<String, Integer>, Map<String, List<String>>> distancesAndPaths = PathUtils.calculateShortestPathFromSource(gedcom, person);
 
-        System.out.println("\ngetShortestPathsToPersons:");
+        System.out.println("getShortestPathsToPersons:");
         System.out.println("distance from I4 to I1 (" + gedcom.getPersonById("I1").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I1"));
         System.out.println("distance from I4 to I2 (" + gedcom.getPersonById("I2").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I2"));
         System.out.println("distance from I4 to I3 (" + gedcom.getPersonById("I3").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I3"));
