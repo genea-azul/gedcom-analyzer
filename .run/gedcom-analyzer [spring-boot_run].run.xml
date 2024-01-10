@@ -16,7 +16,7 @@
               <option value="spring-boot:run" />
               <option value="-Dspring-boot.run.profiles=local" />
               <option value="-DskipTests" />
-              <option value="-Dspring-boot.run.jvmArguments=-Xms256m -Xmx640m" />
+              <option value="-Dspring-boot.run.jvmArguments=-Xms256m -Xmx768m" />
             </list>
           </option>
           <option name="pomFileName" value="pom.xml" />
