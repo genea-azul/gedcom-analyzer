@@ -10,11 +10,15 @@ import jakarta.annotation.Nullable;
 
 public record GivenName(
         String value,
+        String simplified,
         String normalized,
         int wordsCount,
         Pattern searchPattern) {
 
-    public static GivenName of(String value, String normalized) {
+    public static GivenName of(
+            String value,
+            String simplified,
+            String normalized) {
 
         // Use normalized value to generate the matching regex
         String[] words = StringUtils.splitByWholeSeparator(normalized, " ");
@@ -28,7 +32,12 @@ public record GivenName(
                     .collect(Collectors.joining("", "^", ".*$"));
         }
 
-        return new GivenName(value, normalized, words.length, Pattern.compile(regex));
+        return new GivenName(
+                value,
+                simplified,
+                normalized,
+                words.length,
+                Pattern.compile(regex));
     }
 
     public boolean matches(@Nullable GivenName other) {

@@ -6,7 +6,6 @@ import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.annotation.CheckForNull;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +13,8 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import javax.annotation.CheckForNull;
 
 import jakarta.annotation.Nullable;
 

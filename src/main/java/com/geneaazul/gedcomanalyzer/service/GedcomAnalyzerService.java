@@ -397,11 +397,12 @@ public class GedcomAnalyzerService {
                 .flatMap(Optional::stream)
                 .toList();
 
-        List<String> mainWords = surnamesByPlaceOfBirth
+        List<String> surnames = surnamesByPlaceOfBirth
                 .stream()
                 .map(Surname::value)
                 .toList();
-        Map<String, Integer> mainWordsCardinality = CollectionUtils.getCardinalityMap(mainWords);
+
+        Map<String, Integer> surnamesCardinality = CollectionUtils.getCardinalityMap(surnames);
 
         List<String> normalizedMainWords = surnamesByPlaceOfBirth
                 .stream()
@@ -420,28 +421,35 @@ public class GedcomAnalyzerService {
                         Collectors.mapping(
                                 surname -> Pair.of(
                                         surname.value(),
-                                        mainWordsCardinality.get(surname.value())),
+                                        surnamesCardinality.get(surname.value())),
                                 Collectors.toSet())));
 
         return normalizedMainWordCardinality
                 .entrySet()
                 .stream()
-                .sorted(Comparator
-                        .<Map.Entry<String, Integer>>comparingInt(Map.Entry::getValue)
-                        .reversed()
-                        .thenComparing(Map.Entry::getKey))
                 .map(entry -> {
                     String normalizedMainWord = entry.getKey();
                     String shortenedMainWord = NameUtils.shortenSurnameMainWord(normalizedMainWord);
+
+                    List<Pair<String, Integer>> cardinalityList = surnamesByNormalized.get(entry.getKey())
+                            .stream()
+                            .sorted(Comparator
+                                    .<Pair<String, Integer>>comparingInt(Pair::getRight)
+                                    .reversed()
+                                    .thenComparing(Pair::getLeft))
+                            .toList();
+
                     return new SurnamesCardinality(
-                            normalizedMainWord,
                             entry.getValue(),
-                            surnamesByNormalized.get(entry.getKey())
+                            Surname.of(
+                                    cardinalityList.get(0).getLeft(),
+                                    NameUtils.simplifyName(cardinalityList.get(0).getLeft()),
+                                    normalizedMainWord,
+                                    shortenedMainWord),
+                            cardinalityList.get(0).getRight(),
+                            cardinalityList
                                     .stream()
-                                    .sorted(Comparator
-                                            .<Pair<String, Integer>>comparingInt(Pair::getRight)
-                                            .reversed()
-                                            .thenComparing(Pair::getLeft))
+                                    .skip(1)
                                     .toList(),
                             normalizedMainWordsByShortened.get(shortenedMainWord)
                                     .stream()
@@ -449,13 +457,18 @@ public class GedcomAnalyzerService {
                                     .sorted()
                                     .toList());
                 })
+                .sorted(Comparator
+                        .comparingInt(SurnamesCardinality::value)
+                        .reversed()
+                        .thenComparing(cardinality -> cardinality.mainSurname().simplified()))
                 .toList();
     }
 
     public record SurnamesCardinality (
-            String normalizedMainWord,
-            Integer cardinality,
-            List<Pair<String, Integer>> surnamesCardinality,
+            Integer value,
+            Surname mainSurname,
+            Integer mainSurnameCardinality,
+            List<Pair<String, Integer>> variantsCardinality,
             List<String> relatedNormalized) {
 
     }

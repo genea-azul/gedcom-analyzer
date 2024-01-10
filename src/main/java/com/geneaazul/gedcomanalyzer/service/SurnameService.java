@@ -50,7 +50,7 @@ public class SurnameService {
                 .map(surname -> {
                     List<EnrichedPerson> persons = searchPersonsBySurname(surname, gedcom);
 
-                    List<String> variants = getSurnameVariants(surname, persons, normalizedSurnamesMap);
+                    List<String> variants = getMatchingSurnameVariants(surname, persons, normalizedSurnamesMap);
 
                     List<String> countries = persons
                             .stream()
@@ -100,7 +100,7 @@ public class SurnameService {
                 .build();
     }
 
-    private List<String> getSurnameVariants(
+    private List<String> getMatchingSurnameVariants(
             Surname surname,
             List<EnrichedPerson> persons,
             Map<String, String> normalizedSurnamesMap) {
@@ -110,10 +110,28 @@ public class SurnameService {
                 .flatMap(Optional::stream)
                 .distinct()
                 .filter(surname::matches)
-                // Skip same surname
-                .filter(s -> !StringUtils.startsWithIgnoreCase(s.value(), surname.value()))
                 // Try to suppress compound surnames
-                .map(s -> suppressCompoundSurname(s, normalizedSurnamesMap))
+                .map(variant -> suppressCompoundSurname(variant, normalizedSurnamesMap))
+                // Skip same surname
+                .filter(variant -> !StringUtils.equalsIgnoreCase(variant, surname.value()))
+                .distinct()
+                .sorted()
+                .toList();
+    }
+
+    public List<String> getSurnameVariants(
+            Surname surname,
+            List<String> variantCandidates,
+            Map<String, String> normalizedSurnamesMap) {
+        return variantCandidates
+                .stream()
+                .distinct()
+                .map(variant -> PersonUtils.getShortenedSurnameMainWord(variant, normalizedSurnamesMap))
+                .flatMap(Optional::stream)
+                // Try to suppress compound surnames
+                .map(variant -> suppressCompoundSurname(variant, normalizedSurnamesMap))
+                // Skip same surname
+                .filter(variant -> !StringUtils.equalsIgnoreCase(variant, surname.value()))
                 .distinct()
                 .sorted()
                 .toList();
@@ -123,12 +141,12 @@ public class SurnameService {
             Surname surname,
             Map<String, String> normalizedSurnamesMap) {
 
-        String value = surname.value();
-        String simplifed = NameUtils.simplifyName(surname.value());
-
-        if (simplifed == null) {
-            return value;
+        if (!surname.value().contains(" ")) {
+            return surname.value();
         }
+
+        String value = surname.value();
+        String simplifed = surname.simplified();
 
         while (simplifed.contains(" ")) {
 

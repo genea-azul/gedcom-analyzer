@@ -3,13 +3,14 @@ $(document).ready(function() {
 
     $.ajax({
         type: "GET",
-        url: isToReview
-            ? "/api/search/family/latest?isReviewed=false"
-            : "/api/search/family/latest",
+        url: "/api/search/family/latest",
         contentType: "application/json",
         data: {
-            page: searchParams.get("page"),
-            size: searchParams.get("size")
+            page: searchParams.get("page") || undefined,
+            size: searchParams.get("size") || undefined,
+            isMatch: searchParams.get("isMatch") || undefined,
+            isReviewed: (isToReview ? false : (searchParams.get("isReviewed") || undefined)),
+            hasContact: searchParams.get("hasContact") || undefined
         },
         success: function(data) {
             data.forEach((element, index) => data[index] = removeEmpty(element));

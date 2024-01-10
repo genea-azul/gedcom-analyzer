@@ -199,8 +199,10 @@ public class PersonUtils {
             Map<NameAndSex, String> normalizedGivenNamesMap) {
         return Optional.ofNullable(givenName)
                 .map(NameUtils::simplifyName)
-                .map(simplifiedGivenName -> NameUtils.normalizeGivenName(simplifiedGivenName, sex, normalizedGivenNamesMap))
-                .map(normalized -> GivenName.of(givenName, normalized));
+                .map(simplified -> {
+                    String normalized = NameUtils.normalizeGivenName(simplified, sex, normalizedGivenNamesMap);
+                    return GivenName.of(givenName, simplified, normalized);
+                });
     }
 
     public static Optional<GivenName> getNormalizedGivenName(
@@ -230,10 +232,14 @@ public class PersonUtils {
             Map<String, String> normalizedSurnamesMap) {
         return Optional.ofNullable(surname)
                 .map(NameUtils::simplifyName)
-                .map(simplifiedSurname -> NameUtils.normalizeSurnameToMainWord(simplifiedSurname, normalizedSurnamesMap))
-                .map(normalizedMainWord -> {
+                .map(simplified -> {
+                    String normalizedMainWord = NameUtils.normalizeSurnameToMainWord(simplified, normalizedSurnamesMap);
                     String shortenedMainWord = NameUtils.shortenSurnameMainWord(normalizedMainWord);
-                    return Surname.of(surname, normalizedMainWord, shortenedMainWord);
+                    return Surname.of(
+                            surname,
+                            simplified,
+                            normalizedMainWord,
+                            shortenedMainWord);
                 });
     }
 
