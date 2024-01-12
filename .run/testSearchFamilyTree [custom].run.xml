@@ -11,7 +11,7 @@
     <option name="MAIN_CLASS_NAME" value="com.geneaazul.gedcomanalyzer.controller.SearchControllerIT" />
     <option name="METHOD_NAME" value="testSearchFamilyTree" />
     <option name="TEST_OBJECT" value="method" />
-    <option name="VM_PARAMETERS" value="-ea -Dtest.individual.givenName=Félix -Dtest.individual.surname=Piazza -Dtest.individual.yearOfBirth=1862 -Dtest.spouse.givenName= -Dtest.spouse.surname= -Dtest.father.givenName= -Dgedcom-storage-local-path=../gedcoms/genea-azul-full-gedcom.ged" />
+    <option name="VM_PARAMETERS" value="-ea -Dtest.individual.givenName=Delfina -Dtest.individual.surname=Rubare -Dtest.individual.yearOfBirth=1996 -Dtest.spouse.givenName= -Dtest.spouse.surname= -Dtest.father.givenName= -Dgedcom-storage-local-path=../gedcoms/genea-azul-full-gedcom.ged" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>
