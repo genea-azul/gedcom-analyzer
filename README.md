@@ -1,8 +1,9 @@
 # Gedcom Analyzer by Genea Azul
 
 ### Requirements
-- Java JDK 17+
-- Google Cloud CLI (only for production deployment)
+- Java JDK 21+
+- Python 3
+- Docker
 
 ### Run commands
 
