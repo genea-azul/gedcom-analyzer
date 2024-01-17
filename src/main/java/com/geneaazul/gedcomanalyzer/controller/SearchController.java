@@ -1,6 +1,7 @@
 package com.geneaazul.gedcomanalyzer.controller;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
+import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.FamilyTree;
 import com.geneaazul.gedcomanalyzer.model.FamilyTreeType;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDetailsDto;
@@ -172,11 +173,21 @@ public class SearchController {
                         BooleanUtils.isNotFalse(obfuscateLiving),
                         BooleanUtils.isTrue(forceRewrite));
 
+        log.info("Plain family tree [ personUuid={}, personId={}, obfuscateLiving={}, forceRewrite={}, httpRequestId={} ]",
+                personUuid,
+                maybeFamilyTree
+                        .map(FamilyTree::person)
+                        .map(EnrichedPerson::getId)
+                        .orElse(null),
+                obfuscateLiving,
+                forceRewrite,
+                request.getRequestId());
+
         if (maybeFamilyTree.isEmpty()) {
             return ResponseEntity.badRequest()
                     .contentType(MediaType.TEXT_HTML)
                     .body(new InMemoryResource("<h4>Identificador de persona inv&aacute;lido.</h4>"
-                            + "<h5>Por favor realiz&aacute; una nueva b&uacute;squeda.</h5>"));
+                            + "<p>Por favor realiz&aacute; una nueva b&uacute;squeda.</p>"));
         }
 
         FamilyTree familyTree = maybeFamilyTree.get();
@@ -185,13 +196,6 @@ public class SearchController {
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + familyTree.filename());
         headers.add(HttpHeaders.CONTENT_LANGUAGE, familyTree.locale().toString());
         headers.add("File-Name", familyTree.filename());
-
-        log.info("Plain family tree [ personUuid={}, personId={}, obfuscateLiving={}, forceRewrite={}, httpRequestId={} ]",
-                personUuid,
-                familyTree.person().getId(),
-                obfuscateLiving,
-                forceRewrite,
-                request.getRequestId());
 
         PathResource resource = new PathResource(familyTree.path());
 

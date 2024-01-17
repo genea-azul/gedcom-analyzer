@@ -78,6 +78,11 @@ public class AppController {
             HttpServletRequest request) throws IOException {
         boolean obfuscateLiving = !"0".equals(f);
 
+        log.info("Network family tree [ personUuid={}, obfuscateLiving={}, httpRequestId={} ]",
+                personUuid,
+                obfuscateLiving,
+                request.getRequestId());
+
         Optional<FamilyTree> maybeFamilyTree = networkFamilyTreeService
                 .getFamilyTree(personUuid, obfuscateLiving, false);
 
@@ -86,13 +91,8 @@ public class AppController {
                     .contentType(MediaType.TEXT_HTML)
                     .cacheControl(CacheControl.noCache())
                     .body("<h4>Identificador de persona inv&aacute;lido.</h4>"
-                            + "<h5>Por favor realiz&aacute; una nueva b&uacute;squeda.</h5>");
+                            + "<p>Por favor realiz&aacute; una nueva b&uacute;squeda.</p>");
         }
-
-        log.info("Network family tree [ personUuid={}, obfuscateLiving={}, httpRequestId={} ]",
-                personUuid,
-                obfuscateLiving,
-                request.getRequestId());
 
         FamilyTree familyTree = maybeFamilyTree.get();
 
