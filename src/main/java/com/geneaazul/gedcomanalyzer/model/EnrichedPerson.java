@@ -210,6 +210,10 @@ public class EnrichedPerson {
     }
 
     public List<Place> getPlacesOfAnyEvent() {
+        return getPlacesOfAnyEvent(false);
+    }
+
+    public List<Place> getPlacesOfAnyEvent(boolean includeSpousePlaces) {
         return Stream.concat(
                 Stream
                         .of(
@@ -217,10 +221,24 @@ public class EnrichedPerson {
                                 this.placeOfDeath),
                 this.spousesWithChildren
                         .stream()
-                        .flatMap(spouseWithChildren -> Stream
-                                .of(
-                                        spouseWithChildren.getPlaceOfPartners(),
-                                        spouseWithChildren.getPlaceOfSeparation())))
+                        .flatMap(spouseWithChildren -> Stream.concat(
+                                includeSpousePlaces
+                                        ? Stream.of(
+                                                spouseWithChildren.getPlaceOfPartners(),
+                                                spouseWithChildren.getPlaceOfSeparation(),
+                                                spouseWithChildren
+                                                        .getSpouse()
+                                                        .flatMap(EnrichedPerson::getPlaceOfBirth),
+                                                spouseWithChildren
+                                                        .getSpouse()
+                                                        .flatMap(EnrichedPerson::getPlaceOfDeath))
+                                        : Stream.of(
+                                                spouseWithChildren.getPlaceOfPartners(),
+                                                spouseWithChildren.getPlaceOfSeparation()),
+                                spouseWithChildren
+                                        .getChildren()
+                                        .stream()
+                                        .map(EnrichedPerson::getPlaceOfBirth))))
                 .flatMap(Optional::stream)
                 .distinct()
                 .toList();
@@ -384,6 +402,7 @@ public class EnrichedPerson {
                 + " - " + StringUtils.rightPad(displayName, 36)
                 + " - " + StringUtils.leftPad(dateOfBirth.map(Date::format).orElse(""), 11)
                 + " - " + StringUtils.leftPad(dateOfDeath.map(Date::format).orElse(""), 11)
+                + " - " + StringUtils.leftPad(age.map(Age::period).map(String::valueOf).orElse(""), 3)
                 + " - " + StringUtils.rightPad(placeOfBirth.map(place -> StringUtils.substring(place.name(), 0, 36)).orElse(""), 36)
                 + " - " + StringUtils.rightPad(placeOfDeath.map(place -> StringUtils.substring(place.name(), 0, 36)).orElse(""), 36)
                 + " - " + StringUtils.rightPad(parents

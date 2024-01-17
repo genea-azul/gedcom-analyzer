@@ -222,7 +222,7 @@ public class SearchService {
                 .filter(person -> isAlive == null || isAlive == person.isAlive())
                 .filter(person -> sex == null || sex == person.getSex())
                 .filter(person -> person
-                        .getPlacesOfAnyEvent()
+                        .getPlacesOfAnyEvent(true)
                         .stream()
                         .map(Place::forSearch)
                         .anyMatch(place -> place.endsWith(placeOfEvent)))

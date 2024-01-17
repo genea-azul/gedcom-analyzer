@@ -14,6 +14,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.DateUtils.AstrologicalSign;
 import com.geneaazul.gedcomanalyzer.utils.PathUtils;
+import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -325,6 +326,53 @@ public class GedcomAnalyzerServiceTests {
                 + ": " + monthsCount + " deaths");
         monthsOfDeathCardinality
                 .forEach(((month, count) -> System.out.printf("%s\t%.2f%%\t%d%n", month, (double) count / monthsCount * 100, count)));
+    }
+
+    @Test
+    public void getOlderAndLongestLivingPersons() {
+        System.out.println("getOlderAndLongestLivingPersons:");
+        List<EnrichedPerson> aliveMenByPlace = searchService
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", true, SexType.M, gedcom.getPeople())
+                .stream()
+                .sorted(PersonUtils.DATES_COMPARATOR)
+                .toList();
+        List<EnrichedPerson> aliveWomenByPlace = searchService
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", true, SexType.F, gedcom.getPeople())
+                .stream()
+                .sorted(PersonUtils.DATES_COMPARATOR)
+                .toList();
+        List<EnrichedPerson> deadMenByPlace = searchService
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", false, SexType.M, gedcom.getPeople())
+                .stream()
+                .filter(p -> p.getAge().isPresent())
+                .sorted(PersonUtils.AGES_COMPARATOR.reversed())
+                .toList();
+        List<EnrichedPerson> deadWomenByPlace = searchService
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", false, SexType.F, gedcom.getPeople())
+                .stream()
+                .filter(p -> p.getAge().isPresent())
+                .sorted(PersonUtils.AGES_COMPARATOR.reversed())
+                .toList();
+        System.out.println("\nOlder men: " + aliveMenByPlace.size());
+        aliveMenByPlace
+                .stream()
+                .limit(8)
+                .forEach(System.out::println);
+        System.out.println("\nOlder women: " + aliveWomenByPlace.size());
+        aliveWomenByPlace
+                .stream()
+                .limit(8)
+                .forEach(System.out::println);
+        System.out.println("\nLongest living men: " + deadMenByPlace.size());
+        deadMenByPlace
+                .stream()
+                .limit(8)
+                .forEach(System.out::println);
+        System.out.println("\nLongest living women: " + deadWomenByPlace.size());
+        deadWomenByPlace
+                .stream()
+                .limit(8)
+                .forEach(System.out::println);
     }
 
     @Test
