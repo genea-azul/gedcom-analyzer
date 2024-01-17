@@ -182,12 +182,13 @@ public class GedcomAnalyzerServiceTests {
     }
 
     @Test
-    public void getSurnamesCardinalityByPlaceOfBirth() {
-        System.out.println("getSurnamesCardinalityByPlaceOfBirth (1):");
-        gedcomAnalyzerService
-                .getSurnamesCardinalityByPlaceOfBirth(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null)
+    public void getSurnamesCardinalityByPlaceOfAnyEvent() {
+        List<GedcomAnalyzerService.SurnamesCardinality> surnamesCardinalities = gedcomAnalyzerService
+                .getSurnamesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null);
+        System.out.println("getSurnamesCardinalityByPlaceOfAnyEvent (" + surnamesCardinalities.size() + "):");
+        surnamesCardinalities
                 .stream()
-                .limit(360)
+                .limit(576)
                 .forEach(cardinality -> {
 
                     List<String> variants = surnameService.getSurnameVariants(
@@ -210,11 +211,11 @@ public class GedcomAnalyzerServiceTests {
                 });
 
         /*
-        System.out.println("getSurnamesCardinalityByPlaceOfBirth (2):");
+        System.out.println("getSurnamesCardinalityByPlaceOfAnyEvent (2):");
         gedcomAnalyzerService
-                .getSurnamesCardinalityByPlaceOfBirth(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null)
+                .getSurnamesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null)
                 .stream()
-                .limit(360)
+                .limit(576)
                 .forEach(cardinality -> System.out.println(
                         cardinality.mainSurname().normalizedMainWord()
                         + " - " + cardinality.value()

@@ -402,7 +402,7 @@ public class EnrichedPerson {
                 + " - " + StringUtils.rightPad(displayName, 36)
                 + " - " + StringUtils.leftPad(dateOfBirth.map(Date::format).orElse(""), 11)
                 + " - " + StringUtils.leftPad(dateOfDeath.map(Date::format).orElse(""), 11)
-                + " - " + StringUtils.leftPad(age.map(Age::period).map(String::valueOf).orElse(""), 3)
+                + " - " + StringUtils.leftPad(age.map(Age::getYears).map(String::valueOf).orElse(""), 3)
                 + " - " + StringUtils.rightPad(placeOfBirth.map(place -> StringUtils.substring(place.name(), 0, 36)).orElse(""), 36)
                 + " - " + StringUtils.rightPad(placeOfDeath.map(place -> StringUtils.substring(place.name(), 0, 36)).orElse(""), 36)
                 + " - " + StringUtils.rightPad(parents

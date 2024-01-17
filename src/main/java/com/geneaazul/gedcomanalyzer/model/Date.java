@@ -109,9 +109,19 @@ public class Date implements Comparable<Date> {
         return yearMonth;
     }
 
+    public boolean isBefore(Date other) {
+        if (other.day != null) {
+            return isBefore(other.localDate);
+        }
+        if (other.month != null) {
+            return isBefore(LocalDate.of(other.year.getValue(), other.month, 1));
+        }
+        return isBefore(LocalDate.of(other.year.getValue(), 1, 1));
+    }
+
     public boolean isBefore(LocalDate date) {
         if (day != null) {
-            return toLocalDate().isBefore(date);
+            return localDate.isBefore(date);
         }
         if (month != null) {
             return !LocalDate.of(year.getValue(), month, 1).isAfter(date);
@@ -123,8 +133,8 @@ public class Date implements Comparable<Date> {
         if (!this.isFullDate() || !other.isFullDate()) {
             return false;
         }
-        LocalDate ym1 = this.toLocalDate();
-        LocalDate ym2 = other.toLocalDate();
+        LocalDate ym1 = this.localDate;
+        LocalDate ym2 = other.localDate;
         if (delta.isZero()) {
             return ym1.isEqual(ym2);
         }
