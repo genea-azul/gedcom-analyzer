@@ -19,6 +19,7 @@ import com.geneaazul.gedcomanalyzer.utils.InetAddressUtils;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.util.InMemoryResource;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -173,7 +174,9 @@ public class SearchController {
 
         if (maybeFamilyTree.isEmpty()) {
             return ResponseEntity.badRequest()
-                    .body(new InMemoryResource("Invalid person!"));
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(new InMemoryResource("<h4>Identificador de persona inv&aacute;lido.</h4>"
+                            + "<h5>Por favor realiz&aacute; una nueva b&uacute;squeda.</h5>"));
         }
 
         FamilyTree familyTree = maybeFamilyTree.get();

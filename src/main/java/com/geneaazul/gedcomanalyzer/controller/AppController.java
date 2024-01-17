@@ -85,7 +85,8 @@ public class AppController {
             return ResponseEntity.badRequest()
                     .contentType(MediaType.TEXT_HTML)
                     .cacheControl(CacheControl.noCache())
-                    .body("<h4>Identificador de persona inv&aacute;lido.</h4>");
+                    .body("<h4>Identificador de persona inv&aacute;lido.</h4>"
+                            + "<h5>Por favor realiz&aacute; una nueva b&uacute;squeda.</h5>");
         }
 
         log.info("Network family tree [ personUuid={}, obfuscateLiving={}, httpRequestId={} ]",
