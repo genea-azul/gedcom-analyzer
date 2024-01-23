@@ -188,7 +188,7 @@ public class GedcomAnalyzerServiceTests {
         System.out.println("getSurnamesCardinalityByPlaceOfAnyEvent (" + surnamesCardinalities.size() + "):");
         surnamesCardinalities
                 .stream()
-                .limit(576)
+                .limit(504)
                 .forEach(cardinality -> {
 
                     List<String> variants = surnameService.getSurnameVariants(
