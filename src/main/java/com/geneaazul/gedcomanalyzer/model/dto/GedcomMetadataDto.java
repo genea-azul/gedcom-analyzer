@@ -1,5 +1,7 @@
 package com.geneaazul.gedcomanalyzer.model.dto;
 
+import java.time.ZonedDateTime;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,5 +20,8 @@ public class GedcomMetadataDto {
 
     @ToString.Include
     private Integer personsCount;
+
+    @ToString.Include
+    private ZonedDateTime modifiedDateTime;
 
 }
