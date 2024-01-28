@@ -369,12 +369,10 @@ public class RelationshipMapper {
                 String relationshipNameOr1 = (relationship.getGeneration() == 1)
                         ? getTreeSideInSpanish(relationship.getTreeSides(), "padre/madre")
                         : getRelationshipNameInSpanish(relationship.getGeneration(), SEX_SUFFIX_X_VALUE, Sort.Direction.ASC);
-                String adoptionSuffixOr = (relationship.getGeneration() == 1)
-                        ? getAdoptionSuffixInSpanish(relationship.getAdoptionType(), getSexSuffixByParentInSpanish(relationshipNameOr1))
-                        : "";
                 String relationshipNameOr2 = (relationship.getGrade() == 1 ? "herman" : "prim") + sexSuffix;
                 String gradeSuffixOr = getGradeSuffixInSpanish(relationship.getGrade() - 1, sexSuffix);
-                or = spousePrefix + halfPrefix + relationshipNameOr2 + gradeSuffixOr + " de " + relationshipNameOr1 + adoptionSuffixOr;
+                // It would be nice to add adoptionSuffixOr after relationshipNameOr1, but it is not possible to know where the adoption happens
+                or = spousePrefix + halfPrefix + relationshipNameOr2 + gradeSuffixOr + " de " + relationshipNameOr1;
                 if (onlySecondaryDescription) {
                     return or;
                 }
@@ -399,11 +397,9 @@ public class RelationshipMapper {
             if (relationship.getGeneration() > 2 || relationship.getGrade() >= 2) {
                 String relationshipNameOr1 = getRelationshipNameInSpanish(relationship.getGeneration(), sexSuffix, Sort.Direction.DESC);
                 String relationshipNameOr2 = (relationship.getGrade() == 1 ? "herman" : "prim") + SEX_SUFFIX_X_VALUE;
-                String adoptionSuffixOr = (relationship.getGeneration() == 1)
-                        ? getAdoptionSuffixInSpanish(relationship.getAdoptionType(), sexSuffix)
-                        : "";
                 String gradeSuffixOr = getGradeSuffixInSpanish(relationship.getGrade() - 1, SEX_SUFFIX_X_VALUE);
-                or = spousePrefix + relationshipNameOr1 + adoptionSuffixOr + " de " + halfPrefix + relationshipNameOr2 + gradeSuffixOr;
+                // It would be nice to add adoptionSuffixOr after relationshipNameOr1, but it is not possible to know where the adoption happens
+                or = spousePrefix + relationshipNameOr1 + " de " + halfPrefix + relationshipNameOr2 + gradeSuffixOr;
                 if (onlySecondaryDescription) {
                     return or;
                 }
@@ -503,14 +499,6 @@ public class RelationshipMapper {
         return switch (sex) {
             case M -> SEX_SUFFIX_M_VALUE;
             case F -> SEX_SUFFIX_F_VALUE;
-            default -> SEX_SUFFIX_X_VALUE;
-        };
-    }
-
-    private String getSexSuffixByParentInSpanish(String parentRelationshipName) {
-        return switch (parentRelationshipName) {
-            case "padre" -> SEX_SUFFIX_M_VALUE;
-            case "madre" -> SEX_SUFFIX_F_VALUE;
             default -> SEX_SUFFIX_X_VALUE;
         };
     }
