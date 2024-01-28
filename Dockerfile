@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # stage 1
-FROM eclipse-temurin:21-jre-alpine as jre-py
+FROM eclipse-temurin:21.0.1_12-jre-alpine as jre-py
 
 ## Install python/pip
 ENV PYTHONUNBUFFERED=1
