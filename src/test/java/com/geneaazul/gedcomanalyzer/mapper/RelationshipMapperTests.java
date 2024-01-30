@@ -802,7 +802,7 @@ public class RelationshipMapperTests {
                 "ADOPTIVE",
                 "★",
                 "↔",
-                "ex-pareja de medio-tía 4ta  (ex-pareja de medio-prima 3ra de padre/madre adoptivo/a)",
+                "ex-pareja de medio-tía 4ta  (ex-pareja de medio-prima 3ra de padre/madre)",
                 false));
     }
 
@@ -841,7 +841,7 @@ public class RelationshipMapperTests {
                 "ADOPTIVE",
                 "★",
                 "↔",
-                "ex-pareja de medio-sobrina 4ta  (ex-pareja de hija adoptiva de medio-primo/a 3ro/a)",
+                "ex-pareja de medio-sobrina 4ta  (ex-pareja de hija de medio-primo/a 3ro/a)",
                 false));
     }
 
