@@ -237,8 +237,6 @@ public class GedcomAnalyzerServiceTests {
         System.out.println("getAncestryCountriesCardinalityByPlaceOfBirth:");
         gedcomAnalyzerService
                 .getAncestryCountriesCardinalityByPlaceOfBirth(gedcom.getPeople(), "Azul, Buenos Aires, Argentina")
-                .stream()
-                .limit(150)
                 .forEach(cardinality -> System.out.println(
                         cardinality.country()
                                 + " - " + cardinality.cardinality()
