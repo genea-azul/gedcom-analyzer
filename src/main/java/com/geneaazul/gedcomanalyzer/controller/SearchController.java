@@ -81,11 +81,14 @@ public class SearchController {
             searchId = familyService.persistSearch(searchFamilyDto, clientIpAddress.orElse(null));
         }
 
+        boolean obfuscateLiving = !properties.isDisableObfuscateLiving()
+                && BooleanUtils.isNotFalse(searchFamilyDto.getObfuscateLiving());
+
         SearchFamilyResultDto searchFamilyResult = familyService.search(searchFamilyDto);
 
         log.info("Search family [ searchId={}, obfuscateLiving={}, forceRewrite={}, peopleInResult={}, potentialResults={}, errors={}, httpRequestId={} ]",
                 searchId.orElse(null),
-                searchFamilyDto.getObfuscateLiving(),
+                obfuscateLiving,
                 searchFamilyDto.getIsForceRewrite(),
                 searchFamilyResult.getPeople().size(),
                 searchFamilyResult.getPotentialResults(),
@@ -99,7 +102,7 @@ public class SearchController {
         // Queue PDF Family Tree and HTML Pyvis Network generation
         familyTreeManager.queueFamilyTreeGeneration(
                 searchFamilyResult.getPeople(),
-                searchFamilyDto.getObfuscateLiving(),
+                obfuscateLiving,
                 searchFamilyDto.getIsForceRewrite(),
                 List.of(FamilyTreeType.PLAIN_PDF, FamilyTreeType.NETWORK));
 
@@ -167,10 +170,12 @@ public class SearchController {
             @RequestParam @Nullable Boolean forceRewrite,
             HttpServletRequest request) throws IOException {
 
+        boolean obfuscateLivingEnabled = !properties.isDisableObfuscateLiving() && BooleanUtils.isNotFalse(obfuscateLiving);
+
         Optional<FamilyTree> maybeFamilyTree = plainFamilyTreePdfService
                 .getFamilyTree(
                         personUuid,
-                        BooleanUtils.isNotFalse(obfuscateLiving),
+                        obfuscateLivingEnabled,
                         BooleanUtils.isTrue(forceRewrite));
 
         log.info("Plain family tree [ personUuid={}, personId={}, obfuscateLiving={}, forceRewrite={}, httpRequestId={} ]",
@@ -179,7 +184,7 @@ public class SearchController {
                         .map(FamilyTree::person)
                         .map(EnrichedPerson::getId)
                         .orElse(null),
-                obfuscateLiving,
+                obfuscateLivingEnabled,
                 forceRewrite,
                 request.getRequestId());
 

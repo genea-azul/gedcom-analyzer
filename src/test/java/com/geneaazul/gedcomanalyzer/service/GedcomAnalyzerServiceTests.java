@@ -332,6 +332,12 @@ public class GedcomAnalyzerServiceTests {
     @Test
     public void getOlderAndLongestLivingPersons() {
         System.out.println("getOlderAndLongestLivingPersons:");
+        List<EnrichedPerson> personsByPlace = searchService
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", null, null, gedcom.getPeople());
+        List<EnrichedPerson> alivePersonsByPlace = searchService
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", true, null, gedcom.getPeople());
+        List<EnrichedPerson> deadPersonsByPlace = searchService
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", false, null, gedcom.getPeople());
         List<EnrichedPerson> aliveMenByPlace = searchService
                 .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", true, SexType.M, gedcom.getPeople())
                 .stream()
@@ -354,6 +360,18 @@ public class GedcomAnalyzerServiceTests {
                 .filter(p -> p.getAge().isPresent())
                 .sorted(PersonUtils.AGES_COMPARATOR.reversed())
                 .toList();
+        System.out.println("\nTotal persons: " + personsByPlace.size());
+        System.out.println("Alive persons: " + alivePersonsByPlace.size());
+        System.out.println("Alive persons with day of birth: " + alivePersonsByPlace
+                .stream()
+                .filter(person -> person.getDateOfBirth().isPresent())
+                .count());
+        System.out.println("Dead persons: " + deadPersonsByPlace.size());
+        System.out.println("Dead persons with day of birth and death: " + deadPersonsByPlace
+                .stream()
+                .filter(person -> person.getDateOfBirth().isPresent())
+                .filter(person -> person.getDateOfDeath().isPresent())
+                .count());
         System.out.println("\nOlder men: " + aliveMenByPlace.size());
         aliveMenByPlace
                 .stream()

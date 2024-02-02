@@ -43,7 +43,8 @@ services:
         "gedcom-storage-google-drive.enabled" : $GEDCOM_GOOGLE_DRIVE_ENABLED,
         "gedcom-storage-google-drive-file-id" : "$GEDCOM_GOOGLE_DRIVE_FILE_ID",
         "gedcom-storage-local-path" : "/tmp/genea-azul-full-gedcom.ged",
-        "temp-dir" : "/tmp"
+        "temp-dir" : "/tmp",
+        "disable-obfuscate-living" : "false"
       }'
     volumes:
       - app:/tmp
