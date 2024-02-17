@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class GedcomParsingService {
 
-    public static final Set<String> ZIP_FILE_CONTENT_TYPES = Set.of("application/zip", "application/octet-stream");
+    public static final Set<String> ZIP_FILE_CONTENT_TYPES = Set.of("application/zip", "application/x-zip-compressed");
     public static final String ZIP_FILE_EXTENSION = ".zip";
     public static final String GEDCOM_FILE_EXTENSION = ".ged";
 
@@ -77,8 +77,7 @@ public class GedcomParsingService {
 
     private Path uploadAndDecompress(Path gedcomDirPath, MultipartFile uploadedGedcomFile) throws IOException {
 
-        if (uploadedGedcomFile.getOriginalFilename() != null && uploadedGedcomFile.getOriginalFilename().endsWith(ZIP_FILE_EXTENSION)
-                && uploadedGedcomFile.getContentType() != null && ZIP_FILE_CONTENT_TYPES.contains(uploadedGedcomFile.getContentType())) {
+        if (uploadedGedcomFile.getContentType() != null && ZIP_FILE_CONTENT_TYPES.contains(uploadedGedcomFile.getContentType())) {
 
             try (ZipInputStream zis = new ZipInputStream(uploadedGedcomFile.getInputStream())) {
                 ZipEntry zipEntry = zis.getNextEntry();

@@ -27,8 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class GoogleDriveStorageService implements StorageService {
 
-    private static final String ZIP_FILE_CONTENT_TYPE = "application/zip";
-
     private final LocalStorageService localStorageService;
     private final GedcomAnalyzerProperties properties;
 
@@ -65,7 +63,7 @@ public class GoogleDriveStorageService implements StorageService {
                 .build();
 
         // Note: Google Drive considers .ged files media-type as: 'application/octet-stream'
-        boolean isCompressed = ZIP_FILE_CONTENT_TYPE.contains(mediaType);
+        boolean isCompressed = GedcomParsingService.ZIP_FILE_CONTENT_TYPES.contains(mediaType);
 
         Path downloadFilePath = isCompressed
                 ? Paths.get(StringUtils.replaceOnce(
@@ -73,6 +71,8 @@ public class GoogleDriveStorageService implements StorageService {
                         GedcomParsingService.GEDCOM_FILE_EXTENSION,
                         GedcomParsingService.ZIP_FILE_EXTENSION))
                 : properties.getGedcomStorageLocalPath();
+
+        log.info("Downloaded file [ mediaType={}, path={} ]", mediaType, downloadFilePath);
 
         try (FileOutputStream outputStream = new FileOutputStream(downloadFilePath.toFile())) {
             service
@@ -96,6 +96,7 @@ public class GoogleDriveStorageService implements StorageService {
 
                 Path gedcomPath = downloadFilePath.getParent().resolve(zipEntry.getName());
                 Files.copy(zis, gedcomPath, StandardCopyOption.REPLACE_EXISTING);
+                log.info("Decompressed file [ path={} ]", gedcomPath);
 
                 zis.closeEntry();
             }

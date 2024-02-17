@@ -106,7 +106,7 @@ $(document).ready(function() {
         contentType: "application/json",
         success: function(data) {
             $("#persons-count-container")
-                .html(data.personsCount);
+                .html(data.personsCount.toLocaleString("es-AR"));
         },
         error: function(xhr) {
             console.log(xhr);
