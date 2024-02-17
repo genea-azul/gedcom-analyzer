@@ -388,10 +388,11 @@ public class GedcomAnalyzerService {
     public List<SurnamesCardinality> getSurnamesCardinalityByPlaceOfAnyEvent(
             List<EnrichedPerson> people,
             String placeOfBirth,
-            @Nullable Boolean isAlive) {
+            @Nullable Boolean isAlive,
+            boolean isExactPlace) {
 
         List<Surname> surnamesByPlaceOfBirth = searchService
-                .findPersonsByPlaceOfAnyEvent(placeOfBirth, isAlive, null, people)
+                .findPersonsByPlaceOfAnyEvent(placeOfBirth, isAlive, null, isExactPlace, people)
                 .stream()
                 .map(EnrichedPerson::getSurname)
                 .flatMap(Optional::stream)
@@ -476,10 +477,13 @@ public class GedcomAnalyzerService {
     /**
      * .
      */
-    public List<CountryCardinality> getAncestryCountriesCardinalityByPlaceOfBirth(List<EnrichedPerson> people, String placeOfBirth) {
+    public List<CountryCardinality> getAncestryCountriesCardinalityByPlaceOfBirth(
+            List<EnrichedPerson> people,
+            String placeOfBirth,
+            boolean isExactPlace) {
 
         List<Pair<Optional<String>, Set<String>>> countries = searchService
-                .findPersonsByPlaceOfBirth(placeOfBirth, Boolean.TRUE, null, people)
+                .findPersonsByPlaceOfBirth(placeOfBirth, Boolean.TRUE, null, isExactPlace, people)
                 .stream()
                 .map(person -> Pair.of(
                         person.getSurname().map(Surname::value),

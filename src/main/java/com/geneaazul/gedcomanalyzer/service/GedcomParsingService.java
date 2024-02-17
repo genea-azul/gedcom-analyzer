@@ -34,9 +34,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class GedcomParsingService {
 
-    private static final Set<String> ZIP_FILE_CONTENT_TYPES = Set.of("application/zip", "application/octet-stream");
-    private static final String ZIP_FILE_EXTENSION = ".zip";
-    private static final String GEDCOM_FILE_EXTENSION = ".ged";
+    public static final Set<String> ZIP_FILE_CONTENT_TYPES = Set.of("application/zip", "application/octet-stream");
+    public static final String ZIP_FILE_EXTENSION = ".zip";
+    public static final String GEDCOM_FILE_EXTENSION = ".ged";
 
     private final GedcomAnalyzerProperties properties;
 

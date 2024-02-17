@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Build and push docker image
 ./scripts/docker-image-build-push.sh
 

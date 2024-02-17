@@ -2,14 +2,23 @@ package com.geneaazul.gedcomanalyzer.service.storage;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
+import com.geneaazul.gedcomanalyzer.service.GedcomParsingService;
 
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
+import org.apache.commons.lang3.StringUtils;
 
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipInputStream;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class GoogleDriveStorageService implements StorageService {
+
+    private static final String ZIP_FILE_CONTENT_TYPE = "application/zip";
 
     private final LocalStorageService localStorageService;
     private final GedcomAnalyzerProperties properties;
@@ -46,11 +57,48 @@ public class GoogleDriveStorageService implements StorageService {
                 .setApplicationName("gedcom-analyzer")
                 .build();
 
-        try (FileOutputStream outputStream = new FileOutputStream(properties.getGedcomStorageLocalPath().toFile())) {
+        String mediaType = service
+                .files()
+                .get(properties.getGedcomStorageGoogleDriveFileId())
+                .executeMedia()
+                .getMediaType()
+                .build();
+
+        // Note: Google Drive considers .ged files media-type as: 'application/octet-stream'
+        boolean isCompressed = ZIP_FILE_CONTENT_TYPE.contains(mediaType);
+
+        Path downloadFilePath = isCompressed
+                ? Paths.get(StringUtils.replaceOnce(
+                        properties.getGedcomStorageLocalPath().toString(),
+                        GedcomParsingService.GEDCOM_FILE_EXTENSION,
+                        GedcomParsingService.ZIP_FILE_EXTENSION))
+                : properties.getGedcomStorageLocalPath();
+
+        try (FileOutputStream outputStream = new FileOutputStream(downloadFilePath.toFile())) {
             service
                     .files()
                     .get(properties.getGedcomStorageGoogleDriveFileId())
                     .executeMediaAndDownloadTo(outputStream);
+        }
+
+        if (isCompressed) {
+            try (FileInputStream fis = new FileInputStream(downloadFilePath.toFile());
+                    ZipInputStream zis = new ZipInputStream(fis)) {
+                ZipEntry zipEntry = zis.getNextEntry();
+
+                if (zipEntry == null) {
+                    throw new ZipException("zip file is empty: " + downloadFilePath);
+                }
+                if (StringUtils.isBlank(zipEntry.getName())
+                        || !zipEntry.getName().endsWith(GedcomParsingService.GEDCOM_FILE_EXTENSION)) {
+                    throw new ZipException("zip content is invalid: " + zipEntry.getName());
+                }
+
+                Path gedcomPath = downloadFilePath.getParent().resolve(zipEntry.getName());
+                Files.copy(zis, gedcomPath, StandardCopyOption.REPLACE_EXISTING);
+
+                zis.closeEntry();
+            }
         }
     }
 
