@@ -76,16 +76,21 @@ public class PersonUtils {
 
     private static final UniformRandomProvider RNG = RandomSource.JDK.create();
 
-    public static UUID getUuid(
-            Person person,
-            @Nullable ZonedDateTime modifiedDateTime) {
-
-        long personId = Optional.of(person.getId())
+    public static Integer getId(Person person) {
+        return Optional.of(person.getId())
                 .map(id -> id.startsWith("I") ? id.substring(1) : id)
                 .filter(StringUtils::isNumeric)
-                .map(Long::valueOf)
-                .map(id -> (modifiedDateTime != null) ? id * (modifiedDateTime.getNano() / 1_000) : id)
-                .orElseGet(RNG::nextLong);
+                .map(Integer::valueOf)
+                .orElseGet(RNG::nextInt);
+    }
+
+    public static UUID getUuid(
+            Integer id,
+            @Nullable ZonedDateTime modifiedDateTime) {
+
+        long personId = (modifiedDateTime != null)
+                ? (long) id * (modifiedDateTime.getNano() / 1_000)
+                : id;
 
         long timestamp = Optional.ofNullable(modifiedDateTime)
                 .map(ZonedDateTime::toEpochSecond)
@@ -412,8 +417,8 @@ public class PersonUtils {
                 .toList();
     }
 
-    public static List<Pair<String, Optional<ReferenceType>>> getParentsWithReference(Person legacyPerson, Gedcom legacyGedcom) {
-        Map<String, Set<ReferenceType>> references = legacyPerson
+    public static List<Pair<Integer, Optional<ReferenceType>>> getParentsWithReference(Person legacyPerson, Gedcom legacyGedcom) {
+        Map<Integer, Set<ReferenceType>> references = legacyPerson
                 .getParentFamilyRefs()
                 .stream()
                 .sorted(Comparator.comparing(ParentFamilyRef::getRelationshipType, Comparator.nullsFirst(Comparator.naturalOrder())))
@@ -426,7 +431,7 @@ public class PersonUtils {
                                     family.getHusbands(legacyGedcom),
                                     family.getWives(legacyGedcom))
                             .flatMap(List::stream)
-                            .map(Person::getId)
+                            .map(PersonUtils::getId)
                             .map(personId -> Map.entry(personId, referenceType));
                 })
                 .collect(Collectors.groupingBy(
@@ -489,11 +494,11 @@ public class PersonUtils {
                 .getSpouseFamilies(legacyGedcom)
                 .stream()
                 .map(family -> {
-                    List<Pair<String, Optional<ReferenceType>>> children = family
+                    List<Pair<Integer, Optional<ReferenceType>>> children = family
                             .getChildren(legacyGedcom)
                             .stream()
                             .map(child -> Pair.of(
-                                    child.getId(),
+                                    PersonUtils.getId(child),
                                     child
                                             .getParentFamilyRefs()
                                             .stream()

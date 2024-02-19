@@ -36,7 +36,7 @@ public class PlainFamilyTreeTxtServiceTests {
     @Test
     public void testExportToTXT() {
 
-        EnrichedPerson person = gedcomHolder.getGedcom().getPersonById("I4");
+        EnrichedPerson person = gedcomHolder.getGedcom().getPersonById(4);
         assert person != null;
 
         List<List<Relationship>> relationshipsList = familyTreeManager.getRelationshipsWithNotInLawPriority(person);

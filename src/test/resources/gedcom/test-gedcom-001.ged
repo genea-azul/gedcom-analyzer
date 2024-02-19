@@ -58,34 +58,120 @@
 2 DATE 14 AUG 2022
 2 PLAC Italia
 0 @I6@ INDI
-1 NAME Test Mother /Biological/
-2 GIVN Test Mother
-2 SURN Biological
+1 NAME Mother /B/
+2 GIVN Mother
+2 SURN B
 1 SEX F
 1 FAMS @F4@
 1 FAMS @F5@
+1 FAMS @F6@
 0 @I7@ INDI
-1 NAME Test Father1 /Biological/
-2 GIVN Test Father1
-2 SURN Biological
+1 NAME Father /B/
+2 GIVN Father
+2 SURN B
 1 SEX M
 1 FAMS @F4@
+1 FAMS @F7@
 0 @I8@ INDI
-1 NAME Test Father2 /Adoptive/
-2 GIVN Test Father2
-2 SURN Adoptive
+1 NAME Father /A/
+2 GIVN Father
+2 SURN A
 1 SEX M
 1 FAMS @F5@
+1 FAMS @F8@
 0 @I9@ INDI
-1 NAME Test Son /Biological and Adoptive/
-2 GIVN Test Son
-2 SURN Biological and Adoptive
+1 NAME Son /B&A/
+2 GIVN Son
+2 SURN B&A
 1 SEX M
 1 BIRT
 2 DATE 01 JAN 2000
 1 FAMC @F4@
 1 FAMC @F5@
 2 PEDI Adopted
+0 @I10@ INDI
+1 NAME Son /A1/
+2 GIVN Son
+2 SURN A1
+1 SEX M
+1 FAMC @F4@
+2 PEDI Adopted
+0 @I11@ INDI
+1 NAME Son /B1/
+2 GIVN Son
+2 SURN B1
+1 SEX M
+1 FAMC @F4@
+0 @I12@ INDI
+1 NAME Son /A2/
+2 GIVN Son
+2 SURN A2
+1 SEX M
+1 FAMC @F5@
+2 PEDI Adopted
+0 @I13@ INDI
+1 NAME Son /B2/
+2 GIVN Son
+2 SURN B2
+1 SEX M
+1 FAMC @F5@
+0 @I14@ INDI
+1 NAME Mother's Couple /B/
+2 GIVN Mother's Couple
+2 SURN B
+1 SEX M
+1 FAMS @F6@
+0 @I15@ INDI
+1 NAME Father's Couple /B/
+2 GIVN Father's Couple
+2 SURN B
+1 SEX F
+1 FAMS @F7@
+0 @I16@ INDI
+1 NAME Father's Couple /A/
+2 GIVN Father's Couple
+2 SURN A
+1 SEX F
+1 FAMS @F8@
+0 @I17@ INDI
+1 NAME Son A3 / Mother's Couple B/
+2 GIVN Son A3
+2 SURN Mother's Couple B
+1 SEX M
+1 FAMC @F6@
+2 PEDI Adopted
+0 @I18@ INDI
+1 NAME Son B3 / Mother's Couple B/
+2 GIVN Son B3
+2 SURN Mother's Couple B
+1 SEX M
+1 FAMC @F6@
+0 @I19@ INDI
+1 NAME Son A4 / Father's Couple B/
+2 GIVN Son A4
+2 SURN Father's Couple B
+1 SEX M
+1 FAMC @F7@
+2 PEDI Adopted
+0 @I20@ INDI
+1 NAME Son B4 / Father's Couple B/
+2 GIVN Son B4
+2 SURN Father's Couple B
+1 SEX M
+1 FAMC @F7@
+0 @I21@ INDI
+1 NAME Son A5 / Father's Couple A/
+2 GIVN Son A5
+2 SURN Father's Couple A
+1 SEX M
+1 FAMC @F8@
+2 PEDI Adopted
+0 @I22@ INDI
+1 NAME Son B5 / Father's Couple A/
+2 GIVN Son B5
+2 SURN Father's Couple A
+1 SEX M
+1 FAMC @F8@
 0 @F1@ FAM
 1 HUSB @I1@
 1 WIFE @I2@
@@ -100,11 +186,30 @@
 1 WIFE @I3@
 1 CHIL @I5@
 0 @F4@ FAM
-1 WIFE @I6@
 1 HUSB @I7@
-1 CHIL @I9@
-0 @F5@ FAM
 1 WIFE @I6@
-1 HUSB @I8@
 1 CHIL @I9@
+1 CHIL @I10@
+1 CHIL @I11@
+0 @F5@ FAM
+1 HUSB @I8@
+1 WIFE @I6@
+1 CHIL @I9@
+1 CHIL @I12@
+1 CHIL @I13@
+0 @F6@ FAM
+1 HUSB @I14@
+1 WIFE @I6@
+1 CHIL @I17@
+1 CHIL @I18@
+0 @F7@ FAM
+1 HUSB @I7@
+1 WIFE @I15@
+1 CHIL @I19@
+1 CHIL @I20@
+0 @F8@ FAM
+1 HUSB @I8@
+1 WIFE @I16@
+1 CHIL @I21@
+1 CHIL @I22@
 0 TRLR

@@ -228,13 +228,13 @@ public class GedcomAnalyzerService {
      */
     public List<EnrichedPerson> getInitialPersonOfOrphanTrees(EnrichedGedcom gedcom) {
 
-        Map<String, UUID> visitedPersons = new HashMap<>();
-        Set<String> orphanPersons = new LinkedHashSet<>();
+        Map<Integer, UUID> visitedPersons = new HashMap<>();
+        Set<Integer> orphanPersons = new LinkedHashSet<>();
 
         gedcom.getPeople()
                 .forEach(person -> getReachedSubTreeIds(person, visitedPersons, orphanPersons, UUID.randomUUID(), 0));
 
-        String firstPersonId = gedcom.getPeople().isEmpty() ? null : gedcom.getPeople().get(0).getId();
+        Integer firstPersonId = gedcom.getPeople().isEmpty() ? null : gedcom.getPeople().get(0).getId();
 
         return orphanPersons
                 .stream()
@@ -250,8 +250,8 @@ public class GedcomAnalyzerService {
      */
     private static Set<UUID> getReachedSubTreeIds(
             EnrichedPerson person,
-            Map<String, UUID> visitedPersons,
-            Set<String> orphanPersons,
+            Map<Integer, UUID> visitedPersons,
+            Set<Integer> orphanPersons,
             UUID subTreeId,
             int level) {
 
@@ -305,7 +305,7 @@ public class GedcomAnalyzerService {
      */
     public Map<EnrichedPerson, Pair<String, Integer>> getMostFrequentSurnamesByPersonSubTree(List<EnrichedPerson> people) {
 
-        Set<String> visitedPersons = new HashSet<>();
+        Set<Integer> visitedPersons = new HashSet<>();
 
         return people
                 .stream()
@@ -617,7 +617,7 @@ public class GedcomAnalyzerService {
      */
     private static <T> List<T> treeTraversal(
             EnrichedPerson person,
-            Set<String> visitedPersons,
+            Set<Integer> visitedPersons,
             int level,
             Function<EnrichedPerson, T> valueExtractor) {
 

@@ -38,7 +38,7 @@ public class EnrichedPerson {
     private final EnrichedGedcom gedcom;
     private final GedcomAnalyzerProperties properties;
 
-    private final String id;
+    private final Integer id;
     private final UUID uuid;
     private final SexType sex;
     private final Optional<GivenName> givenName;
@@ -89,8 +89,8 @@ public class EnrichedPerson {
         this.legacyPerson = properties.isKeepReferenceToLegacyGedcom() ? person : null;
         this.gedcom = gedcom;
 
-        id = person.getId();
-        uuid = PersonUtils.getUuid(person, gedcom.getModifiedDateTime());
+        id = PersonUtils.getId(person);
+        uuid = PersonUtils.getUuid(id, gedcom.getModifiedDateTime());
         sex = PersonUtils.getSex(person);
         givenName = PersonUtils.getNormalizedGivenName(person, properties.getNormalizedGivenNamesMap());
         surname = PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap());
@@ -121,8 +121,8 @@ public class EnrichedPerson {
         return Optional.ofNullable(legacyPerson);
     }
 
-    public void enrichFamily(Gedcom legacyGedcom, Map<String, EnrichedPerson> enrichedPeopleIndex) {
-        Person legacyPerson = legacyGedcom.getPerson(id);
+    public void enrichFamily(Gedcom legacyGedcom, Map<Integer, EnrichedPerson> enrichedPeopleIndex) {
+        Person legacyPerson = legacyGedcom.getPerson("I" + id);
         parentsWithReference = toEnrichedPeopleWithReference(PersonUtils.getParentsWithReference(legacyPerson, legacyGedcom), enrichedPeopleIndex, null);
         spousesWithChildren = toEnrichedSpousesWithChildren(PersonUtils.getSpousesWithChildren(legacyPerson, legacyGedcom, gedcom.getPlaces()), enrichedPeopleIndex);
         allSiblings = toEnrichedPeople(PersonUtils.getAllSiblings(legacyPerson, legacyGedcom), enrichedPeopleIndex, PersonUtils.DATES_COMPARATOR);
@@ -149,12 +149,12 @@ public class EnrichedPerson {
 
     private List<EnrichedPerson> toEnrichedPeople(
             List<Person> people,
-            Map<String, EnrichedPerson> enrichedPeopleIndex,
+            Map<Integer, EnrichedPerson> enrichedPeopleIndex,
             @SuppressWarnings("SameParameterValue") @Nullable Comparator<EnrichedPerson> personComparator) {
 
         Stream<EnrichedPerson> peopleStream = people
                 .stream()
-                .map(Person::getId)
+                .map(PersonUtils::getId)
                 .map(enrichedPeopleIndex::get);
 
         if (personComparator != null) {
@@ -168,13 +168,13 @@ public class EnrichedPerson {
 
     private List<EnrichedSpouseWithChildren> toEnrichedSpousesWithChildren(
             List<SpouseWithChildren> spousesWithChildren,
-            Map<String, EnrichedPerson> enrichedPeopleIndex) {
+            Map<Integer, EnrichedPerson> enrichedPeopleIndex) {
         return spousesWithChildren
                 .stream()
                 .map(spouseWithChildren -> EnrichedSpouseWithChildren.of(
                         spouseWithChildren
                                 .spouse()
-                                .map(Person::getId)
+                                .map(PersonUtils::getId)
                                 .map(enrichedPeopleIndex::get),
                         toEnrichedPeopleWithReference(
                                 spouseWithChildren.children(),
@@ -190,8 +190,8 @@ public class EnrichedPerson {
     }
 
     private List<EnrichedPersonWithReference> toEnrichedPeopleWithReference(
-            List<Pair<String, Optional<ReferenceType>>> people,
-            Map<String, EnrichedPerson> enrichedPeopleIndex,
+            List<Pair<Integer, Optional<ReferenceType>>> people,
+            Map<Integer, EnrichedPerson> enrichedPeopleIndex,
             @Nullable Comparator<EnrichedPerson> personComparator) {
 
         Stream<EnrichedPersonWithReference> peopleStream = people
@@ -396,7 +396,7 @@ public class EnrichedPerson {
     }
 
     public String format() {
-        return StringUtils.rightPad(id, 8)
+        return StringUtils.rightPad(id.toString(), 7)
                 + " - " + sex
                 + " " + (isAlive ? " " : "X")
                 + " - " + StringUtils.rightPad(displayName, 36)

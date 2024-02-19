@@ -463,7 +463,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void getPeopleInTree() {
-        EnrichedPerson person = Objects.requireNonNull(gedcom.getPersonById("I4"));
+        EnrichedPerson person = Objects.requireNonNull(gedcom.getPersonById(4));
         personService.setTransientProperties(person, true);
 
         System.out.println("setTransientProperties (excludeRootPerson):");
@@ -501,16 +501,16 @@ public class GedcomAnalyzerServiceTests {
     @Test
     @SuppressWarnings("DataFlowIssue")
     public void getShortestPathsToPersons() {
-        EnrichedPerson person = gedcom.getPersonById("I4");
-        Pair<Map<String, Integer>, Map<String, List<String>>> distancesAndPaths = PathUtils.calculateShortestPathFromSource(gedcom, person);
+        EnrichedPerson person = gedcom.getPersonById(4);
+        Pair<Map<Integer, Integer>, Map<Integer, List<Integer>>> distancesAndPaths = PathUtils.calculateShortestPathFromSource(gedcom, person);
 
         System.out.println("getShortestPathsToPersons:");
-        System.out.println("distance from I4 to I1 (" + gedcom.getPersonById("I1").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I1"));
-        System.out.println("distance from I4 to I2 (" + gedcom.getPersonById("I2").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I2"));
-        System.out.println("distance from I4 to I3 (" + gedcom.getPersonById("I3").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I3"));
-        System.out.println("distance from I4 to I4 (" + gedcom.getPersonById("I4").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I4"));
-        System.out.println("distance from I4 to I5 (" + gedcom.getPersonById("I5").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I5"));
-        System.out.println("distance from I4 to I6 (" + gedcom.getPersonById("I6").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I6"));
+        System.out.println("distance from I4 to I1 (" + gedcom.getPersonById(1).getDisplayName() + "): " + distancesAndPaths.getLeft().get(1));
+        System.out.println("distance from I4 to I2 (" + gedcom.getPersonById(2).getDisplayName() + "): " + distancesAndPaths.getLeft().get(2));
+        System.out.println("distance from I4 to I3 (" + gedcom.getPersonById(3).getDisplayName() + "): " + distancesAndPaths.getLeft().get(3));
+        System.out.println("distance from I4 to I4 (" + gedcom.getPersonById(4).getDisplayName() + "): " + distancesAndPaths.getLeft().get(4));
+        System.out.println("distance from I4 to I5 (" + gedcom.getPersonById(5).getDisplayName() + "): " + distancesAndPaths.getLeft().get(5));
+        System.out.println("distance from I4 to I6 (" + gedcom.getPersonById(6).getDisplayName() + "): " + distancesAndPaths.getLeft().get(6));
 
         System.out.println();
         gedcom
@@ -521,10 +521,10 @@ public class GedcomAnalyzerServiceTests {
                         .<EnrichedPerson, Integer>comparing(d -> distancesAndPaths.getLeft().get(d.getId()), Comparator.nullsLast(Comparator.naturalOrder()))
                         .thenComparing(d -> d.getSurname().map(Surname::simplified).orElse(null), Comparator.nullsLast(Comparator.naturalOrder()))
                         .thenComparing(d -> d.getGivenName().map(GivenName::simplified).orElse(null), Comparator.nullsLast(Comparator.naturalOrder())))
-                .forEach(distinguished -> System.out.println(StringUtils.rightPad(distinguished.getId(), 9) + distinguished.getDisplayName() + ": " + distancesAndPaths.getLeft().get(distinguished.getId())));
+                .forEach(distinguished -> System.out.println(StringUtils.rightPad(distinguished.getId().toString(), 8) + distinguished.getDisplayName() + ": " + distancesAndPaths.getLeft().get(distinguished.getId())));
 
         System.out.println();
-        List<String> shortestPath = distancesAndPaths.getRight().getOrDefault("I525113", List.of());
+        List<Integer> shortestPath = distancesAndPaths.getRight().getOrDefault(525113, List.of());
         for (int i = 0; i < shortestPath.size() - 1; i++) {
             EnrichedPerson personA = gedcom.getPersonById(shortestPath.get(i));
             EnrichedPerson personB = gedcom.getPersonById(shortestPath.get(i + 1));

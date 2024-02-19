@@ -26,7 +26,7 @@ public record Relationship(
         boolean isHalf,
         @Nullable AdoptionType adoptionType,
         @Nullable Set<TreeSideType> treeSides,
-        @Nullable List<String> relatedPersonIds) implements Comparable<Relationship> {
+        @Nullable List<Integer> relatedPersonIds) implements Comparable<Relationship> {
 
     public static Relationship empty(EnrichedPerson person) {
         return new Relationship(
@@ -64,7 +64,7 @@ public record Relationship(
             boolean isSetHalf,
             @Nullable AdoptionType newAdoptionType,
             @NonNull Set<TreeSideType> treeSides,
-            @NonNull List<String> relatedPersonIds) {
+            @NonNull List<Integer> relatedPersonIds) {
 
         if (isInLaw
                 || isHalf && (direction == TreeTraversalDirection.ASC || direction == TreeTraversalDirection.ONLY_ASC)
@@ -204,7 +204,7 @@ public record Relationship(
             return invert(compareTreeSides, invertedPriority);
         }
         //
-        int compareRelatedPersonIds = STRING_COLLECTION_COMPARATOR.compare(this.relatedPersonIds, other.relatedPersonIds);
+        int compareRelatedPersonIds = INTEGER_COLLECTION_COMPARATOR.compare(this.relatedPersonIds, other.relatedPersonIds);
         if (compareRelatedPersonIds != 0) {
             return invert(compareRelatedPersonIds, invertedPriority);
         }
@@ -231,7 +231,7 @@ public record Relationship(
     }
 
     private static final Comparator<AdoptionType> ADOPTION_TYPE_COMPARATOR = Comparator.nullsFirst(Comparator.naturalOrder());
-    private static final Comparator<Collection<String>> STRING_COLLECTION_COMPARATOR = Comparator.nullsFirst(new CollectionComparator<>());
+    private static final Comparator<Collection<Integer>> INTEGER_COLLECTION_COMPARATOR = Comparator.nullsFirst(new CollectionComparator<>());
     private static final Comparator<Collection<TreeSideType>> TREE_SIDE_TYPE_COLLECTION_COMPARATOR = Comparator.nullsFirst(new CollectionComparator<>());
 
 }

@@ -31,7 +31,7 @@ import lombok.ToString;
 public class Relationships {
 
     @ToString.Include
-    private final String personId;
+    private final Integer personId;
     @ToString.Include
     private final TreeSet<Relationship> orderedRelationships;
     @ToString.Include

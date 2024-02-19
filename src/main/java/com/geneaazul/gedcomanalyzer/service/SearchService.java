@@ -308,7 +308,7 @@ public class SearchService {
     }
 
     public List<PersonComparisonResults> findDuplicatedPersons(EnrichedGedcom gedcom) {
-        Set<String> comparedIds = new HashSet<>();
+        Set<Integer> comparedIds = new HashSet<>();
 
         List<PersonComparisonResults> results = gedcom.getPeople()
                 .stream()

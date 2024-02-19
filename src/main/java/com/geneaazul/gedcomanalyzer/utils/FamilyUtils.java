@@ -117,6 +117,6 @@ public class FamilyUtils {
     public static final Comparator<EnrichedSpouseWithChildren> DATES_COMPARATOR = Comparator
             .<EnrichedSpouseWithChildren, Date>comparing(couple -> couple.getDateOfPartners().orElse(null), Comparator.nullsLast(Comparator.naturalOrder()))
             .thenComparing(couple -> couple.getDateOfSeparation().orElse(null), Comparator.nullsLast(Comparator.naturalOrder()))
-            .thenComparing(couple -> couple.getSpouse().map(EnrichedPerson::getId).orElse(""));
+            .thenComparing(couple -> couple.getSpouse().map(EnrichedPerson::getId).orElse(-1));
 
 }

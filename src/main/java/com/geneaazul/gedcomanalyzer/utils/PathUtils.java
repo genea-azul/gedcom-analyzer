@@ -20,23 +20,23 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class PathUtils {
 
-    public static Pair<Map<String, Integer>, Map<String, List<String>>> calculateShortestPathFromSource(
+    public static Pair<Map<Integer, Integer>, Map<Integer, List<Integer>>> calculateShortestPathFromSource(
             EnrichedGedcom gedcom,
             EnrichedPerson source) {
 
-        Map<String, Integer> distances = new HashMap<>();
-        Map<String, List<String>> shortestPaths = new HashMap<>();
+        Map<Integer, Integer> distances = new HashMap<>();
+        Map<Integer, List<Integer>> shortestPaths = new HashMap<>();
 
         distances.put(source.getId(), 0);
         shortestPaths.put(source.getId(), List.of());
 
-        Set<String> settledNodes = new HashSet<>();
-        Set<String> unsettledNodes = new LinkedHashSet<>();
+        Set<Integer> settledNodes = new HashSet<>();
+        Set<Integer> unsettledNodes = new LinkedHashSet<>();
 
         unsettledNodes.add(source.getId());
 
         while (!unsettledNodes.isEmpty()) {
-            String currentNodeId = getLowestDistanceNodeId(unsettledNodes, distances);
+            Integer currentNodeId = getLowestDistanceNodeId(unsettledNodes, distances);
             EnrichedPerson currentNode = Objects.requireNonNull(gedcom.getPersonById(currentNodeId));
             unsettledNodes.remove(currentNodeId);
 
@@ -58,7 +58,7 @@ public class PathUtils {
             }
 
             settledNodes.add(currentNode.getId());
-            List<String> shortestPath = new ArrayList<>(shortestPaths.getOrDefault(currentNode.getId(), List.of()));
+            List<Integer> shortestPath = new ArrayList<>(shortestPaths.getOrDefault(currentNode.getId(), List.of()));
             shortestPath.add(currentNode.getId());
             shortestPaths.put(currentNode.getId(), List.copyOf(shortestPath));
         }
@@ -66,10 +66,10 @@ public class PathUtils {
         return Pair.of(distances, shortestPaths);
     }
 
-    private static String getLowestDistanceNodeId(Set<String> unsettledNodes, Map<String, Integer> distances) {
-        String lowestDistanceNode = null;
+    private static Integer getLowestDistanceNodeId(Set<Integer> unsettledNodes, Map<Integer, Integer> distances) {
+        Integer lowestDistanceNode = null;
         int lowestDistance = Integer.MAX_VALUE;
-        for (String node : unsettledNodes) {
+        for (Integer node : unsettledNodes) {
             int nodeDistance = distances.getOrDefault(node, Integer.MAX_VALUE);
             if (nodeDistance < lowestDistance) {
                 lowestDistance = nodeDistance;
@@ -82,17 +82,17 @@ public class PathUtils {
     private static void calculateMinimumDistance(
             EnrichedPerson evaluationNode,
             @SuppressWarnings("SameParameterValue") Integer edgeWeigh,
-            String sourceNodeId,
+            Integer sourceNodeId,
             Integer sourceDistance,
-            Map<String, Integer> distances,
-            Map<String, List<String>> shortestPaths) {
+            Map<Integer, Integer> distances,
+            Map<Integer, List<Integer>> shortestPaths) {
 
         Integer evaluationNodeDistance = distances.getOrDefault(evaluationNode.getId(), Integer.MAX_VALUE);
 
         if (sourceDistance + edgeWeigh < evaluationNodeDistance) {
             distances.put(evaluationNode.getId(), sourceDistance + edgeWeigh);
 
-            List<String> shortestPath = new ArrayList<>(shortestPaths.getOrDefault(sourceNodeId, List.of()));
+            List<Integer> shortestPath = new ArrayList<>(shortestPaths.getOrDefault(sourceNodeId, List.of()));
             shortestPath.add(sourceNodeId);
             shortestPaths.put(evaluationNode.getId(), List.copyOf(shortestPath));
         }
