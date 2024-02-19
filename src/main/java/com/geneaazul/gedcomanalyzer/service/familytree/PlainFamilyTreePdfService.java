@@ -4,9 +4,12 @@ import com.geneaazul.gedcomanalyzer.config.EmbeddedFontsConfig;
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.FormattedDistance;
 import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
+import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
+import com.geneaazul.gedcomanalyzer.utils.PathUtils;
 import com.geneaazul.gedcomanalyzer.utils.PlaceUtils;
 
 import org.springframework.core.io.Resource;
@@ -32,6 +35,7 @@ import java.nio.file.Path;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -95,8 +99,18 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                         .orElseThrow())
                 .toList();
 
+        Map<Integer, Integer> shortestPathByPersonId = PathUtils.calculateShortestPathFromSource(gedcomHolder.getGedcom(), person).getLeft();
+        List<FormattedDistance> formattedDistances = gedcomHolder.getGedcom()
+                .getPeople()
+                .stream()
+                .filter(EnrichedPerson::isDistinguishedPerson)
+                .map(p -> new FormattedDistance(p.getDisplayName(), shortestPathByPersonId.get(person.getId())))
+                .filter(f -> f.personName() != null)
+                .sorted(Comparator.nullsLast(Comparator.comparing(FormattedDistance::personName)))
+                .toList();
+
         try {
-            exportToPDF(exportFilePath, person, formattedRelationships);
+            exportToPDF(exportFilePath, person, formattedRelationships, formattedDistances);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

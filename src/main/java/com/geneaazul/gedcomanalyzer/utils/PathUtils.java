@@ -61,13 +61,19 @@ public class PathUtils {
 
             for (EnrichedPerson adjacentNode : directRelatives) {
                 if (!settledNodes.contains(adjacentNode.getId())) {
-                    Integer adjacentDistance = calculateMinimumDistance(adjacentNode.getId(), 1, currentNode.getId(), sourceDistance, distances, shortestPaths);
+                    Integer adjacentDistance = calculateMinimumDistance(
+                            adjacentNode.getId(),
+                            1,
+                            currentNodeId,
+                            sourceDistance,
+                            distances,
+                            shortestPaths);
                     unsettledNodes.add(Pair.of(adjacentNode.getId(), adjacentDistance));
                 }
             }
 
-            settledNodes.add(currentNode.getId());
-            shortestPaths.get(currentNode.getId()).add(currentNode.getId());
+            settledNodes.add(currentNodeId);
+            shortestPaths.get(currentNodeId).add(currentNodeId);
         }
 
         return Pair.of(distances, shortestPaths);
