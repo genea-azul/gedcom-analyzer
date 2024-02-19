@@ -6,12 +6,14 @@ import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -24,21 +26,30 @@ public class PathUtils {
             EnrichedGedcom gedcom,
             EnrichedPerson source) {
 
-        Map<Integer, Integer> distances = new HashMap<>();
-        Map<Integer, List<Integer>> shortestPaths = new HashMap<>();
+        Map<Integer, Integer> distances = new HashMap<>(gedcom.getPeople().size());
+        Map<Integer, List<Integer>> shortestPaths = new HashMap<>(gedcom.getPeople().size());
 
         distances.put(source.getId(), 0);
-        shortestPaths.put(source.getId(), List.of());
+        shortestPaths.put(source.getId(), new ArrayList<>());
 
-        Set<Integer> settledNodes = new HashSet<>();
-        Set<Integer> unsettledNodes = new LinkedHashSet<>();
+        Queue<Pair<Integer, Integer>> unsettledNodes = new PriorityQueue<>(
+                gedcom.getPeople().size(),
+                Comparator.comparing(Pair::getRight));
+        Set<Integer> settledNodes = new HashSet<>(gedcom.getPeople().size());
 
-        unsettledNodes.add(source.getId());
+        unsettledNodes.add(Pair.of(source.getId(), 0));
 
         while (!unsettledNodes.isEmpty()) {
-            Integer currentNodeId = getLowestDistanceNodeId(unsettledNodes, distances);
+            Pair<Integer, Integer> currentData = unsettledNodes.remove();
+            Integer currentNodeId = currentData.getLeft();
+
+            // Unsettled nodes can contain repeated node ids, cause it adds many distances to it before processing it
+            if (settledNodes.contains(currentNodeId)) {
+                continue;
+            }
+
+            Integer sourceDistance = currentData.getRight();
             EnrichedPerson currentNode = Objects.requireNonNull(gedcom.getPersonById(currentNodeId));
-            unsettledNodes.remove(currentNodeId);
 
             List<EnrichedPerson> directRelatives = Stream
                     .of(
@@ -48,53 +59,42 @@ public class PathUtils {
                     .flatMap(List::stream)
                     .toList();
 
-            Integer sourceDistance = distances.getOrDefault(currentNode.getId(), Integer.MAX_VALUE);
-
             for (EnrichedPerson adjacentNode : directRelatives) {
                 if (!settledNodes.contains(adjacentNode.getId())) {
-                    calculateMinimumDistance(adjacentNode, 1, currentNode.getId(), sourceDistance, distances, shortestPaths);
-                    unsettledNodes.add(adjacentNode.getId());
+                    Integer adjacentDistance = calculateMinimumDistance(adjacentNode.getId(), 1, currentNode.getId(), sourceDistance, distances, shortestPaths);
+                    unsettledNodes.add(Pair.of(adjacentNode.getId(), adjacentDistance));
                 }
             }
 
             settledNodes.add(currentNode.getId());
-            List<Integer> shortestPath = new ArrayList<>(shortestPaths.getOrDefault(currentNode.getId(), List.of()));
-            shortestPath.add(currentNode.getId());
-            shortestPaths.put(currentNode.getId(), List.copyOf(shortestPath));
+            shortestPaths.get(currentNode.getId()).add(currentNode.getId());
         }
 
         return Pair.of(distances, shortestPaths);
     }
 
-    private static Integer getLowestDistanceNodeId(Set<Integer> unsettledNodes, Map<Integer, Integer> distances) {
-        Integer lowestDistanceNode = null;
-        int lowestDistance = Integer.MAX_VALUE;
-        for (Integer node : unsettledNodes) {
-            int nodeDistance = distances.getOrDefault(node, Integer.MAX_VALUE);
-            if (nodeDistance < lowestDistance) {
-                lowestDistance = nodeDistance;
-                lowestDistanceNode = node;
-            }
-        }
-        return lowestDistanceNode;
-    }
-
-    private static void calculateMinimumDistance(
-            EnrichedPerson evaluationNode,
+    private static Integer calculateMinimumDistance(
+            Integer evaluationNodeId,
             @SuppressWarnings("SameParameterValue") Integer edgeWeigh,
             Integer sourceNodeId,
             Integer sourceDistance,
             Map<Integer, Integer> distances,
             Map<Integer, List<Integer>> shortestPaths) {
 
-        Integer evaluationNodeDistance = distances.getOrDefault(evaluationNode.getId(), Integer.MAX_VALUE);
+        Integer newDistance = sourceDistance + edgeWeigh;
+        Integer evaluationNodeDistance = distances.getOrDefault(evaluationNodeId, Integer.MAX_VALUE);
 
-        if (sourceDistance + edgeWeigh < evaluationNodeDistance) {
-            distances.put(evaluationNode.getId(), sourceDistance + edgeWeigh);
+        if (newDistance < evaluationNodeDistance) {
+            distances.put(evaluationNodeId, newDistance);
 
             List<Integer> shortestPath = new ArrayList<>(shortestPaths.getOrDefault(sourceNodeId, List.of()));
             shortestPath.add(sourceNodeId);
-            shortestPaths.put(evaluationNode.getId(), List.copyOf(shortestPath));
+            shortestPaths.put(evaluationNodeId, shortestPath);
+
+            return newDistance;
         }
+
+        return evaluationNodeDistance;
     }
+
 }

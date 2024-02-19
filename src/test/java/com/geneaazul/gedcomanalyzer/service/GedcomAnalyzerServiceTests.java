@@ -497,7 +497,6 @@ public class GedcomAnalyzerServiceTests {
                         + relationships.get(0).person()));
     }
 
-    @Disabled
     @Test
     @SuppressWarnings("DataFlowIssue")
     public void getShortestPathsToPersons() {
