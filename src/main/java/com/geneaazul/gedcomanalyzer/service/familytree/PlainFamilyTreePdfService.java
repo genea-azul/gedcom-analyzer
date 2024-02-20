@@ -6,6 +6,7 @@ import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.FormattedDistance;
 import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
+import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
@@ -52,6 +53,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
 
     private static final int MAX_DISTANCE_TO_OBFUSCATE = 3;
     private static final int MAX_PERSON_NAME_LENGTH = 48;
+    private static final int MAX_DISTINGUISHED_PERSONS_TO_DISPLAY = 90;
 
     private final RelationshipMapper relationshipMapper;
     private final Map<EmbeddedFontsConfig.Font, String> embeddedFonts;
@@ -78,7 +80,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             EnrichedPerson person,
             boolean obfuscateLiving,
             List<List<Relationship>> peopleInTree) {
-        log.info("Generating Plain family tree PDF");
+        log.info("Generating plain family tree PDF");
 
         List<FormattedRelationship> formattedRelationships = peopleInTree
                 .stream()
@@ -99,18 +101,38 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                         .orElseThrow())
                 .toList();
 
-        Map<Integer, Integer> shortestPathByPersonId = PathUtils.calculateShortestPathFromSource(gedcomHolder.getGedcom(), person).getLeft();
+        long startTime = System.currentTimeMillis();
+        Map<Integer, Integer> shortestPathByPersonId = PathUtils.calculateShortestPathFromSource(
+                gedcomHolder.getGedcom(),
+                person,
+                false)
+                .getLeft();
         List<FormattedDistance> formattedDistances = gedcomHolder.getGedcom()
                 .getPeople()
                 .stream()
                 .filter(EnrichedPerson::isDistinguishedPerson)
-                .map(p -> new FormattedDistance(p.getDisplayName(), shortestPathByPersonId.get(person.getId())))
-                .filter(f -> f.personName() != null)
-                .sorted(Comparator.nullsLast(Comparator.comparing(FormattedDistance::personName)))
+                .filter(distinguished -> !distinguished.getId().equals(person.getId()))
+                .map(distinguished -> new FormattedDistance(
+                        distinguished.getGivenName().map(GivenName::simplified).orElseThrow(),
+                        distinguished.getSurname().map(Surname::simplified).orElseThrow(),
+                        distinguished.getDisplayName(),
+                        shortestPathByPersonId.get(distinguished.getId())))
+                .filter(distance -> distance.distance() != null)
+                .sorted(Comparator.comparing(FormattedDistance::distance)
+                        .thenComparing(FormattedDistance::surnameSimplified)
+                        .thenComparing(FormattedDistance::givenNameSimplified)
+                        .thenComparing(FormattedDistance::displayName))
+                .limit(MAX_DISTINGUISHED_PERSONS_TO_DISPLAY)
                 .toList();
+        long totalTime = System.currentTimeMillis() - startTime;
+        log.info("Shortest paths calculation time: {} ms", totalTime);
 
         try {
-            exportToPDF(exportFilePath, person, formattedRelationships, formattedDistances);
+            exportToPDF(
+                    exportFilePath,
+                    person,
+                    formattedRelationships,
+                    formattedDistances);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -119,7 +141,8 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
     private void exportToPDF(
             Path exportFilePath,
             EnrichedPerson person,
-            List<FormattedRelationship> peopleInTree) throws IOException {
+            List<FormattedRelationship> peopleInTree,
+            List<FormattedDistance> distances) throws IOException {
 
         // Create a document
         try (PDDocument document = new PDDocument()) {
@@ -177,9 +200,20 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                 }
             }
 
+            writeDistancesPage(
+                    document,
+                    distances,
+                    nextPages.size() + 2,
+                    isAnyPersonObfuscated,
+                    logoImage,
+                    font,
+                    bold,
+                    light,
+                    mono);
+
             writeLastPage(
                     document,
-                    nextPages.size(),
+                    nextPages.size() + 3,
                     isAnyPersonObfuscated,
                     logoImage,
                     font,
@@ -220,17 +254,17 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             writeText(stream, font, 11.5f, 1.2f, 30f, 60f,
                     "sitio web: geneaazul.com.ar  -  en redes sociales: @genea.azul");
 
-            float legendX = 30f;
-            float legendY = 95f;
+            float textPosX = 30f;
+            float textPosY = 95f;
 
-            writeText(stream, bold, 12.5f, 1.2f, legendX, legendY,
+            writeText(stream, bold, 12.5f, 1.2f, textPosX, textPosY,
                     "Árbol genealógico de " + person.getDisplayName());
 
-            legendX = legendX + 20f;
-            legendY = legendY + 20f;
-            float legendSepY = 70f;
+            textPosX = textPosX + 20f;
+            textPosY = textPosY + 20f;
+            float textSepY = 70f;
 
-            writeText(stream, light, 11f, 1.3f, legendX, legendY,
+            writeText(stream, light, 11f, 1.3f, textPosX, textPosY,
                     "Personas:  " + person.getPersonsCountInTree(),
                     "Apellidos (en caso de apellidos compuestos sólo se considera el primero):  " + person.getSurnamesCountInTree(),
                     "Generaciones:  " + person.getAncestryGenerations().getTotalGenerations()
@@ -245,16 +279,135 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                     italic,
                     mono,
                     peopleInTree.subList(0, Math.min(peopleInTree.size(), maxPersonsInFirstPage)),
-                    legendY + legendSepY,
+                    textPosY + textSepY,
                     1,
                     peopleInTree.size() <= maxPersonsInFirstPage,
                     isAnyPersonObfuscated);
         }
     }
 
+    private void writeDistancesPage(
+            PDDocument document,
+            List<FormattedDistance> distances,
+            int pageNum,
+            boolean isAnyPersonObfuscated,
+            PDImageXObject logoImage,
+            PDFont font,
+            PDFont bold,
+            PDFont light,
+            PDFont mono) throws IOException {
+
+        if (distances.isEmpty()) {
+            return;
+        }
+
+        PDPage lastPage = new PDPage(PDRectangle.A4);
+        document.addPage(lastPage);
+
+        try (PDPageContentStream stream = new PDPageContentStream(document, lastPage)) {
+
+            drawLogoImage(stream, logoImage, A4_MAX_OFFSET_X - 160f, 10f);
+
+            writeText(stream, bold, 16f, 1.2f, 30f, 40f,
+                    "Genea Azul");
+            writeText(stream, font, 11.5f, 1.2f, 30f, 60f,
+                    "sitio web: geneaazul.com.ar  -  en redes sociales: @genea.azul");
+
+            float textPosX = 30f;
+            float textPosY = 95f;
+
+            writeText(stream, bold, 12.5f, 1.2f, 30f, 95f,
+                    "Distancia a personalidades destacadas:");
+
+            textPosX = textPosX + 20f;
+            textPosY = textPosY + 20f;
+            float textIndX = 25f;
+            float textSize = 10f;
+
+            writeText(stream, light, textSize, 1.3f, textPosX, textPosY,
+                    "La distancia entre dos personas indica por cuántas relaciones familiares directas, ya sean cosanguíneas o por",
+                    "afinidad (matrimonios, parejas de hecho, adopciones), debemos atravesar para llegar de un individuo al otro.",
+                    "Las relaciones familiares directas son:");
+
+            float textIndY = textSize * 1.3f;
+            textPosY = textPosY + textIndY * 3 + 3f;
+
+            writeText(stream, mono, 11f, 1.2272f, textPosX + textIndX, textPosY + 0.5f,
+                    "•",
+                    "•",
+                    "•");
+
+            writeText(stream, light, textSize, 1.35f, textPosX + textIndX + 10f, textPosY,
+                    "padre/madre (relación familiar cosanguínea o adoptiva)",
+                    "hijo/hija (relación familiar cosanguínea o adoptiva)",
+                    "pareja (relación familiar por matrimonio o pareja de hecho)");
+
+            textIndY = textSize * 1.35f;
+            textPosY = textPosY + textIndY * 3 + 3f;
+
+            writeText(stream, light, textSize, 1.3f, textPosX, textPosY,
+                    "En otras palabras, nos dice qué tan lejos está una persona de otra en el árbol. Y dado que se calcula tomando",
+                    "en cuenta relaciones por afinidad, no implica que dichas personas estén emparentadas.");
+
+            float size = 8.9f;
+            float space = 1.28f;
+
+            MutableInt index = new MutableInt(0);
+
+            textIndY = textSize * 1.3f;
+            float yPos = textPosY + textIndY * 2 + 15f;
+
+            float distancesNoSepY = 240f;
+
+            distances
+                    .stream()
+                    .limit(MAX_DISTINGUISHED_PERSONS_TO_DISPLAY / 2)
+                    .forEach(distance -> {
+                int lineIndex = index.getAndIncrement();
+                float lineYPos = yPos + (size * space) * lineIndex;
+
+                try {
+                    writeText(stream, light, size, space, 30f, lineYPos, distance.displayName());
+                    String distanceNo = StringUtils.leftPad(String.valueOf(distance.distance()), 2);
+                    writeText(stream, light, size, space, 30f + distancesNoSepY, lineYPos, distanceNo);
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            });
+
+            index.setValue(0);
+
+            distances
+                    .stream()
+                    .skip(MAX_DISTINGUISHED_PERSONS_TO_DISPLAY / 2)
+                    .limit(MAX_DISTINGUISHED_PERSONS_TO_DISPLAY)
+                    .forEach(distance -> {
+                        int lineIndex = index.getAndIncrement();
+                        float lineYPos = yPos + (size * space) * lineIndex;
+
+                        try {
+                            writeText(stream, light, size, space, 305f, lineYPos, distance.displayName());
+                            String distanceNo = StringUtils.leftPad(String.valueOf(distance.distance()), 2);
+                            writeText(stream, light, size, space, 305f + distancesNoSepY, lineYPos, distanceNo);
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    });
+
+            writePageNumber(stream, font, pageNum);
+
+            writeGeneratedOn(stream, font);
+
+            if (isAnyPersonObfuscated) {
+                writeText(stream, light, 10.f, 1.2f, 75f, 805f,
+                        "Para revelar las datos privados de las personas ponete en contacto con nosotros (no tiene costo).");
+            }
+        }
+    }
+
     private void writeLastPage(
             PDDocument document,
-            int nextPagesCount,
+            int pageNum,
             boolean isAnyPersonObfuscated,
             PDImageXObject logoImage,
             PDFont font,
@@ -353,7 +506,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             writeText(stream, bold, 12.5f, 1.2f, legendX, legendY,
                     "Nomenclatura de relaciones familiares:");
 
-            writePageNumber(stream, font, nextPagesCount + 2);
+            writePageNumber(stream, font, pageNum);
 
             writeGeneratedOn(stream, font);
 

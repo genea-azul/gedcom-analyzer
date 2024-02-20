@@ -234,7 +234,7 @@ public class GedcomAnalyzerService {
         gedcom.getPeople()
                 .forEach(person -> getReachedSubTreeIds(person, visitedPersons, orphanPersons, UUID.randomUUID(), 0));
 
-        Integer firstPersonId = gedcom.getPeople().isEmpty() ? null : gedcom.getPeople().get(0).getId();
+        Integer firstPersonId = gedcom.getPeople().isEmpty() ? null : gedcom.getPeople().getFirst().getId();
 
         return orphanPersons
                 .stream()
@@ -443,11 +443,11 @@ public class GedcomAnalyzerService {
                     return new SurnamesCardinality(
                             entry.getValue(),
                             Surname.of(
-                                    cardinalityList.get(0).getLeft(),
-                                    NameUtils.simplifyName(cardinalityList.get(0).getLeft()),
+                                    cardinalityList.getFirst().getLeft(),
+                                    NameUtils.simplifyName(cardinalityList.getFirst().getLeft()),
                                     normalizedMainWord,
                                     shortenedMainWord),
-                            cardinalityList.get(0).getRight(),
+                            cardinalityList.getFirst().getRight(),
                             cardinalityList
                                     .stream()
                                     .skip(1)

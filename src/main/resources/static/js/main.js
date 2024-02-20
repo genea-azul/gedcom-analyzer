@@ -254,7 +254,7 @@ $(document).ready(function() {
                     setTimeout(function() {
                         enableFamilyTreeSearch(resultComponentLocator);
                         enableFamilyTreeView(resultComponentLocator);
-                    }, 1750);
+                    }, 1800);
                 }
 
                 var surnamesInRequest = getSurnamesInRequest(searchFamilyRequest);

@@ -484,7 +484,7 @@ public class GedcomAnalyzerServiceTests {
                     }
                     return List.copyOf(relationships.getOrderedRelationships());
                 })
-                .sorted(Comparator.comparing(relationships -> relationships.get(0)))
+                .sorted(Comparator.comparing(List::getFirst))
                 .limit(50)
                 .forEach(relationships -> System.out.println(
                         relationships
@@ -494,14 +494,14 @@ public class GedcomAnalyzerServiceTests {
                                 .map(FormattedRelationship::toString)
                                 .collect(Collectors.joining(", "))
                         + "  --  "
-                        + relationships.get(0).person()));
+                        + relationships.getFirst().person()));
     }
 
     @Test
     @SuppressWarnings("DataFlowIssue")
     public void getShortestPathsToPersons() {
         EnrichedPerson person = gedcom.getPersonById(4);
-        Pair<Map<Integer, Integer>, Map<Integer, List<Integer>>> distancesAndPaths = PathUtils.calculateShortestPathFromSource(gedcom, person);
+        Pair<Map<Integer, Integer>, Map<Integer, List<Integer>>> distancesAndPaths = PathUtils.calculateShortestPathFromSource(gedcom, person, true);
 
         System.out.println("getShortestPathsToPersons:");
         System.out.println("distance from I4 to I1 (" + gedcom.getPersonById(1).getDisplayName() + "): " + distancesAndPaths.getLeft().get(1));

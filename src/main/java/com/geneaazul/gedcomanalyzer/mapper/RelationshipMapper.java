@@ -63,7 +63,7 @@ public class RelationshipMapper {
                     .map(List::size)
                     .orElse(0);
             if (relatedPersons == 1) {
-                Integer spouseId = relationship.relatedPersonIds().get(0);
+                Integer spouseId = relationship.relatedPersonIds().getFirst();
                 EnrichedPerson spouse = relationship
                         .person()
                         .getGedcom()

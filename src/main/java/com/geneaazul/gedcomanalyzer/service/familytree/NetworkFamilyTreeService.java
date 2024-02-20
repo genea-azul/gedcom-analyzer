@@ -80,6 +80,9 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
             boolean obfuscateLiving,
             List<List<Relationship>> relationshipsWithNotInLawPriority) {
 
+        log.info("Generating network family tree HTML [ personId={}, personUuid={} ]", person.getId(), person.getUuid());
+        long startTime = System.currentTimeMillis();
+
         Path htmlPyvisNetworkFilePath = getNetworkHtmlFile(
                 person,
                 familyTreeFileIdPrefix,
@@ -101,6 +104,9 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                 csvPyvisNetworkEdgesFilePath,
                 obfuscateLiving,
                 relationshipsWithNotInLawPriority);
+
+        long totalTime = System.currentTimeMillis() - startTime;
+        log.info("Generating network family tree HTML [ personId={}, personUuid={}, ms={} ]", person.getId(), person.getUuid(), totalTime);
     }
 
     @Override
@@ -150,12 +156,11 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
             Path csvPyvisNetworkEdgesFilePath,
             boolean obfuscateLiving,
             List<List<Relationship>> peopleInTree) {
-        log.info("Generating Network family tree HTML");
 
         List<EnrichedPerson> peopleToExport = peopleInTree
                 .stream()
                 .limit(properties.getMaxPyvisNetworkNodesToExport())
-                .map(relationships -> relationships.get(0))
+                .map(List::getFirst)
                 .map(Relationship::person)
                 .toList();
 

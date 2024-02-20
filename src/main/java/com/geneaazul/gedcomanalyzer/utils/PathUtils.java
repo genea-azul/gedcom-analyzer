@@ -24,13 +24,16 @@ public class PathUtils {
 
     public static Pair<Map<Integer, Integer>, Map<Integer, List<Integer>>> calculateShortestPathFromSource(
             EnrichedGedcom gedcom,
-            EnrichedPerson source) {
+            EnrichedPerson source,
+            boolean includePaths) {
 
         Map<Integer, Integer> distances = new HashMap<>(gedcom.getPeople().size());
         Map<Integer, List<Integer>> shortestPaths = new HashMap<>(gedcom.getPeople().size());
 
         distances.put(source.getId(), 0);
-        shortestPaths.put(source.getId(), new ArrayList<>());
+        if (includePaths) {
+            shortestPaths.put(source.getId(), new ArrayList<>());
+        }
 
         Queue<Pair<Integer, Integer>> unsettledNodes = new PriorityQueue<>(
                 gedcom.getPeople().size(),
@@ -67,13 +70,16 @@ public class PathUtils {
                             currentNodeId,
                             sourceDistance,
                             distances,
-                            shortestPaths);
+                            shortestPaths,
+                            includePaths);
                     unsettledNodes.add(Pair.of(adjacentNode.getId(), adjacentDistance));
                 }
             }
 
             settledNodes.add(currentNodeId);
-            shortestPaths.get(currentNodeId).add(currentNodeId);
+            if (includePaths) {
+                shortestPaths.get(currentNodeId).add(currentNodeId);
+            }
         }
 
         return Pair.of(distances, shortestPaths);
@@ -85,7 +91,8 @@ public class PathUtils {
             Integer sourceNodeId,
             Integer sourceDistance,
             Map<Integer, Integer> distances,
-            Map<Integer, List<Integer>> shortestPaths) {
+            Map<Integer, List<Integer>> shortestPaths,
+            boolean includePaths) {
 
         Integer newDistance = sourceDistance + edgeWeigh;
         Integer evaluationNodeDistance = distances.getOrDefault(evaluationNodeId, Integer.MAX_VALUE);
@@ -93,9 +100,11 @@ public class PathUtils {
         if (newDistance < evaluationNodeDistance) {
             distances.put(evaluationNodeId, newDistance);
 
-            List<Integer> shortestPath = new ArrayList<>(shortestPaths.getOrDefault(sourceNodeId, List.of()));
-            shortestPath.add(sourceNodeId);
-            shortestPaths.put(evaluationNodeId, shortestPath);
+            if (includePaths) {
+                List<Integer> shortestPath = new ArrayList<>(shortestPaths.getOrDefault(sourceNodeId, List.of()));
+                shortestPath.add(sourceNodeId);
+                shortestPaths.put(evaluationNodeId, shortestPath);
+            }
 
             return newDistance;
         }
