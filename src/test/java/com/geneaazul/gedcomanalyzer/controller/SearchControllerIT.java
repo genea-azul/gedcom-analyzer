@@ -48,9 +48,9 @@ public class SearchControllerIT extends AbstractControllerIT {
     @Autowired
     private Jackson2ObjectMapperBuilder mapperBuilder;
 
-    @Value("${test.individual.givenName:Test Son}")
+    @Value("${test.individual.givenName:Son}")
     private String individualGivenName;
-    @Value("${test.individual.surname:Biological and Adoptive}")
+    @Value("${test.individual.surname:B&A}")
     private String individualSurname;
     @Value("${test.individual.yearOfBirth:2000}")
     private Integer individualYearOfBirth;
@@ -225,7 +225,7 @@ public class SearchControllerIT extends AbstractControllerIT {
 
         SearchFamilyResultDto searchFamilyResult = objectMapper.readValue(searchResult, SearchFamilyResultDto.class);
 
-        UUID personUuid = searchFamilyResult.getPeople().get(0).getUuid();
+        UUID personUuid = searchFamilyResult.getPeople().getFirst().getUuid();
 
         /*
          * Test download plain family tree PDF

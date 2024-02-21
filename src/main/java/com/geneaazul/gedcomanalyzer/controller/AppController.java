@@ -1,5 +1,6 @@
 package com.geneaazul.gedcomanalyzer.controller;
 
+import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.FamilyTree;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
 import com.geneaazul.gedcomanalyzer.service.DockerService;
@@ -38,6 +39,7 @@ public class AppController {
     private final DockerService dockerService;
     private final PersonService personService;
     private final NetworkFamilyTreeService networkFamilyTreeService;
+    private final GedcomAnalyzerProperties properties;
 
     @Value("${project.version}")
     private String projectVersion;
@@ -45,7 +47,7 @@ public class AppController {
     @GetMapping("/")
     public ModelAndView index(@RequestParam @Nullable String f) {
         dockerService.startDbContainer();
-        boolean obfuscateLiving = !"0".equals(f);
+        boolean obfuscateLiving = !properties.isDisableObfuscateLiving() && !"0".equals(f);
         Map<String, ?> params = Map.of(
                 "projectVersion", projectVersion,
                 "obfuscateLiving", obfuscateLiving);
@@ -56,7 +58,7 @@ public class AppController {
     public ModelAndView familyTreeView(
             @PathVariable UUID personUuid,
             @RequestParam @Nullable String f) {
-        boolean obfuscateLiving = !"0".equals(f);
+        boolean obfuscateLiving = !properties.isDisableObfuscateLiving() && !"0".equals(f);
 
         String personDisplayName = personService
                 .getPersonDto(personUuid)
@@ -76,7 +78,12 @@ public class AppController {
             @PathVariable UUID personUuid,
             @RequestParam @Nullable String f,
             HttpServletRequest request) throws IOException {
-        boolean obfuscateLiving = !"0".equals(f);
+        boolean obfuscateLiving = !properties.isDisableObfuscateLiving() && !"0".equals(f);
+
+        log.info("Network family tree [ personUuid={}, obfuscateLiving={}, httpRequestId={} ]",
+                personUuid,
+                obfuscateLiving,
+                request.getRequestId());
 
         Optional<FamilyTree> maybeFamilyTree = networkFamilyTreeService
                 .getFamilyTree(personUuid, obfuscateLiving, false);
@@ -85,13 +92,9 @@ public class AppController {
             return ResponseEntity.badRequest()
                     .contentType(MediaType.TEXT_HTML)
                     .cacheControl(CacheControl.noCache())
-                    .body("<h4>Identificador de persona inv&aacute;lido.</h4>");
+                    .body("<h4>Identificador de persona inv&aacute;lido.</h4>"
+                            + "<p>Por favor realiz&aacute; una nueva b&uacute;squeda.</p>");
         }
-
-        log.info("Network family tree [ personUuid={}, obfuscateLiving={}, httpRequestId={} ]",
-                personUuid,
-                obfuscateLiving,
-                request.getRequestId());
 
         FamilyTree familyTree = maybeFamilyTree.get();
 

@@ -31,7 +31,7 @@ public class PyvisNetworkMapper {
             String[] defaultColors,
             double size) {
         return new String[] {
-                person.getId(),
+                person.getId().toString(),
                 getPyvisNodeLabel(person, defaultLabel),
                 getPyvisNodeTitle(person),
                 person.isDistinguishedPerson()
@@ -86,7 +86,7 @@ public class PyvisNetworkMapper {
             double borderWidth,
             String color,
             double size) {
-        String nodeId = buildCoupleNodeId(person, spouse, noChildren);
+        String coupleNodeId = buildCoupleNodeId(person, spouse, noChildren);
         String personSurname = person.getSurname()
                 .map(Surname::value)
                 .orElse(defaultLabel);
@@ -94,7 +94,7 @@ public class PyvisNetworkMapper {
                 .map(Surname::value)
                 .orElse(defaultLabel);
         return new String[] {
-                nodeId,
+                coupleNodeId,
                 personSurname + " - " + spouseSurname,
                 person.getDisplayName() + " - " + spouse.getDisplayName(),
                 "triangle",
@@ -115,7 +115,7 @@ public class PyvisNetworkMapper {
             double width) {
         String coupleNodeId = buildCoupleNodeId(person, spouse, noChildren);
         return new String[] {
-                person.getId(),
+                person.getId().toString(),
                 coupleNodeId,
                 separated
                         ? separatedTitle
@@ -147,7 +147,7 @@ public class PyvisNetworkMapper {
 
     public String buildCoupleNodeId(EnrichedPerson person, EnrichedPerson spouse, boolean noChildren) {
         if (noChildren) {
-            return spouse.getId();
+            return spouse.getId().toString();
         }
 
         return (person.getOrderKey().compareTo(spouse.getOrderKey()) < 0)

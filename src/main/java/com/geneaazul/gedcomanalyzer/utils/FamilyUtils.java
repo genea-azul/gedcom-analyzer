@@ -4,7 +4,6 @@ import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.EnrichedSpouseWithChildren;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folg.gedcom.model.EventFact;
 import org.folg.gedcom.model.Family;
@@ -116,22 +115,8 @@ public class FamilyUtils {
     }
 
     public static final Comparator<EnrichedSpouseWithChildren> DATES_COMPARATOR = Comparator
-            .nullsLast((m1, m2) -> {
-                Date dop1 = m1.getDateOfPartners().orElse(null);
-                Date dop2 = m2.getDateOfPartners().orElse(null);
-                int cmp = ObjectUtils.compare(dop1, dop2, true);
-                if (cmp != 0) {
-                    return cmp;
-                }
-                Date dos1 = m1.getDateOfSeparation().orElse(null);
-                Date dos2 = m2.getDateOfSeparation().orElse(null);
-                cmp = ObjectUtils.compare(dos1, dos2, true);
-                if (cmp != 0) {
-                    return cmp;
-                }
-                String spouseId1 = m1.getSpouse().map(EnrichedPerson::getId).orElse("");
-                String spouseId2 = m2.getSpouse().map(EnrichedPerson::getId).orElse("");
-                return spouseId1.compareTo(spouseId2);
-            });
+            .<EnrichedSpouseWithChildren, Date>comparing(couple -> couple.getDateOfPartners().orElse(null), Comparator.nullsLast(Comparator.naturalOrder()))
+            .thenComparing(couple -> couple.getDateOfSeparation().orElse(null), Comparator.nullsLast(Comparator.naturalOrder()))
+            .thenComparing(couple -> couple.getSpouse().map(EnrichedPerson::getId).orElse(-1));
 
 }

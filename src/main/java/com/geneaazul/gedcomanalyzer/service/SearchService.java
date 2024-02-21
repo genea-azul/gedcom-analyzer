@@ -177,6 +177,7 @@ public class SearchService {
             @NonNull String placeOfBirth,
             @Nullable Boolean isAlive,
             @Nullable SexType sex,
+            boolean isExactPlace,
             List<EnrichedPerson> people) {
         return people
                 .stream()
@@ -185,7 +186,9 @@ public class SearchService {
                 .filter(person -> person
                         .getPlaceOfBirth()
                         .map(Place::forSearch)
-                        .map(pob -> pob.endsWith(placeOfBirth))
+                        .map(pob -> isExactPlace
+                                ? pob.equals(placeOfBirth)
+                                : pob.endsWith(placeOfBirth))
                         .orElse(false))
                 .toList();
     }
@@ -196,6 +199,7 @@ public class SearchService {
     public List<EnrichedPerson> findPersonsByPlaceOfDeath(
             @NonNull String placeOfDeath,
             @Nullable SexType sex,
+            boolean isExactPlace,
             List<EnrichedPerson> people) {
         return people
                 .stream()
@@ -204,7 +208,9 @@ public class SearchService {
                 .filter(person -> person
                         .getPlaceOfDeath()
                         .map(Place::forSearch)
-                        .map(pod -> pod.endsWith(placeOfDeath))
+                        .map(pod -> isExactPlace
+                                ? pod.equals(placeOfDeath)
+                                : pod.endsWith(placeOfDeath))
                         .orElse(false))
                 .toList();
     }
@@ -216,16 +222,19 @@ public class SearchService {
             @NonNull String placeOfEvent,
             @Nullable Boolean isAlive,
             @Nullable SexType sex,
+            boolean isExactPlace,
             List<EnrichedPerson> people) {
         return people
                 .stream()
                 .filter(person -> isAlive == null || isAlive == person.isAlive())
                 .filter(person -> sex == null || sex == person.getSex())
                 .filter(person -> person
-                        .getPlacesOfAnyEvent()
+                        .getPlacesOfAnyEvent(true)
                         .stream()
                         .map(Place::forSearch)
-                        .anyMatch(place -> place.endsWith(placeOfEvent)))
+                        .anyMatch(place -> isExactPlace
+                                ? place.equals(placeOfEvent)
+                                : place.endsWith(placeOfEvent)))
                 .toList();
     }
 
@@ -299,7 +308,7 @@ public class SearchService {
     }
 
     public List<PersonComparisonResults> findDuplicatedPersons(EnrichedGedcom gedcom) {
-        Set<String> comparedIds = new HashSet<>();
+        Set<Integer> comparedIds = new HashSet<>();
 
         List<PersonComparisonResults> results = gedcom.getPeople()
                 .stream()

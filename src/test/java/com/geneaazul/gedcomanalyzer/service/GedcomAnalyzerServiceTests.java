@@ -14,6 +14,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.DateUtils.AstrologicalSign;
 import com.geneaazul.gedcomanalyzer.utils.PathUtils;
+import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -181,12 +182,13 @@ public class GedcomAnalyzerServiceTests {
     }
 
     @Test
-    public void getSurnamesCardinalityByPlaceOfBirth() {
-        System.out.println("getSurnamesCardinalityByPlaceOfBirth (1):");
-        gedcomAnalyzerService
-                .getSurnamesCardinalityByPlaceOfBirth(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null)
+    public void getSurnamesCardinalityByPlaceOfAnyEvent() {
+        List<GedcomAnalyzerService.SurnamesCardinality> surnamesCardinalities = gedcomAnalyzerService
+                .getSurnamesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null, false);
+        System.out.println("getSurnamesCardinalityByPlaceOfAnyEvent (" + surnamesCardinalities.size() + "):");
+        surnamesCardinalities
                 .stream()
-                .limit(360)
+                .limit(504)
                 .forEach(cardinality -> {
 
                     List<String> variants = surnameService.getSurnameVariants(
@@ -209,11 +211,11 @@ public class GedcomAnalyzerServiceTests {
                 });
 
         /*
-        System.out.println("getSurnamesCardinalityByPlaceOfBirth (2):");
+        System.out.println("getSurnamesCardinalityByPlaceOfAnyEvent (2):");
         gedcomAnalyzerService
-                .getSurnamesCardinalityByPlaceOfBirth(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null)
+                .getSurnamesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null)
                 .stream()
-                .limit(360)
+                .limit(576)
                 .forEach(cardinality -> System.out.println(
                         cardinality.mainSurname().normalizedMainWord()
                         + " - " + cardinality.value()
@@ -234,9 +236,7 @@ public class GedcomAnalyzerServiceTests {
     public void getAncestryCountriesCardinalityByPlaceOfBirth() {
         System.out.println("getAncestryCountriesCardinalityByPlaceOfBirth:");
         gedcomAnalyzerService
-                .getAncestryCountriesCardinalityByPlaceOfBirth(gedcom.getPeople(), "Azul, Buenos Aires, Argentina")
-                .stream()
-                .limit(150)
+                .getAncestryCountriesCardinalityByPlaceOfBirth(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", false)
                 .forEach(cardinality -> System.out.println(
                         cardinality.country()
                                 + " - " + cardinality.cardinality()
@@ -248,7 +248,7 @@ public class GedcomAnalyzerServiceTests {
         System.out.println("findPersonsByPlaceOfBirth:");
         List<EnrichedPerson> people = searchService.findPersonsBySurname("Arbío", null, gedcom);
         searchService
-                .findPersonsByPlaceOfBirth("Argentina", null, null, people)
+                .findPersonsByPlaceOfBirth("Argentina", null, null, false, people)
                 .forEach(System.out::println);
     }
 
@@ -285,7 +285,7 @@ public class GedcomAnalyzerServiceTests {
     public void getAstrologicalSignsCardinalityByPlaceOfBirth() {
         System.out.println("getAstrologicalSignsCardinalityByPlaceOfBirth:");
         List<EnrichedPerson> personsByPlaceOfBirth = searchService
-                .findPersonsByPlaceOfBirth("Azul, Buenos Aires, Argentina", null, null, gedcom.getPeople());
+                .findPersonsByPlaceOfBirth("Azul, Buenos Aires, Argentina", null, null, false, gedcom.getPeople());
         Pair<Optional<EnrichedPerson>, Optional<EnrichedPerson>> minMaxDateOfBirth = gedcomAnalyzerService.getMinMaxFullDateOfBirth(personsByPlaceOfBirth);
         Map<AstrologicalSign, Integer> astrologicalSignsCardinality = gedcomAnalyzerService.getAstrologicalSignsCardinality(personsByPlaceOfBirth, true);
         int astrologicalSignsCount = astrologicalSignsCardinality.values().stream().reduce(0, Integer::sum);
@@ -308,7 +308,7 @@ public class GedcomAnalyzerServiceTests {
     public void getMonthOfDeathCardinalityByPlaceOfDeath() {
         System.out.println("getMonthOfDeathCardinalityByPlaceOfDeath:");
         List<EnrichedPerson> personsByPlaceOfDeath = searchService
-                .findPersonsByPlaceOfDeath("Azul, Buenos Aires, Argentina", null, gedcom.getPeople());
+                .findPersonsByPlaceOfDeath("Azul, Buenos Aires, Argentina", null, false, gedcom.getPeople());
         Pair<Optional<EnrichedPerson>, Optional<EnrichedPerson>> minMaxDateOfDeath = gedcomAnalyzerService.getMinMaxFullDateOfDeath(personsByPlaceOfDeath);
         Map<Month, Integer> monthsOfDeathCardinality = gedcomAnalyzerService.getMonthsOfDeathCardinality(personsByPlaceOfDeath);
         int monthsCount = monthsOfDeathCardinality.values().stream().reduce(0, Integer::sum);
@@ -328,14 +328,79 @@ public class GedcomAnalyzerServiceTests {
     }
 
     @Test
+    public void getOlderAndLongestLivingPersons() {
+        System.out.println("getOlderAndLongestLivingPersons:");
+        List<EnrichedPerson> personsByPlace = searchService
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", null, null, false, gedcom.getPeople());
+        List<EnrichedPerson> alivePersonsByPlace = searchService
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", true, null, false, gedcom.getPeople());
+        List<EnrichedPerson> deadPersonsByPlace = searchService
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", false, null, false, gedcom.getPeople());
+        List<EnrichedPerson> aliveMenByPlace = searchService
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", true, SexType.M, false, gedcom.getPeople())
+                .stream()
+                .sorted(PersonUtils.DATES_COMPARATOR)
+                .toList();
+        List<EnrichedPerson> aliveWomenByPlace = searchService
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", true, SexType.F, false, gedcom.getPeople())
+                .stream()
+                .sorted(PersonUtils.DATES_COMPARATOR)
+                .toList();
+        List<EnrichedPerson> deadMenByPlace = searchService
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", false, SexType.M, false, gedcom.getPeople())
+                .stream()
+                .filter(p -> p.getAge().isPresent())
+                .sorted(PersonUtils.AGES_COMPARATOR.reversed())
+                .toList();
+        List<EnrichedPerson> deadWomenByPlace = searchService
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", false, SexType.F, false, gedcom.getPeople())
+                .stream()
+                .filter(p -> p.getAge().isPresent())
+                .sorted(PersonUtils.AGES_COMPARATOR.reversed())
+                .toList();
+        System.out.println("\nTotal persons: " + personsByPlace.size());
+        System.out.println("Alive persons: " + alivePersonsByPlace.size());
+        System.out.println("Alive persons with day of birth: " + alivePersonsByPlace
+                .stream()
+                .filter(person -> person.getDateOfBirth().isPresent())
+                .count());
+        System.out.println("Dead persons: " + deadPersonsByPlace.size());
+        System.out.println("Dead persons with day of birth and death: " + deadPersonsByPlace
+                .stream()
+                .filter(person -> person.getDateOfBirth().isPresent())
+                .filter(person -> person.getDateOfDeath().isPresent())
+                .count());
+        System.out.println("\nOlder men: " + aliveMenByPlace.size());
+        aliveMenByPlace
+                .stream()
+                .limit(8)
+                .forEach(System.out::println);
+        System.out.println("\nOlder women: " + aliveWomenByPlace.size());
+        aliveWomenByPlace
+                .stream()
+                .limit(8)
+                .forEach(System.out::println);
+        System.out.println("\nLongest living men: " + deadMenByPlace.size());
+        deadMenByPlace
+                .stream()
+                .limit(8)
+                .forEach(System.out::println);
+        System.out.println("\nLongest living women: " + deadWomenByPlace.size());
+        deadWomenByPlace
+                .stream()
+                .limit(8)
+                .forEach(System.out::println);
+    }
+
+    @Test
     public void findPersonsWithManyChildrenByPlaceOfBirth() {
         System.out.println("findPersonsWithManyChildrenByPlaceOfBirth:");
         Stream.concat(
                 searchService
-                        .findPersonsByPlaceOfBirth("Azul, Buenos Aires, Argentina", true, null, gedcom.getPeople())
+                        .findPersonsByPlaceOfBirth("Azul, Buenos Aires, Argentina", true, null, false, gedcom.getPeople())
                         .stream(),
                 searchService
-                        .findPersonsByPlaceOfBirth("Azul, Buenos Aires, Argentina", true, null, gedcom.getPeople())
+                        .findPersonsByPlaceOfBirth("Azul, Buenos Aires, Argentina", true, null, false, gedcom.getPeople())
                         .stream()
                         .map(EnrichedPerson::getParents)
                         .flatMap(List::stream))
@@ -398,7 +463,7 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void getPeopleInTree() {
-        EnrichedPerson person = Objects.requireNonNull(gedcom.getPersonById("I4"));
+        EnrichedPerson person = Objects.requireNonNull(gedcom.getPersonById(4));
         personService.setTransientProperties(person, true);
 
         System.out.println("setTransientProperties (excludeRootPerson):");
@@ -419,7 +484,7 @@ public class GedcomAnalyzerServiceTests {
                     }
                     return List.copyOf(relationships.getOrderedRelationships());
                 })
-                .sorted(Comparator.comparing(relationships -> relationships.get(0)))
+                .sorted(Comparator.comparing(List::getFirst))
                 .limit(50)
                 .forEach(relationships -> System.out.println(
                         relationships
@@ -429,23 +494,22 @@ public class GedcomAnalyzerServiceTests {
                                 .map(FormattedRelationship::toString)
                                 .collect(Collectors.joining(", "))
                         + "  --  "
-                        + relationships.get(0).person()));
+                        + relationships.getFirst().person()));
     }
 
-    @Disabled
     @Test
     @SuppressWarnings("DataFlowIssue")
     public void getShortestPathsToPersons() {
-        EnrichedPerson person = gedcom.getPersonById("I4");
-        Pair<Map<String, Integer>, Map<String, List<String>>> distancesAndPaths = PathUtils.calculateShortestPathFromSource(gedcom, person);
+        EnrichedPerson person = gedcom.getPersonById(4);
+        Pair<Map<Integer, Integer>, Map<Integer, List<Integer>>> distancesAndPaths = PathUtils.calculateShortestPathFromSource(gedcom, person, true);
 
         System.out.println("getShortestPathsToPersons:");
-        System.out.println("distance from I4 to I1 (" + gedcom.getPersonById("I1").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I1"));
-        System.out.println("distance from I4 to I2 (" + gedcom.getPersonById("I2").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I2"));
-        System.out.println("distance from I4 to I3 (" + gedcom.getPersonById("I3").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I3"));
-        System.out.println("distance from I4 to I4 (" + gedcom.getPersonById("I4").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I4"));
-        System.out.println("distance from I4 to I5 (" + gedcom.getPersonById("I5").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I5"));
-        System.out.println("distance from I4 to I6 (" + gedcom.getPersonById("I6").getDisplayName() + "): " + distancesAndPaths.getLeft().get("I6"));
+        System.out.println("distance from I4 to I1 (" + gedcom.getPersonById(1).getDisplayName() + "): " + distancesAndPaths.getLeft().get(1));
+        System.out.println("distance from I4 to I2 (" + gedcom.getPersonById(2).getDisplayName() + "): " + distancesAndPaths.getLeft().get(2));
+        System.out.println("distance from I4 to I3 (" + gedcom.getPersonById(3).getDisplayName() + "): " + distancesAndPaths.getLeft().get(3));
+        System.out.println("distance from I4 to I4 (" + gedcom.getPersonById(4).getDisplayName() + "): " + distancesAndPaths.getLeft().get(4));
+        System.out.println("distance from I4 to I5 (" + gedcom.getPersonById(5).getDisplayName() + "): " + distancesAndPaths.getLeft().get(5));
+        System.out.println("distance from I4 to I6 (" + gedcom.getPersonById(6).getDisplayName() + "): " + distancesAndPaths.getLeft().get(6));
 
         System.out.println();
         gedcom
@@ -456,10 +520,10 @@ public class GedcomAnalyzerServiceTests {
                         .<EnrichedPerson, Integer>comparing(d -> distancesAndPaths.getLeft().get(d.getId()), Comparator.nullsLast(Comparator.naturalOrder()))
                         .thenComparing(d -> d.getSurname().map(Surname::simplified).orElse(null), Comparator.nullsLast(Comparator.naturalOrder()))
                         .thenComparing(d -> d.getGivenName().map(GivenName::simplified).orElse(null), Comparator.nullsLast(Comparator.naturalOrder())))
-                .forEach(distinguished -> System.out.println(StringUtils.rightPad(distinguished.getId(), 9) + distinguished.getDisplayName() + ": " + distancesAndPaths.getLeft().get(distinguished.getId())));
+                .forEach(distinguished -> System.out.println(StringUtils.rightPad(distinguished.getId().toString(), 8) + distinguished.getDisplayName() + ": " + distancesAndPaths.getLeft().get(distinguished.getId())));
 
         System.out.println();
-        List<String> shortestPath = distancesAndPaths.getRight().getOrDefault("I525113", List.of());
+        List<Integer> shortestPath = distancesAndPaths.getRight().getOrDefault(525113, List.of());
         for (int i = 0; i < shortestPath.size() - 1; i++) {
             EnrichedPerson personA = gedcom.getPersonById(shortestPath.get(i));
             EnrichedPerson personB = gedcom.getPersonById(shortestPath.get(i + 1));

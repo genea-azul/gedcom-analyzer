@@ -35,13 +35,13 @@ public class EnrichedGedcom {
     private final List<EnrichedPerson> people;
 
     // Indexes
-    private final Map<String, EnrichedPerson> peopleByIdIndex;
+    private final Map<Integer, EnrichedPerson> peopleByIdIndex;
     private final Map<UUID, EnrichedPerson> peopleByUuidIndex;
     private final Map<NameAndSex, List<EnrichedPerson>> peopleByNormalizedSurnameMainWordAndSexIndex;
     private final Map<NameSexYear, List<EnrichedPerson>> peopleByNormalizedSurnameMainWordAndSexAndYearOfBirthIndex;
     private final Map<NameSexYear, List<EnrichedPerson>> peopleByNormalizedSurnameMainWordAndSexAndYearOfDeathIndex;
 
-    private final Map<String, Place> places = new HashMap<>();
+    private final Map<String, Place> places = new HashMap<>(256);
 
     private EnrichedGedcom(
             Gedcom legacyGedcom,
@@ -110,7 +110,7 @@ public class EnrichedGedcom {
                 .map(p -> EnrichedPerson.of(p, this))
                 .toList();
 
-        Map<String, EnrichedPerson> enrichedPeopleIndex = enrichedPeople
+        Map<Integer, EnrichedPerson> enrichedPeopleIndex = enrichedPeople
                 .stream()
                 .collect(Collectors.toUnmodifiableMap(EnrichedPerson::getId, Function.identity()));
 
@@ -121,7 +121,7 @@ public class EnrichedGedcom {
     }
 
     @CheckForNull
-    public EnrichedPerson getPersonById(String id) {
+    public EnrichedPerson getPersonById(Integer id) {
         return peopleByIdIndex.get(id);
     }
 

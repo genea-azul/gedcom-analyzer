@@ -23,6 +23,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.OffsetDateTime;
@@ -309,7 +310,10 @@ public class FamilyService {
                 .peek(person -> personService.setTransientProperties(person, true))
                 .toList();
 
-        ObfuscationType obfuscationType = Boolean.TRUE.equals(searchFamilyDto.getObfuscateLiving())
+        boolean obfuscateLiving = !properties.isDisableObfuscateLiving()
+                && BooleanUtils.isNotFalse(searchFamilyDto.getObfuscateLiving());
+
+        ObfuscationType obfuscationType = obfuscateLiving
                 ? ObfuscationType.SKIP_MAIN_PERSON_NAME
                 : ObfuscationType.NONE;
         List<PersonDto> people = personMapper.toPersonDto(result, obfuscationType);

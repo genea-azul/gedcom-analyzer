@@ -5,7 +5,6 @@ import com.geneaazul.gedcomanalyzer.utils.SetUtils;
 
 import org.springframework.util.Assert;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collection;
@@ -31,7 +30,7 @@ import lombok.ToString;
 public class Relationships {
 
     @ToString.Include
-    private final String personId;
+    private final Integer personId;
     @ToString.Include
     private final TreeSet<Relationship> orderedRelationships;
     @ToString.Include
@@ -119,10 +118,15 @@ public class Relationships {
     }
 
     public void propagateTreeSidesToRelationships() {
-        TreeSet<Relationship> withPropagatedTreeSides = orderedRelationships
+        if (orderedRelationships
+                .stream()
+                .allMatch(relationship -> Objects.equals(relationship.treeSides(), treeSides))) {
+            return;
+        }
+        List<Relationship> withPropagatedTreeSides = orderedRelationships
                 .stream()
                 .map(relationship -> relationship.withTreeSides(treeSides))
-                .collect(Collectors.toCollection(TreeSet::new));
+                .toList();
         orderedRelationships.clear();
         orderedRelationships.addAll(withPropagatedTreeSides);
     }
@@ -146,7 +150,7 @@ public class Relationships {
         Assert.isTrue(t2.size() == 1, "Error");
 
         Collection<Relationship> relationships = t1;
-        Relationship toMergeRelationship = t2.iterator().next();
+        Relationship toMergeRelationship = t2.first();
 
         if (!toMergeRelationship.isInLaw()
                 && !relationships.isEmpty()) {
@@ -169,13 +173,6 @@ public class Relationships {
                         .filter(r -> !r.isInLaw())
                         .collect(Collectors.toList());
             }
-        }
-
-        if (CollectionUtils.isNotEmpty(toMergeRelationship.treeSides())) {
-            relationships = relationships
-                    .stream()
-                    .filter(toMergeRelationship::isTreeSideCompatible)
-                    .toList();
         }
 
         Set<TreeSideType> treeSides = Stream

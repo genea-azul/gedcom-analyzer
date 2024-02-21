@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Install FamilySearch GEDCOM Java in local Maven repo
 # https://github.com/FamilySearch/gedcom5-java
 

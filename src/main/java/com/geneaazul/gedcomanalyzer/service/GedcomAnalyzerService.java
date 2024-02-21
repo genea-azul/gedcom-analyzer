@@ -228,13 +228,13 @@ public class GedcomAnalyzerService {
      */
     public List<EnrichedPerson> getInitialPersonOfOrphanTrees(EnrichedGedcom gedcom) {
 
-        Map<String, UUID> visitedPersons = new HashMap<>();
-        Set<String> orphanPersons = new LinkedHashSet<>();
+        Map<Integer, UUID> visitedPersons = new HashMap<>();
+        Set<Integer> orphanPersons = new LinkedHashSet<>();
 
         gedcom.getPeople()
                 .forEach(person -> getReachedSubTreeIds(person, visitedPersons, orphanPersons, UUID.randomUUID(), 0));
 
-        String firstPersonId = gedcom.getPeople().isEmpty() ? null : gedcom.getPeople().get(0).getId();
+        Integer firstPersonId = gedcom.getPeople().isEmpty() ? null : gedcom.getPeople().getFirst().getId();
 
         return orphanPersons
                 .stream()
@@ -250,8 +250,8 @@ public class GedcomAnalyzerService {
      */
     private static Set<UUID> getReachedSubTreeIds(
             EnrichedPerson person,
-            Map<String, UUID> visitedPersons,
-            Set<String> orphanPersons,
+            Map<Integer, UUID> visitedPersons,
+            Set<Integer> orphanPersons,
             UUID subTreeId,
             int level) {
 
@@ -305,7 +305,7 @@ public class GedcomAnalyzerService {
      */
     public Map<EnrichedPerson, Pair<String, Integer>> getMostFrequentSurnamesByPersonSubTree(List<EnrichedPerson> people) {
 
-        Set<String> visitedPersons = new HashSet<>();
+        Set<Integer> visitedPersons = new HashSet<>();
 
         return people
                 .stream()
@@ -385,13 +385,14 @@ public class GedcomAnalyzerService {
     /**
      * .
      */
-    public List<SurnamesCardinality> getSurnamesCardinalityByPlaceOfBirth(
+    public List<SurnamesCardinality> getSurnamesCardinalityByPlaceOfAnyEvent(
             List<EnrichedPerson> people,
             String placeOfBirth,
-            @Nullable Boolean isAlive) {
+            @Nullable Boolean isAlive,
+            boolean isExactPlace) {
 
         List<Surname> surnamesByPlaceOfBirth = searchService
-                .findPersonsByPlaceOfBirth(placeOfBirth, isAlive, null, people)
+                .findPersonsByPlaceOfAnyEvent(placeOfBirth, isAlive, null, isExactPlace, people)
                 .stream()
                 .map(EnrichedPerson::getSurname)
                 .flatMap(Optional::stream)
@@ -442,11 +443,11 @@ public class GedcomAnalyzerService {
                     return new SurnamesCardinality(
                             entry.getValue(),
                             Surname.of(
-                                    cardinalityList.get(0).getLeft(),
-                                    NameUtils.simplifyName(cardinalityList.get(0).getLeft()),
+                                    cardinalityList.getFirst().getLeft(),
+                                    NameUtils.simplifyName(cardinalityList.getFirst().getLeft()),
                                     normalizedMainWord,
                                     shortenedMainWord),
-                            cardinalityList.get(0).getRight(),
+                            cardinalityList.getFirst().getRight(),
                             cardinalityList
                                     .stream()
                                     .skip(1)
@@ -476,10 +477,13 @@ public class GedcomAnalyzerService {
     /**
      * .
      */
-    public List<CountryCardinality> getAncestryCountriesCardinalityByPlaceOfBirth(List<EnrichedPerson> people, String placeOfBirth) {
+    public List<CountryCardinality> getAncestryCountriesCardinalityByPlaceOfBirth(
+            List<EnrichedPerson> people,
+            String placeOfBirth,
+            boolean isExactPlace) {
 
         List<Pair<Optional<String>, Set<String>>> countries = searchService
-                .findPersonsByPlaceOfBirth(placeOfBirth, Boolean.TRUE, null, people)
+                .findPersonsByPlaceOfBirth(placeOfBirth, Boolean.TRUE, null, isExactPlace, people)
                 .stream()
                 .map(person -> Pair.of(
                         person.getSurname().map(Surname::value),
@@ -577,11 +581,11 @@ public class GedcomAnalyzerService {
 
         Optional<EnrichedPerson> minDateOfBirth = peopleWithFullDateOfBirth
                 .stream()
-                .reduce((p1, p2) -> p1.getDateOfBirth().get().isBefore(p2.getDateOfBirth().get().toLocalDate()) ? p1 : p2);
+                .reduce((p1, p2) -> p1.getDateOfBirth().get().isBefore(p2.getDateOfBirth().get()) ? p1 : p2);
 
         Optional<EnrichedPerson> maxDateOfBirth = peopleWithFullDateOfBirth
                 .stream()
-                .reduce((p1, p2) -> p2.getDateOfBirth().get().isBefore(p1.getDateOfBirth().get().toLocalDate()) ? p1 : p2);
+                .reduce((p1, p2) -> p2.getDateOfBirth().get().isBefore(p1.getDateOfBirth().get()) ? p1 : p2);
 
         return Pair.of(minDateOfBirth, maxDateOfBirth);
     }
@@ -599,11 +603,11 @@ public class GedcomAnalyzerService {
 
         Optional<EnrichedPerson> minDateOfDeath = peopleWithFullDateOfDeath
                 .stream()
-                .reduce((p1, p2) -> p1.getDateOfDeath().get().isBefore(p2.getDateOfDeath().get().toLocalDate()) ? p1 : p2);
+                .reduce((p1, p2) -> p1.getDateOfDeath().get().isBefore(p2.getDateOfDeath().get()) ? p1 : p2);
 
         Optional<EnrichedPerson> maxDateOfDeath = peopleWithFullDateOfDeath
                 .stream()
-                .reduce((p1, p2) -> p2.getDateOfDeath().get().isBefore(p1.getDateOfDeath().get().toLocalDate()) ? p1 : p2);
+                .reduce((p1, p2) -> p2.getDateOfDeath().get().isBefore(p1.getDateOfDeath().get()) ? p1 : p2);
 
         return Pair.of(minDateOfDeath, maxDateOfDeath);
     }
@@ -613,7 +617,7 @@ public class GedcomAnalyzerService {
      */
     private static <T> List<T> treeTraversal(
             EnrichedPerson person,
-            Set<String> visitedPersons,
+            Set<Integer> visitedPersons,
             int level,
             Function<EnrichedPerson, T> valueExtractor) {
 

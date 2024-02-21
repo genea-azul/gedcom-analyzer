@@ -80,6 +80,9 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
             boolean obfuscateLiving,
             List<List<Relationship>> relationshipsWithNotInLawPriority) {
 
+        log.info("Generating network family tree HTML [ personId={}, personUuid={} ]", person.getId(), person.getUuid());
+        long startTime = System.currentTimeMillis();
+
         Path htmlPyvisNetworkFilePath = getNetworkHtmlFile(
                 person,
                 familyTreeFileIdPrefix,
@@ -101,6 +104,9 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                 csvPyvisNetworkEdgesFilePath,
                 obfuscateLiving,
                 relationshipsWithNotInLawPriority);
+
+        long totalTime = System.currentTimeMillis() - startTime;
+        log.info("Generating network family tree HTML [ personId={}, personUuid={}, ms={} ]", person.getId(), person.getUuid(), totalTime);
     }
 
     @Override
@@ -150,12 +156,11 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
             Path csvPyvisNetworkEdgesFilePath,
             boolean obfuscateLiving,
             List<List<Relationship>> peopleInTree) {
-        log.info("Generating Network family tree HTML");
 
         List<EnrichedPerson> peopleToExport = peopleInTree
                 .stream()
                 .limit(properties.getMaxPyvisNetworkNodesToExport())
-                .map(relationships -> relationships.get(0))
+                .map(List::getFirst)
                 .map(Relationship::person)
                 .toList();
 
@@ -247,7 +252,7 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                 .setHeader(HEADERS)
                 .build();
 
-        Set<String> idsToExport = people
+        Set<Integer> idsToExport = people
                 .stream()
                 .map(EnrichedPerson::getId)
                 .collect(Collectors.toUnmodifiableSet());
@@ -314,7 +319,7 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                 .setHeader(HEADERS)
                 .build();
 
-        Set<String> idsToExport = people
+        Set<Integer> idsToExport = people
                 .stream()
                 .map(EnrichedPerson::getId)
                 .collect(Collectors.toUnmodifiableSet());
@@ -356,7 +361,7 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                         .filter(swc -> hasChildrenToExport(swc.getChildren(), idsToExport))
                         .forEach(swc -> {
                             String sourceId = swc.getSpouse().isEmpty()
-                                    ? person.getId()
+                                    ? person.getId().toString()
                                     : pyvisNetworkMapper.buildCoupleNodeId(person, swc.getSpouse().get(), false);
                             swc.getChildrenWithReference()
                                     .stream()
@@ -366,7 +371,7 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                                         try {
                                             String[] childCsvRecord = pyvisNetworkMapper.toPyvisChildEdgeCsvRecord(
                                                     sourceId,
-                                                    cwr.person().getId(),
+                                                    cwr.person().getId().toString(),
                                                     swc.getSpouse().isEmpty(),
                                                     cwr.referenceType().isPresent(),
                                                     defaultChildTitle,
@@ -384,7 +389,7 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
         }
     }
 
-    private boolean hasChildrenToExport(List<EnrichedPerson> children, Set<String> idsToExport) {
+    private boolean hasChildrenToExport(List<EnrichedPerson> children, Set<Integer> idsToExport) {
         return !children.isEmpty()
                 && children
                 .stream()

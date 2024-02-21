@@ -1,5 +1,6 @@
 package com.geneaazul.gedcomanalyzer.utils;
 
+import com.geneaazul.gedcomanalyzer.model.Age;
 import com.geneaazul.gedcomanalyzer.model.Aka;
 import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
@@ -12,8 +13,6 @@ import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
-import org.apache.commons.collections4.ComparatorUtils;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.rng.UniformRandomProvider;
@@ -77,16 +76,21 @@ public class PersonUtils {
 
     private static final UniformRandomProvider RNG = RandomSource.JDK.create();
 
-    public static UUID getUuid(
-            Person person,
-            @Nullable ZonedDateTime modifiedDateTime) {
-
-        long personId = Optional.of(person.getId())
+    public static Integer getId(Person person) {
+        return Optional.of(person.getId())
                 .map(id -> id.startsWith("I") ? id.substring(1) : id)
                 .filter(StringUtils::isNumeric)
-                .map(Long::valueOf)
-                .map(id -> (modifiedDateTime != null) ? id * (modifiedDateTime.getNano() / 1_000) : id)
-                .orElseGet(RNG::nextLong);
+                .map(Integer::valueOf)
+                .orElseGet(RNG::nextInt);
+    }
+
+    public static UUID getUuid(
+            Integer id,
+            @Nullable ZonedDateTime modifiedDateTime) {
+
+        long personId = (modifiedDateTime != null)
+                ? (long) id * (modifiedDateTime.getNano() / 1_000)
+                : id;
 
         long timestamp = Optional.ofNullable(modifiedDateTime)
                 .map(ZonedDateTime::toEpochSecond)
@@ -413,11 +417,11 @@ public class PersonUtils {
                 .toList();
     }
 
-    public static List<Pair<String, Optional<ReferenceType>>> getParentsWithReference(Person legacyPerson, Gedcom legacyGedcom) {
-        Map<String, Set<ReferenceType>> references = legacyPerson
+    public static List<Pair<Integer, Optional<ReferenceType>>> getParentsWithReference(Person legacyPerson, Gedcom legacyGedcom) {
+        Map<Integer, Set<ReferenceType>> references = legacyPerson
                 .getParentFamilyRefs()
                 .stream()
-                .sorted(ComparatorUtils.transformedComparator(Comparator.nullsFirst(Comparator.naturalOrder()), ParentFamilyRef::getRelationshipType))
+                .sorted(Comparator.comparing(ParentFamilyRef::getRelationshipType, Comparator.nullsFirst(Comparator.naturalOrder())))
                 .flatMap(familyRef -> {
                     Family family = familyRef.getFamily(legacyGedcom);
                     ReferenceType referenceType = PersonUtils.resolveParentReferenceType(familyRef.getRelationshipType());
@@ -427,7 +431,7 @@ public class PersonUtils {
                                     family.getHusbands(legacyGedcom),
                                     family.getWives(legacyGedcom))
                             .flatMap(List::stream)
-                            .map(Person::getId)
+                            .map(PersonUtils::getId)
                             .map(personId -> Map.entry(personId, referenceType));
                 })
                 .collect(Collectors.groupingBy(
@@ -490,11 +494,11 @@ public class PersonUtils {
                 .getSpouseFamilies(legacyGedcom)
                 .stream()
                 .map(family -> {
-                    List<Pair<String, Optional<ReferenceType>>> children = family
+                    List<Pair<Integer, Optional<ReferenceType>>> children = family
                             .getChildren(legacyGedcom)
                             .stream()
                             .map(child -> Pair.of(
-                                    child.getId(),
+                                    PersonUtils.getId(child),
                                     child
                                             .getParentFamilyRefs()
                                             .stream()
@@ -610,20 +614,12 @@ public class PersonUtils {
     }
 
     public static final Comparator<EnrichedPerson> DATES_COMPARATOR = Comparator
-            .nullsLast((p1, p2) -> {
-                Date dob1 = p1.getDateOfBirth().orElse(null);
-                Date dob2 = p2.getDateOfBirth().orElse(null);
-                int cmp = ObjectUtils.compare(dob1, dob2, true);
-                if (cmp != 0) {
-                    return cmp;
-                }
-                Date dod1 = p1.getDateOfDeath().orElse(null);
-                Date dod2 = p2.getDateOfDeath().orElse(null);
-                cmp = ObjectUtils.compare(dod1, dod2, true);
-                if (cmp != 0) {
-                    return cmp;
-                }
-                return p1.getId().compareTo(p2.getId());
-            });
+            .<EnrichedPerson, Date>comparing(person -> person.getDateOfBirth().orElse(null), Comparator.nullsLast(Comparator.naturalOrder()))
+            .thenComparing(person -> person.getDateOfDeath().orElse(null), Comparator.nullsLast(Comparator.naturalOrder()))
+            .thenComparing(EnrichedPerson::getId);
+
+    public static final Comparator<EnrichedPerson> AGES_COMPARATOR = Comparator
+            .<EnrichedPerson, Age>comparing(person -> person.getAge().orElse(null), Comparator.nullsFirst(Comparator.naturalOrder()))
+            .thenComparing(EnrichedPerson::getId);
 
 }

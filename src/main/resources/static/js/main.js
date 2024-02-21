@@ -106,7 +106,7 @@ $(document).ready(function() {
         contentType: "application/json",
         success: function(data) {
             $("#persons-count-container")
-                .html(data.personsCount);
+                .html(data.personsCount.toLocaleString("es-AR"));
         },
         error: function(xhr) {
             console.log(xhr);
@@ -254,7 +254,7 @@ $(document).ready(function() {
                     setTimeout(function() {
                         enableFamilyTreeSearch(resultComponentLocator);
                         enableFamilyTreeView(resultComponentLocator);
-                    }, 1750);
+                    }, 1800);
                 }
 
                 var surnamesInRequest = getSurnamesInRequest(searchFamilyRequest);

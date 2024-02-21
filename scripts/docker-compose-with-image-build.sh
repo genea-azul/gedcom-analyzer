@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Build docker image
 ./scripts/docker-image-build-only.sh
 

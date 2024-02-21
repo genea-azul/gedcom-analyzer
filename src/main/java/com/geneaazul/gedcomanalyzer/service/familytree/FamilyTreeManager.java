@@ -123,8 +123,8 @@ public class FamilyTreeManager {
                     }
                     return List.copyOf(relationships.getOrderedRelationships());
                 })
-                .sorted(Comparator.comparing(relationships -> relationships.get(0)))
-                .peek(relationships -> relationships.get(0).person().setOrderKey(orderKey.getAndIncrement()))
+                .sorted(Comparator.comparing(List::getFirst))
+                .peek(relationships -> relationships.getFirst().person().setOrderKey(orderKey.getAndIncrement()))
                 .toList();
     }
 

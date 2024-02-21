@@ -89,7 +89,7 @@ public class AppControllerIT extends AbstractControllerIT {
 
         SearchFamilyResultDto searchFamilyResult = objectMapper.readValue(searchResult, SearchFamilyResultDto.class);
 
-        UUID personUuid = searchFamilyResult.getPeople().get(0).getUuid();
+        UUID personUuid = searchFamilyResult.getPeople().getFirst().getUuid();
 
         url = "/family-tree/" + personUuid;
         MvcResult result = mvc.perform(get(url)

@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Install ICU4J Transliterator in local Maven repo
 # https://github.com/unicode-org/icu
 

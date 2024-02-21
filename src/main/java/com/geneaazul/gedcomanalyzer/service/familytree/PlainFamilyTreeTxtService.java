@@ -49,7 +49,7 @@ public class PlainFamilyTreeTxtService extends PlainFamilyTreeService {
             EnrichedPerson person,
             boolean obfuscateLiving,
             List<List<Relationship>> peopleInTree) {
-        log.info("Generating Plain family tree TXT");
+        log.info("Generating plain family tree TXT");
 
         List<FormattedRelationship> formattedRelationships = peopleInTree
                 .stream()

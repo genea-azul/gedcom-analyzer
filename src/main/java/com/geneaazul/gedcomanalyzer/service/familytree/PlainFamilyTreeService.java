@@ -63,6 +63,9 @@ public abstract class PlainFamilyTreeService implements FamilyTreeService {
             boolean obfuscateLiving,
             List<List<Relationship>> relationshipsWithNotInLawPriority) {
 
+        log.info("Generating plain family tree [ personId={}, personUuid={} ]", person.getId(), person.getUuid());
+        long startTime = System.currentTimeMillis();
+
         Path exportFilePath = getExportFilePath(
                 person,
                 familyTreeFileIdPrefix,
@@ -73,6 +76,9 @@ public abstract class PlainFamilyTreeService implements FamilyTreeService {
                 person,
                 obfuscateLiving,
                 relationshipsWithNotInLawPriority);
+
+        long totalTime = System.currentTimeMillis() - startTime;
+        log.info("Completed plain family tree [ personId={}, personUuid={}, ms={} ]", person.getId(), person.getUuid(), totalTime);
     }
 
     @Override

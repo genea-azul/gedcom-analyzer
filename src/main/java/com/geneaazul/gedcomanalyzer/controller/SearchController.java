@@ -1,6 +1,7 @@
 package com.geneaazul.gedcomanalyzer.controller;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
+import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.FamilyTree;
 import com.geneaazul.gedcomanalyzer.model.FamilyTreeType;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDetailsDto;
@@ -19,6 +20,7 @@ import com.geneaazul.gedcomanalyzer.utils.InetAddressUtils;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.util.InMemoryResource;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -79,11 +81,14 @@ public class SearchController {
             searchId = familyService.persistSearch(searchFamilyDto, clientIpAddress.orElse(null));
         }
 
+        boolean obfuscateLiving = !properties.isDisableObfuscateLiving()
+                && BooleanUtils.isNotFalse(searchFamilyDto.getObfuscateLiving());
+
         SearchFamilyResultDto searchFamilyResult = familyService.search(searchFamilyDto);
 
         log.info("Search family [ searchId={}, obfuscateLiving={}, forceRewrite={}, peopleInResult={}, potentialResults={}, errors={}, httpRequestId={} ]",
                 searchId.orElse(null),
-                searchFamilyDto.getObfuscateLiving(),
+                obfuscateLiving,
                 searchFamilyDto.getIsForceRewrite(),
                 searchFamilyResult.getPeople().size(),
                 searchFamilyResult.getPotentialResults(),
@@ -97,7 +102,7 @@ public class SearchController {
         // Queue PDF Family Tree and HTML Pyvis Network generation
         familyTreeManager.queueFamilyTreeGeneration(
                 searchFamilyResult.getPeople(),
-                searchFamilyDto.getObfuscateLiving(),
+                obfuscateLiving,
                 searchFamilyDto.getIsForceRewrite(),
                 List.of(FamilyTreeType.PLAIN_PDF, FamilyTreeType.NETWORK));
 
@@ -165,15 +170,29 @@ public class SearchController {
             @RequestParam @Nullable Boolean forceRewrite,
             HttpServletRequest request) throws IOException {
 
+        boolean obfuscateLivingEnabled = !properties.isDisableObfuscateLiving() && BooleanUtils.isNotFalse(obfuscateLiving);
+
         Optional<FamilyTree> maybeFamilyTree = plainFamilyTreePdfService
                 .getFamilyTree(
                         personUuid,
-                        BooleanUtils.isNotFalse(obfuscateLiving),
+                        obfuscateLivingEnabled,
                         BooleanUtils.isTrue(forceRewrite));
+
+        log.info("Plain family tree [ personUuid={}, personId={}, obfuscateLiving={}, forceRewrite={}, httpRequestId={} ]",
+                personUuid,
+                maybeFamilyTree
+                        .map(FamilyTree::person)
+                        .map(EnrichedPerson::getId)
+                        .orElse(null),
+                obfuscateLivingEnabled,
+                forceRewrite,
+                request.getRequestId());
 
         if (maybeFamilyTree.isEmpty()) {
             return ResponseEntity.badRequest()
-                    .body(new InMemoryResource("Invalid person!"));
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(new InMemoryResource("<h4>Identificador de persona inv&aacute;lido.</h4>"
+                            + "<p>Por favor realiz&aacute; una nueva b&uacute;squeda.</p>"));
         }
 
         FamilyTree familyTree = maybeFamilyTree.get();
@@ -182,13 +201,6 @@ public class SearchController {
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + familyTree.filename());
         headers.add(HttpHeaders.CONTENT_LANGUAGE, familyTree.locale().toString());
         headers.add("File-Name", familyTree.filename());
-
-        log.info("Plain family tree [ personUuid={}, personId={}, obfuscateLiving={}, forceRewrite={}, httpRequestId={} ]",
-                personUuid,
-                familyTree.person().getId(),
-                obfuscateLiving,
-                forceRewrite,
-                request.getRequestId());
 
         PathResource resource = new PathResource(familyTree.path());
 

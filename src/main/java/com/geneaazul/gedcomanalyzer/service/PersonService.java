@@ -21,6 +21,8 @@ import com.geneaazul.gedcomanalyzer.utils.SetUtils;
 
 import org.springframework.stereotype.Service;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,6 +30,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import jakarta.annotation.Nullable;
@@ -50,6 +53,7 @@ public class PersonService {
     }
 
     public List<Relationships> setTransientProperties(EnrichedPerson person, boolean excludeRootPerson) {
+        // Traverse tree
         List<Relationships> relationships = getPeopleInTree(person, excludeRootPerson, false);
 
         List<Relationship> lastRelationships = relationships
@@ -80,7 +84,7 @@ public class PersonService {
     }
 
     public List<Relationships> getPeopleInTree(EnrichedPerson person, boolean excludeRootPerson, boolean onlyAscDirection) {
-        Map<String, Relationships> visitedPersons = new LinkedHashMap<>();
+        Map<Integer, Relationships> visitedPersons = new LinkedHashMap<>(128);
         traversePeopleInTree(
                 Relationship.empty(person),
                 null,
@@ -100,8 +104,8 @@ public class PersonService {
 
     private static void traversePeopleInTree(
             @NonNull Relationship toVisitRelationship,
-            @Nullable String previousPersonId,
-            @NonNull Map<String, Relationships> visitedPersons,
+            @Nullable Integer previousPersonId,
+            @NonNull Map<Integer, Relationships> visitedPersons,
             @NonNull TreeTraversalDirection direction,
             @NonNull Relationships.VisitedRelationshipTraversalStrategy visitedRelationshipTraversalStrategy,
             boolean onlyPropagateTreeSides) {
@@ -189,18 +193,15 @@ public class PersonService {
     }
 
     private static void mergeTreeSides(
-            @NonNull Map<String, Relationships> visitedPersons,
+            @NonNull Map<Integer, Relationships> visitedPersons,
             @NonNull Relationship toVisitRelationship,
-            @Nullable String previousPersonId,
+            @Nullable Integer previousPersonId,
             @NonNull TreeTraversalDirection direction,
             @NonNull Relationships.VisitedRelationshipTraversalStrategy visitedRelationshipTraversalStrategy) {
 
         Relationships relationships = visitedPersons.get(toVisitRelationship.person().getId());
 
-        boolean isTreeSideCompatible = toVisitRelationship.isTreeSideCompatible(relationships.getOrderedRelationships());
-        boolean isMissingTreeSides = !SetUtils.containsAll(relationships.getTreeSides(), toVisitRelationship.treeSides());
-
-        if (!isTreeSideCompatible || !isMissingTreeSides) {
+        if (SetUtils.containsAll(relationships.getTreeSides(), toVisitRelationship.treeSides())) {
             return;
         }
 
@@ -209,7 +210,7 @@ public class PersonService {
                 Relationships.from(toVisitRelationship),
                 Relationships::mergeTreeSides);
 
-        // Propagate merged tree sides to descendants
+        // Propagate merged tree sides to relatives
         resolveRelativesToTraverse(
                 toVisitRelationship.person(),
                 direction,
@@ -257,32 +258,55 @@ public class PersonService {
             @NonNull EnrichedPerson person,
             @NonNull TreeTraversalDirection direction,
             @Nullable Set<TreeSideType> treeSides,
-            @Nullable String previousPersonId) {
+            @Nullable Integer previousPersonId) {
 
         if (direction == TreeTraversalDirection.SAME) {
             return Stream.of();
         }
 
-        List<String> singleRelatedPersonIds = List.of(person.getId());
+        List<Integer> singleRelatedPersonIds = List.of(person.getId());
 
-        List<Optional<String>> previousPersonNonAdoptiveParents =
-                (direction == TreeTraversalDirection.ASC
-                        && previousPersonId != null
-                        && !person.getSpousesWithChildren().isEmpty())
-                ? person
-                        .getSpousesWithChildren()
-                        .stream()
-                        .filter(spouseWithChildren -> spouseWithChildren
-                                .getChildrenWithReference()
-                                .stream()
-                                .filter(cwr -> cwr.referenceType().isEmpty())
-                                .map(EnrichedPersonWithReference::person)
-                                .map(EnrichedPerson::getId)
-                                .anyMatch(previousPersonId::equals))
-                        .map(EnrichedSpouseWithChildren::getSpouse)
-                        .map(spouse -> spouse.map(EnrichedPerson::getId))
-                        .toList()
-                : null;
+        // Returns current person (which is parent of previous person)
+        //   and optionally its couple (in case it is parent of previous person)
+        boolean calculateIsHalf = direction == TreeTraversalDirection.ASC
+                && previousPersonId != null
+                && person.getSpousesWithChildren().size() > 1;
+
+        Map<Optional<Integer>, Optional<ReferenceType>> previousPersonAdoptionTypesByParentId;
+        if (calculateIsHalf) {
+            List<Pair<Optional<Integer>, Optional<ReferenceType>>> previousPersonParents = person
+                    .getSpousesWithChildren()
+                    .stream()
+                    .map(spouseWithChildren -> Pair.of(
+                            spouseWithChildren
+                                    .getSpouse()
+                                    .map(EnrichedPerson::getId),
+                            spouseWithChildren
+                                    .getChildrenWithReference()
+                                    .stream()
+                                    .filter(cwr -> previousPersonId.equals(cwr.person().getId()))
+                                    .findAny()
+                                    .map(EnrichedPersonWithReference::referenceType)
+                                    .orElse(null)))
+                    .filter(pair -> pair.getRight() != null)
+                    .toList();
+
+            /*
+             * Possible values:
+             *   - 1 element with empty spouse (this person, 1 parent family)
+             *   - 1 element with spouse (the biological or adopted parent)
+             *   - 2 elements (the biological and adopted parents)
+             */
+            if (previousPersonParents.isEmpty() || previousPersonParents.size() > 2) {
+                throw new UnsupportedOperationException();
+            }
+
+            previousPersonAdoptionTypesByParentId = previousPersonParents
+                    .stream()
+                    .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
+        } else {
+            previousPersonAdoptionTypesByParentId = Map.of();
+        }
 
         Stream<RelativeAndDirection> relativesAndDirections = (direction != TreeTraversalDirection.ONLY_ASC)
                 ? Stream.concat(
@@ -303,7 +327,7 @@ public class PersonService {
                                 .stream()
                                 .flatMap(spouseWithChildren -> {
                                     // when traversing children, both parents will be considered the related persons
-                                    List<String> relatedPersonIds = spouseWithChildren.getSpouse()
+                                    List<Integer> relatedPersonIds = spouseWithChildren.getSpouse()
                                             .map(spouse -> Stream
                                                     .of(
                                                             person.getId(),
@@ -312,14 +336,24 @@ public class PersonService {
                                                     .toList())
                                             .orElse(singleRelatedPersonIds);
 
+                                    Optional<Integer> spouseId = spouseWithChildren
+                                            .getSpouse()
+                                            .map(EnrichedPerson::getId);
+
                                     return spouseWithChildren
                                             .getChildrenWithReference()
                                             .stream()
                                             .map(childWithReference -> new RelativeAndDirection(
                                                     childWithReference.person(),
                                                     TreeTraversalDirection.DESC,
-                                                    previousPersonNonAdoptiveParents != null && !previousPersonNonAdoptiveParents
-                                                            .contains(spouseWithChildren.getSpouse().map(EnrichedPerson::getId)),
+                                                    // If my child's (previous person when it is ASC direction) parents list
+                                                    //   is not empty (it includes at least me) and it doesn't include my couple,
+                                                    //   it means these children are half-siblings of the previous one.
+                                                    !previousPersonAdoptionTypesByParentId.isEmpty()
+                                                            && (!previousPersonAdoptionTypesByParentId.containsKey(spouseId)
+                                                                    || previousPersonAdoptionTypesByParentId.size() > 1
+                                                                    && previousPersonAdoptionTypesByParentId.get(spouseId).isPresent()
+                                                                    && childWithReference.referenceType().isEmpty()),
                                                     childWithReference
                                                             .referenceType()
                                                             .map(PersonService::resolveAdoptionType)
@@ -430,7 +464,7 @@ public class PersonService {
             boolean isHalf,
             @Nullable AdoptionType adoptionType,
             @NonNull Set<TreeSideType> treeSides,
-            @NonNull List<String> relatedPersonIds) {
+            @NonNull List<Integer> relatedPersonIds) {
     }
 
     private static Set<TreeSideType> resolveParentTreeSideTypes(SexType parentSex) {

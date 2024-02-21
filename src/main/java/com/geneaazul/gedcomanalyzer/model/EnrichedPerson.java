@@ -38,7 +38,7 @@ public class EnrichedPerson {
     private final EnrichedGedcom gedcom;
     private final GedcomAnalyzerProperties properties;
 
-    private final String id;
+    private final Integer id;
     private final UUID uuid;
     private final SexType sex;
     private final Optional<GivenName> givenName;
@@ -89,8 +89,8 @@ public class EnrichedPerson {
         this.legacyPerson = properties.isKeepReferenceToLegacyGedcom() ? person : null;
         this.gedcom = gedcom;
 
-        id = person.getId();
-        uuid = PersonUtils.getUuid(person, gedcom.getModifiedDateTime());
+        id = PersonUtils.getId(person);
+        uuid = PersonUtils.getUuid(id, gedcom.getModifiedDateTime());
         sex = PersonUtils.getSex(person);
         givenName = PersonUtils.getNormalizedGivenName(person, properties.getNormalizedGivenNamesMap());
         surname = PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap());
@@ -121,8 +121,8 @@ public class EnrichedPerson {
         return Optional.ofNullable(legacyPerson);
     }
 
-    public void enrichFamily(Gedcom legacyGedcom, Map<String, EnrichedPerson> enrichedPeopleIndex) {
-        Person legacyPerson = legacyGedcom.getPerson(id);
+    public void enrichFamily(Gedcom legacyGedcom, Map<Integer, EnrichedPerson> enrichedPeopleIndex) {
+        Person legacyPerson = legacyGedcom.getPerson("I" + id);
         parentsWithReference = toEnrichedPeopleWithReference(PersonUtils.getParentsWithReference(legacyPerson, legacyGedcom), enrichedPeopleIndex, null);
         spousesWithChildren = toEnrichedSpousesWithChildren(PersonUtils.getSpousesWithChildren(legacyPerson, legacyGedcom, gedcom.getPlaces()), enrichedPeopleIndex);
         allSiblings = toEnrichedPeople(PersonUtils.getAllSiblings(legacyPerson, legacyGedcom), enrichedPeopleIndex, PersonUtils.DATES_COMPARATOR);
@@ -149,12 +149,12 @@ public class EnrichedPerson {
 
     private List<EnrichedPerson> toEnrichedPeople(
             List<Person> people,
-            Map<String, EnrichedPerson> enrichedPeopleIndex,
+            Map<Integer, EnrichedPerson> enrichedPeopleIndex,
             @SuppressWarnings("SameParameterValue") @Nullable Comparator<EnrichedPerson> personComparator) {
 
         Stream<EnrichedPerson> peopleStream = people
                 .stream()
-                .map(Person::getId)
+                .map(PersonUtils::getId)
                 .map(enrichedPeopleIndex::get);
 
         if (personComparator != null) {
@@ -168,13 +168,13 @@ public class EnrichedPerson {
 
     private List<EnrichedSpouseWithChildren> toEnrichedSpousesWithChildren(
             List<SpouseWithChildren> spousesWithChildren,
-            Map<String, EnrichedPerson> enrichedPeopleIndex) {
+            Map<Integer, EnrichedPerson> enrichedPeopleIndex) {
         return spousesWithChildren
                 .stream()
                 .map(spouseWithChildren -> EnrichedSpouseWithChildren.of(
                         spouseWithChildren
                                 .spouse()
-                                .map(Person::getId)
+                                .map(PersonUtils::getId)
                                 .map(enrichedPeopleIndex::get),
                         toEnrichedPeopleWithReference(
                                 spouseWithChildren.children(),
@@ -190,8 +190,8 @@ public class EnrichedPerson {
     }
 
     private List<EnrichedPersonWithReference> toEnrichedPeopleWithReference(
-            List<Pair<String, Optional<ReferenceType>>> people,
-            Map<String, EnrichedPerson> enrichedPeopleIndex,
+            List<Pair<Integer, Optional<ReferenceType>>> people,
+            Map<Integer, EnrichedPerson> enrichedPeopleIndex,
             @Nullable Comparator<EnrichedPerson> personComparator) {
 
         Stream<EnrichedPersonWithReference> peopleStream = people
@@ -210,6 +210,10 @@ public class EnrichedPerson {
     }
 
     public List<Place> getPlacesOfAnyEvent() {
+        return getPlacesOfAnyEvent(false);
+    }
+
+    public List<Place> getPlacesOfAnyEvent(boolean includeSpousePlaces) {
         return Stream.concat(
                 Stream
                         .of(
@@ -217,10 +221,24 @@ public class EnrichedPerson {
                                 this.placeOfDeath),
                 this.spousesWithChildren
                         .stream()
-                        .flatMap(spouseWithChildren -> Stream
-                                .of(
-                                        spouseWithChildren.getPlaceOfPartners(),
-                                        spouseWithChildren.getPlaceOfSeparation())))
+                        .flatMap(spouseWithChildren -> Stream.concat(
+                                includeSpousePlaces
+                                        ? Stream.of(
+                                                spouseWithChildren.getPlaceOfPartners(),
+                                                spouseWithChildren.getPlaceOfSeparation(),
+                                                spouseWithChildren
+                                                        .getSpouse()
+                                                        .flatMap(EnrichedPerson::getPlaceOfBirth),
+                                                spouseWithChildren
+                                                        .getSpouse()
+                                                        .flatMap(EnrichedPerson::getPlaceOfDeath))
+                                        : Stream.of(
+                                                spouseWithChildren.getPlaceOfPartners(),
+                                                spouseWithChildren.getPlaceOfSeparation()),
+                                spouseWithChildren
+                                        .getChildren()
+                                        .stream()
+                                        .map(EnrichedPerson::getPlaceOfBirth))))
                 .flatMap(Optional::stream)
                 .distinct()
                 .toList();
@@ -378,12 +396,13 @@ public class EnrichedPerson {
     }
 
     public String format() {
-        return StringUtils.rightPad(id, 8)
+        return StringUtils.rightPad(id.toString(), 7)
                 + " - " + sex
                 + " " + (isAlive ? " " : "X")
                 + " - " + StringUtils.rightPad(displayName, 36)
                 + " - " + StringUtils.leftPad(dateOfBirth.map(Date::format).orElse(""), 11)
                 + " - " + StringUtils.leftPad(dateOfDeath.map(Date::format).orElse(""), 11)
+                + " - " + StringUtils.leftPad(age.map(Age::getYears).map(String::valueOf).orElse(""), 3)
                 + " - " + StringUtils.rightPad(placeOfBirth.map(place -> StringUtils.substring(place.name(), 0, 36)).orElse(""), 36)
                 + " - " + StringUtils.rightPad(placeOfDeath.map(place -> StringUtils.substring(place.name(), 0, 36)).orElse(""), 36)
                 + " - " + StringUtils.rightPad(parents

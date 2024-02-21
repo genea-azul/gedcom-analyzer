@@ -4,7 +4,16 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
 public class CollectionComparator<E extends Comparable<E>> implements Comparator<Collection<E>> {
+
+    private final boolean biggerCollectionPriority;
+
+    public CollectionComparator() {
+        this(false);
+    }
 
     @Override
     public int compare(Collection<E> c1, Collection<E> c2) {
@@ -12,7 +21,9 @@ public class CollectionComparator<E extends Comparable<E>> implements Comparator
             return 0;
         }
         if (c1.size() != c2.size()) {
-            return c1.size() < c2.size() ? -1 : 1;
+            return biggerCollectionPriority
+                    ? (c1.size() > c2.size() ? -1 : 1)
+                    : (c1.size() < c2.size() ? -1 : 1);
         }
 
         Iterator<E> iterator2 = c2.iterator();
