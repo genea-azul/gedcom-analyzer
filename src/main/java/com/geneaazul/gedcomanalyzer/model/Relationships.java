@@ -119,10 +119,15 @@ public class Relationships {
     }
 
     public void propagateTreeSidesToRelationships() {
-        TreeSet<Relationship> withPropagatedTreeSides = orderedRelationships
+        if (orderedRelationships
+                .stream()
+                .allMatch(relationship -> Objects.equals(relationship.treeSides(), treeSides))) {
+            return;
+        }
+        List<Relationship> withPropagatedTreeSides = orderedRelationships
                 .stream()
                 .map(relationship -> relationship.withTreeSides(treeSides))
-                .collect(Collectors.toCollection(TreeSet::new));
+                .toList();
         orderedRelationships.clear();
         orderedRelationships.addAll(withPropagatedTreeSides);
     }

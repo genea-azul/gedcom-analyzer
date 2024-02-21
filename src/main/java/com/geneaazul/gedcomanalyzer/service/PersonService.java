@@ -52,6 +52,7 @@ public class PersonService {
     }
 
     public List<Relationships> setTransientProperties(EnrichedPerson person, boolean excludeRootPerson) {
+        // Traverse tree
         List<Relationships> relationships = getPeopleInTree(person, excludeRootPerson, false);
 
         List<Relationship> lastRelationships = relationships
@@ -119,8 +120,7 @@ public class PersonService {
                 return;
             }
 
-            if (onlyPropagateTreeSides
-                    && !SetUtils.containsAll(visitedRelationships.getTreeSides(), toVisitRelationship.treeSides())) {
+            if (onlyPropagateTreeSides) {
                 mergeTreeSides(visitedPersons, toVisitRelationship, previousPersonId, direction, visitedRelationshipTraversalStrategy);
                 return;
             }
@@ -199,10 +199,8 @@ public class PersonService {
 
         Relationships relationships = visitedPersons.get(toVisitRelationship.person().getId());
 
-        boolean isTreeSideCompatible = toVisitRelationship.isTreeSideCompatible(relationships.getOrderedRelationships());
-        boolean isMissingTreeSides = !SetUtils.containsAll(relationships.getTreeSides(), toVisitRelationship.treeSides());
-
-        if (!isTreeSideCompatible || !isMissingTreeSides) {
+        if (SetUtils.containsAll(relationships.getTreeSides(), toVisitRelationship.treeSides())
+                || !toVisitRelationship.isTreeSideCompatible(relationships.getOrderedRelationships())) {
             return;
         }
 
@@ -211,7 +209,7 @@ public class PersonService {
                 Relationships.from(toVisitRelationship),
                 Relationships::mergeTreeSides);
 
-        // Propagate merged tree sides to descendants
+        // Propagate merged tree sides to relatives
         resolveRelativesToTraverse(
                 toVisitRelationship.person(),
                 direction,
