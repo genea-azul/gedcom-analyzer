@@ -5,7 +5,6 @@ import com.geneaazul.gedcomanalyzer.utils.SetUtils;
 
 import org.springframework.util.Assert;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collection;
@@ -151,7 +150,7 @@ public class Relationships {
         Assert.isTrue(t2.size() == 1, "Error");
 
         Collection<Relationship> relationships = t1;
-        Relationship toMergeRelationship = t2.iterator().next();
+        Relationship toMergeRelationship = t2.first();
 
         if (!toMergeRelationship.isInLaw()
                 && !relationships.isEmpty()) {
@@ -174,13 +173,6 @@ public class Relationships {
                         .filter(r -> !r.isInLaw())
                         .collect(Collectors.toList());
             }
-        }
-
-        if (CollectionUtils.isNotEmpty(toMergeRelationship.treeSides())) {
-            relationships = relationships
-                    .stream()
-                    .filter(toMergeRelationship::isTreeSideCompatible)
-                    .toList();
         }
 
         Set<TreeSideType> treeSides = Stream

@@ -38,7 +38,7 @@ public class PersonServiceTests {
         EnrichedPerson person = gedcom.getPersonById(9);
         List<Relationships> relationshipsList = personService.getPeopleInTree(person, false, false);
 
-        List<FormattedRelationship> formatted = relationshipsList
+        List<FormattedRelationship> formattedRelationships = relationshipsList
                 .stream()
                 .map(Relationships::getOrderedRelationships)
                 .map(TreeSet::first)
@@ -47,87 +47,166 @@ public class PersonServiceTests {
                 .map(relationshipDto -> relationshipMapper.formatInSpanish(relationshipDto, false))
                 .toList();
 
-        formatted.forEach(System.out::println);
+        formattedRelationships.forEach(System.out::println);
 
-        assertThat(formatted.size()).isEqualTo(17);
+        assertThat(formattedRelationships.size()).isEqualTo(17);
 
-        assertThat(formatted.stream().filter(f -> f.personName().equals("Son B&A")).findFirst())
-                .hasValueSatisfying(f -> assertThat(f.relationshipDesc()).isEqualTo("persona principal"))
-                .hasValueSatisfying(f -> assertThat(f.adoption()).isNull());
+        assertThat(formattedRelationships.stream().filter(f -> f.personName().equals("Son B&A")).findFirst())
+                .hasValueSatisfying(f -> {
+                    assertThat(f.relationshipDesc()).isEqualTo("persona principal");
+                    assertThat(f.adoption()).isNull();
+                    assertThat(f.treeSide()).isEqualTo(" ");
+                });
 
-        assertThat(formatted.stream().filter(f -> f.personName().equals("Father B")).findFirst())
-                .hasValueSatisfying(f -> assertThat(f.relationshipDesc()).isEqualTo("padre"))
-                .hasValueSatisfying(f -> assertThat(f.adoption()).isNull());
+        assertThat(formattedRelationships.stream().filter(f -> f.personName().equals("Father B")).findFirst())
+                .hasValueSatisfying(f -> {
+                    assertThat(f.relationshipDesc()).isEqualTo("padre");
+                    assertThat(f.adoption()).isNull();
+                    assertThat(f.treeSide()).isEqualTo("←");
+                });
 
-        assertThat(formatted.stream().filter(f -> f.personName().equals("Mother B")).findFirst())
-                .hasValueSatisfying(f -> assertThat(f.relationshipDesc()).isEqualTo("madre"))
-                .hasValueSatisfying(f -> assertThat(f.adoption()).isNull());
+        assertThat(formattedRelationships.stream().filter(f -> f.personName().equals("Mother B")).findFirst())
+                .hasValueSatisfying(f -> {
+                    assertThat(f.relationshipDesc()).isEqualTo("madre");
+                    assertThat(f.adoption()).isNull();
+                    assertThat(f.treeSide()).isEqualTo("→");
+                });
 
-        assertThat(formatted.stream().filter(f -> f.personName().equals("Father A")).findFirst())
-                .hasValueSatisfying(f -> assertThat(f.relationshipDesc()).isEqualTo("padre adoptivo"))
-                .hasValueSatisfying(f -> assertThat(f.adoption()).isEqualTo("ADOPTIVE"));
+        assertThat(formattedRelationships.stream().filter(f -> f.personName().equals("Father A")).findFirst())
+                .hasValueSatisfying(f -> {
+                    assertThat(f.relationshipDesc()).isEqualTo("padre adoptivo");
+                    assertThat(f.adoption()).isEqualTo("ADOPTIVE");
+                    assertThat(f.treeSide()).isEqualTo("←");
+                });
 
-        assertThat(formatted.stream().filter(f -> f.personName().equals("Father's Couple B")).findFirst())
-                .hasValueSatisfying(f -> assertThat(f.relationshipDesc()).isEqualTo("pareja de padre"))
-                .hasValueSatisfying(f -> assertThat(f.adoption()).isNull());
+        assertThat(formattedRelationships.stream().filter(f -> f.personName().equals("Father B Couple")).findFirst())
+                .hasValueSatisfying(f -> {
+                    assertThat(f.relationshipDesc()).isEqualTo("pareja de padre");
+                    assertThat(f.adoption()).isNull();
+                    assertThat(f.treeSide()).isEqualTo("←");
+                });
 
-        assertThat(formatted.stream().filter(f -> f.personName().equals("Mother's Couple B")).findFirst())
-                .hasValueSatisfying(f -> assertThat(f.relationshipDesc()).isEqualTo("pareja de madre"))
-                .hasValueSatisfying(f -> assertThat(f.adoption()).isNull());
+        assertThat(formattedRelationships.stream().filter(f -> f.personName().equals("Mother B Couple")).findFirst())
+                .hasValueSatisfying(f -> {
+                    assertThat(f.relationshipDesc()).isEqualTo("pareja de madre");
+                    assertThat(f.adoption()).isNull();
+                    assertThat(f.treeSide()).isEqualTo("→");
+                });
 
-        assertThat(formatted.stream().filter(f -> f.personName().equals("Father's Couple A")).findFirst())
-                .hasValueSatisfying(f -> assertThat(f.relationshipDesc()).isEqualTo("pareja de padre adoptivo"))
-                .hasValueSatisfying(f -> assertThat(f.adoption()).isEqualTo("ADOPTIVE"));
+        assertThat(formattedRelationships.stream().filter(f -> f.personName().equals("Father A Couple")).findFirst())
+                .hasValueSatisfying(f -> {
+                    assertThat(f.relationshipDesc()).isEqualTo("pareja de padre adoptivo");
+                    assertThat(f.adoption()).isEqualTo("ADOPTIVE");
+                    assertThat(f.treeSide()).isEqualTo("←");
+                });
 
         // Siblings from both biological parents, one is adopted
 
-        assertThat(formatted.stream().filter(f -> f.personName().equals("Son B1")).findFirst())
-                .hasValueSatisfying(f -> assertThat(f.relationshipDesc()).isEqualTo("hermano"))
-                .hasValueSatisfying(f -> assertThat(f.adoption()).isNull());
+        assertThat(formattedRelationships.stream().filter(f -> f.personName().equals("Son B1 Father B - Mother B")).findFirst())
+                .hasValueSatisfying(f -> {
+                    assertThat(f.relationshipDesc()).isEqualTo("hermano");
+                    assertThat(f.adoption()).isNull();
+                    assertThat(f.treeSide()).isEqualTo("↔");
+                });
 
-        assertThat(formatted.stream().filter(f -> f.personName().equals("Son A1")).findFirst())
-                .hasValueSatisfying(f -> assertThat(f.relationshipDesc()).isEqualTo("hermano"))
-                .hasValueSatisfying(f -> assertThat(f.adoption()).isEqualTo("ADOPTIVE"));
+        assertThat(formattedRelationships.stream().filter(f -> f.personName().equals("Son A1 Father B - Mother B")).findFirst())
+                .hasValueSatisfying(f -> {
+                    assertThat(f.relationshipDesc()).isEqualTo("hermano");
+                    assertThat(f.adoption()).isEqualTo("ADOPTIVE");
+                    assertThat(f.treeSide()).isEqualTo("↔");
+                });
 
         // Siblings from biological parent and adoptive parent, one is adopted
 
-        assertThat(formatted.stream().filter(f -> f.personName().equals("Son B2")).findFirst())
-                .hasValueSatisfying(f -> assertThat(f.relationshipDesc()).isEqualTo("medio-hermano"))
-                .hasValueSatisfying(f -> assertThat(f.adoption()).isNull());
+        assertThat(formattedRelationships.stream().filter(f -> f.personName().equals("Son B2 Father A - Mother B")).findFirst())
+                .hasValueSatisfying(f -> {
+                    assertThat(f.relationshipDesc()).isEqualTo("medio-hermano");
+                    assertThat(f.adoption()).isNull();
+                    assertThat(f.treeSide()).isEqualTo("↔");
+                });
 
-        assertThat(formatted.stream().filter(f -> f.personName().equals("Son A2")).findFirst())
-                .hasValueSatisfying(f -> assertThat(f.relationshipDesc()).isEqualTo("hermano"))
-                .hasValueSatisfying(f -> assertThat(f.adoption()).isEqualTo("ADOPTIVE"));
+        assertThat(formattedRelationships.stream().filter(f -> f.personName().equals("Son A2 Father A - Mother B")).findFirst())
+                .hasValueSatisfying(f -> {
+                    assertThat(f.relationshipDesc()).isEqualTo("hermano");
+                    assertThat(f.adoption()).isEqualTo("ADOPTIVE");
+                    assertThat(f.treeSide()).isEqualTo("↔");
+                });
 
         // Siblings from biological mother and new couple, one is adopted
 
-        assertThat(formatted.stream().filter(f -> f.personName().equals("Son B3 Mother's Couple B")).findFirst())
-                .hasValueSatisfying(f -> assertThat(f.relationshipDesc()).isEqualTo("medio-hermano"))
-                .hasValueSatisfying(f -> assertThat(f.adoption()).isNull());
+        assertThat(formattedRelationships.stream().filter(f -> f.personName().equals("Son B3 Mother B - Couple")).findFirst())
+                .hasValueSatisfying(f -> {
+                    assertThat(f.relationshipDesc()).isEqualTo("medio-hermano");
+                    assertThat(f.adoption()).isNull();
+                    assertThat(f.treeSide()).isEqualTo("→");
+                });
 
-        assertThat(formatted.stream().filter(f -> f.personName().equals("Son A3 Mother's Couple B")).findFirst())
-                .hasValueSatisfying(f -> assertThat(f.relationshipDesc()).isEqualTo("medio-hermano"))
-                .hasValueSatisfying(f -> assertThat(f.adoption()).isEqualTo("ADOPTIVE"));
+        assertThat(formattedRelationships.stream().filter(f -> f.personName().equals("Son A3 Mother B - Couple")).findFirst())
+                .hasValueSatisfying(f -> {
+                    assertThat(f.relationshipDesc()).isEqualTo("medio-hermano");
+                    assertThat(f.adoption()).isEqualTo("ADOPTIVE");
+                    assertThat(f.treeSide()).isEqualTo("→");
+                });
 
         // Siblings from biological father and new couple, one is adopted
 
-        assertThat(formatted.stream().filter(f -> f.personName().equals("Son B4 Father's Couple B")).findFirst())
-                .hasValueSatisfying(f -> assertThat(f.relationshipDesc()).isEqualTo("medio-hermano"))
-                .hasValueSatisfying(f -> assertThat(f.adoption()).isNull());
+        assertThat(formattedRelationships.stream().filter(f -> f.personName().equals("Son B4 Father B - Couple")).findFirst())
+                .hasValueSatisfying(f -> {
+                    assertThat(f.relationshipDesc()).isEqualTo("medio-hermano");
+                    assertThat(f.adoption()).isNull();
+                    assertThat(f.treeSide()).isEqualTo("←");
+                });
 
-        assertThat(formatted.stream().filter(f -> f.personName().equals("Son A4 Father's Couple B")).findFirst())
-                .hasValueSatisfying(f -> assertThat(f.relationshipDesc()).isEqualTo("medio-hermano"))
-                .hasValueSatisfying(f -> assertThat(f.adoption()).isEqualTo("ADOPTIVE"));
+        assertThat(formattedRelationships.stream().filter(f -> f.personName().equals("Son A4 Father B - Couple")).findFirst())
+                .hasValueSatisfying(f -> {
+                    assertThat(f.relationshipDesc()).isEqualTo("medio-hermano");
+                    assertThat(f.adoption()).isEqualTo("ADOPTIVE");
+                    assertThat(f.treeSide()).isEqualTo("←");
+                });
 
         // Siblings from adoptive father and new couple, one is adopted
 
-        assertThat(formatted.stream().filter(f -> f.personName().equals("Son B5 Father's Couple A")).findFirst())
-                .hasValueSatisfying(f -> assertThat(f.relationshipDesc()).isEqualTo("medio-hermano"))
-                .hasValueSatisfying(f -> assertThat(f.adoption()).isEqualTo("ADOPTIVE"));
+        assertThat(formattedRelationships.stream().filter(f -> f.personName().equals("Son B5 Father A - Couple")).findFirst())
+                .hasValueSatisfying(f -> {
+                    assertThat(f.relationshipDesc()).isEqualTo("medio-hermano");
+                    assertThat(f.adoption()).isEqualTo("ADOPTIVE");
+                    assertThat(f.treeSide()).isEqualTo("←");
+                });
 
-        assertThat(formatted.stream().filter(f -> f.personName().equals("Son A5 Father's Couple A")).findFirst())
-                .hasValueSatisfying(f -> assertThat(f.relationshipDesc()).isEqualTo("medio-hermano"))
-                .hasValueSatisfying(f -> assertThat(f.adoption()).isEqualTo("ADOPTIVE"));
+        assertThat(formattedRelationships.stream().filter(f -> f.personName().equals("Son A5 Father A - Couple")).findFirst())
+                .hasValueSatisfying(f -> {
+                    assertThat(f.relationshipDesc()).isEqualTo("medio-hermano");
+                    assertThat(f.adoption()).isEqualTo("ADOPTIVE");
+                    assertThat(f.treeSide()).isEqualTo("←");
+                });
+
+        assertThat(formattedRelationships)
+                .map(FormattedRelationship::personName)
+                .containsExactly(
+                        "Son B&A",
+                        "Father B",
+                        "Mother B",
+                        "Father A",
+                        "Father B Couple",
+                        "Mother B Couple",
+                        "Father A Couple",
+                        // biological children of biological parents (biological siblings)
+                        "Son B1 Father B - Mother B",
+                        // biological children of biological and adoptive parents (biological half siblings)
+                        "Son B2 Father A - Mother B",
+                        // biological children of biological parents with other couples (biological half siblings)
+                        "Son B4 Father B - Couple",
+                        "Son B3 Mother B - Couple",
+                        // adopted children of biological parents (adoptive siblings)
+                        "Son A1 Father B - Mother B",
+                        // adopted children of biological and adoptive parents (adoptive siblings)
+                        "Son A2 Father A - Mother B",
+                        // adopted children of biological parents with other couples (adoptive half siblings)
+                        "Son A4 Father B - Couple",
+                        "Son A3 Mother B - Couple",
+                        // biological and adoptive children of adoptive parents with other couples (adoptive half siblings)
+                        "Son B5 Father A - Couple",
+                        "Son A5 Father A - Couple");
     }
 
 }

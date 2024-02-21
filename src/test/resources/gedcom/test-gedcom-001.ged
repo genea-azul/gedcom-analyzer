@@ -90,86 +90,86 @@
 1 FAMC @F5@
 2 PEDI Adopted
 0 @I10@ INDI
-1 NAME Son /A1/
-2 GIVN Son
-2 SURN A1
+1 NAME Son A1 /Father B - Mother B/
+2 GIVN Son A1
+2 SURN Father B - Mother B
 1 SEX M
 1 FAMC @F4@
 2 PEDI Adopted
 0 @I11@ INDI
-1 NAME Son /B1/
-2 GIVN Son
-2 SURN B1
+1 NAME Son B1 /Father B - Mother B/
+2 GIVN Son B1
+2 SURN Father B - Mother B
 1 SEX M
 1 FAMC @F4@
 0 @I12@ INDI
-1 NAME Son /A2/
-2 GIVN Son
-2 SURN A2
+1 NAME Son A2 /Father A - Mother B/
+2 GIVN Son A2
+2 SURN Father A - Mother B
 1 SEX M
 1 FAMC @F5@
 2 PEDI Adopted
 0 @I13@ INDI
-1 NAME Son /B2/
-2 GIVN Son
-2 SURN B2
+1 NAME Son B2 /Father A - Mother B/
+2 GIVN Son B2
+2 SURN Father A - Mother B
 1 SEX M
 1 FAMC @F5@
 0 @I14@ INDI
-1 NAME Mother's Couple /B/
-2 GIVN Mother's Couple
-2 SURN B
+1 NAME Mother B /Couple/
+2 GIVN Mother B
+2 SURN Couple
 1 SEX M
 1 FAMS @F6@
 0 @I15@ INDI
-1 NAME Father's Couple /B/
-2 GIVN Father's Couple
-2 SURN B
+1 NAME Father B /Couple/
+2 GIVN Father B
+2 SURN Couple
 1 SEX F
 1 FAMS @F7@
 0 @I16@ INDI
-1 NAME Father's Couple /A/
-2 GIVN Father's Couple
-2 SURN A
+1 NAME Father A /Couple/
+2 GIVN Father A
+2 SURN Couple
 1 SEX F
 1 FAMS @F8@
 0 @I17@ INDI
-1 NAME Son A3 / Mother's Couple B/
+1 NAME Son A3 /Mother B - Couple/
 2 GIVN Son A3
-2 SURN Mother's Couple B
+2 SURN Mother B - Couple
 1 SEX M
 1 FAMC @F6@
 2 PEDI Adopted
 0 @I18@ INDI
-1 NAME Son B3 / Mother's Couple B/
+1 NAME Son B3 /Mother B - Couple/
 2 GIVN Son B3
-2 SURN Mother's Couple B
+2 SURN Mother B - Couple
 1 SEX M
 1 FAMC @F6@
 0 @I19@ INDI
-1 NAME Son A4 / Father's Couple B/
+1 NAME Son A4 /Father B - Couple/
 2 GIVN Son A4
-2 SURN Father's Couple B
+2 SURN Father B - Couple
 1 SEX M
 1 FAMC @F7@
 2 PEDI Adopted
 0 @I20@ INDI
-1 NAME Son B4 / Father's Couple B/
+1 NAME Son B4 /Father B - Couple/
 2 GIVN Son B4
-2 SURN Father's Couple B
+2 SURN Father B - Couple
 1 SEX M
 1 FAMC @F7@
 0 @I21@ INDI
-1 NAME Son A5 / Father's Couple A/
+1 NAME Son A5 /Father A - Couple/
 2 GIVN Son A5
-2 SURN Father's Couple A
+2 SURN Father A - Couple
 1 SEX M
 1 FAMC @F8@
 2 PEDI Adopted
 0 @I22@ INDI
-1 NAME Son B5 / Father's Couple A/
+1 NAME Son B5 /Father A - Couple/
 2 GIVN Son B5
-2 SURN Father's Couple A
+2 SURN Father A - Couple
 1 SEX M
 1 FAMC @F8@
 0 @F1@ FAM
