@@ -24,7 +24,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.time.Month;
@@ -232,14 +231,14 @@ public class GedcomAnalyzerServiceTests {
     }
 
     @Test
-    @Disabled
     public void getAncestryCountriesCardinalityByPlaceOfBirth() {
         System.out.println("getAncestryCountriesCardinalityByPlaceOfBirth:");
         gedcomAnalyzerService
-                .getAncestryCountriesCardinalityByPlaceOfBirth(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", false)
+                .getAncestryCountriesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", true, false)
                 .forEach(cardinality -> System.out.println(
-                        cardinality.country()
-                                + " - " + cardinality.cardinality()
+                        StringUtils.rightPad(cardinality.country(), 20)
+                                + " - " + String.format("%5d", cardinality.cardinality())
+                                + " - " + String.format("%5.2f%%", cardinality.percentage())
                                 + " - " + cardinality.surnames()));
     }
 
