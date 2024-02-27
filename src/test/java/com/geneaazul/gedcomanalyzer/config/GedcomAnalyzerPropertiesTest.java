@@ -29,7 +29,7 @@ public class GedcomAnalyzerPropertiesTest {
     private GedcomAnalyzerProperties properties;
 
     @Test
-    public void testPropertyNameNormalizedM() {
+    public void testPropertiesNameNormalizedMaps() {
         properties.getNormalizedGivenNamesMap()
                 .entrySet()
                 .stream()
