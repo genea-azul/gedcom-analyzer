@@ -32,7 +32,7 @@ public class DockerService {
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private final Optional<DockerClient> dockerClient;
-    private final ExecutorService singleThreadExecutorService;
+    private final ExecutorService executorService;
 
     @Value("${docker.app-container.name:gedcom-analyzer-app}")
     private String appContainerName;
@@ -111,7 +111,7 @@ public class DockerService {
         }
 
         log.info("Restart Docker container [ name={} ]", appContainerName);
-        singleThreadExecutorService.submit(() -> ThreadUtils.sleepMillisAndThen(
+        executorService.submit(() -> ThreadUtils.sleepMillisAndThen(
                 500,
                 () -> executeSyncDockerCmd(
                         DockerClient::restartContainerCmd,

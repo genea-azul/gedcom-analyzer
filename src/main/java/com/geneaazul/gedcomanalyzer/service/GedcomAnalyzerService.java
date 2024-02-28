@@ -387,12 +387,12 @@ public class GedcomAnalyzerService {
      */
     public List<SurnamesCardinality> getSurnamesCardinalityByPlaceOfAnyEvent(
             List<EnrichedPerson> people,
-            String placeOfBirth,
+            String placeOfAnyEvent,
             @Nullable Boolean isAlive,
             boolean isExactPlace) {
 
         List<Surname> surnamesByPlaceOfBirth = searchService
-                .findPersonsByPlaceOfAnyEvent(placeOfBirth, isAlive, null, isExactPlace, people)
+                .findPersonsByPlaceOfAnyEvent(placeOfAnyEvent, isAlive, null, isExactPlace, people)
                 .stream()
                 .map(EnrichedPerson::getSurname)
                 .flatMap(Optional::stream)
@@ -477,13 +477,14 @@ public class GedcomAnalyzerService {
     /**
      * .
      */
-    public List<CountryCardinality> getAncestryCountriesCardinalityByPlaceOfBirth(
+    public List<CountryCardinality> getAncestryCountriesCardinalityByPlaceOfAnyEvent(
             List<EnrichedPerson> people,
-            String placeOfBirth,
+            String placeOfAnyEvent,
+            @Nullable Boolean isAlive,
             boolean isExactPlace) {
 
         List<Pair<Optional<String>, Set<String>>> countries = searchService
-                .findPersonsByPlaceOfBirth(placeOfBirth, Boolean.TRUE, null, isExactPlace, people)
+                .findPersonsByPlaceOfAnyEvent(placeOfAnyEvent, isAlive, null, isExactPlace, people)
                 .stream()
                 .map(person -> Pair.of(
                         person.getSurname().map(Surname::value),
@@ -521,6 +522,7 @@ public class GedcomAnalyzerService {
                 .map(entry -> new CountryCardinality(
                         entry.getKey(),
                         entry.getValue(),
+                        ((float) Math.round((float) entry.getValue() / countries.size() * 10000) / 100),
                         surnamesByCountry
                                 .get(entry.getKey())
                                 .stream()
@@ -531,7 +533,8 @@ public class GedcomAnalyzerService {
 
     public record CountryCardinality (
             String country,
-            Integer cardinality,
+            int cardinality,
+            float percentage,
             List<String> surnames) {
 
     }

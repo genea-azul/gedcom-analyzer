@@ -12,6 +12,9 @@ $(document).ready(function() {
     }
 });
 
+const FAMILY_TREE_PROCESS_PERSONS_BY_SEC = 275;
+const FAMILY_TREE_PROCESS_FIX_DELAY_MILLIS = 2500;
+
 var toggleYearOfDeath = function(isAliveComponent, yearOfDeathComponent) {
     $(isAliveComponent).on("change", function() {
         var show = $(isAliveComponent).prop("checked");
@@ -221,9 +224,12 @@ $(document).ready(function() {
                 // remove the "searching.." message
                 $resultComponent.empty();
 
+                var timeoutMs = 0;
                 data.people.forEach((person, index) => {
                     var $personComponent = getPersonComponent(person, index);
                     $resultComponent.append($personComponent);
+
+                    timeoutMs += enableFamilyTreeButtons(person.uuid, person.personsCountInTree, timeoutMs);
                 });
 
                 if (data.people.length == 0) {
@@ -250,11 +256,6 @@ $(document).ready(function() {
                             .append("<p>Refin&aacute; la b&uacute;squeda agregando fechas o completando nombres de padres y parejas.</p>")
                             .append("<p><b>Potenciales resultados:</b> " + data.potentialResults + "</p>");
                     }
-                } else {
-                    setTimeout(function() {
-                        enableFamilyTreeSearch(resultComponentLocator);
-                        enableFamilyTreeView(resultComponentLocator);
-                    }, 1800);
                 }
 
                 var surnamesInRequest = getSurnamesInRequest(searchFamilyRequest);
@@ -304,18 +305,26 @@ var finalizeSearch = function(callback = function() {}) {
         });
 };
 
-var enableFamilyTreeSearch = function(resultComponentLocator) {
-    $(resultComponentLocator + " .search-family-tree-btn")
-        .removeClass("btn-dark")
-        .addClass("btn-outline-light")
-        .removeClass("disabled");
-};
+var enableFamilyTreeButtons = function(personUuid, personsCountInTree, previousTimeoutMs) {
 
-var enableFamilyTreeView = function(resultComponentLocator) {
-    $(resultComponentLocator + " .view-family-tree-btn")
-        .removeClass("btn-dark")
-        .addClass("btn-outline-light")
-        .removeClass("disabled");
+    var timeoutMs = (personsCountInTree || 0) * 1000 / FAMILY_TREE_PROCESS_PERSONS_BY_SEC + FAMILY_TREE_PROCESS_FIX_DELAY_MILLIS;
+
+    setTimeout(function() {
+        $("#search-family-tree-wait-sign-" + personUuid)
+            .remove();
+
+        $("#search-family-tree-btn-" + personUuid)
+            .removeClass("btn-dark")
+            .addClass("btn-outline-light")
+            .removeClass("disabled");
+
+        $("#view-family-tree-btn-" + personUuid)
+            .removeClass("btn-dark")
+            .addClass("btn-outline-light")
+            .removeClass("disabled");
+    }, previousTimeoutMs + timeoutMs);
+
+    return timeoutMs;
 };
 
 var searchSurnames = function(surnames) {
@@ -461,7 +470,9 @@ var getSurnamesInRequest = function(searchFamilyRequest) {
 };
 
 var getPersonComponent = function(person, index) {
-    var $card = $("<div>").addClass("card");
+    var $card = $("<div>")
+            .addClass("card")
+            .attr("id", "person-card-" + person.uuid);
 
     if (index > 0) {
         $card.addClass("mt-2");
@@ -693,7 +704,16 @@ var getPersonComponent = function(person, index) {
     $cardBody
         .append(
             $("<div>")
-                .addClass("mt-1 text-center")
+                .addClass("mt-2 text-center")
+                .attr("id", "search-family-tree-wait-sign-" + person.uuid)
+                .append(
+                    $("<span>")
+                        .addClass("spinner-border spinner-border-sm me-1")
+                        .attr("role", "status"))
+                .append("Generando datos de familiares,<br>esper&aacute; unos segundos..."))
+        .append(
+            $("<div>")
+                .addClass("mt-2 text-center")
                 .html(
                     $("<a>")
                         .addClass("btn btn-sm btn-dark search-family-tree-btn disabled")
