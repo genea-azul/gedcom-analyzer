@@ -31,7 +31,7 @@ public class FamilyTreeManager {
     private final GedcomHolder gedcomHolder;
     private final FamilyTreeHelper familyTreeHelper;
     private final PersonService personService;
-    private final ExecutorService singleThreadExecutorService;
+    private final ExecutorService executorService;
     private final Map<FamilyTreeType, FamilyTreeService> familyTreeServiceByType;
 
     public void queueFamilyTreeGeneration(
@@ -51,7 +51,7 @@ public class FamilyTreeManager {
 
         FamilyTreeTaskParams taskParams = new FamilyTreeTaskParams(peopleUuids, obfuscateLiving, forceRewrite, types);
         FamilyTreeTask task = new FamilyTreeTask(taskParams, this);
-        singleThreadExecutorService.submit(task);
+        executorService.submit(task);
     }
 
     public void generateFamilyTrees(

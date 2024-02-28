@@ -4,4 +4,4 @@
 
 java \
     -Dspring.profiles.active=prod \
-    -Xms256m -Xmx768m -jar target/*.jar
+    -Xms512m -Xmx2048m -jar target/*.jar

@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 public class FamilyTreeConfig {
 
     private final GedcomAnalyzerProperties properties;
-    private final ExecutorService singleThreadExecutorService;
+    private final ExecutorService executorService;
 
     @Bean
     public Map<FamilyTreeType, FamilyTreeService> familyTreeServiceByType(
@@ -43,7 +43,7 @@ public class FamilyTreeConfig {
 
     @PostConstruct
     public void extractPyvisNetworkScript() {
-        singleThreadExecutorService.submit(() -> {
+        executorService.submit(() -> {
             try {
                 Path familyTreeTempDir = properties
                         .getTempDir()

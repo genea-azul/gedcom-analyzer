@@ -55,8 +55,8 @@ public class StorageConfig {
 
     @Bean
     @Profile("!test")
-    public ExecutorService singleThreadExecutorService() {
-        return Executors.newSingleThreadExecutor();
+    public ExecutorService executorService() {
+        return Executors.newFixedThreadPool(2);
     }
 
     @Configuration
@@ -64,14 +64,14 @@ public class StorageConfig {
     public static class SubConfig {
 
         private final GedcomHolder gedcomHolder;
-        private final ExecutorService singleThreadExecutorService;
+        private final ExecutorService executorService;
 
         @Value("${gedcom.reload-delay-in-secs:8}")
         private int gedcomReloadDelayInSecs;
 
         @PostConstruct
         public void postConstruct() {
-            singleThreadExecutorService.submit(() -> ThreadUtils.sleepSecondsAndThen(
+            executorService.submit(() -> ThreadUtils.sleepSecondsAndThen(
                     gedcomReloadDelayInSecs,
                     () -> gedcomHolder.reloadFromStorage(false)));
         }

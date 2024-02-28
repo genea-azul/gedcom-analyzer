@@ -26,7 +26,7 @@ services:
     ports:
       - $SPRING_LOCAL_SECURE_PORT:$SPRING_DOCKER_SECURE_PORT
     environment:
-      JAVA_OPTS: '-Xms256m -Xmx768m'
+      JAVA_OPTS: '-Xms512m -Xmx2048m'
       SPRING_PROFILES_ACTIVE: 'prod'
       SPRING_APPLICATION_JSON: '{
         "docker.enabled" : true,
@@ -44,7 +44,7 @@ services:
         "gedcom-storage-google-drive-file-id" : "$GEDCOM_GOOGLE_DRIVE_FILE_ID",
         "gedcom-storage-local-path" : "/tmp/genea-azul-full-gedcom.ged",
         "temp-dir" : "/tmp",
-        "disable-obfuscate-living" : "false"
+        "disable-obfuscate-living" : "true"
       }'
     volumes:
       - app:/tmp

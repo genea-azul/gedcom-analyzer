@@ -10,7 +10,7 @@ import java.util.concurrent.ExecutorService;
 public class GedcomAnalyzerTestsConfig {
 
     @Bean
-    public ExecutorService singleThreadExecutorService() {
+    public ExecutorService executorService() {
         return new ExecutorServiceAdapter(Runnable::run);
     }
 

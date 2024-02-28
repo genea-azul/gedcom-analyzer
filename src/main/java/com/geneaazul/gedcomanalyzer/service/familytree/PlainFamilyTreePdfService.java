@@ -363,30 +363,31 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
 
             float distancesNoSepY = 240f;
 
-            MutableInt index = new MutableInt(0);
             float size = 8.9f;
             float space = 1.28f;
             float monoSize = 8.3f;
             float monoSpace = (size * space) / monoSize;
 
+            MutableInt index = new MutableInt(0);
+
             distances
                     .stream()
                     .limit(MAX_DISTINGUISHED_PERSONS_TO_DISPLAY / 2)
                     .forEach(distance -> {
-                int lineIndex = index.getAndIncrement();
-                float lineYPos = yPos + (size * space) * lineIndex;
+                        int lineIndex = index.getAndIncrement();
+                        float lineYPos = yPos + (size * space) * lineIndex;
 
-                try {
-                    if (distance.isRelative()) {
-                        writeText(stream, mono, monoSize, monoSpace, 25f, lineYPos - 1f, "ƒ");
-                    }
-                    writeText(stream, light, size, space, 35f, lineYPos, distance.displayName());
-                    String distanceNo = StringUtils.leftPad(String.valueOf(distance.distance()), 2);
-                    writeText(stream, light, size, space, 35f + distancesNoSepY, lineYPos, distanceNo);
-                } catch (IOException e) {
-                    throw new UncheckedIOException(e);
-                }
-            });
+                        try {
+                            if (distance.isRelative()) {
+                                writeText(stream, mono, monoSize, monoSpace, 25f, lineYPos - 1f, "ƒ");
+                            }
+                            writeText(stream, light, size, space, 35f, lineYPos, distance.displayName());
+                            String distanceNo = StringUtils.leftPad(String.valueOf(distance.distance()), 2);
+                            writeText(stream, light, size, space, 35f + distancesNoSepY, lineYPos, distanceNo);
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    });
 
             index.setValue(0);
 
@@ -635,12 +636,14 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             float x,
             float y,
             String text) throws IOException {
-        stream.beginText();
-        stream.setFont(font, size);
-        stream.setLeading(size * space);
-        stream.newLineAtOffset(x, A4_MAX_OFFSET_Y - y);
-        stream.showText(text);
-        stream.endText();
+        if (StringUtils.isNotBlank(text)) {
+            stream.beginText();
+            stream.setFont(font, size);
+            stream.setLeading(size * space);
+            stream.newLineAtOffset(x, A4_MAX_OFFSET_Y - y);
+            stream.showText(text);
+            stream.endText();
+        }
     }
 
     private void writeText(
