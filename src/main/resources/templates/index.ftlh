@@ -9,16 +9,38 @@
     <link rel="stylesheet" href="/css/main.css?v${projectVersion}" />
   </head>
 
-  <body class="container-fluid">
-    <img src="img/genea-azul-logo.png?v${projectVersion}" width="120" height="60" class="rounded float-start me-3" alt="Genea Azul logo" />
-    <div class="h5 mt-2 mb-0">Buscador de personas</div>
-    <div class="d-flex small mt-0">
-      <div class="me-1">Personas en el &aacute;rbol:</div>
-      <div id="persons-count-container">
-        <span class="spinner-border spinner-border-sm" role="status"></span>
+  <body class="container">
+
+    <img src="img/genea-azul-logo.png?v${projectVersion}" width="120" height="60" class="rounded float-start mt-2" alt="Genea Azul logo" />
+
+    <div class="mt-2 mb-0 text-end">
+      <a class="link-secondary text-decoration-none ms-1 me-1" href="https://instagram.com/_u/genea.azul" target="_blank" title="@genea.azul">
+        <i class="bi bi-instagram"></i>
+      </a>
+      <a class="link-secondary text-decoration-none ms-1 me-1" href="https://facebook.com/genea.azul" target="_blank" title="@genea.azul">
+        <i class="bi bi-facebook"></i>
+      </a>
+      <a class="link-secondary text-decoration-none ms-1 me-1" href="mailto:genea.azul@gmail.com" target="_blank" title="genea.azul@gmail.com">
+        <i class="bi bi-envelope"></i>
+      </a>
+    </div>
+
+    <div class="text-center">
+      <div class="h3 m-0 d-none d-xl-block">
+        Buscador de personas
+      </div>
+      <div class="h5 m-0 d-xl-none">
+        Buscador de personas
+      </div>
+      <div class="small">
+        Personas en el &aacute;rbol:
+        <span id="persons-count-container">
+          <span class="spinner-border spinner-border-sm" role="status"></span>
+        </span>
       </div>
     </div>
-    <div class="small mt-4 mb-3">Todos los campos son opcionales, para obtener un mejor resultado complet&aacute; la mayor cantidad de datos posibles.</div>
+
+    <div class="small mt-2 mb-3">Todos los campos son opcionales, para obtener un mejor resultado complet&aacute; la mayor cantidad de datos posibles.</div>
 
     <div class="row mb-3">
       <div class="col-xl-auto">
@@ -28,8 +50,8 @@
             Persona principal
           </div>
           <div class="card-body">
-            <span class="small text-secondary">Sexo:</span>
-            <div class="btn-group btn-group-sm" role="group" aria-label="Sexo">
+            <span class="small text-secondary d-none">Sexo:</span>
+            <div class="btn-group btn-group-sm d-none" role="group" aria-label="Sexo">
               <input type="radio" class="btn-check" name="individualSex" id="individualSexF" value="F" autocomplete="off" />
               <label class="btn btn-outline-danger" for="individualSexF">Mujer</label>
               <input type="radio" class="btn-check" name="individualSex" id="individualSexM" value="M" autocomplete="off" />
@@ -77,8 +99,8 @@
               </div>
             </div>
             <div class="d-none" id="spouseContainer">
-              <span class="small text-secondary">Sexo:</span>
-              <div class="btn-group btn-group-sm" role="group" aria-label="Sexo">
+              <span class="small text-secondary d-none">Sexo:</span>
+              <div class="btn-group btn-group-sm d-none" role="group" aria-label="Sexo">
                 <input type="radio" class="btn-check" name="spouseSex" id="spouseSexF" value="F" autocomplete="off" />
                 <label class="btn btn-outline-danger" for="spouseSexF">Mujer</label>
                 <input type="radio" class="btn-check" name="spouseSex" id="spouseSexM" value="M" autocomplete="off" />
@@ -344,8 +366,6 @@
             <div class="small">
               <#if obfuscateLiving == true>
                 Los datos de personas vivas <b>ser&aacute;n ocultados</b>
-              <#else>
-                Los datos de personas vivas <b>ser&aacute;n visibles</b>
               </#if>
             </div>
           </div>

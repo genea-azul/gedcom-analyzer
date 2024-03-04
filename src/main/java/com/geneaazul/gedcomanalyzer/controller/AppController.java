@@ -3,7 +3,6 @@ package com.geneaazul.gedcomanalyzer.controller;
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.FamilyTree;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
-import com.geneaazul.gedcomanalyzer.service.DockerService;
 import com.geneaazul.gedcomanalyzer.service.PersonService;
 import com.geneaazul.gedcomanalyzer.service.familytree.NetworkFamilyTreeService;
 
@@ -36,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AppController {
 
-    private final DockerService dockerService;
     private final PersonService personService;
     private final NetworkFamilyTreeService networkFamilyTreeService;
     private final GedcomAnalyzerProperties properties;
@@ -46,7 +44,6 @@ public class AppController {
 
     @GetMapping("/")
     public ModelAndView index(@RequestParam @Nullable String f) {
-        dockerService.startDbContainer();
         boolean obfuscateLiving = !properties.isDisableObfuscateLiving() && !"0".equals(f);
         Map<String, ?> params = Map.of(
                 "projectVersion", projectVersion,
@@ -107,7 +104,6 @@ public class AppController {
 
     @GetMapping("/search-family/latest")
     public ModelAndView searchFamily() {
-        dockerService.startDbContainer();
         Map<String, ?> params = Map.of(
                 "projectVersion", projectVersion);
         return new ModelAndView("search-family/latest", params);
@@ -115,7 +111,6 @@ public class AppController {
 
     @GetMapping("/search-family/latestToReview")
     public ModelAndView searchFamilyToReview() {
-        dockerService.startDbContainer();
         Map<String, ?> params = Map.of(
                 "projectVersion", projectVersion,
                 "toReview", true);
