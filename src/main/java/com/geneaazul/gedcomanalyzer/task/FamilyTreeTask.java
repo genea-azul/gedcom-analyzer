@@ -15,27 +15,31 @@ public class FamilyTreeTask implements Runnable {
     @Override
     public void run() {
         try {
-            log.info("Executing task [ persons={}, obfuscateLiving={}, forceRewrite={}, types={} ]",
+            log.info("Executing task [ persons={}, obfuscateLiving={}, onlySecondaryDescription={}, forceRewrite={}, types={} ]",
                     taskParams.personUuids(),
                     taskParams.obfuscateLiving(),
+                    taskParams.onlySecondaryDescription(),
                     taskParams.forceRewrite(),
                     taskParams.types());
 
             familyTreeManager.generateFamilyTrees(
                     taskParams.personUuids(),
                     taskParams.obfuscateLiving(),
+                    taskParams.onlySecondaryDescription(),
                     taskParams.forceRewrite(),
                     taskParams.types());
 
-            log.info("Task completed [ persons={}, obfuscateLiving={}, forceRewrite={}, types={} ]",
+            log.info("Task completed [ persons={}, obfuscateLiving={}, onlySecondaryDescription={}, forceRewrite={}, types={} ]",
                     taskParams.personUuids(),
                     taskParams.obfuscateLiving(),
+                    taskParams.onlySecondaryDescription(),
                     taskParams.forceRewrite(),
                     taskParams.types());
         } catch (Throwable t) {
-            log.error("Error while executing task [ persons={}, obfuscateLiving={}, forceRewrite={}, types={} ]",
+            log.error("Error while executing task [ persons={}, obfuscateLiving={}, onlySecondaryDescription={}, forceRewrite={}, types={} ]",
                     taskParams.personUuids(),
                     taskParams.obfuscateLiving(),
+                    taskParams.onlySecondaryDescription(),
                     taskParams.forceRewrite(),
                     taskParams.types(),
                     t);

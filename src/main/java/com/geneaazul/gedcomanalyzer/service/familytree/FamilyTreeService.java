@@ -13,19 +13,20 @@ public interface FamilyTreeService {
     boolean isMissingFamilyTree(
             EnrichedPerson person,
             String familyTreeFileIdPrefix,
-            String familyTreeFileSuffix,
-            boolean obfuscateLiving);
+            String familyTreeFileSuffix);
 
     void generateFamilyTree(
             EnrichedPerson person,
             String familyTreeFileIdPrefix,
             String familyTreeFileSuffix,
             boolean obfuscateLiving,
+            boolean onlySecondaryDescription,
             List<List<Relationship>> relationshipsWithNotInLawPriority);
 
     Optional<FamilyTree> getFamilyTree(
             UUID personUuid,
             boolean obfuscateLiving,
+            boolean onlySecondaryDescription,
             boolean forceRewrite);
 
 }

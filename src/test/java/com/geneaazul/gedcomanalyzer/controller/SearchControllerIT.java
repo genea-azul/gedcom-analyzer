@@ -90,6 +90,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                         .build())
                 .contact("juan.perez@gmail.com")
                 .obfuscateLiving(false)
+                .onlySecondaryDescription(true)
                 .isForceRewrite(true)
                 .build();
 
@@ -202,8 +203,9 @@ public class SearchControllerIT extends AbstractControllerIT {
                         .givenName(fatherGivenName)
                         .sex(SexType.M)
                         .build())
-                .obfuscateLiving(false)
-                .isForceRewrite(true)
+                .obfuscateLiving(false)         // default: true
+                .onlySecondaryDescription(true) // default: true
+                .isForceRewrite(true)           // default: false
                 .build();
 
         doReturn(SearchFamily.builder()
@@ -233,6 +235,7 @@ public class SearchControllerIT extends AbstractControllerIT {
         url = "/api/search/family-tree/" + personUuid + "/plainPdf";
         MvcResult result = mvc.perform(get(url)
                         .queryParam("obfuscateLiving", "false")
+                        .queryParam("onlySecondaryDescription", "false") // not considered if not re-generated
                         .queryParam("forceRewrite", "false") // already forced in previous search
                         .with(csrf()))
                 .andExpect(status().isOk())

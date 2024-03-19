@@ -8,6 +8,7 @@ import java.util.UUID;
 public record FamilyTreeTaskParams(
         List<UUID> personUuids,
         boolean obfuscateLiving,
+        boolean onlySecondaryDescription,
         boolean forceRewrite,
         List<FamilyTreeType> types) {
 

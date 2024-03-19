@@ -81,6 +81,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             Path exportFilePath,
             EnrichedPerson person,
             boolean obfuscateLiving,
+            boolean onlySecondaryDescription,
             List<List<Relationship>> peopleInTree) {
         log.info("Generating plain family tree PDF");
 
@@ -101,7 +102,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                                         && !relationship.person().getId().equals(person.getId())
                                         && (person.isAlive() && relationship.getDistance() <= MAX_DISTANCE_TO_OBFUSCATE
                                                 || relationship.person().isAlive())))
-                        .map(relationship -> relationshipMapper.formatInSpanish(relationship, true))
+                        .map(relationship -> relationshipMapper.formatInSpanish(relationship, onlySecondaryDescription))
                         .toList())
                 .map(frs -> frs
                         .stream()

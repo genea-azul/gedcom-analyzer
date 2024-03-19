@@ -49,6 +49,8 @@ public class SearchFamilyDto {
     @Builder.Default
     private Boolean obfuscateLiving = true;
     @Builder.Default
+    private Boolean onlySecondaryDescription = true;
+    @Builder.Default
     private Boolean isForceRewrite = false;
 
 }
