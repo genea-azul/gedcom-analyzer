@@ -61,8 +61,7 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
     public boolean isMissingFamilyTree(
             EnrichedPerson person,
             String familyTreeFileIdPrefix,
-            String familyTreeFileSuffix,
-            boolean obfuscateLiving) {
+            String familyTreeFileSuffix) {
 
         Path htmlPyvisNetworkFilePath = getNetworkHtmlFile(
                 person,
@@ -78,6 +77,7 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
             String familyTreeFileIdPrefix,
             String familyTreeFileSuffix,
             boolean obfuscateLiving,
+            boolean onlySecondaryDescription,
             List<List<Relationship>> relationshipsWithNotInLawPriority) {
 
         log.info("Generating network family tree HTML [ personId={}, personUuid={} ]", person.getId(), person.getUuid());
@@ -113,6 +113,7 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
     public Optional<FamilyTree> getFamilyTree(
             UUID personUuid,
             boolean obfuscateLiving,
+            boolean onlySecondaryDescription,
             boolean forceRewrite) {
 
         EnrichedGedcom gedcom = gedcomHolder.getGedcom();
@@ -138,6 +139,7 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                     familyTreeFileIdPrefix,
                     familyTreeFileSuffix,
                     obfuscateLiving,
+                    onlySecondaryDescription,
                     relationshipsWithNotInLawPriority);
         }
 

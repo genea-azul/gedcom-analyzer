@@ -48,6 +48,7 @@ public class PlainFamilyTreeTxtService extends PlainFamilyTreeService {
             Path exportFilePath,
             EnrichedPerson person,
             boolean obfuscateLiving,
+            boolean onlySecondaryDescription,
             List<List<Relationship>> peopleInTree) {
         log.info("Generating plain family tree TXT");
 
@@ -56,7 +57,7 @@ public class PlainFamilyTreeTxtService extends PlainFamilyTreeService {
                 .map(relationships -> relationships
                         .stream()
                         .map(relationship -> relationshipMapper.toRelationshipDto(relationship, obfuscateLiving))
-                        .map(relationship -> relationshipMapper.formatInSpanish(relationship, false))
+                        .map(relationship -> relationshipMapper.formatInSpanish(relationship, onlySecondaryDescription))
                         .toList())
                 .map(frs -> frs
                         .stream()

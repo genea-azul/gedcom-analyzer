@@ -38,14 +38,14 @@ public abstract class PlainFamilyTreeService implements FamilyTreeService {
             Path exportFilePath,
             EnrichedPerson person,
             boolean obfuscateLiving,
+            boolean onlySecondaryDescription,
             List<List<Relationship>> relationshipsWithNotInLawPriority);
 
     @Override
     public boolean isMissingFamilyTree(
             EnrichedPerson person,
             String familyTreeFileIdPrefix,
-            String familyTreeFileSuffix,
-            boolean obfuscateLiving) {
+            String familyTreeFileSuffix) {
 
         Path pdfExportFilePath = getExportFilePath(
                 person,
@@ -61,6 +61,7 @@ public abstract class PlainFamilyTreeService implements FamilyTreeService {
             String familyTreeFileIdPrefix,
             String familyTreeFileSuffix,
             boolean obfuscateLiving,
+            boolean onlySecondaryDescription,
             List<List<Relationship>> relationshipsWithNotInLawPriority) {
 
         log.info("Generating plain family tree [ personId={}, personUuid={} ]", person.getId(), person.getUuid());
@@ -75,6 +76,7 @@ public abstract class PlainFamilyTreeService implements FamilyTreeService {
                 exportFilePath,
                 person,
                 obfuscateLiving,
+                onlySecondaryDescription,
                 relationshipsWithNotInLawPriority);
 
         long totalTime = System.currentTimeMillis() - startTime;
@@ -85,6 +87,7 @@ public abstract class PlainFamilyTreeService implements FamilyTreeService {
     public Optional<FamilyTree> getFamilyTree(
             UUID personUuid,
             boolean obfuscateLiving,
+            boolean onlySecondaryDescription,
             boolean forceRewrite) {
 
         EnrichedGedcom gedcom = gedcomHolder.getGedcom();
@@ -110,6 +113,7 @@ public abstract class PlainFamilyTreeService implements FamilyTreeService {
                     familyTreeFileIdPrefix,
                     familyTreeFileSuffix,
                     obfuscateLiving,
+                    onlySecondaryDescription,
                     relationshipsWithNotInLawPriority);
         }
 

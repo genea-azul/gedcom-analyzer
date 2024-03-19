@@ -30,8 +30,11 @@ public class PlainFamilyTreeTxtServiceTests {
     @Autowired
     private GedcomAnalyzerProperties properties;
 
-    @Value("${obfuscate-condition:false}")
-    private boolean obfuscateCondition;
+    @Value("${obfuscate-living:false}")
+    private boolean obfuscateLiving;
+
+    @Value("${only-secondary-description:false}")
+    private boolean onlySecondaryDescription;
 
     @Test
     public void testExportToTXT() {
@@ -49,7 +52,8 @@ public class PlainFamilyTreeTxtServiceTests {
         plainFamilyTreeTxtService.export(
                 path,
                 person,
-                obfuscateCondition,
+                obfuscateLiving,
+                onlySecondaryDescription,
                 relationshipsList);
     }
 

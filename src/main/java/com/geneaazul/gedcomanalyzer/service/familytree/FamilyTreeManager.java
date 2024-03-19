@@ -37,6 +37,7 @@ public class FamilyTreeManager {
     public void queueFamilyTreeGeneration(
             List<PersonDto> people,
             boolean obfuscateLiving,
+            boolean onlySecondaryDescription,
             boolean forceRewrite,
             List<FamilyTreeType> types) {
 
@@ -49,7 +50,7 @@ public class FamilyTreeManager {
                 .map(PersonDto::getUuid)
                 .toList();
 
-        FamilyTreeTaskParams taskParams = new FamilyTreeTaskParams(peopleUuids, obfuscateLiving, forceRewrite, types);
+        FamilyTreeTaskParams taskParams = new FamilyTreeTaskParams(peopleUuids, obfuscateLiving, onlySecondaryDescription, forceRewrite, types);
         FamilyTreeTask task = new FamilyTreeTask(taskParams, this);
         executorService.submit(task);
     }
@@ -57,6 +58,7 @@ public class FamilyTreeManager {
     public void generateFamilyTrees(
             List<UUID> personUuids,
             boolean obfuscateLiving,
+            boolean onlySecondaryDescription,
             boolean forceRewrite,
             List<FamilyTreeType> types) {
 
@@ -77,8 +79,7 @@ public class FamilyTreeManager {
                             .filter(familyTreeService -> forceRewrite || familyTreeService.isMissingFamilyTree(
                                     person,
                                     familyTreeFileIdPrefix,
-                                    familyTreeFileSuffix,
-                                    obfuscateLiving))
+                                    familyTreeFileSuffix))
                             .toList();
 
                     if (familyTreeServices.isEmpty()) {
@@ -94,6 +95,7 @@ public class FamilyTreeManager {
                                             familyTreeFileIdPrefix,
                                             familyTreeFileSuffix,
                                             obfuscateLiving,
+                                            onlySecondaryDescription,
                                             relationshipsWithNotInLawPriority));
                 });
     }

@@ -81,15 +81,21 @@ public class SearchController {
             searchId = familyService.persistSearch(searchFamilyDto, clientIpAddress.orElse(null));
         }
 
+        // default: true
         boolean obfuscateLiving = !properties.isDisableObfuscateLiving()
                 && BooleanUtils.isNotFalse(searchFamilyDto.getObfuscateLiving());
+        // default: true
+        boolean onlySecondaryDescription = BooleanUtils.isNotFalse(searchFamilyDto.getOnlySecondaryDescription());
+        // default: false
+        boolean forceRewrite = BooleanUtils.isTrue(searchFamilyDto.getIsForceRewrite());
 
         SearchFamilyResultDto searchFamilyResult = familyService.search(searchFamilyDto);
 
-        log.info("Search family [ searchId={}, obfuscateLiving={}, forceRewrite={}, peopleInResult={}, potentialResults={}, errors={}, httpRequestId={} ]",
+        log.info("Search family [ searchId={}, obfuscateLiving={}, onlySecondaryDescription={}, forceRewrite={}, peopleInResult={}, potentialResults={}, errors={}, httpRequestId={} ]",
                 searchId.orElse(null),
                 obfuscateLiving,
-                searchFamilyDto.getIsForceRewrite(),
+                onlySecondaryDescription,
+                forceRewrite,
                 searchFamilyResult.getPeople().size(),
                 searchFamilyResult.getPotentialResults(),
                 searchFamilyResult.getErrors().size(),
@@ -103,7 +109,8 @@ public class SearchController {
         familyTreeManager.queueFamilyTreeGeneration(
                 searchFamilyResult.getPeople(),
                 obfuscateLiving,
-                searchFamilyDto.getIsForceRewrite(),
+                onlySecondaryDescription,
+                forceRewrite,
                 List.of(FamilyTreeType.PLAIN_PDF, FamilyTreeType.NETWORK));
 
         return searchFamilyResult;
@@ -167,25 +174,34 @@ public class SearchController {
     public ResponseEntity<Resource> getPlainFamilyTreePdf(
             @PathVariable UUID personUuid,
             @RequestParam @Nullable Boolean obfuscateLiving,
+            @RequestParam @Nullable Boolean onlySecondaryDescription,
             @RequestParam @Nullable Boolean forceRewrite,
             HttpServletRequest request) throws IOException {
 
-        boolean obfuscateLivingEnabled = !properties.isDisableObfuscateLiving() && BooleanUtils.isNotFalse(obfuscateLiving);
+        // default: true
+        boolean obfuscateLivingEnabled = !properties.isDisableObfuscateLiving()
+                && BooleanUtils.isNotFalse(obfuscateLiving);
+        // default: true
+        boolean onlySecondaryDescriptionEnabled = BooleanUtils.isNotFalse(onlySecondaryDescription);
+        // default: false
+        boolean forceRewriteEnabled = BooleanUtils.isTrue(forceRewrite);
 
         Optional<FamilyTree> maybeFamilyTree = plainFamilyTreePdfService
                 .getFamilyTree(
                         personUuid,
                         obfuscateLivingEnabled,
-                        BooleanUtils.isTrue(forceRewrite));
+                        onlySecondaryDescriptionEnabled,
+                        forceRewriteEnabled);
 
-        log.info("Plain family tree [ personUuid={}, personId={}, obfuscateLiving={}, forceRewrite={}, httpRequestId={} ]",
+        log.info("Plain family tree [ personUuid={}, personId={}, obfuscateLiving={}, onlySecondaryDescriptionEnabled={}, forceRewrite={}, httpRequestId={} ]",
                 personUuid,
                 maybeFamilyTree
                         .map(FamilyTree::person)
                         .map(EnrichedPerson::getId)
                         .orElse(null),
                 obfuscateLivingEnabled,
-                forceRewrite,
+                onlySecondaryDescriptionEnabled,
+                forceRewriteEnabled,
                 request.getRequestId());
 
         if (maybeFamilyTree.isEmpty()) {
