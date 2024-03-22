@@ -10,7 +10,6 @@ import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyResultDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnameResultDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesResultDto;
-import com.geneaazul.gedcomanalyzer.service.DockerService;
 import com.geneaazul.gedcomanalyzer.service.FamilyService;
 import com.geneaazul.gedcomanalyzer.service.SurnameService;
 import com.geneaazul.gedcomanalyzer.service.familytree.FamilyTreeManager;
@@ -55,7 +54,6 @@ public class SearchController {
     private final FamilyService familyService;
     private final SurnameService surnameService;
     private final GedcomAnalyzerProperties properties;
-    private final DockerService dockerService;
     private final FamilyTreeManager familyTreeManager;
     private final PlainFamilyTreePdfService plainFamilyTreePdfService;
 
@@ -63,7 +61,6 @@ public class SearchController {
     public SearchFamilyResultDto searchFamily(
             @Valid @RequestBody SearchFamilyDto searchFamilyDto,
             HttpServletRequest request) {
-        dockerService.startDbContainer();
 
         Optional<String> clientIpAddress = InetAddressUtils.getRemoteAddress(request);
 
@@ -120,10 +117,7 @@ public class SearchController {
     public SearchFamilyDetailsDto markFamilyReviewed(
             @PathVariable Long searchId,
             @RequestParam(defaultValue = BooleanUtils.TRUE) Boolean isReviewed) {
-        dockerService.startDbContainer();
-
         log.info("Mark family reviewed [ searchId={}, isReviewed={} ]", searchId, isReviewed);
-
         return familyService.updateSearchIsReviewed(searchId, isReviewed);
     }
 
@@ -135,18 +129,14 @@ public class SearchController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request) {
-        dockerService.startDbContainer();
-
         log.info("Search family latest [ isMatch={}, isReviewed={}, hasContact={}, page={}, size={} ]",
                 isMatch, isReviewed, hasContact, page, size);
-
         String context = StringUtils.substringBefore(request.getRequestURL().toString(), "/api");
         return familyService.getLatest(isMatch, isReviewed, hasContact, page, size, context);
     }
 
     @PostMapping("/surnames")
     public SearchSurnamesResultDto searchSurnames(@Valid @RequestBody SearchSurnamesDto searchSurnamesDto, HttpServletRequest request) {
-        dockerService.startDbContainer();
 
         Optional<String> clientIpAddress = InetAddressUtils.getRemoteAddress(request);
 

@@ -31,11 +31,11 @@ public class SearchPersonDto {
     @ToString.Include
     private Boolean isAlive;
     @Min(0)
-    @Max(2050)
+    @Max(2025)
     @ToString.Include
     private Integer yearOfBirth;
     @Min(0)
-    @Max(2050)
+    @Max(2025)
     @ToString.Include
     private Integer yearOfDeath;
     @Size(max = 80)

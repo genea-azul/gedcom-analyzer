@@ -222,6 +222,7 @@ public class SearchService {
             @NonNull String placeOfEvent,
             @Nullable Boolean isAlive,
             @Nullable SexType sex,
+            boolean includeSpousePlaces,
             boolean isExactPlace,
             List<EnrichedPerson> people) {
         return people
@@ -229,7 +230,7 @@ public class SearchService {
                 .filter(person -> isAlive == null || isAlive == person.isAlive())
                 .filter(person -> sex == null || sex == person.getSex())
                 .filter(person -> person
-                        .getPlacesOfAnyEvent(true)
+                        .getPlacesOfAnyEvent(includeSpousePlaces)
                         .stream()
                         .map(Place::forSearch)
                         .anyMatch(place -> isExactPlace

@@ -2,35 +2,37 @@ version: '3.9'
 
 services:
 
-  mysqldb:
-    container_name: gedcom-analyzer-db
-    image: mysql:8.2.0
-    restart: always
+  mariadb:
+    container_name: 'gedcom-analyzer-db'
+    image: 'jbergstroem/mariadb-alpine:10.11.5'
+    restart: 'always'
     ports:
-      - $MYSQLDB_LOCAL_PORT:$MYSQLDB_DOCKER_PORT
+      - '$MYSQLDB_LOCAL_PORT:$MYSQLDB_DOCKER_PORT'
     environment:
-      MYSQL_DATABASE: $MYSQLDB_DATABASE
-      MYSQL_USER: $MYSQLDB_USER
-      MYSQL_PASSWORD: $MYSQLDB_PASSWORD
-      MYSQL_ROOT_PASSWORD: $MYSQLDB_ROOT_PASSWORD
+      MYSQL_DATABASE: '$MYSQLDB_DATABASE'
+      MYSQL_USER: '$MYSQLDB_USER'
+      MYSQL_PASSWORD: '$MYSQLDB_PASSWORD'
+      MYSQL_ROOT_PASSWORD: '$MYSQLDB_ROOT_PASSWORD'
+      MYSQL_CHARSET: 'utf8mb4'
+      MYSQL_COLLATION: 'utf8mb4_unicode_ci'
     volumes:
       - db:/var/lib/mysql
 
   app:
-    container_name: gedcom-analyzer-app
-    image: geneaazul/gedcom-analyzer:latest
+    container_name: 'gedcom-analyzer-app'
+    image: 'geneaazul/gedcom-analyzer:latest'
     build: .
     depends_on:
-      - mysqldb
-    restart: always
+      - mariadb
+    restart: 'always'
     ports:
-      - $SPRING_LOCAL_SECURE_PORT:$SPRING_DOCKER_SECURE_PORT
+      - '$SPRING_LOCAL_SECURE_PORT:$SPRING_DOCKER_SECURE_PORT'
     environment:
-      JAVA_OPTS: '-Xms512m -Xmx2048m'
+      JAVA_OPTS: '-Xms512m -Xmx1024m'
       SPRING_PROFILES_ACTIVE: 'prod'
       SPRING_APPLICATION_JSON: '{
         "docker.enabled" : true,
-        "spring.datasource.url"  : "jdbc:mysql://mysqldb:$MYSQLDB_DOCKER_PORT/$MYSQLDB_DATABASE",
+        "spring.datasource.url"  : "jdbc:mariadb://mariadb:$MYSQLDB_DOCKER_PORT/$MYSQLDB_DATABASE",
         "spring.datasource.username" : "$MYSQLDB_USER",
         "spring.datasource.password" : "$MYSQLDB_PASSWORD",
         "server.port" : $SPRING_DOCKER_SECURE_PORT,
@@ -44,10 +46,18 @@ services:
         "gedcom-storage-google-drive-file-id" : "$GEDCOM_GOOGLE_DRIVE_FILE_ID",
         "gedcom-storage-local-path" : "/tmp/genea-azul-full-gedcom.ged",
         "temp-dir" : "/tmp",
-        "disable-obfuscate-living" : "true"
+        "disable-obfuscate-living" : true
       }'
+      LOG_PATH: '/tmp/logs'
     volumes:
       - app:/tmp
+
+  #adminer:
+  #  container_name: gedcom-analyzer-adminer
+  #  image: adminer:4.8.1
+  #  restart: always
+  #  ports:
+  #    - 8086:8080
 
 volumes:
   db:

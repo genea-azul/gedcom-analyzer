@@ -7,42 +7,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class MapUtils {
 
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
     public static <T> Map<String, Set<T>> reduceOptsToSet(List<Pair<String, Optional<T>>> opts) {
         return opts
                 .stream()
-                .reduce(
-                        new HashMap<>(),
-                        (map, pair) -> {
-                            map.merge(
-                                    pair.getLeft(),
-                                    pair.getRight()
-                                            .map(Set::of)
-                                            .orElseGet(Set::of),
-                                    SetUtils::merge);
-                            return map;
-                        },
-                        MapUtils::merge);
-    }
-
-    public static <T> Map<String, Set<T>> reduceSets(List<Pair<String, Set<T>>> sets) {
-        return sets
-                .stream()
-                .reduce(
-                        new HashMap<>(),
-                        (map, pair) -> {
-                            map.merge(
-                                    pair.getLeft(),
-                                    pair.getRight(),
-                                    SetUtils::merge);
-                            return map;
-                        },
-                        MapUtils::merge);
+                .filter(pair -> pair.getRight().isPresent())
+                .collect(Collectors.groupingBy(Pair::getLeft, Collectors.mapping(pair -> pair.getRight().get(), Collectors.toSet())));
     }
 
     public static <T, M extends Map<String, Set<T>>> M merge(M m1, M m2) {

@@ -13,7 +13,7 @@ $(document).ready(function() {
 });
 
 const FAMILY_TREE_PROCESS_PERSONS_BY_SEC = 275;
-const FAMILY_TREE_PROCESS_FIX_DELAY_MILLIS = 2500;
+const FAMILY_TREE_PROCESS_FIX_DELAY_MILLIS = 3250;
 
 var toggleYearOfDeath = function(isAliveComponent, yearOfDeathComponent) {
     $(isAliveComponent).on("change", function() {
@@ -385,8 +385,26 @@ var handleError = function(xhr, componentLocator) {
                 errorMsg = "El servidor se est&aacute; reiniciando, intent&aacute; de nuevo.";
             } else if (xhr.status == 0) {
                 errorMsg = "El servidor est&aacute; ca&iacute;do, intent&aacute; de nuevo.";
-            } else {
-                errorMsg = xhr.responseJSON.message;
+            } else if (xhr.responseJSON !== undefined) {
+                if (xhr.responseJSON.errors !== undefined && xhr.responseJSON.errors.length > 0) {
+                    errorMsg = xhr.responseJSON.errors[0].defaultMessage;
+                } else if (xhr.responseJSON.message !== undefined) {
+                    errorMsg = xhr.responseJSON.message;
+                } else if (xhr.responseJSON.error !== undefined) {
+                    if (xhr.responseJSON.error === "Bad Request") {
+                        errorMsg = "Alguno de los valores ingresados es incorrecto";
+                    } else {
+                        errorMsg = xhr.responseJSON.error;
+                    }
+                }
+            } else if (xhr.message !== undefined) {
+                errorMsg = xhr.message;
+            } else if (xhr.error !== undefined) {
+                if (xhr.error === "Bad Request") {
+                    errorMsg = "Alguno de los valores ingresados es incorrecto";
+                } else {
+                    errorMsg = xhr.error;
+                }
             }
         } else if (xhr.message !== undefined) {
             errorMsg = xhr.message;
