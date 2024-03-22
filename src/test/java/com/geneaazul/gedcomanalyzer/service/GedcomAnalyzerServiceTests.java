@@ -251,7 +251,7 @@ public class GedcomAnalyzerServiceTests {
     @Test
     public void getImmigrantsCitiesCardinalityByPlaceOfAnyEvent() {
         List<GedcomAnalyzerService.SurenamesCardinality> places = gedcomAnalyzerService
-                .getImmigrantsCitiesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", "Francia", null, true, false, false);
+                .getImmigrantsCitiesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", "Francia", null, true, false, false, false, true);
         int totalImmigrants = places
                 .stream()
                 .mapToInt(GedcomAnalyzerService.SurenamesCardinality::cardinality)
