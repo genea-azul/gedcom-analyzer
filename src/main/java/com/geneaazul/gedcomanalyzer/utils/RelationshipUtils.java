@@ -6,12 +6,18 @@ import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.Surname;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import lombok.experimental.UtilityClass;
@@ -20,13 +26,34 @@ import lombok.experimental.UtilityClass;
 public class RelationshipUtils {
 
     public static Set<String> getCountriesOfBirth(List<Relationship> relationships) {
+        return getCountriesOfBirth(relationships, r -> true, s -> s);
+    }
+
+    public static <T extends Collection<String>> T getCountriesOfBirth(
+            List<Relationship> relationships,
+            Predicate<Relationship> filter,
+            Function<Set<String>, T> finisher) {
         return relationships
                 .stream()
+                .filter(filter)
                 .map(Relationship::person)
                 .map(EnrichedPerson::getPlaceOfBirth)
                 .flatMap(Optional::stream)
                 .map(Place::country)
-                .collect(Collectors.toUnmodifiableSet());
+                .collect(Collectors.collectingAndThen(Collectors.toSet(), finisher));
+    }
+
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
+    public static List<Pair<EnrichedPerson, String>> getImmigrantsCitiesOfBirth(
+            List<Relationship> relationships,
+            Predicate<EnrichedPerson> isImmigrantWithCityCondition) {
+        return relationships
+                .stream()
+                .map(Relationship::person)
+                .filter(isImmigrantWithCityCondition)
+                .filter(StreamUtils.distinctByKey(EnrichedPerson::getId))
+                .map(person -> Pair.of(person, StringUtils.substringBeforeLast(person.getPlaceOfBirth().get().name(), ",").trim()))
+                .toList();
     }
 
     public static Integer getSurnamesCount(List<Relationship> relationships) {
@@ -69,23 +96,16 @@ public class RelationshipUtils {
         return result;
     }
 
-    public static List<String> getAncestryCountries(List<Relationship> relationships) {
+    /*public static List<String> getAncestryCountries(List<Relationship> relationships) {
         return relationships
                 .stream()
-                .reduce(Set.<String>of(),
-                        (s, r) -> (r.isDirect() && r.getGeneration() >= 0 && !r.isInLaw())
-                                ? r
-                                        .person()
-                                        .getPlaceOfBirth()
-                                        .map(Place::country)
-                                        .map(country -> SetUtils.add(s, country))
-                                        .orElse(s)
-                                : s,
-                        SetUtils::merge)
-                .stream()
-                .sorted()
-                .toList();
-    }
+                .filter()
+                .map(Relationship::person)
+                .map(EnrichedPerson::getPlaceOfBirth)
+                .flatMap(Optional::stream)
+                .map(Place::country)
+                .collect(Collectors.collectingAndThen(Collectors.toSet(), set -> set.stream().sorted().toList()));
+    }*/
 
     public static AncestryGenerations getAncestryGenerations(List<Relationship> relationships) {
         return relationships

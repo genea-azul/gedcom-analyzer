@@ -98,6 +98,7 @@ public class FamilyUtils {
                         .filter(eventFact -> EVENT_TAGS.contains(eventFact.getTag()) && PARTNERS_EVENT_TYPES.contains(eventFact.getType()))
                         .findFirst())
                 .map(EventFact::getPlace)
+                .map(PlaceUtils::adjustPlace)
                 .map(StringUtils::trimToNull);
     }
 
@@ -111,6 +112,7 @@ public class FamilyUtils {
                         .filter(eventFact -> EVENT_TAGS.contains(eventFact.getTag()) && SEPARATION_EVENT_TYPES.contains(eventFact.getType()))
                         .findFirst())
                 .map(EventFact::getPlace)
+                .map(PlaceUtils::adjustPlace)
                 .map(StringUtils::trimToNull);
     }
 

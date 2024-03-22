@@ -9,21 +9,6 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class SetUtils {
 
-    public static <T> Set<T> add(Set<T> s, T e) {
-        if (s == null) {
-            return null;
-        }
-        if (e == null) {
-            return s;
-        }
-        if (s.contains(e)) {
-            return s;
-        }
-        return Stream
-                .concat(s.stream(), Stream.of(e))
-                .collect(Collectors.toUnmodifiableSet());
-    }
-
     public static <T, S extends Set<T>> S merge(S s1, S s2) {
         if (s1 == s2) {
             return s1;

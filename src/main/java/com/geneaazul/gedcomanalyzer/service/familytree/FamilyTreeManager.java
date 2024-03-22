@@ -4,19 +4,13 @@ import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.FamilyTreeType;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
-import com.geneaazul.gedcomanalyzer.model.Relationships;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
-import com.geneaazul.gedcomanalyzer.service.PersonService;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.task.FamilyTreeTask;
 import com.geneaazul.gedcomanalyzer.task.FamilyTreeTaskParams;
 
 import org.springframework.stereotype.Service;
 
-import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.lang3.mutable.MutableInt;
-
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -30,7 +24,6 @@ public class FamilyTreeManager {
 
     private final GedcomHolder gedcomHolder;
     private final FamilyTreeHelper familyTreeHelper;
-    private final PersonService personService;
     private final ExecutorService executorService;
     private final Map<FamilyTreeType, FamilyTreeService> familyTreeServiceByType;
 
@@ -75,7 +68,7 @@ public class FamilyTreeManager {
 
                     List<FamilyTreeService> familyTreeServices = types
                             .stream()
-                            .map(this::getFamilyTreeServiceByType)
+                            .map(familyTreeServiceByType::get)
                             .filter(familyTreeService -> forceRewrite || familyTreeService.isMissingFamilyTree(
                                     person,
                                     familyTreeFileIdPrefix,
@@ -86,7 +79,8 @@ public class FamilyTreeManager {
                         return;
                     }
 
-                    List<List<Relationship>> relationshipsWithNotInLawPriority = getRelationshipsWithNotInLawPriority(person);
+                    List<List<Relationship>> relationshipsWithNotInLawPriority = familyTreeHelper
+                            .getRelationshipsWithNotInLawPriority(person);
 
                     familyTreeServices
                             .forEach(familyTreeService -> familyTreeService
@@ -98,36 +92,6 @@ public class FamilyTreeManager {
                                             onlySecondaryDescription,
                                             relationshipsWithNotInLawPriority));
                 });
-    }
-
-    public FamilyTreeService getFamilyTreeServiceByType(FamilyTreeType type) {
-        return familyTreeServiceByType.get(type);
-    }
-
-    @VisibleForTesting
-    protected List<List<Relationship>> getRelationshipsWithNotInLawPriority(EnrichedPerson person) {
-        List<Relationships> relationshipsList = personService.setTransientProperties(person, false);
-
-        MutableInt orderKey = new MutableInt(1);
-
-        return relationshipsList
-                .stream()
-                // Make sure each relationship group has 1 or 2 elements (usually an in-law and a not-in-law relationship)
-                .peek(relationships -> {
-                    if (relationships.size() == 0 || relationships.size() > 2) {
-                        throw new UnsupportedOperationException("Something is wrong");
-                    }
-                })
-                // Order internal elements of each relationship group: first not-in-law, then in-law
-                .map(relationships -> {
-                    if (relationships.size() == 2 && relationships.findFirst().isInLaw()) {
-                        return List.of(relationships.findLast(), relationships.findFirst());
-                    }
-                    return List.copyOf(relationships.getOrderedRelationships());
-                })
-                .sorted(Comparator.comparing(List::getFirst))
-                .peek(relationships -> relationships.getFirst().person().setOrderKey(orderKey.getAndIncrement()))
-                .toList();
     }
 
 }

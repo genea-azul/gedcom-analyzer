@@ -26,7 +26,7 @@ public class PlainFamilyTreeTxtServiceTests {
     @Autowired
     private PlainFamilyTreeTxtService plainFamilyTreeTxtService;
     @Autowired
-    private FamilyTreeManager familyTreeManager;
+    private FamilyTreeHelper familyTreeHelper;
     @Autowired
     private GedcomAnalyzerProperties properties;
 
@@ -42,7 +42,7 @@ public class PlainFamilyTreeTxtServiceTests {
         EnrichedPerson person = gedcomHolder.getGedcom().getPersonById(4);
         assert person != null;
 
-        List<List<Relationship>> relationshipsList = familyTreeManager.getRelationshipsWithNotInLawPriority(person);
+        List<List<Relationship>> relationshipsList = familyTreeHelper.getRelationshipsWithNotInLawPriority(person);
 
         Path path = properties
                 .getTempDir()

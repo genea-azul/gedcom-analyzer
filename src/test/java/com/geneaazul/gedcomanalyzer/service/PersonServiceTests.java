@@ -15,6 +15,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.TreeSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,8 +36,8 @@ public class PersonServiceTests {
     public void testGetPeopleInTreeWhenOneParentIsBiologicalAndAdoptive() {
 
         EnrichedGedcom gedcom = gedcomHolder.getGedcom();
-        EnrichedPerson person = gedcom.getPersonById(9);
-        List<Relationships> relationshipsList = personService.getPeopleInTree(person, false, false);
+        EnrichedPerson person = Objects.requireNonNull(gedcom.getPersonById(9));
+        List<Relationships> relationshipsList = personService.getPeopleInTree(person, false, false, true);
 
         List<FormattedRelationship> formattedRelationships = relationshipsList
                 .stream()

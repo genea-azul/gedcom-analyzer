@@ -7,8 +7,11 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class PlaceUtils {
 
+    private static final String[] SEARCH_PLACE = new String[]{ "Pirineos-Atlánticos", ", Pau,", ", Oloron-Sainte-Marie," };
+    private static final String[] REPLACEMENT_PLACE = new String[]{ "Pirineos Atlánticos", ",", "," };
+
     /**
-     * i.e: Potenza, Italia -> Italia
+     * i.e:  Trento, Trentino-Alto Adige, Italia (antes Austria) -> Italia (antes Austria)
      */
     public static String getCountry(String place) {
         int pos = place.lastIndexOf(",");
@@ -16,7 +19,7 @@ public class PlaceUtils {
     }
 
     /**
-     * i.e: Italia (antes Suiza) -> Italia
+     * i.e:  Trento, Trentino-Alto Adige, Italia (antes Austria) ->  Trento, Trentino-Alto Adige, Italia
      */
     public static String removeLastParenthesis(String place) {
         return place.endsWith(")") ? StringUtils.substringBeforeLast(place, "(").trim() : place;
@@ -31,6 +34,9 @@ public class PlaceUtils {
         }
         if (place.endsWith("Reino Unido")) {
             return StringUtils.substringBeforeLast(place, ",");
+        }
+        if (place.endsWith("Francia")) {
+            return StringUtils.replaceEach(place, SEARCH_PLACE, REPLACEMENT_PLACE);
         }
         return place;
     }

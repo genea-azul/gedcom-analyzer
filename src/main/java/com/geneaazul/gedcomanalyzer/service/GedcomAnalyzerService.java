@@ -6,9 +6,11 @@ import com.geneaazul.gedcomanalyzer.mapper.PersonMapper;
 import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.EnrichedSpouseWithChildren;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResults;
 import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Reference;
+import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.Relationships;
 import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.model.dto.GedcomAnalysisDto;
@@ -23,7 +25,9 @@ import com.geneaazul.gedcomanalyzer.utils.FamilyUtils;
 import com.geneaazul.gedcomanalyzer.utils.MapUtils;
 import com.geneaazul.gedcomanalyzer.utils.NameUtils;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
+import com.geneaazul.gedcomanalyzer.utils.PlaceUtils;
 import com.geneaazul.gedcomanalyzer.utils.RelationshipUtils;
+import com.geneaazul.gedcomanalyzer.utils.StreamUtils;
 
 import org.springframework.stereotype.Service;
 
@@ -54,6 +58,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -389,10 +394,11 @@ public class GedcomAnalyzerService {
             List<EnrichedPerson> people,
             String placeOfAnyEvent,
             @Nullable Boolean isAlive,
+            boolean includeSpousePlaces,
             boolean isExactPlace) {
 
         List<Surname> surnamesByPlaceOfBirth = searchService
-                .findPersonsByPlaceOfAnyEvent(placeOfAnyEvent, isAlive, null, isExactPlace, people)
+                .findPersonsByPlaceOfAnyEvent(placeOfAnyEvent, isAlive, null, includeSpousePlaces, isExactPlace, people)
                 .stream()
                 .map(EnrichedPerson::getSurname)
                 .flatMap(Optional::stream)
@@ -477,20 +483,21 @@ public class GedcomAnalyzerService {
     /**
      * .
      */
-    public List<CountryCardinality> getAncestryCountriesCardinalityByPlaceOfAnyEvent(
+    public List<SurenamesCardinality> getAncestryCountriesCardinalityByPlaceOfAnyEvent(
             List<EnrichedPerson> people,
             String placeOfAnyEvent,
             @Nullable Boolean isAlive,
+            boolean includeSpousePlaces,
             boolean isExactPlace) {
 
         List<Pair<Optional<String>, Set<String>>> countries = searchService
-                .findPersonsByPlaceOfAnyEvent(placeOfAnyEvent, isAlive, null, isExactPlace, people)
+                .findPersonsByPlaceOfAnyEvent(placeOfAnyEvent, isAlive, null, includeSpousePlaces, isExactPlace, people)
                 .stream()
                 .map(person -> Pair.of(
                         person.getSurname().map(Surname::value),
                         RelationshipUtils.getCountriesOfBirth(
                                 personService
-                                        .getPeopleInTree(person, false, true)
+                                        .getPeopleInTree(person, false, true, false)
                                         .stream()
                                         .map(Relationships::findFirst)
                                         .toList())))
@@ -519,10 +526,10 @@ public class GedcomAnalyzerService {
                         .<Map.Entry<String, Integer>>comparingInt(Map.Entry::getValue)
                         .reversed()
                         .thenComparing(Map.Entry::getKey))
-                .map(entry -> new CountryCardinality(
+                .map(entry -> new SurenamesCardinality(
                         entry.getKey(),
                         entry.getValue(),
-                        ((float) Math.round((float) entry.getValue() / countries.size() * 10000) / 100),
+                        ((float) Math.round((float) entry.getValue() / countries.size() * 1_000_000) / 10_000),
                         surnamesByCountry
                                 .get(entry.getKey())
                                 .stream()
@@ -531,12 +538,153 @@ public class GedcomAnalyzerService {
                 .toList();
     }
 
-    public record CountryCardinality (
+    public record SurenamesCardinality(
             String country,
             int cardinality,
             float percentage,
             List<String> surnames) {
 
+    }
+
+    /**
+     * .
+     */
+    public List<SurenamesCardinality> getImmigrantsCitiesCardinalityByPlaceOfAnyEvent(
+            List<EnrichedPerson> people,
+            String placeOfAnyEvent,
+            @Nullable String foreignPlace,
+            @Nullable Boolean isAlive,
+            boolean includeSpousePlaces,
+            boolean isExactPlace,
+            boolean onlyWithCity) {
+
+        String countryOfAnyEvent = PlaceUtils.getCountry(placeOfAnyEvent);
+
+        Predicate<EnrichedPerson> isImmigrantCondition = person -> getForeignPlace(
+                person,
+                countryOfAnyEvent,
+                foreignPlace,
+                isExactPlace,
+                onlyWithCity)
+                .filter(fplace -> person.getPlacesOfAnyEvent(true)
+                        .stream()
+                        .anyMatch(place -> !place.country().equals(fplace.country())))
+                .isPresent();
+
+        List<Pair<EnrichedPerson, String>> cities = searchService
+                .findPersonsByPlaceOfAnyEvent(placeOfAnyEvent, isAlive, null, includeSpousePlaces, isExactPlace, people)
+                .stream()
+                .flatMap(person -> personService
+                        .getPeopleInTree(person, false, true, false, isImmigrantCondition)
+                        .stream()
+                        .map(Relationships::findFirst)
+                        .map(Relationship::person)
+                        .filter(isImmigrantCondition))
+                .filter(StreamUtils.distinctByKey(EnrichedPerson::getId))
+                .map(person -> Pair.of(
+                        person,
+                        getForeignPlace(
+                                person,
+                                countryOfAnyEvent,
+                                foreignPlace,
+                                isExactPlace,
+                                onlyWithCity)
+                                .get()
+                                .name()))
+                .toList();
+
+        Map<String, Integer> cardinality = CollectionUtils.getCardinalityMap(
+                cities
+                        .stream()
+                        .map(Pair::getRight)
+                        .toList());
+
+        Map<String, Set<String>> surnamesByCity = MapUtils.reduceOptsToSet(
+                cities
+                        .stream()
+                        .map(pair -> Pair.of(
+                                pair.getRight(),
+                                pair.getLeft()
+                                        .getSurname()
+                                        .map(Surname::value)))
+                        .toList());
+
+        return cardinality
+                .entrySet()
+                .stream()
+                .sorted(Comparator
+                        .<Map.Entry<String, Integer>>comparingInt(Map.Entry::getValue)
+                        .reversed()
+                        .thenComparing(Map.Entry::getKey))
+                .map(entry -> new SurenamesCardinality(
+                        entry.getKey(),
+                        entry.getValue(),
+                        ((float) Math.round((float) entry.getValue() / cities.size() * 1_000_000) / 10_000),
+                        surnamesByCity
+                                .get(entry.getKey())
+                                .stream()
+                                .sorted()
+                                .toList()))
+                .toList();
+    }
+
+    private Optional<Place> getForeignPlace(
+            EnrichedPerson person,
+            String excludeCountry,
+            @Nullable String foreignPlace,
+            boolean isExactPlace,
+            boolean onlyWithCity) {
+        Optional<Place> placeOfBirth = getForeignPlace(
+                person,
+                excludeCountry,
+                foreignPlace,
+                isExactPlace,
+                onlyWithCity,
+                p -> p
+                        .getPlaceOfBirth()
+                        .stream());
+        Optional<Place> placeOfPartners = getForeignPlace(
+                person,
+                excludeCountry,
+                foreignPlace,
+                isExactPlace,
+                onlyWithCity,
+                p -> p
+                        .getSpousesWithChildren()
+                        .stream()
+                        .map(EnrichedSpouseWithChildren::getPlaceOfPartners)
+                        .flatMap(Optional::stream));
+
+        int placeOfBirthPrecision = placeOfBirth
+                .map(place -> StringUtils.countMatches(place.name(), ","))
+                .orElse(0);
+        int placeOfPartnersPrecision = placeOfPartners
+                .map(place -> StringUtils.countMatches(place.name(), ","))
+                .orElse(0);
+
+        if (placeOfPartnersPrecision > placeOfBirthPrecision) {
+            return placeOfPartners;
+        } else {
+            return placeOfBirth;
+        }
+    }
+
+    private Optional<Place> getForeignPlace(
+            EnrichedPerson person,
+            String excludeCountry,
+            @Nullable String foreignPlace,
+            boolean isExactPlace,
+            boolean onlyWithCity,
+            Function<EnrichedPerson, Stream<Place>> personPlacesExtractor) {
+        return personPlacesExtractor
+                .apply(person)
+                .filter(place -> !place.country().equals(excludeCountry))
+                .filter(place -> foreignPlace == null
+                        || (isExactPlace
+                                ? place.forSearch().equals(foreignPlace)
+                                : place.forSearch().endsWith(foreignPlace)))
+                .filter(place -> !onlyWithCity || !place.forSearch().equals(place.country()))
+                .findFirst();
     }
 
     /**
