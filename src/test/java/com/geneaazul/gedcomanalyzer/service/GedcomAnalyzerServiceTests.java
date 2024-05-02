@@ -234,7 +234,7 @@ public class GedcomAnalyzerServiceTests {
     @Test
     public void getAncestryCountriesCardinalityByPlaceOfBirth() {
         List<GedcomAnalyzerService.SurenamesCardinality> places = gedcomAnalyzerService
-                .getAncestryCountriesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", true, true, false);
+                .getAncestryCountriesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null, true, false);
         int totalSurnames = places
                 .stream()
                 .mapToInt(GedcomAnalyzerService.SurenamesCardinality::cardinality)
@@ -251,7 +251,7 @@ public class GedcomAnalyzerServiceTests {
     @Test
     public void getImmigrantsCitiesCardinalityByPlaceOfAnyEvent() {
         List<GedcomAnalyzerService.SurenamesCardinality> places = gedcomAnalyzerService
-                .getImmigrantsCitiesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", "Francia", null, true, false, false, false, true);
+                .getImmigrantsCitiesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null, null, true, false, false, true, true);
         int totalImmigrants = places
                 .stream()
                 .mapToInt(GedcomAnalyzerService.SurenamesCardinality::cardinality)
