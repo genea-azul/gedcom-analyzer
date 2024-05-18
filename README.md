@@ -1,7 +1,7 @@
 # Gedcom Analyzer by Genea Azul
 
 ### Requirements
-- Java JDK 21+
+- Java JDK 22+
 - Python 3
 - Docker
 

@@ -707,12 +707,14 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
     }
 
     private void writeGeneratedOn(PDPageContentStream stream, PDFont font) throws IOException {
+        String dateTimeStr = ZonedDateTime
+                .now(properties.getZoneId())
+                .format(DateTimeFormatter
+                        .ofLocalizedDateTime(FormatStyle.FULL)
+                        .localizedBy(properties.getLocale()));
+        dateTimeStr = StringUtils.replace(dateTimeStr, "\u202F", " ");
         writeText(stream, font, 12f, 1.2f, 30f, 780f,
-                "Generado el " + ZonedDateTime
-                        .now(properties.getZoneId())
-                        .format(DateTimeFormatter
-                                .ofLocalizedDateTime(FormatStyle.FULL)
-                                .localizedBy(properties.getLocale())));
+                "Generado el " + dateTimeStr);
     }
 
     @SuppressWarnings("SameParameterValue")
