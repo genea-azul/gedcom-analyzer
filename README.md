@@ -52,3 +52,10 @@ export GOOGLE_APPLICATION_CREDENTIALS=~/develop/google-cloud-credentials.json
 # Read server logs
 gcloud app logs tail -s default
 ```
+
+### Development commands
+
+```shell
+# Update Maven wrapper
+./mvnw -N wrapper:wrapper -Dmaven=4.0.0-alpha-10
+```

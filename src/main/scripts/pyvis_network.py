@@ -88,4 +88,4 @@ net.set_options('''
   }
 ''')
 
-net.show(exportFile)
+net.show(exportFile, notebook=False)
