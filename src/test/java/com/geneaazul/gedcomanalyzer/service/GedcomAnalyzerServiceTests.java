@@ -459,6 +459,20 @@ public class GedcomAnalyzerServiceTests {
                 .getPeople()
                 .stream()
                 .filter(EnrichedPerson::isDistinguishedPerson)
+                .filter(p -> (
+                        p.isAlive()
+                                ? p.getDateOfBirth()
+                                : p.getDateOfDeath())
+                        .map(Date::isFullDate)
+                        .orElse(false))
+                .sorted(Comparator.comparing(
+                        p -> (
+                        p.isAlive()
+                                ? p.getDateOfBirth()
+                                : p.getDateOfDeath())
+                        .map(date -> Pair.of(date.getMonth(), date.getDay()))
+                        .orElse(null),
+                        Comparator.nullsLast(Comparator.naturalOrder())))
                 .forEach(System.out::println);
     }
 
