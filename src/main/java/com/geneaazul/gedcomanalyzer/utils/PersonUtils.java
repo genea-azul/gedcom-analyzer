@@ -88,9 +88,11 @@ public class PersonUtils {
             Integer id,
             @Nullable ZonedDateTime modifiedDateTime) {
 
-        long personId = (modifiedDateTime != null)
-                ? (long) id * (modifiedDateTime.getNano() / 1_000)
-                : id;
+        long offset = Optional.ofNullable(modifiedDateTime)
+                .filter(mdt -> mdt.getNano() != 0)
+                .map(mdt -> mdt.getNano() / 1_000L)
+                .orElse(1L);
+        long personId = id * offset;
 
         long timestamp = Optional.ofNullable(modifiedDateTime)
                 .map(ZonedDateTime::toEpochSecond)

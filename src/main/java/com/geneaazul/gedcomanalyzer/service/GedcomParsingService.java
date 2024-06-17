@@ -13,7 +13,6 @@ import org.folg.gedcom.parser.ModelParser;
 import org.xml.sax.SAXParseException;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -41,7 +40,7 @@ public class GedcomParsingService {
     private final GedcomAnalyzerProperties properties;
 
     public EnrichedGedcom parse(Path gedcomPath) throws IOException, SAXParseException {
-        Gedcom gedcom = parseGedcom(gedcomPath.toFile());
+        Gedcom gedcom = parseGedcom(gedcomPath);
         ZonedDateTime gedcomModifiedTime = Files.getLastModifiedTime(gedcomPath)
                 .toInstant()
                 .atZone(properties.getZoneId());
@@ -65,7 +64,7 @@ public class GedcomParsingService {
             gedcomDirPath = Files.createTempDirectory(properties.getTempDir(), properties.getTempUploadedGedcomDirPrefix());
 
             Path gedcomPath = uploadAndDecompress(gedcomDirPath, gedcomFile);
-            Gedcom gedcom = parseGedcom(gedcomPath.toFile());
+            Gedcom gedcom = parseGedcom(gedcomPath);
             return EnrichedGedcom.of(gedcom, gedcomFile.getOriginalFilename(), properties);
 
         } finally {
@@ -109,10 +108,10 @@ public class GedcomParsingService {
         throw new IllegalArgumentException("gedcom file name or content type is invalid: " + uploadedGedcomFile.getOriginalFilename());
     }
 
-    public Gedcom parseGedcom(File gedcomFile) throws IOException, SAXParseException {
+    public Gedcom parseGedcom(Path gedcomFile) throws IOException, SAXParseException {
         log.info("Parse gedcom file: {}", gedcomFile);
         ModelParser modelParser = new ModelParser();
-        Gedcom gedcom = modelParser.parseGedcom(gedcomFile);
+        Gedcom gedcom = modelParser.parseGedcom(gedcomFile.toFile());
         gedcom.createIndexes();
         gedcom.updateReferences();
         return gedcom;
