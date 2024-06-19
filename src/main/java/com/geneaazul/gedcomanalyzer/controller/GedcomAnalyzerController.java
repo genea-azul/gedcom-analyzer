@@ -19,6 +19,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.xml.sax.SAXParseException;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
@@ -54,8 +56,10 @@ public class GedcomAnalyzerController {
 
     @GetMapping("/reload")
     public GedcomMetadataDto reloadAndGetGedcomMetadata() {
+        Instant startInstant = Instant.now();
         gedcomHolder.reloadFromStorage(true);
-        return gedcomAnalyzerService.getGedcomMetadata();
+        Duration reloadDuration = Duration.between(startInstant, Instant.now());
+        return gedcomAnalyzerService.getGedcomMetadata(reloadDuration);
     }
 
     @PostMapping

@@ -45,6 +45,7 @@ import org.folg.gedcom.model.SpouseFamilyRef;
 import org.folg.gedcom.model.SpouseRef;
 import org.folg.gedcom.model.Visitor;
 
+import java.time.Duration;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -79,8 +80,12 @@ public class GedcomAnalyzerService {
     private final GedcomMapper gedcomMapper;
 
     public GedcomMetadataDto getGedcomMetadata() {
+        return getGedcomMetadata(null);
+    }
+
+    public GedcomMetadataDto getGedcomMetadata(@Nullable Duration reloadDuration) {
         EnrichedGedcom gedcom = gedcomHolder.getGedcom();
-        return gedcomMapper.toGedcomMetadataDto(gedcom);
+        return gedcomMapper.toGedcomMetadataDto(gedcom, reloadDuration);
     }
 
     public GedcomAnalysisDto analyze(EnrichedGedcom gedcom) {
