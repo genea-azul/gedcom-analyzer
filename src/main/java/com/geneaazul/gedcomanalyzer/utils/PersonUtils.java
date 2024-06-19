@@ -624,4 +624,9 @@ public class PersonUtils {
             .<EnrichedPerson, Age>comparing(person -> person.getAge().orElse(null), Comparator.nullsFirst(Comparator.naturalOrder()))
             .thenComparing(EnrichedPerson::getId);
 
+    public static final Comparator<EnrichedPerson> NAME_COMPARATOR = Comparator
+            .<EnrichedPerson, String>comparing(person -> person.getSurname().map(Surname::simplified).orElse(null), Comparator.nullsLast(Comparator.naturalOrder()))
+            .thenComparing(person -> person.getGivenName().map(GivenName::simplified).orElse(null), Comparator.nullsLast(Comparator.naturalOrder()))
+            .thenComparing(EnrichedPerson::getId);
+
 }

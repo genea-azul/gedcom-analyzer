@@ -251,7 +251,7 @@ public class GedcomAnalyzerServiceTests {
     @Test
     public void getImmigrantsCitiesCardinalityByPlaceOfAnyEvent() {
         List<GedcomAnalyzerService.SurenamesCardinality> places = gedcomAnalyzerService
-                .getImmigrantsCitiesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null, null, true, false, false, true, true);
+                .getImmigrantsCitiesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null, null, true, true, false, false, true);
         int totalImmigrants = places
                 .stream()
                 .mapToInt(GedcomAnalyzerService.SurenamesCardinality::cardinality)
@@ -263,6 +263,9 @@ public class GedcomAnalyzerServiceTests {
                                 + " - " + String.format("%5d", cardinality.cardinality())
                                 + " - " + String.format("%5.4f%%", cardinality.percentage())
                                 + " - " + cardinality.surnames()));
+
+        System.out.println("people by city: " + places.get(0).country() + " (" + places.get(0).persons().size() + ")");
+        places.get(0).persons().forEach(System.out::println);
     }
 
     @Test
