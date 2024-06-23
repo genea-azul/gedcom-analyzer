@@ -214,6 +214,7 @@ public class GedcomAnalyzerService {
 
         return places
                 .stream()
+                .map(PlaceUtils::removeLastParenthesis)
                 .map(place -> StringUtils.splitByWholeSeparator(place, ", "))
                 .peek(ArrayUtils::reverse)
                 .sorted((a1, a2) -> {
