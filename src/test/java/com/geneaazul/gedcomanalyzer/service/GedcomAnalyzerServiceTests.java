@@ -256,7 +256,7 @@ public class GedcomAnalyzerServiceTests {
                 .stream()
                 .mapToInt(GedcomAnalyzerService.SurenamesCardinality::cardinality)
                 .sum();
-        System.out.println(STR."getImmigrantsCitiesCardinalityByPlaceOfAnyEvent: \{places.size()} places and \{totalImmigrants} immigrants");
+        System.out.println("getImmigrantsCitiesCardinalityByPlaceOfAnyEvent: " + places.size() + " places and " + totalImmigrants + " immigrants");
         places
                 .forEach(cardinality -> System.out.println(
                         StringUtils.leftPad(cardinality.country(), 80)
@@ -265,7 +265,7 @@ public class GedcomAnalyzerServiceTests {
                                 + " - " + cardinality.surnames()));
 
         if (!places.isEmpty()) {
-            System.out.println(STR."people by city: \{places.getFirst().country()} (\{places.getFirst().persons().size()})");
+            System.out.println("people by city: " + places.getFirst().country() + " (" + places.getFirst().persons().size() + ")");
             places.getFirst().persons().forEach(System.out::println);
         }
     }
