@@ -17,11 +17,15 @@ public class EntryStreamUtils {
         return value -> Map.entry(value, mapper.apply(value));
     }
 
-    public static <T, U, V> Function<Map.Entry<T, U>, Map.Entry<T, V>> entryValueMapper(Function<? super U, ? extends V> mapper) {
+    public static <K, U, V> Function<Map.Entry<U, V>, Map.Entry<K, V>> entryKeyMapper(Function<? super U, ? extends K> mapper) {
+        return entry -> Map.entry(mapper.apply(entry.getKey()), entry.getValue());
+    }
+
+    public static <K, U, V> Function<Map.Entry<K, U>, Map.Entry<K, V>> entryValueMapper(Function<? super U, ? extends V> mapper) {
         return entry -> Map.entry(entry.getKey(), mapper.apply(entry.getValue()));
     }
 
-    public static <T, U, V> Function<Map.Entry<T, U>, Map.Entry<T, V>> entryValueMapper(BiFunction<T, ? super U, ? extends V> mapper) {
+    public static <K, U, V> Function<Map.Entry<K, U>, Map.Entry<K, V>> entryValueMapper(BiFunction<K, ? super U, ? extends V> mapper) {
         return entry -> Map.entry(entry.getKey(), mapper.apply(entry.getKey(), entry.getValue()));
     }
 

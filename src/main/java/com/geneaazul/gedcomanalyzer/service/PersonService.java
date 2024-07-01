@@ -97,7 +97,7 @@ public class PersonService {
                 excludeRootPerson,
                 onlyAscDirection,
                 mergeTreeSides,
-                p -> false);
+                _ -> false);
     }
 
     public List<Relationships> getPeopleInTree(
@@ -439,7 +439,7 @@ public class PersonService {
                 .stream()
                 .filter(pwr -> pwr.person().getId().equals(personB.getId()))
                 // Prefer non-adoptive parent
-                .min(Comparator.comparingInt(cwr -> cwr.referenceType().map(ReferenceType::ordinal).get()));
+                .min(Comparator.comparingInt(cwr -> cwr.referenceType().map(ReferenceType::ordinal).orElse(-1)));
         if (parentWithReference.isPresent()) {
             return Relationship
                     .empty(personA)
@@ -454,6 +454,90 @@ public class PersonService {
                                     .orElse(null),
                             Set.of(),
                             List.of(personA.getId()));
+        }
+
+        Set<Integer> parentIdsB = personB
+                .getParents()
+                .stream()
+                .map(EnrichedPerson::getId)
+                .collect(Collectors.toSet());
+        if (personA
+                .getParents()
+                .stream()
+                .map(EnrichedPerson::getId)
+                .anyMatch(parentIdsB::contains)) {
+
+            SiblingRelationshipHelper relationshipHelper = personA
+                    .getParents()
+                    .stream()
+                    .filter(parent -> parentIdsB.contains(parent.getId()))
+                    .map(parent -> {
+                        Pair<Optional<EnrichedPerson>, Optional<ReferenceType>> spouseA = parent.getSpousesWithChildren()
+                                .stream()
+                                .map(swc -> Pair.of(
+                                        swc.getSpouse(),
+                                        swc.getChildrenWithReference()
+                                                .stream()
+                                                .filter(cwr -> cwr.person().getId().equals(personA.getId()))
+                                                .findFirst()
+                                                .map(EnrichedPersonWithReference::referenceType)
+                                                .orElse(null)))
+                                .filter(pair -> pair.getRight() != null)
+                                // Prefer non-adoptive spouse
+                                .min(Comparator.comparingInt(pwr -> pwr.getRight().map(ReferenceType::ordinal).orElse(-1)))
+                                .orElseThrow();
+                        Pair<Optional<EnrichedPerson>, Optional<ReferenceType>> spouseB = parent.getSpousesWithChildren()
+                                .stream()
+                                .map(swc -> Pair.of(
+                                        swc.getSpouse(),
+                                        swc.getChildrenWithReference()
+                                                .stream()
+                                                .filter(cwr -> cwr.person().getId().equals(personB.getId()))
+                                                .findFirst()
+                                                .map(EnrichedPersonWithReference::referenceType)
+                                                .orElse(null)))
+                                .filter(pair -> pair.getRight() != null)
+                                // Prefer non-adoptive spouse
+                                .min(Comparator.comparingInt(pwr -> pwr.getRight().map(ReferenceType::ordinal).orElse(-1)))
+                                .orElseThrow();
+                        return new SiblingRelationshipHelper(
+                                parent,
+                                spouseB.getLeft(),
+                                spouseA.getRight(),
+                                spouseB.getRight(),
+                                !spouseA.getLeft()
+                                        .map(EnrichedPerson::getId)
+                                        .equals(spouseB.getLeft()
+                                                .map(EnrichedPerson::getId)));
+                    })
+                    // Prefer non-adoptive spouse
+                    .min(Comparator
+                            .<SiblingRelationshipHelper>comparingInt(srh -> srh.referenceTypeA.map(ReferenceType::ordinal).orElse(-1))
+                            .thenComparingInt(srh -> srh.referenceTypeB.map(ReferenceType::ordinal).orElse(-1)))
+                    .orElseThrow();
+
+            return Relationship
+                    .empty(personA)
+                    .increaseWithPerson(
+                            relationshipHelper.parent,
+                            TreeTraversalDirection.ASC,
+                            false,
+                            relationshipHelper.referenceTypeA
+                                    .map(PersonService::resolveAdoptionType)
+                                    .orElse(null),
+                            Set.of(),
+                            List.of(personA.getId()))
+                    .increaseWithPerson(
+                            personB,
+                            TreeTraversalDirection.DESC,
+                            relationshipHelper.isHalf,
+                            relationshipHelper.referenceTypeB
+                                    .map(PersonService::resolveAdoptionType)
+                                    .orElse(null),
+                            Set.of(),
+                            relationshipHelper.parentSpouseForB.isPresent()
+                                    ? List.of(relationshipHelper.parent.getId())
+                                    : List.of(relationshipHelper.parent.getId(), relationshipHelper.parentSpouseForB.map(EnrichedPerson::getId).get()));
         }
 
         Optional<EnrichedSpouseWithChildren> spouseWithChildren = personA
@@ -481,7 +565,7 @@ public class PersonService {
                 .flatMap(List::stream)
                 .filter(cwr -> cwr.person().getId().equals(personB.getId()))
                 // Prefer non-adoptive child
-                .min(Comparator.comparingInt(cwr -> cwr.referenceType().map(ReferenceType::ordinal).get()));
+                .min(Comparator.comparingInt(cwr -> cwr.referenceType().map(ReferenceType::ordinal).orElse(-1)));
         if (childWithReference.isPresent()) {
             return Relationship
                     .empty(personA)
@@ -499,6 +583,14 @@ public class PersonService {
         }
 
         return null;
+    }
+
+    private record SiblingRelationshipHelper(
+            EnrichedPerson parent,
+            Optional<EnrichedPerson> parentSpouseForB,
+            Optional<ReferenceType> referenceTypeA,
+            Optional<ReferenceType> referenceTypeB,
+            boolean isHalf) {
     }
 
     private record RelativeAndDirection(

@@ -1,5 +1,6 @@
 package com.geneaazul.gedcomanalyzer.model.dto;
 
+import java.time.Duration;
 import java.time.ZonedDateTime;
 
 import lombok.AccessLevel;
@@ -23,5 +24,8 @@ public class GedcomMetadataDto {
 
     @ToString.Include
     private ZonedDateTime modifiedDateTime;
+
+    @ToString.Include
+    private Duration reloadDuration;
 
 }

@@ -23,14 +23,14 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class NameUtils {
 
-    private static final String[] NAME_SEARCH_SPECIAL_CHARS = new String[]{ "?", "(", ")", "'", ".", "-" };
-    private static final String[] NAME_REPLACEMENT_SPECIAL_CHARS = new String[]{ "", "", "", "", "", " " };
+    private static final String[] NAME_SEARCH_SPECIAL_CHARS      = new String[]{ "?", "(", ")", "'", ".", "-" };
+    private static final String[] NAME_REPLACEMENT_SPECIAL_CHARS = new String[]{  "",  "",  "",  "",  "", " " };
     private static final Pattern NAME_MULTIPLE_SPACES_PATTERN = Pattern.compile("  +");
 
     private static final Pattern NORMALIZED_NAME_SEPARATOR_PATTERN = Pattern.compile("-");
 
-    private static final String[] GIVEN_NAME_COMMON_EXTRAS = new String[]{ " cadette", " cadete", " cadet", " dite ", " dit " };
-    private static final String[] GIVEN_NAME_COMMON_EXTRAS_REPLACEMENT = new String[]{ "", "", "", " ", " " };
+    private static final String[] GIVEN_NAME_COMMON_EXTRAS             = new String[]{ " cadette", " cadete", " cadet", " dite ", " dit " };
+    private static final String[] GIVEN_NAME_COMMON_EXTRAS_REPLACEMENT = new String[]{         "",        "",       "",      " ",     " " };
 
     private static final Pattern SURNAME_COMMON_CONNECTOR_PATTERN =
             Pattern.compile("^([^ ]+)(?: (de|del|der|la|los|las|san))+ (.+)$");
@@ -39,8 +39,8 @@ public class NameUtils {
     private static final Pattern SURNAME_DOUBLE_LETTERS_PATTERN = Pattern.compile("([a-z])\\1+");
     private static final Pattern SURNAME_VOWELS_ENDING_PATTERN = Pattern.compile("[aeiou]+$");
     private static final String SURNAME_VOWELS_ENDING_REPLACEMENT = "_";
-    private static final String[] SURNAME_SEARCH_CHARS = new String[]{ "b", "ç", "je", "ji", "k", "q", "y", "z" };
-    private static final String[] SURNAME_REPLACEMENT_CHARS = new String[]{ "v", "c", "ge", "gi", "c", "c", "i", "s" };
+    private static final String[] SURNAME_SEARCH_CHARS      = new String[]{ "b", "ç", "ce", "ci", "je", "ji", "k", "q", "y", "z" };
+    private static final String[] SURNAME_REPLACEMENT_CHARS = new String[]{ "v", "c", "se", "si", "ge", "gi", "c", "c", "i", "s" }; // replacement of k and q must be done after replacement of ce and ci
 
     /**
      * Usually sued for givenName and surname simplification.
@@ -146,7 +146,7 @@ public class NameUtils {
         return names
                 .entrySet()
                 .stream()
-                .map(entry -> Map.entry(RegExUtils.replaceAll(entry.getKey(), NORMALIZED_NAME_SEPARATOR_PATTERN, " "), entry.getValue()))
+                .map(EntryStreamUtils.entryKeyMapper(name -> RegExUtils.replaceAll(name, NORMALIZED_NAME_SEPARATOR_PATTERN, " ")))
                 .flatMap(entry -> entry
                         .getValue()
                         .stream()

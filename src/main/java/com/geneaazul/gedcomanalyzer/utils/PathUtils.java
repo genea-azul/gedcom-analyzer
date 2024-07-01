@@ -25,6 +25,7 @@ public class PathUtils {
     public static Pair<Map<Integer, Integer>, Map<Integer, List<Integer>>> calculateShortestPathFromSource(
             EnrichedGedcom gedcom,
             EnrichedPerson source,
+            boolean isSiblingDirectRel,
             boolean includePaths) {
 
         Map<Integer, Integer> distances = new HashMap<>(gedcom.getPeople().size());
@@ -57,6 +58,7 @@ public class PathUtils {
             List<EnrichedPerson> directRelatives = Stream
                     .of(
                             currentNode.getParents(),
+                            (isSiblingDirectRel ? currentNode.getAllSiblings() : List.<EnrichedPerson>of()),
                             currentNode.getSpouses(),
                             currentNode.getChildren())
                     .flatMap(List::stream)

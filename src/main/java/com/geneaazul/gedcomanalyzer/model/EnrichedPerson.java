@@ -64,7 +64,7 @@ public class EnrichedPerson {
     private List<EnrichedPersonWithReference> parentsWithReference;
     private List<EnrichedSpouseWithChildren> spousesWithChildren;
     private List<EnrichedPerson> parents;
-    private List<EnrichedPerson> allSiblings;
+    private List<EnrichedPerson> allSiblings; // full and half siblings
     private List<EnrichedPerson> spouses;
     private List<EnrichedPerson> children;
 
@@ -399,7 +399,7 @@ public class EnrichedPerson {
         return StringUtils.rightPad(id.toString(), 7)
                 + " - " + sex
                 + " " + (isAlive ? " " : "X")
-                + " - " + StringUtils.rightPad(displayName, 36)
+                + " - " + StringUtils.rightPad(displayName, 42)
                 + " - " + StringUtils.leftPad(dateOfBirth.map(Date::format).orElse(""), 11)
                 + " - " + StringUtils.leftPad(dateOfDeath.map(Date::format).orElse(""), 11)
                 + " - " + StringUtils.leftPad(age.map(Age::getYears).map(String::valueOf).orElse(""), 3)

@@ -35,7 +35,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -55,7 +54,8 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
 
     private static final int MAX_DISTANCE_TO_OBFUSCATE = 3;
     private static final int MAX_PERSON_NAME_LENGTH = 48;
-    private static final int MAX_DISTINGUISHED_PERSONS_TO_DISPLAY = 90;
+    private static final int MAX_DISTINGUISHED_PERSONS_TO_DISPLAY = 92;
+    private static final String DATE_TIME_PATTERN = "EEEE d 'de' MMMM 'de' yyyy 'a las' HH:mm:ss 'hs.'";
 
     private final RelationshipMapper relationshipMapper;
     private final Map<EmbeddedFontsConfig.Font, String> embeddedFonts;
@@ -114,6 +114,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
         Map<Integer, Integer> shortestPathByPersonId = PathUtils.calculateShortestPathFromSource(
                 gedcomHolder.getGedcom(),
                 person,
+                true,
                 false)
                 .getLeft();
         List<FormattedDistance> formattedDistances = gedcomHolder.getGedcom()
@@ -129,6 +130,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                         shortestPathByPersonId.get(distinguished.getId())))
                 .filter(distance -> distance.distance() != null)
                 .sorted(Comparator.comparing(FormattedDistance::distance)
+                        .thenComparing(FormattedDistance::isRelative, Comparator.reverseOrder())
                         .thenComparing(FormattedDistance::surnameSimplified)
                         .thenComparing(FormattedDistance::givenNameSimplified)
                         .thenComparing(FormattedDistance::displayName))
@@ -344,16 +346,14 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
 
             writeText(stream, mono, 11f, 1.2272f, textPosX + textIndX, textPosY + 0.5f,
                     "•",
-                    "•",
                     "•");
 
             writeText(stream, light, textSize, 1.35f, textPosX + textIndX + 10f, textPosY,
-                    "padre/madre (relación familiar cosanguínea o adoptiva)",
-                    "hijo/hija (relación familiar cosanguínea o adoptiva)",
-                    "pareja (relación familiar por matrimonio o pareja de hecho)");
+                    "Relación familiar cosanguínea o adoptiva:  padre/madre,  hijo/hija,  (medio-)hermano/a",
+                    "Relación familiar por matrimonio o pareja de hecho:  pareja");
 
             textIndY = textSize * 1.35f;
-            textPosY = textPosY + textIndY * 3 + 3f;
+            textPosY = textPosY + textIndY * 2 + 3f;
 
             writeText(stream, light, textSize, 1.3f, textPosX, textPosY,
                     "En otras palabras, nos dice qué tan lejos está una persona de otra en el árbol. Y dado que se calcula tomando",
@@ -413,8 +413,8 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                     });
 
             writePageNumber(stream, font, pageNum);
-
             writeGeneratedOn(stream, font);
+            writeCollaborate(stream, light);
 
             if (isAnyPersonObfuscated) {
                 writeText(stream, light, 10.f, 1.2f, 75f, 805f,
@@ -532,8 +532,8 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                     "Nomenclatura de relaciones familiares:");
 
             writePageNumber(stream, font, pageNum);
-
             writeGeneratedOn(stream, font);
+            writeCollaborate(stream, light);
 
             if (isAnyPersonObfuscated) {
                 writeText(stream, light, 10.f, 1.2f, 75f, 805f,
@@ -618,10 +618,10 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
         });
 
         writePageNumber(stream, font, pageNum);
-
         if (isLastPageOfPeople) {
             writeGeneratedOn(stream, font);
         }
+        writeCollaborate(stream, light);
 
         if (isAnyPersonObfuscated) {
             writeText(stream, light, 10.f, 1.2f, 75f, 805f,
@@ -707,12 +707,17 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
     }
 
     private void writeGeneratedOn(PDPageContentStream stream, PDFont font) throws IOException {
-        writeText(stream, font, 12f, 1.2f, 30f, 780f,
-                "Generado el " + ZonedDateTime
-                        .now(properties.getZoneId())
-                        .format(DateTimeFormatter
-                                .ofLocalizedDateTime(FormatStyle.FULL)
-                                .localizedBy(properties.getLocale())));
+        String dateTimeStr = ZonedDateTime
+                .now(properties.getZoneId())
+                .format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN, properties.getLocale()));
+        dateTimeStr = StringUtils.replace(dateTimeStr, "\u202F", " ");
+        writeText(stream, font, 11.5f, 1.2f, 30f, 782f,
+                "Generado el " + dateTimeStr);
+    }
+
+    private void writeCollaborate(PDPageContentStream stream, PDFont font) throws IOException {
+        writeText(stream, font, 10f, 1.2f, 160f, 805f,
+                "¡Colaborá con este proyecto! ¡Solicitá acceso al árbol y cargá info!");
     }
 
     @SuppressWarnings("SameParameterValue")

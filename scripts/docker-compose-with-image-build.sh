@@ -4,4 +4,4 @@
 ./scripts/docker-image-build-only.sh
 
 # Restart the containers
-docker-compose up -d
+docker compose up -d

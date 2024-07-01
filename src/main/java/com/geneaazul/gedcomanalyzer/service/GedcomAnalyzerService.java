@@ -45,6 +45,7 @@ import org.folg.gedcom.model.SpouseFamilyRef;
 import org.folg.gedcom.model.SpouseRef;
 import org.folg.gedcom.model.Visitor;
 
+import java.time.Duration;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -79,8 +80,12 @@ public class GedcomAnalyzerService {
     private final GedcomMapper gedcomMapper;
 
     public GedcomMetadataDto getGedcomMetadata() {
+        return getGedcomMetadata(null);
+    }
+
+    public GedcomMetadataDto getGedcomMetadata(@Nullable Duration reloadDuration) {
         EnrichedGedcom gedcom = gedcomHolder.getGedcom();
-        return gedcomMapper.toGedcomMetadataDto(gedcom);
+        return gedcomMapper.toGedcomMetadataDto(gedcom, reloadDuration);
     }
 
     public GedcomAnalysisDto analyze(EnrichedGedcom gedcom) {
@@ -166,7 +171,7 @@ public class GedcomAnalyzerService {
                 .filter(event -> PersonUtils.SEX_TAGS.contains(event.getTag()))
                 .findFirst()
                 .filter(event -> event.getValue().equals("F"))
-                .map(event -> ReferenceType.WIFE)
+                .map(_ -> ReferenceType.WIFE)
                 .orElse(ReferenceType.HUSB);
 
         return resolveSpouseReferenceType(spouseType, eventsFacts);
@@ -178,7 +183,7 @@ public class GedcomAnalyzerService {
                 .filter(event -> FamilyUtils.DIVORCE_TAGS.contains(event.getTag()) && event.getValue().equals("Y")
                         || FamilyUtils.EVENT_TAGS.contains(event.getTag()) && FamilyUtils.SEPARATION_EVENT_TYPES.contains(event.getType()))
                 .findFirst()
-                .map(event -> referenceType == ReferenceType.WIFE ? ReferenceType.FORMER_WIFE : ReferenceType.FORMER_HUSB)
+                .map(_ -> referenceType == ReferenceType.WIFE ? ReferenceType.FORMER_WIFE : ReferenceType.FORMER_HUSB)
                 .orElse(referenceType);
     }
 
@@ -209,6 +214,7 @@ public class GedcomAnalyzerService {
 
         return places
                 .stream()
+                .map(PlaceUtils::removeLastParenthesis)
                 .map(place -> StringUtils.splitByWholeSeparator(place, ", "))
                 .peek(ArrayUtils::reverse)
                 .sorted((a1, a2) -> {
@@ -530,7 +536,8 @@ public class GedcomAnalyzerService {
                         entry.getKey(),
                         entry.getValue(),
                         ((float) Math.round((float) entry.getValue() / countries.size() * 1_000_000) / 10_000),
-                        surnamesByCountry.get(entry.getKey())))
+                        surnamesByCountry.get(entry.getKey()),
+                        null))
                 .toList();
     }
 
@@ -538,7 +545,8 @@ public class GedcomAnalyzerService {
             String country,
             int cardinality,
             float percentage,
-            List<String> surnames) {
+            List<String> surnames,
+            List<EnrichedPerson> persons) {
 
     }
 
@@ -605,9 +613,20 @@ public class GedcomAnalyzerService {
                                 .getSurname()
                                 .map(Surname::value)))
                 .toList();
+
         Map<String, List<String>> surnamesByCity = surnamesOrderedByOccurrences
                 ? MapUtils.groupByAndOrderHierarchically(citiesAndSurnames)
                 : MapUtils.groupByAndOrderAlphabetically(citiesAndSurnames);
+
+        Map<String, List<EnrichedPerson>> peopleByCity = cities
+                .stream()
+                .collect(Collectors.groupingBy(
+                        Pair::getRight,
+                        Collectors.mapping(
+                                Pair::getLeft,
+                                Collectors.collectingAndThen(
+                                        Collectors.toList(),
+                                        list -> list.stream().sorted(PersonUtils.NAME_COMPARATOR).toList()))));
 
         return cardinality
                 .entrySet()
@@ -620,7 +639,8 @@ public class GedcomAnalyzerService {
                         entry.getKey(),
                         entry.getValue(),
                         ((float) Math.round((float) entry.getValue() / cities.size() * 1_000_000) / 10_000),
-                        surnamesByCity.get(entry.getKey())))
+                        surnamesByCity.get(entry.getKey()),
+                        peopleByCity.get(entry.getKey())))
                 .toList();
     }
 

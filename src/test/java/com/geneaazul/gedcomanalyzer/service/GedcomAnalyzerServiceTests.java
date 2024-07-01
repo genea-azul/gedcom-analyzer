@@ -251,7 +251,7 @@ public class GedcomAnalyzerServiceTests {
     @Test
     public void getImmigrantsCitiesCardinalityByPlaceOfAnyEvent() {
         List<GedcomAnalyzerService.SurenamesCardinality> places = gedcomAnalyzerService
-                .getImmigrantsCitiesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null, null, true, false, false, true, true);
+                .getImmigrantsCitiesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null, null, true, false, false, false, true);
         int totalImmigrants = places
                 .stream()
                 .mapToInt(GedcomAnalyzerService.SurenamesCardinality::cardinality)
@@ -263,6 +263,11 @@ public class GedcomAnalyzerServiceTests {
                                 + " - " + String.format("%5d", cardinality.cardinality())
                                 + " - " + String.format("%5.4f%%", cardinality.percentage())
                                 + " - " + cardinality.surnames()));
+
+        if (!places.isEmpty()) {
+            System.out.println("people by city: " + places.getFirst().country() + " (" + places.getFirst().persons().size() + ")");
+            places.getFirst().persons().forEach(System.out::println);
+        }
     }
 
     @Test
@@ -459,6 +464,20 @@ public class GedcomAnalyzerServiceTests {
                 .getPeople()
                 .stream()
                 .filter(EnrichedPerson::isDistinguishedPerson)
+                .filter(p -> (
+                        p.isAlive()
+                                ? p.getDateOfBirth()
+                                : p.getDateOfDeath())
+                        .map(Date::isFullDate)
+                        .orElse(false))
+                .sorted(Comparator.comparing(
+                        p -> (
+                        p.isAlive()
+                                ? p.getDateOfBirth()
+                                : p.getDateOfDeath())
+                        .map(date -> Pair.of(date.getMonth(), date.getDay()))
+                        .orElse(null),
+                        Comparator.nullsLast(Comparator.naturalOrder())))
                 .forEach(System.out::println);
     }
 
@@ -522,7 +541,7 @@ public class GedcomAnalyzerServiceTests {
     @SuppressWarnings("DataFlowIssue")
     public void getShortestPathsToPersons() {
         EnrichedPerson person = gedcom.getPersonById(4);
-        Pair<Map<Integer, Integer>, Map<Integer, List<Integer>>> distancesAndPaths = PathUtils.calculateShortestPathFromSource(gedcom, person, true);
+        Pair<Map<Integer, Integer>, Map<Integer, List<Integer>>> distancesAndPaths = PathUtils.calculateShortestPathFromSource(gedcom, person, true, true);
 
         System.out.println("getShortestPathsToPersons:");
         System.out.println("distance from I4 to I1 (" + gedcom.getPersonById(1).getDisplayName() + "): " + distancesAndPaths.getLeft().get(1));

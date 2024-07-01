@@ -88,9 +88,11 @@ public class PersonUtils {
             Integer id,
             @Nullable ZonedDateTime modifiedDateTime) {
 
-        long personId = (modifiedDateTime != null)
-                ? (long) id * (modifiedDateTime.getNano() / 1_000)
-                : id;
+        long offset = Optional.ofNullable(modifiedDateTime)
+                .filter(mdt -> mdt.getNano() != 0)
+                .map(mdt -> mdt.getNano() / 1_000L)
+                .orElse(1L);
+        long personId = id * offset;
 
         long timestamp = Optional.ofNullable(modifiedDateTime)
                 .map(ZonedDateTime::toEpochSecond)
@@ -620,6 +622,11 @@ public class PersonUtils {
 
     public static final Comparator<EnrichedPerson> AGES_COMPARATOR = Comparator
             .<EnrichedPerson, Age>comparing(person -> person.getAge().orElse(null), Comparator.nullsFirst(Comparator.naturalOrder()))
+            .thenComparing(EnrichedPerson::getId);
+
+    public static final Comparator<EnrichedPerson> NAME_COMPARATOR = Comparator
+            .<EnrichedPerson, String>comparing(person -> person.getSurname().map(Surname::simplified).orElse(null), Comparator.nullsLast(Comparator.naturalOrder()))
+            .thenComparing(person -> person.getGivenName().map(GivenName::simplified).orElse(null), Comparator.nullsLast(Comparator.naturalOrder()))
             .thenComparing(EnrichedPerson::getId);
 
 }

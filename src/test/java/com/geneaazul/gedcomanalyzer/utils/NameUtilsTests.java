@@ -197,8 +197,8 @@ public class NameUtilsTests {
                 .get()
                 .satisfies(surname -> {
                     assertThat(surname.value()).isEqualTo("Viciconte");
-                    assertThat(surname.normalizedMainWord()).isEqualTo("viceconte");
-                    assertThat(surname.shortenedMainWord()).isEqualTo("vicecont_");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("viseconte");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("visecont_");
 
                     Surname matching = PersonUtils.getShortenedSurnameMainWord("Viceconte", properties.getNormalizedSurnamesMap()).orElse(null);
                     assertThat(surname.matches(matching)).isTrue();
