@@ -12,8 +12,8 @@ $(document).ready(function() {
     }
 });
 
-const FAMILY_TREE_PROCESS_PERSONS_BY_SEC = 275;
-const FAMILY_TREE_PROCESS_FIX_DELAY_MILLIS = 3250;
+const FAMILY_TREE_PROCESS_PERSONS_BY_SEC = 250;
+const FAMILY_TREE_PROCESS_FIXED_DELAY_MILLIS = 3250;
 
 var toggleYearOfDeath = function(isAliveComponent, yearOfDeathComponent) {
     $(isAliveComponent).on("change", function() {
@@ -307,7 +307,7 @@ var finalizeSearch = function(callback = function() {}) {
 
 var enableFamilyTreeButtons = function(personUuid, personsCountInTree, previousTimeoutMs) {
 
-    var timeoutMs = (personsCountInTree || 0) * 1000 / FAMILY_TREE_PROCESS_PERSONS_BY_SEC + FAMILY_TREE_PROCESS_FIX_DELAY_MILLIS;
+    var timeoutMs = (personsCountInTree || 0) * 1000 / FAMILY_TREE_PROCESS_PERSONS_BY_SEC + FAMILY_TREE_PROCESS_FIXED_DELAY_MILLIS;
 
     setTimeout(function() {
         $("#search-family-tree-wait-sign-" + personUuid)
