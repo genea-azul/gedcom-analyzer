@@ -64,7 +64,7 @@ public class EnrichedPerson {
     private List<EnrichedPersonWithReference> parentsWithReference;
     private List<EnrichedSpouseWithChildren> spousesWithChildren;
     private List<EnrichedPerson> parents;
-    private List<EnrichedPerson> allSiblings;
+    private List<EnrichedPerson> allSiblings; // full and half siblings
     private List<EnrichedPerson> spouses;
     private List<EnrichedPerson> children;
 

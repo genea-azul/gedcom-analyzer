@@ -541,7 +541,7 @@ public class GedcomAnalyzerServiceTests {
     @SuppressWarnings("DataFlowIssue")
     public void getShortestPathsToPersons() {
         EnrichedPerson person = gedcom.getPersonById(4);
-        Pair<Map<Integer, Integer>, Map<Integer, List<Integer>>> distancesAndPaths = PathUtils.calculateShortestPathFromSource(gedcom, person, true);
+        Pair<Map<Integer, Integer>, Map<Integer, List<Integer>>> distancesAndPaths = PathUtils.calculateShortestPathFromSource(gedcom, person, true, true);
 
         System.out.println("getShortestPathsToPersons:");
         System.out.println("distance from I4 to I1 (" + gedcom.getPersonById(1).getDisplayName() + "): " + distancesAndPaths.getLeft().get(1));
