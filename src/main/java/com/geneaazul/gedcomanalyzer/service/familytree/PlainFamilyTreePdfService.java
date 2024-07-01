@@ -65,8 +65,8 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
     private static final int MAX_DISTINGUISHED_PERSONS_TO_DISPLAY = 92;
     private static final String DATE_TIME_PATTERN = "EEEE d 'de' MMMM 'de' yyyy 'a las' HH:mm:ss 'hs.'";
 
-    // Cacique Cipriano Catriel, Manuel Belgrano, Papa Francisco, Pedro Burgos, Rubén De Paula
-    private static final List<Integer> SHORTEST_PATH_TARGET_PERSON_IDS = List.of(511668, 543016, 525113, 518817, 505424);
+    // Cacique Cipriano Catriel, Manuel Belgrano, Papa Francisco, Pedro Burgos, Rubén De Paula, Justo José de Urquiza
+    private static final List<Integer> SHORTEST_PATH_TARGET_PERSON_IDS = List.of(511668, 543016, 525113, 518817, 505424, 545653);
 
     private final PersonService personService;
     private final RelationshipMapper relationshipMapper;
@@ -289,31 +289,35 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                 }
             }
 
-            MutableInt index = new MutableInt(0);
+            MutableInt pageNum = new MutableInt(nextPages.size() + 2);
 
-            writeDistancesPage(
+            if (writeDistancesPage(
                     document,
                     distances,
-                    nextPages.size() + 2 + index.getAndIncrement(),
+                    pageNum.getValue(),
                     isAnyPersonObfuscated,
                     logoImage,
                     font,
                     bold,
                     light,
-                    mono);
+                    mono)) {
+                pageNum.increment();
+            }
 
             relationshipsList
                     .forEach(relationships -> {
                         try {
-                            writePathToPersonPage(
+                            if (writePathToPersonPage(
                                     document,
                                     relationships,
-                                    nextPages.size() + 2 + index.getAndIncrement(),
+                                    pageNum.getValue(),
                                     isAnyPersonObfuscated,
                                     logoImage,
                                     font,
                                     bold,
-                                    light);
+                                    light)) {
+                                pageNum.increment();
+                            }
                         } catch (IOException e) {
                             throw new UncheckedIOException(e);
                         }
@@ -321,7 +325,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
 
             writeLastPage(
                     document,
-                    nextPages.size() + 2  + index.getAndIncrement(),
+                    pageNum.getValue(),
                     isAnyPersonObfuscated,
                     logoImage,
                     font,
@@ -394,7 +398,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
         }
     }
 
-    private void writeDistancesPage(
+    private boolean writeDistancesPage(
             PDDocument document,
             List<FormattedShortestPathDistance> distances,
             int pageNum,
@@ -406,7 +410,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             PDFont mono) throws IOException {
 
         if (distances.isEmpty()) {
-            return;
+            return false;
         }
 
         PDPage lastPage = new PDPage(PDRectangle.A4);
@@ -522,9 +526,11 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                         "Para revelar las datos privados de las personas ponete en contacto con nosotros (no tiene costo).");
             }
         }
+
+        return true;
     }
 
-    private void writePathToPersonPage(
+    private boolean writePathToPersonPage(
             PDDocument document,
             List<FormattedShortestPathRelationship> relationships,
             int pageNum,
@@ -535,7 +541,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             PDFont light) throws IOException {
 
         if (relationships.isEmpty()) {
-            return;
+            return false;
         }
 
         PDPage lastPage = new PDPage(PDRectangle.A4);
@@ -594,6 +600,8 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                         "Para revelar las datos privados de las personas ponete en contacto con nosotros (no tiene costo).");
             }
         }
+
+        return true;
     }
 
     private void writeLastPage(
