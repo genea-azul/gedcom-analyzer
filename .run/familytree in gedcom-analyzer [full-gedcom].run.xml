@@ -4,7 +4,7 @@
     <option name="MAIN_CLASS_NAME" value="" />
     <option name="METHOD_NAME" value="" />
     <option name="TEST_OBJECT" value="directory" />
-    <option name="VM_PARAMETERS" value="-ea -Dobfuscate-condition=false -Dgedcom-storage-local-path=../gedcoms/genea-azul-full-gedcom.ged" />
+    <option name="VM_PARAMETERS" value="-ea -Dobfuscate-living=false -Dgedcom-storage-local-path=../gedcoms/genea-azul-full-gedcom.ged" />
     <dir value="$PROJECT_DIR$/src/test/java/com/geneaazul/gedcomanalyzer/service/familytree" />
     <method v="2">
       <option name="Make" enabled="true" />

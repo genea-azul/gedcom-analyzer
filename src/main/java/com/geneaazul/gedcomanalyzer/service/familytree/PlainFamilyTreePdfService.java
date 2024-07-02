@@ -111,11 +111,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                         .stream()
                         .map(relationship -> relationshipMapper.toRelationshipDto(
                                 relationship,
-                                obfuscateLiving
-                                        // don't obfuscate root person
-                                        && !relationship.person().getId().equals(person.getId())
-                                        && (person.isAlive() && relationship.getDistance() <= MAX_DISTANCE_TO_OBFUSCATE
-                                                || relationship.person().isAlive())))
+                                getObfuscateCondition(obfuscateLiving, person, relationship)))
                         .map(relationship -> relationshipMapper.formatInSpanish(relationship, onlySecondaryDescription))
                         .toList())
                 .map(frs -> frs
@@ -141,89 +137,6 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-    }
-
-    private Pair<List<FormattedShortestPathDistance>, List<List<FormattedShortestPathRelationship>>> calculateFormattedShortestPath(
-            EnrichedPerson person,
-            Set<Integer> distinguishedRelatives,
-            boolean obfuscateLiving,
-            boolean onlySecondaryDescription) {
-        long startTime = System.currentTimeMillis();
-
-        var shortestPathFromSource = PathUtils.calculateShortestPathFromSource(
-                person.getGedcom(),
-                person,
-                true,
-                true);
-        Map<Integer, Integer> shortestDistancesByPersonId = shortestPathFromSource.getLeft();
-        Map<Integer, List<Integer>> shortestPathsByPersonId = shortestPathFromSource.getRight();
-
-        List<FormattedShortestPathDistance> formattedShortestPathDistances = person.getGedcom()
-                .getPeople()
-                .stream()
-                .filter(EnrichedPerson::isDistinguishedPerson)
-                .filter(distinguished -> !distinguished.getId().equals(person.getId()))
-                .map(distinguished -> new FormattedShortestPathDistance(
-                        distinguished.getGivenName().map(GivenName::simplified).orElseThrow(),
-                        distinguished.getSurname().map(Surname::simplified).orElseThrow(),
-                        distinguished.getDisplayName(),
-                        distinguishedRelatives.contains(distinguished.getId()),
-                        shortestDistancesByPersonId.get(distinguished.getId())))
-                .filter(distance -> distance.distance() != null)
-                .sorted(Comparator.comparing(FormattedShortestPathDistance::distance)
-                        .thenComparing(FormattedShortestPathDistance::isRelative, Comparator.reverseOrder())
-                        .thenComparing(FormattedShortestPathDistance::surnameSimplified)
-                        .thenComparing(FormattedShortestPathDistance::givenNameSimplified)
-                        .thenComparing(FormattedShortestPathDistance::displayName))
-                .limit(MAX_DISTINGUISHED_PERSONS_TO_DISPLAY)
-                .toList();
-
-        List<List<FormattedShortestPathRelationship>> formattedShortestPathRelationshipsList = SHORTEST_PATH_TARGET_PERSON_IDS
-                .stream()
-                .map(shortestPathPersonId -> {
-                    List<FormattedShortestPathRelationship> formattedShortestPathRelationships = new ArrayList<>();
-                    List<Integer> shortestPath = shortestPathsByPersonId.getOrDefault(shortestPathPersonId, List.of());
-                    if (shortestPath.size() > 1) {
-                        for (int i = 0; i < shortestPath.size(); i++) {
-                            EnrichedPerson personA = Objects.requireNonNull(person.getGedcom().getPersonById(shortestPath.get(i)));
-                            EnrichedPerson personB = (i < shortestPath.size() - 1) ? Objects.requireNonNull(person.getGedcom().getPersonById(shortestPath.get(i + 1))) : null;
-                            Relationship relationship = (i < shortestPath.size() - 1) ? personService.getRelationshipBetween(personB, personA) : Relationship.empty(personA);
-                            RelationshipDto relationshipDto = relationshipMapper.toRelationshipDto(
-                                    relationship,
-                                    obfuscateLiving
-                                            // don't obfuscate root person
-                                            && !relationship.person().getId().equals(person.getId())
-                                            && (person.isAlive() && relationship.getDistance() <= MAX_DISTANCE_TO_OBFUSCATE
-                                            || relationship.person().isAlive()));
-                            FormattedRelationship formattedRelationship = relationshipMapper.formatInSpanish(relationshipDto, onlySecondaryDescription);
-
-                            formattedShortestPathRelationships
-                                    .add(new FormattedShortestPathRelationship(
-                                            formattedRelationship.personName(),
-                                            displayPersonInfo(formattedRelationship),
-                                            formattedRelationship.relationshipDesc()));
-                        }
-                    }
-                    return formattedShortestPathRelationships;
-                })
-                .toList();
-
-        long totalTime = System.currentTimeMillis() - startTime;
-        log.info("Shortest paths calculation time: {} ms", totalTime);
-        return Pair.of(formattedShortestPathDistances, formattedShortestPathRelationshipsList);
-    }
-
-    private @Nullable String displayPersonInfo(FormattedRelationship formattedRelationship) {
-        if (formattedRelationship.personYearOfBirth() == null && formattedRelationship.personCountryOfBirth() == null) {
-            return null;
-        }
-        if (formattedRelationship.personYearOfBirth() == null) {
-            return "(" + formattedRelationship.personCountryOfBirth() + ")";
-        }
-        if (formattedRelationship.personCountryOfBirth() == null) {
-            return "(" + formattedRelationship.personYearOfBirth() + ")";
-        }
-        return "(" + formattedRelationship.personYearOfBirth() + ", " + formattedRelationship.personCountryOfBirth() + ")";
     }
 
     private void exportToPDF(
@@ -295,7 +208,6 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                     document,
                     distances,
                     pageNum.getValue(),
-                    isAnyPersonObfuscated,
                     logoImage,
                     font,
                     bold,
@@ -311,7 +223,6 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                                     document,
                                     relationships,
                                     pageNum.getValue(),
-                                    isAnyPersonObfuscated,
                                     logoImage,
                                     font,
                                     bold,
@@ -326,7 +237,6 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             writeLastPage(
                     document,
                     pageNum.getValue(),
-                    isAnyPersonObfuscated,
                     logoImage,
                     font,
                     bold,
@@ -402,7 +312,6 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             PDDocument document,
             List<FormattedShortestPathDistance> distances,
             int pageNum,
-            boolean isAnyPersonObfuscated,
             PDImageXObject logoImage,
             PDFont font,
             PDFont bold,
@@ -520,11 +429,6 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             writePageNumber(stream, font, pageNum);
             writeGeneratedOn(stream, font);
             writeCollaborate(stream, light);
-
-            if (isAnyPersonObfuscated) {
-                writeText(stream, light, 10.f, 1.2f, 75f, 805f,
-                        "Para revelar las datos privados de las personas ponete en contacto con nosotros (no tiene costo).");
-            }
         }
 
         return true;
@@ -534,7 +438,6 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             PDDocument document,
             List<FormattedShortestPathRelationship> relationships,
             int pageNum,
-            boolean isAnyPersonObfuscated,
             PDImageXObject logoImage,
             PDFont font,
             PDFont bold,
@@ -564,7 +467,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
 
             float yPos = textPosY + 30f;
             float size = 9.5f;
-            float space = 1.5f;
+            float space = getSpace(relationships.size());
 
             MutableInt index = new MutableInt(0);
 
@@ -593,21 +496,34 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
 
             writePageNumber(stream, font, pageNum);
             writeGeneratedOn(stream, font);
-            writeCollaborate(stream, light);
 
-            if (isAnyPersonObfuscated) {
-                writeText(stream, light, 10.f, 1.2f, 75f, 805f,
-                        "Para revelar las datos privados de las personas ponete en contacto con nosotros (no tiene costo).");
+            if (relationships
+                    .stream()
+                    .anyMatch(FormattedShortestPathRelationship::isObfuscated)) {
+                writeReveal(stream, light);
+            } else {
+                writeCollaborate(stream, light);
             }
         }
 
         return true;
     }
 
+    private static float getSpace(int elements) {
+        float minSpace = 1.15f;
+        float maxSpace = 1.55f;
+        int maxRelationshipsForMinSpace = 30;
+        int maxRelationshipsForMaxSpace = 22;
+        return (elements <= maxRelationshipsForMaxSpace)
+                ? maxSpace
+                : ((elements > maxRelationshipsForMinSpace)
+                        ? minSpace
+                        : maxSpace - ((float) elements - maxRelationshipsForMaxSpace) / (maxRelationshipsForMinSpace - maxRelationshipsForMaxSpace) * (maxSpace - minSpace));
+    }
+
     private void writeLastPage(
             PDDocument document,
             int pageNum,
-            boolean isAnyPersonObfuscated,
             PDImageXObject logoImage,
             PDFont font,
             PDFont bold,
@@ -715,12 +631,101 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             writePageNumber(stream, font, pageNum);
             writeGeneratedOn(stream, font);
             writeCollaborate(stream, light);
-
-            if (isAnyPersonObfuscated) {
-                writeText(stream, light, 10.f, 1.2f, 75f, 805f,
-                        "Para revelar las datos privados de las personas ponete en contacto con nosotros (no tiene costo).");
-            }
         }
+    }
+
+    private Pair<List<FormattedShortestPathDistance>, List<List<FormattedShortestPathRelationship>>> calculateFormattedShortestPath(
+            EnrichedPerson person,
+            Set<Integer> distinguishedRelatives,
+            boolean obfuscateLiving,
+            boolean onlySecondaryDescription) {
+        long startTime = System.currentTimeMillis();
+
+        var shortestPathFromSource = PathUtils.calculateShortestPathFromSource(
+                person.getGedcom(),
+                person,
+                true,
+                true);
+        Map<Integer, Integer> shortestDistancesByPersonId = shortestPathFromSource.getLeft();
+        Map<Integer, List<Integer>> shortestPathsByPersonId = shortestPathFromSource.getRight();
+
+        List<FormattedShortestPathDistance> formattedShortestPathDistances = person.getGedcom()
+                .getPeople()
+                .stream()
+                .filter(EnrichedPerson::isDistinguishedPerson)
+                .filter(distinguished -> !distinguished.getId().equals(person.getId()))
+                .map(distinguished -> new FormattedShortestPathDistance(
+                        distinguished.getGivenName().map(GivenName::simplified).orElseThrow(),
+                        distinguished.getSurname().map(Surname::simplified).orElseThrow(),
+                        distinguished.getDisplayName(),
+                        distinguishedRelatives.contains(distinguished.getId()),
+                        shortestDistancesByPersonId.get(distinguished.getId())))
+                .filter(distance -> distance.distance() != null)
+                .sorted(Comparator.comparing(FormattedShortestPathDistance::distance)
+                        .thenComparing(FormattedShortestPathDistance::isRelative, Comparator.reverseOrder())
+                        .thenComparing(FormattedShortestPathDistance::surnameSimplified)
+                        .thenComparing(FormattedShortestPathDistance::givenNameSimplified)
+                        .thenComparing(FormattedShortestPathDistance::displayName))
+                .limit(MAX_DISTINGUISHED_PERSONS_TO_DISPLAY)
+                .toList();
+
+        List<List<FormattedShortestPathRelationship>> formattedShortestPathRelationshipsList = SHORTEST_PATH_TARGET_PERSON_IDS
+                .stream()
+                .map(shortestPathPersonId -> {
+                    List<FormattedShortestPathRelationship> formattedShortestPathRelationships = new ArrayList<>();
+                    List<Integer> shortestPath = shortestPathsByPersonId.getOrDefault(shortestPathPersonId, List.of());
+                    if (shortestPath.size() > 1) {
+                        for (int i = 0; i < shortestPath.size(); i++) {
+                            EnrichedPerson personA = Objects.requireNonNull(person.getGedcom().getPersonById(shortestPath.get(i)));
+                            EnrichedPerson personB = (i < shortestPath.size() - 1) ? Objects.requireNonNull(person.getGedcom().getPersonById(shortestPath.get(i + 1))) : null;
+                            Relationship relationship = (i < shortestPath.size() - 1) ? personService.getRelationshipBetween(personB, personA) : Relationship.empty(personA);
+                            RelationshipDto relationshipDto = relationshipMapper.toRelationshipDto(
+                                    relationship,
+                                    getObfuscateCondition(obfuscateLiving, person, personA, i));
+                            FormattedRelationship formattedRelationship = relationshipMapper.formatInSpanish(relationshipDto, onlySecondaryDescription);
+
+                            formattedShortestPathRelationships
+                                    .add(new FormattedShortestPathRelationship(
+                                            formattedRelationship.personName(),
+                                            displayPersonInfo(formattedRelationship),
+                                            formattedRelationship.relationshipDesc(),
+                                            formattedRelationship.isObfuscated()));
+                        }
+                    }
+                    return formattedShortestPathRelationships;
+                })
+                .toList();
+
+        long totalTime = System.currentTimeMillis() - startTime;
+        log.info("Shortest paths calculation time: {} ms", totalTime);
+        return Pair.of(formattedShortestPathDistances, formattedShortestPathRelationshipsList);
+    }
+
+    private @Nullable String displayPersonInfo(FormattedRelationship formattedRelationship) {
+        if (formattedRelationship.personYearOfBirth() == null && formattedRelationship.personCountryOfBirth() == null) {
+            return null;
+        }
+        if (formattedRelationship.personYearOfBirth() == null) {
+            return "(" + formattedRelationship.personCountryOfBirth() + ")";
+        }
+        if (formattedRelationship.personCountryOfBirth() == null) {
+            return "(" + formattedRelationship.personYearOfBirth() + ")";
+        }
+        return "(" + formattedRelationship.personYearOfBirth() + ", " + formattedRelationship.personCountryOfBirth() + ")";
+    }
+
+    private boolean getObfuscateCondition(boolean obfuscateLiving, EnrichedPerson rootPerson, Relationship relationship) {
+        return obfuscateLiving
+                // don't obfuscate root person
+                && !relationship.person().getId().equals(rootPerson.getId())
+                && (rootPerson.isAlive() && relationship.getDistance() <= MAX_DISTANCE_TO_OBFUSCATE || relationship.person().isAlive());
+    }
+
+    private boolean getObfuscateCondition(boolean obfuscateLiving, EnrichedPerson rootPerson, EnrichedPerson relPerson, int distance) {
+        return obfuscateLiving
+                // don't obfuscate root person
+                && !relPerson.getId().equals(rootPerson.getId())
+                && (rootPerson.isAlive() && distance <= MAX_DISTANCE_TO_OBFUSCATE || relPerson.isAlive());
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -802,11 +807,11 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
         if (isLastPageOfPeople) {
             writeGeneratedOn(stream, font);
         }
-        writeCollaborate(stream, light);
 
         if (isAnyPersonObfuscated) {
-            writeText(stream, light, 10.f, 1.2f, 75f, 805f,
-                    "Para revelar las datos privados de las personas ponete en contacto con nosotros (no tiene costo).");
+            writeReveal(stream, light);
+        } else {
+            writeCollaborate(stream, light);
         }
     }
 
@@ -895,6 +900,11 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
         float offset = (12f - 11.2f) * 1.2f;
         writeText(stream, font, 11.5f, 1.2f, 30f, 780f + offset,
                 "Generado el " + dateTimeStr);
+    }
+
+    private void writeReveal(PDPageContentStream stream, PDFont font) throws IOException {
+        writeText(stream, font, 10.f, 1.2f, 80f, 805f,
+                "Para revelar las datos privados de las personas ponete en contacto con nosotros (no tiene costo).");
     }
 
     private void writeCollaborate(PDPageContentStream stream, PDFont font) throws IOException {

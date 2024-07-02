@@ -5,6 +5,7 @@ import jakarta.annotation.Nullable;
 public record FormattedShortestPathRelationship(
         String displayName,
         @Nullable String personInfo,
-        @Nullable String relationshipDesc) {
+        @Nullable String relationshipDesc,
+        boolean isObfuscated) {
 
 }
