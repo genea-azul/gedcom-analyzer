@@ -15,6 +15,7 @@ import org.folg.gedcom.model.GedcomTag;
 import org.folg.gedcom.model.Person;
 
 import java.time.Period;
+import java.time.ZonedDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +55,7 @@ public class EnrichedPerson {
     private final Optional<Age> age;
     private final boolean isDistinguishedPerson;
     private final boolean isDisappearedPerson;
+    private final Optional<ZonedDateTime> updateDate;
 
     // Custom event facts and tag extensions
     private List<EventFact> customEventFacts;
@@ -111,6 +113,7 @@ public class EnrichedPerson {
                 .or(() -> isAlive ? Optional.of(Date.now(properties.getZoneId())) : Optional.empty()));
         isDistinguishedPerson = PersonUtils.isDistinguishedPerson(person);
         isDisappearedPerson = PersonUtils.isDisappearedPerson(person);
+        updateDate = PersonUtils.getUpdateDate(person, properties.getZoneId());
     }
 
     public static EnrichedPerson of(Person legacyPerson, EnrichedGedcom gedcom) {
