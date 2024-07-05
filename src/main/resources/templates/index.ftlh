@@ -375,7 +375,7 @@
     </div>
 
     <div class="row bg-light">
-      <div class="col text-center small">
+      <div class="col text-center small p-1">
         &iexcl;Solicitá acceso al &aacute;rbol y carg&aacute; info!
       </div>
     </div>

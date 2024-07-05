@@ -403,6 +403,23 @@ public class SearchService {
                         return 51;
                     }
                 }
+
+                // Try to match by only name, when it has more than 1 word
+                boolean bothHaveManyWordsNames = person.getGivenName().map(GivenName::wordsCount).map(wordCount -> wordCount > 1).orElse(false)
+                        && compare.getGivenName().map(GivenName::wordsCount).map(wordCount -> wordCount > 1).orElse(false);
+                boolean isChildOf = person.getParents().stream().map(EnrichedPerson::getId).anyMatch(id -> id.equals(compare.getId()))
+                        || compare.getParents().stream().map(EnrichedPerson::getId).anyMatch(id -> id.equals(person.getId()));
+                boolean bothHaveBirthCountry = person.getPlaceOfBirth().map(Place::country).isPresent()
+                        && compare.getPlaceOfBirth().map(Place::country).isPresent();
+                if (bothHaveManyWordsNames
+                        && !isChildOf
+                        && (!bothHaveBirthCountry
+                                || person.getPlaceOfBirth().map(Place::country).equals(compare.getPlaceOfBirth().map(Place::country)))) {
+                    if (person.matchesGivenNameAndSurname(compare)) {
+                        int minWordCount = Math.min(person.getGivenName().map(GivenName::wordsCount).orElseThrow(), compare.getGivenName().map(GivenName::wordsCount).orElseThrow());
+                        return 99 + 2 - minWordCount;
+                    }
+                }
             }
 
         // They both have dob or dod set

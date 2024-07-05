@@ -30,8 +30,8 @@ public class NetworkFamilyTreeServiceTests {
     @Autowired
     private GedcomAnalyzerProperties properties;
 
-    @Value("${obfuscate-condition:false}")
-    private boolean obfuscateCondition;
+    @Value("${obfuscate-living:false}")
+    private boolean obfuscateLiving;
 
     @Test
     public void testGenerateNetworkHTML() {
@@ -60,7 +60,7 @@ public class NetworkFamilyTreeServiceTests {
                 htmlPyvisNetworkFilePath,
                 csvPyvisNetworkNodesFilePath,
                 csvPyvisNetworkEdgesFilePath,
-                false,
+                obfuscateLiving,
                 relationshipsList);
     }
 

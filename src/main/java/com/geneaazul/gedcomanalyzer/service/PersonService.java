@@ -317,6 +317,7 @@ public class PersonService {
 
         Map<Optional<Integer>, Optional<ReferenceType>> previousPersonAdoptionTypesByParentId;
         if (calculateIsHalf) {
+            //noinspection OptionalAssignedToNull
             List<Pair<Optional<Integer>, Optional<ReferenceType>>> previousPersonParents = person
                     .getSpousesWithChildren()
                     .stream()
@@ -535,9 +536,12 @@ public class PersonService {
                                     .map(PersonService::resolveAdoptionType)
                                     .orElse(null),
                             Set.of(),
-                            relationshipHelper.parentSpouseForB.isPresent()
-                                    ? List.of(relationshipHelper.parent.getId())
-                                    : List.of(relationshipHelper.parent.getId(), relationshipHelper.parentSpouseForB.map(EnrichedPerson::getId).get()));
+                            relationshipHelper.parentSpouseForB.isEmpty()
+                                    ? List.of(
+                                            relationshipHelper.parent.getId())
+                                    : List.of(
+                                            relationshipHelper.parent.getId(),
+                                            relationshipHelper.parentSpouseForB.map(EnrichedPerson::getId).orElseThrow()));
         }
 
         Optional<EnrichedSpouseWithChildren> spouseWithChildren = personA

@@ -1,5 +1,6 @@
 package com.geneaazul.gedcomanalyzer.service;
 
+import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
 import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
@@ -29,6 +30,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Month;
 import java.time.Year;
+import java.time.ZonedDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +57,8 @@ public class GedcomAnalyzerServiceTests {
     private SurnameService surnameService;
     @Autowired
     private RelationshipMapper relationshipMapper;
+    @Autowired
+    private GedcomAnalyzerProperties properties;
 
     private EnrichedGedcom gedcom;
 
@@ -213,7 +217,7 @@ public class GedcomAnalyzerServiceTests {
         /*
         System.out.println("getSurnamesCardinalityByPlaceOfAnyEvent (2):");
         gedcomAnalyzerService
-                .getSurnamesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null)
+                .getSurnamesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null, true, false)
                 .stream()
                 .limit(576)
                 .forEach(cardinality -> System.out.println(
@@ -305,6 +309,17 @@ public class GedcomAnalyzerServiceTests {
         System.out.println("findPersonsByYearOfDeathAndNoParents:");
         searchService
                 .findPersonsByYearOfDeathAndNoParents(Year.of(2020), null, gedcom.getPeople())
+                .forEach(System.out::println);
+    }
+
+    @Test
+    public void findLastModified() {
+        System.out.println("findLastModified:");
+        ZonedDateTime minUpdateDate = ZonedDateTime.now(properties.getZoneId()).minusDays(3);
+        gedcom
+                .getPeople()
+                .stream()
+                .filter(person -> person.getUpdateDate().map(updateDate -> updateDate.isAfter(minUpdateDate)).orElse(false))
                 .forEach(System.out::println);
     }
 

@@ -26,11 +26,15 @@ import org.folg.gedcom.model.Name;
 import org.folg.gedcom.model.ParentFamilyRef;
 import org.folg.gedcom.model.Person;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -38,6 +42,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -73,6 +79,9 @@ public class PersonUtils {
     public static final String FORMER_NAME_TAG = "_FORMERNAME";
     public static final String UPDATED_TAG = "_UPD";
     public static final String PERSONAL_PHOTO_TAG = "_PERSONALPHOTO";
+
+    public static final Pattern UPDATE_DATE_PATTERN = Pattern.compile("(\\d{1,2}) (\\w{3}) (\\d{4}) (.{8}) (GMT|UTC)\\s*([+-]\\d{4})");
+    public static final DateTimeFormatter UPDATE_DATE_FORMATTER = DateTimeFormatter.ofPattern("d MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
 
     private static final UniformRandomProvider RNG = RandomSource.JDK.create();
 
@@ -586,6 +595,33 @@ public class PersonUtils {
                 // A child could be repeated when it has biological and adopted relationship with a parent
                 .filter(StreamUtils.distinctByKey(Person::getId))
                 .toList();
+    }
+
+    public static Optional<ZonedDateTime> getUpdateDate(Person person, ZoneId zoneId) {
+        return person.getExtensions()
+                .values()
+                .stream()
+                .map(gedcomTags -> (List<?>) gedcomTags)
+                .flatMap(List::stream)
+                .map(gedcomTag -> (GedcomTag) gedcomTag)
+                .filter(gedcomTag -> gedcomTag.getTag().equals(UPDATED_TAG))
+                .map(GedcomTag::getValue)
+                .map(StringUtils::trim)
+                .map(updateDateStr -> {
+                    Matcher matcher = UPDATE_DATE_PATTERN.matcher(updateDateStr);
+                    if (matcher.matches()) {
+                        // Date
+                        return matcher.group(1) + " " + StringUtils.capitalize(matcher.group(2).toLowerCase()) + " " + matcher.group(3)
+                                // Time
+                                + " " + matcher.group(4)
+                                // Zone
+                                + " " + matcher.group(6);
+                    }
+                    return updateDateStr;
+                })
+                .map(updateDateStr -> OffsetDateTime.parse(updateDateStr, UPDATE_DATE_FORMATTER))
+                .map(updateDate -> updateDate.atZoneSameInstant(zoneId))
+                .findFirst();
     }
 
     public static String obfuscateName(
