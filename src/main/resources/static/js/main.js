@@ -244,7 +244,17 @@ $(document).ready(function() {
                         } else {
                             $resultComponent
                                 .html("<p>🔎 No se encontraron resultados. 🔍</p>")
-                                .append("<p>Edit&aacute; la b&uacute;squeda agregando fechas o completando nombres de padres y parejas.</p>");
+                                .append("<p>Edit&aacute; la b&uacute;squeda agregando fechas o completando nombres de padres y parejas.</p>")
+                                .append($("<p>")
+                                        .addClass("text-center")
+                                        .html("&iexcl;Solicitá acceso al &aacute;rbol y carg&aacute; info!")
+                                        .append($("<a>")
+                                                .addClass("link-secondary text-decoration-none ms-2")
+                                                .attr("href", "https://instagram.com/_u/genea.azul")
+                                                .attr("target", "_blank")
+                                                .attr("title", "@genea.azul")
+                                                .append($("<i>")
+                                                        .addClass("bi bi-instagram"))));
                             if (!!searchFamilyRequest["individual"]["sex"]) {
                                 $resultComponent
                                     .append("<p>Verific&aacute; que el <span class=\"text-danger fw-bold\">sexo</span> de la persona est&eacute; bien seleccionado.</p>");
@@ -307,7 +317,25 @@ var finalizeSearch = function(callback = function() {}) {
 
 var enableFamilyTreeButtons = function(personUuid, personsCountInTree, previousTimeoutMs) {
 
-    var timeoutMs = (personsCountInTree || 0) * 1000 / FAMILY_TREE_PROCESS_PERSONS_BY_SEC + FAMILY_TREE_PROCESS_FIXED_DELAY_MILLIS;
+    var currentTimeoutMs = (personsCountInTree || 0) * 1000 / FAMILY_TREE_PROCESS_PERSONS_BY_SEC + FAMILY_TREE_PROCESS_FIXED_DELAY_MILLIS;
+    var timeoutMs = previousTimeoutMs + currentTimeoutMs;
+
+    if (timeoutMs >= 5000) {
+        var $countDownComponent = $("<span>")
+                .addClass("ms-1")
+                .attr("id", "#search-family-tree-wait-countdown-" + personUuid);
+
+        $("#search-family-tree-wait-sign-" + personUuid)
+            .append($countDownComponent);
+
+        var timeoutSec = Math.floor(timeoutMs / 1000);
+        var interval = setInterval(function() {
+          $countDownComponent.html(timeoutSec);
+          if (--timeoutSec < 0) {
+            clearInterval(interval);
+          }
+        }, 1000);
+    }
 
     setTimeout(function() {
         $("#search-family-tree-wait-sign-" + personUuid)
@@ -322,9 +350,9 @@ var enableFamilyTreeButtons = function(personUuid, personsCountInTree, previousT
             .removeClass("btn-dark")
             .addClass("btn-outline-light")
             .removeClass("disabled");
-    }, previousTimeoutMs + timeoutMs);
+    }, timeoutMs);
 
-    return timeoutMs;
+    return currentTimeoutMs;
 };
 
 var searchSurnames = function(surnames) {
