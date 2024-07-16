@@ -248,14 +248,14 @@ public class GedcomAnalyzerServiceTests {
                 .forEach(cardinality -> System.out.println(
                         StringUtils.rightPad(cardinality.country(), 20)
                                 + " - " + String.format("%5d", cardinality.cardinality())
-                                + " - " + String.format("%5.4f%%", cardinality.percentage())
+                                + " - " + String.format("%7.4f%%", cardinality.percentage())
                                 + " - " + cardinality.surnames()));
     }
 
     @Test
     public void getImmigrantsCitiesCardinalityByPlaceOfAnyEvent() {
         List<GedcomAnalyzerService.SurenamesCardinality> places = gedcomAnalyzerService
-                .getImmigrantsCitiesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null, null, true, false, false, false, true);
+                .getImmigrantsCitiesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null, null, true, false, false, false, false, true);
         int totalImmigrants = places
                 .stream()
                 .mapToInt(GedcomAnalyzerService.SurenamesCardinality::cardinality)
@@ -265,12 +265,17 @@ public class GedcomAnalyzerServiceTests {
                 .forEach(cardinality -> System.out.println(
                         StringUtils.leftPad(cardinality.country(), 80)
                                 + " - " + String.format("%5d", cardinality.cardinality())
-                                + " - " + String.format("%5.4f%%", cardinality.percentage())
+                                + " - " + String.format("%7.4f%%", cardinality.percentage())
                                 + " - " + cardinality.surnames()));
 
         if (!places.isEmpty()) {
             System.out.println("people by city: " + places.getFirst().country() + " (" + places.getFirst().persons().size() + ")");
-            places.getFirst().persons().forEach(System.out::println);
+            places
+                    .getFirst()
+                    .persons()
+                    .stream()
+                    .limit(200)
+                    .forEach(System.out::println);
         }
     }
 
@@ -373,29 +378,29 @@ public class GedcomAnalyzerServiceTests {
     public void getOlderAndLongestLivingPersons() {
         System.out.println("getOlderAndLongestLivingPersons:");
         List<EnrichedPerson> personsByPlace = searchService
-                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", null, null, true, false, gedcom.getPeople());
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", null, null, true, false, false, gedcom.getPeople());
         List<EnrichedPerson> alivePersonsByPlace = searchService
-                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", true, null, true, false, gedcom.getPeople());
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", true, null, true, false, false, gedcom.getPeople());
         List<EnrichedPerson> deadPersonsByPlace = searchService
-                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", false, null, true, false, gedcom.getPeople());
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", false, null, true, false, false, gedcom.getPeople());
         List<EnrichedPerson> aliveMenByPlace = searchService
-                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", true, SexType.M, true, false, gedcom.getPeople())
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", true, SexType.M, true, false, false, gedcom.getPeople())
                 .stream()
                 .sorted(PersonUtils.DATES_COMPARATOR)
                 .toList();
         List<EnrichedPerson> aliveWomenByPlace = searchService
-                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", true, SexType.F, true, false, gedcom.getPeople())
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", true, SexType.F, true, false, false, gedcom.getPeople())
                 .stream()
                 .sorted(PersonUtils.DATES_COMPARATOR)
                 .toList();
         List<EnrichedPerson> deadMenByPlace = searchService
-                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", false, SexType.M, true, false, gedcom.getPeople())
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", false, SexType.M, true, false, false, gedcom.getPeople())
                 .stream()
                 .filter(p -> p.getAge().isPresent())
                 .sorted(PersonUtils.AGES_COMPARATOR.reversed())
                 .toList();
         List<EnrichedPerson> deadWomenByPlace = searchService
-                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", false, SexType.F, true, false, gedcom.getPeople())
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", false, SexType.F, true, false, false, gedcom.getPeople())
                 .stream()
                 .filter(p -> p.getAge().isPresent())
                 .sorted(PersonUtils.AGES_COMPARATOR.reversed())

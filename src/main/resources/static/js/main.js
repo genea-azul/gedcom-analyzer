@@ -14,6 +14,7 @@ $(document).ready(function() {
 
 const FAMILY_TREE_PROCESS_PERSONS_BY_SEC = 250;
 const FAMILY_TREE_PROCESS_FIXED_DELAY_MILLIS = 3250;
+const MIN_MILLIS_TO_DISPLAY_WAIT_COUNT_DOWN = 7500;
 
 var toggleYearOfDeath = function(isAliveComponent, yearOfDeathComponent) {
     $(isAliveComponent).on("change", function() {
@@ -320,7 +321,7 @@ var enableFamilyTreeButtons = function(personUuid, personsCountInTree, previousT
     var currentTimeoutMs = (personsCountInTree || 0) * 1000 / FAMILY_TREE_PROCESS_PERSONS_BY_SEC + FAMILY_TREE_PROCESS_FIXED_DELAY_MILLIS;
     var timeoutMs = previousTimeoutMs + currentTimeoutMs;
 
-    if (timeoutMs >= 5000) {
+    if (timeoutMs >= MIN_MILLIS_TO_DISPLAY_WAIT_COUNT_DOWN) {
         var $countDownComponent = $("<span>")
                 .addClass("ms-1")
                 .attr("id", "#search-family-tree-wait-countdown-" + personUuid);

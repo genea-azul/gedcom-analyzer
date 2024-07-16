@@ -32,7 +32,6 @@ import com.geneaazul.gedcomanalyzer.utils.StreamUtils;
 import org.springframework.stereotype.Service;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folg.gedcom.model.ChildRef;
@@ -212,26 +211,7 @@ public class GedcomAnalyzerService {
             }
         });
 
-        return places
-                .stream()
-                .map(PlaceUtils::removeLastParenthesis)
-                .map(place -> StringUtils.splitByWholeSeparator(place, ", "))
-                .peek(ArrayUtils::reverse)
-                .sorted((a1, a2) -> {
-                    int cmp = 0;
-                    int i = 0;
-                    while (i < a1.length && i < a2.length && (cmp = a1[i].compareTo(a2[i])) == 0) {
-                        i++;
-                    }
-                    return cmp == 0 ? Integer.compare(a1.length, a2.length) : cmp;
-                })
-                .peek(place -> {
-                    if (!reversePlace) {
-                        ArrayUtils.reverse(place);
-                    }
-                })
-                .map(place -> StringUtils.join(place, ", "))
-                .toList();
+        return PlaceUtils.sortPlaces(places, reversePlace);
     }
 
     /**
@@ -343,7 +323,7 @@ public class GedcomAnalyzerService {
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         Map.Entry::getValue,
-                        (u, v) -> u,
+                        (u, _) -> u,
                         LinkedHashMap::new));
     }
 
@@ -404,7 +384,7 @@ public class GedcomAnalyzerService {
             boolean isExactPlace) {
 
         List<Surname> surnamesByPlaceOfBirth = searchService
-                .findPersonsByPlaceOfAnyEvent(placeOfAnyEvent, isAlive, null, includeSpousePlaces, isExactPlace, people)
+                .findPersonsByPlaceOfAnyEvent(placeOfAnyEvent, isAlive, null, includeSpousePlaces, false, isExactPlace, people)
                 .stream()
                 .map(EnrichedPerson::getSurname)
                 .flatMap(Optional::stream)
@@ -497,7 +477,7 @@ public class GedcomAnalyzerService {
             boolean isExactPlace) {
 
         List<Pair<Optional<String>, Set<String>>> countries = searchService
-                .findPersonsByPlaceOfAnyEvent(placeOfAnyEvent, isAlive, null, includeSpousePlaces, isExactPlace, people)
+                .findPersonsByPlaceOfAnyEvent(placeOfAnyEvent, isAlive, null, includeSpousePlaces, false, isExactPlace, people)
                 .stream()
                 .map(person -> Pair.of(
                         person.getSurname().map(Surname::value),
@@ -525,6 +505,11 @@ public class GedcomAnalyzerService {
                                 .map(c -> Pair.of(c, pair.getLeft())))
                         .toList());
 
+        int countriesCount = countries
+                .stream()
+                .mapToInt(pair -> pair.getRight().size())
+                .sum();
+
         return cardinality
                 .entrySet()
                 .stream()
@@ -535,7 +520,7 @@ public class GedcomAnalyzerService {
                 .map(entry -> new SurenamesCardinality(
                         entry.getKey(),
                         entry.getValue(),
-                        ((float) Math.round((float) entry.getValue() / countries.size() * 1_000_000) / 10_000),
+                        ((float) Math.round((float) entry.getValue() / countriesCount * 1_000_000) / 10_000),
                         surnamesByCountry.get(entry.getKey()),
                         null))
                 .toList();
@@ -558,28 +543,33 @@ public class GedcomAnalyzerService {
             String placeOfAnyEvent,
             @Nullable String foreignPlace,
             @Nullable Boolean isAlive,
-            boolean includeSpousePlaces, // for placeOfAnyEvent
+            boolean includeSpousePlaces,      // for placeOfAnyEvent
+            boolean includeAllChildrenPlaces, // for placeOfAnyEvent
             boolean isExactPlace,        // for person's place for search compared with placeOfAnyEvent
             boolean onlyWithCity,        // for person's place for search
             boolean onlyConsiderCountry, // for person's returned place
             boolean surnamesOrderedByOccurrences) {
 
-        String countryOfAnyEvent = PlaceUtils.getCountry(placeOfAnyEvent);
+        String countryOfAnyEvent = PlaceUtils.removeLastParenthesis(PlaceUtils.getCountry(placeOfAnyEvent));
+
+        Function<Place, String> placeMapper = onlyConsiderCountry
+                ? Place::country
+                : place -> PlaceUtils.removeSubCityComponent(PlaceUtils.removeLastParenthesis(place.name()));
 
         Predicate<EnrichedPerson> isImmigrantCondition = person -> getForeignPlace(
                 person,
-                countryOfAnyEvent,
+                countryOfAnyEvent, // the excluded country
                 foreignPlace,
                 isExactPlace,
                 onlyWithCity,
-                onlyConsiderCountry)
-                .filter(fplace -> person.getPlacesOfAnyEvent(true)
+                placeMapper)
+                .filter(fplace -> person.getPlacesOfAnyEvent(includeSpousePlaces, includeAllChildrenPlaces)
                         .stream()
                         .anyMatch(place -> !fplace.endsWith(place.country())))
                 .isPresent();
 
         List<Pair<EnrichedPerson, String>> cities = searchService
-                .findPersonsByPlaceOfAnyEvent(placeOfAnyEvent, isAlive, null, includeSpousePlaces, isExactPlace, people)
+                .findPersonsByPlaceOfAnyEvent(placeOfAnyEvent, isAlive, null, includeSpousePlaces, includeAllChildrenPlaces, isExactPlace, people)
                 .stream()
                 .flatMap(person -> personService
                         .getPeopleInTree(person, false, true, false, isImmigrantCondition)
@@ -596,7 +586,8 @@ public class GedcomAnalyzerService {
                                 foreignPlace,
                                 isExactPlace,
                                 onlyWithCity,
-                                onlyConsiderCountry).get()))
+                                placeMapper)
+                                .get()))
                 .toList();
 
         Map<String, Integer> cardinality = CollectionUtils.getCardinalityMap(
@@ -604,6 +595,14 @@ public class GedcomAnalyzerService {
                         .stream()
                         .map(Pair::getRight)
                         .toList());
+
+        Map<String, String> reversedPlacesByPlace = cardinality
+                .keySet()
+                .stream()
+                .distinct()
+                .collect(Collectors.toMap(
+                        Function.identity(),
+                        place -> StringUtils.join(PlaceUtils.reversePlaceWords(PlaceUtils.removeLastParenthesis(place)), ", ")));
 
         List<Pair<String, Optional<String>>> citiesAndSurnames = cities
                 .stream()
@@ -634,6 +633,7 @@ public class GedcomAnalyzerService {
                 .sorted(Comparator
                         .<Map.Entry<String, Integer>>comparingInt(Map.Entry::getValue)
                         .reversed()
+                        .thenComparing(entry -> reversedPlacesByPlace.get(entry.getKey()))
                         .thenComparing(Map.Entry::getKey))
                 .map(entry -> new SurenamesCardinality(
                         entry.getKey(),
@@ -648,9 +648,9 @@ public class GedcomAnalyzerService {
             EnrichedPerson person,
             String excludeCountry,
             @Nullable String foreignPlace,
-            boolean isExactPlace,          // for person's place for search compared with foreignPlace
-            boolean onlyWithCity,          // for person's place for search
-            boolean onlyConsiderCountry) { // for person's returned place
+            boolean isExactPlace,                  // for person's place for search compared with foreignPlace
+            boolean onlyWithCity,                  // for person's place for search
+            Function<Place, String> placeMapper) { // for person's returned place
 
         boolean hasExcludedCountryOfBirth = person
                 .getPlaceOfBirth()
@@ -667,7 +667,7 @@ public class GedcomAnalyzerService {
                 foreignPlace,
                 isExactPlace,
                 onlyWithCity,
-                onlyConsiderCountry,
+                placeMapper,
                 p -> p
                         .getPlaceOfBirth()
                         .stream());
@@ -677,7 +677,7 @@ public class GedcomAnalyzerService {
                 foreignPlace,
                 isExactPlace,
                 onlyWithCity,
-                onlyConsiderCountry,
+                placeMapper,
                 p -> p
                         .getSpousesWithChildren()
                         .stream()
@@ -702,9 +702,9 @@ public class GedcomAnalyzerService {
             EnrichedPerson person,
             String excludeCountry,
             @Nullable String foreignPlace,
-            boolean isExactPlace,        // for person's place for search compared with foreignPlace
-            boolean onlyWithCity,        // for person's place for search
-            boolean onlyConsiderCountry, // for person's returned place
+            boolean isExactPlace,                // for person's place for search compared with foreignPlace
+            boolean onlyWithCity,                // for person's place for search
+            Function<Place, String> placeMapper, // for person's returned place
             Function<EnrichedPerson, Stream<Place>> personPlacesExtractor) {
         return personPlacesExtractor
                 .apply(person)
@@ -714,7 +714,7 @@ public class GedcomAnalyzerService {
                                 ? place.forSearch().equals(foreignPlace)
                                 : place.forSearch().endsWith(foreignPlace)))
                 .filter(place -> !onlyWithCity || !place.forSearch().equals(place.country()))
-                .map(place -> onlyConsiderCountry ? place.country() : place.name())
+                .map(placeMapper)
                 .findFirst();
     }
 
