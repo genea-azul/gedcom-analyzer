@@ -4,6 +4,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -103,23 +104,7 @@ public class PlaceUtils {
         return places
                 .stream()
                 .map(PlaceUtils::reversePlaceWords)
-                .sorted((a1, a2) -> {
-                    int cmp = 0;
-                    int i = 0;
-                    while (i < a1.length && i < a2.length) {
-                        if (i == 0) {
-                            String country1 = PlaceUtils.removeLastParenthesis(a1[0]);
-                            String country2 = PlaceUtils.removeLastParenthesis(a2[0]);
-                            if ((cmp = country1.compareTo(country2)) != 0) {
-                                break;
-                            }
-                        } else if ((cmp = a1[i].compareTo(a2[i])) != 0) {
-                            break;
-                        }
-                        i++;
-                    }
-                    return cmp == 0 ? Integer.compare(a1.length, a2.length) : cmp;
-                })
+                .sorted(REVERSED_PLACE_ARRAY_COMPARATOR)
                 .peek(place -> {
                     if (!keepPlaceReversed) {
                         ArrayUtils.reverse(place);
@@ -154,5 +139,23 @@ public class PlaceUtils {
         }
         return place;
     }
+
+    public static final Comparator<String[]> REVERSED_PLACE_ARRAY_COMPARATOR = (a1, a2) -> {
+        int cmp = 0;
+        int i = 0;
+        while (i < a1.length && i < a2.length) {
+            if (i == 0) {
+                String country1 = PlaceUtils.removeLastParenthesis(a1[0]);
+                String country2 = PlaceUtils.removeLastParenthesis(a2[0]);
+                if ((cmp = country1.compareTo(country2)) != 0) {
+                    break;
+                }
+            } else if ((cmp = a1[i].compareTo(a2[i])) != 0) {
+                break;
+            }
+            i++;
+        }
+        return cmp == 0 ? Integer.compare(a1.length, a2.length) : cmp;
+    };
 
 }

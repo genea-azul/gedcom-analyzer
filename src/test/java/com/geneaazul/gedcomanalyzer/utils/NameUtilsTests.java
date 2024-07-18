@@ -374,6 +374,18 @@ public class NameUtilsTests {
                     Surname matching = PersonUtils.getShortenedSurnameMainWord("Burgos", properties.getNormalizedSurnamesMap()).orElse(null);
                     assertThat(surname.matches(matching)).isTrue();
                 });
+
+        name.setSurname("Iriart dita de Barneix");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("Iriart dita de Barneix");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("hiriart");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("hiriart");
+
+                    Surname matching = PersonUtils.getShortenedSurnameMainWord("Iriart", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(matching)).isTrue();
+                });
     }
 
 }

@@ -57,6 +57,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -568,15 +569,18 @@ public class GedcomAnalyzerService {
                         .anyMatch(place -> !fplace.endsWith(place.country())))
                 .isPresent();
 
+        // Evaluated AFTER visiting person
+        BiPredicate<EnrichedPerson, Integer> isImmigrantStopCondition = (person, _) -> isImmigrantCondition.test(person);
+
         List<Pair<EnrichedPerson, String>> cities = searchService
                 .findPersonsByPlaceOfAnyEvent(placeOfAnyEvent, isAlive, null, includeSpousePlaces, includeAllChildrenPlaces, isExactPlace, people)
                 .stream()
                 .flatMap(person -> personService
-                        .getPeopleInTree(person, false, true, false, isImmigrantCondition)
+                        .getPeopleInTree(person, false, true, false, isImmigrantStopCondition)
                         .stream()
                         .map(Relationships::findFirst)
-                        .map(Relationship::person)
-                        .filter(isImmigrantCondition))
+                        .map(Relationship::person))
+                .filter(isImmigrantCondition)
                 .filter(StreamUtils.distinctByKey(EnrichedPerson::getId))
                 .map(person -> Pair.of(
                         person,

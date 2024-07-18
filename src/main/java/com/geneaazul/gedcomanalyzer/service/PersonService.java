@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Predicate;
+import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -97,7 +97,7 @@ public class PersonService {
                 excludeRootPerson,
                 onlyAscDirection,
                 mergeTreeSides,
-                _ -> false);
+                (_, _) -> false);
     }
 
     public List<Relationships> getPeopleInTree(
@@ -105,7 +105,7 @@ public class PersonService {
             boolean excludeRootPerson,
             boolean onlyAscDirection,
             boolean mergeTreeSides,
-            @NonNull Predicate<EnrichedPerson> stopTraversingCondition) {
+            @NonNull BiPredicate<EnrichedPerson, Integer> stopTraversingCondition) {
         Map<Integer, Relationships> visitedPersons = new LinkedHashMap<>(128);
         traversePeopleInTree(
                 Relationship.empty(person),
@@ -132,7 +132,7 @@ public class PersonService {
             @NonNull Map<Integer, Relationships> visitedPersons,
             @NonNull TreeTraversalDirection direction,
             @NonNull Relationships.VisitedRelationshipTraversalStrategy visitedRelationshipTraversalStrategy,
-            @NonNull Predicate<EnrichedPerson> stopTraversingCondition,
+            @NonNull BiPredicate<EnrichedPerson, Integer> stopTraversingCondition,
             boolean mergeTreeSides,
             boolean onlyPropagateTreeSides) {
 
@@ -205,6 +205,7 @@ public class PersonService {
 
         resolveRelativesToTraverse(
                 person,
+                toVisitRelationship.getDistance(),
                 direction,
                 merged.getTreeSides(),
                 previousPersonId,
@@ -232,7 +233,7 @@ public class PersonService {
             @Nullable Integer previousPersonId,
             @NonNull TreeTraversalDirection direction,
             @NonNull Relationships.VisitedRelationshipTraversalStrategy visitedRelationshipTraversalStrategy,
-            @NonNull Predicate<EnrichedPerson> stopTraversingCondition) {
+            @NonNull BiPredicate<EnrichedPerson, Integer> stopTraversingCondition) {
 
         Relationships relationships = visitedPersons.get(toVisitRelationship.person().getId());
 
@@ -248,6 +249,7 @@ public class PersonService {
         // Propagate merged tree sides to relatives
         resolveRelativesToTraverse(
                 toVisitRelationship.person(),
+                toVisitRelationship.getDistance(),
                 direction,
                 merged.getTreeSides(),
                 previousPersonId,
@@ -294,16 +296,17 @@ public class PersonService {
      */
     private static Stream<RelativeAndDirection> resolveRelativesToTraverse(
             @NonNull EnrichedPerson person,
+            int distance,
             @NonNull TreeTraversalDirection direction,
             @Nullable Set<TreeSideType> treeSides,
             @Nullable Integer previousPersonId,
-            @NonNull Predicate<EnrichedPerson> stopTraversingCondition) {
+            @NonNull BiPredicate<EnrichedPerson, Integer> stopTraversingCondition) {
 
         if (direction == TreeTraversalDirection.SAME) {
             return Stream.of();
         }
 
-        if (stopTraversingCondition.test(person)) {
+        if (stopTraversingCondition.test(person, distance)) {
             return Stream.of();
         }
 
