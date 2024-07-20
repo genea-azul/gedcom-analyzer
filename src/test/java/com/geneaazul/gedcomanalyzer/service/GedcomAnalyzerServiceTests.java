@@ -267,7 +267,18 @@ public class GedcomAnalyzerServiceTests {
     @Test
     public void getImmigrantsCitiesCardinalityByPlaceOfAnyEvent() throws IOException {
         List<GedcomAnalyzerService.SurenamesCardinality> places = gedcomAnalyzerService
-                .getImmigrantsCitiesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null, null, true, true, false, false, false, true);
+                .getImmigrantsCitiesCardinalityByPlaceOfAnyEvent(
+                        gedcom.getPeople(),
+                        "Azul, Buenos Aires, Argentina",
+                        null,
+                        new String[]{ "Uruguay", "Brasil", "Chile", "Perú", "Paraguay", "Bolívia", "Océano Atlántico" },
+                        null,
+                        true,
+                        true,
+                        false,
+                        false,
+                        false,
+                        true);
         int totalImmigrants = places
                 .stream()
                 .mapToInt(GedcomAnalyzerService.SurenamesCardinality::cardinality)

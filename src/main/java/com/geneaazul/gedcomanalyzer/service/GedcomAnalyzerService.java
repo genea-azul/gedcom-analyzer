@@ -59,7 +59,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -543,6 +542,7 @@ public class GedcomAnalyzerService {
             List<EnrichedPerson> people,
             String placeOfAnyEvent,
             @Nullable String foreignPlace,
+            @Nullable String[] notForeignCountriesOnTreeTraversal,
             @Nullable Boolean isAlive,
             boolean includeSpousePlaces,      // for placeOfAnyEvent
             boolean includeAllChildrenPlaces, // for placeOfAnyEvent
@@ -557,20 +557,20 @@ public class GedcomAnalyzerService {
                 ? Place::country
                 : place -> PlaceUtils.removeSubCityComponent(PlaceUtils.removeLastParenthesis(place.name()));
 
-        Predicate<EnrichedPerson> isImmigrantCondition = person -> getForeignPlace(
+        BiPredicate<EnrichedPerson, Boolean> isImmigrantCondition = (person, disableNotForeignCountries) -> getForeignPlace(
                 person,
                 countryOfAnyEvent, // the excluded country
                 foreignPlace,
                 isExactPlace,
                 onlyWithCity,
                 placeMapper)
-                .filter(fplace -> person.getPlacesOfAnyEvent(includeSpousePlaces, includeAllChildrenPlaces)
-                        .stream()
-                        .anyMatch(place -> !fplace.endsWith(place.country())))
+                .filter(fplace
+                        -> !fplace.endsWith(countryOfAnyEvent)
+                        && (disableNotForeignCountries || !StringUtils.endsWithAny(fplace, notForeignCountriesOnTreeTraversal)))
                 .isPresent();
 
         // Evaluated AFTER visiting person
-        BiPredicate<EnrichedPerson, Integer> isImmigrantStopCondition = (person, _) -> isImmigrantCondition.test(person);
+        BiPredicate<EnrichedPerson, Integer> isImmigrantStopCondition = (person, _) -> isImmigrantCondition.test(person, false);
 
         List<Pair<EnrichedPerson, String>> cities = searchService
                 .findPersonsByPlaceOfAnyEvent(placeOfAnyEvent, isAlive, null, includeSpousePlaces, includeAllChildrenPlaces, isExactPlace, people)
@@ -580,7 +580,7 @@ public class GedcomAnalyzerService {
                         .stream()
                         .map(Relationships::findFirst)
                         .map(Relationship::person))
-                .filter(isImmigrantCondition)
+                .filter(person -> isImmigrantCondition.test(person, true))
                 .filter(StreamUtils.distinctByKey(EnrichedPerson::getId))
                 .map(person -> Pair.of(
                         person,
