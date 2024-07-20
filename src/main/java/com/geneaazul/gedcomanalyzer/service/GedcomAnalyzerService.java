@@ -569,6 +569,9 @@ public class GedcomAnalyzerService {
                         && (disableNotForeignCountries || !StringUtils.endsWithAny(fplace, notForeignCountriesOnTreeTraversal)))
                 .isPresent();
 
+        // Evaluated BEFORE visiting person
+        Set<Integer> visitedRelatives = new HashSet<>();
+        BiPredicate<EnrichedPerson, Integer> isVisitedStopCondition = (person, _) -> visitedRelatives.contains(person.getId());
         // Evaluated AFTER visiting person
         BiPredicate<EnrichedPerson, Integer> isImmigrantStopCondition = (person, _) -> isImmigrantCondition.test(person, false);
 
@@ -576,10 +579,11 @@ public class GedcomAnalyzerService {
                 .findPersonsByPlaceOfAnyEvent(placeOfAnyEvent, isAlive, null, includeSpousePlaces, includeAllChildrenPlaces, isExactPlace, people)
                 .stream()
                 .flatMap(person -> personService
-                        .getPeopleInTree(person, false, true, false, isImmigrantStopCondition)
+                        .getPeopleInTree(person, false, true, false, isVisitedStopCondition, isImmigrantStopCondition)
                         .stream()
                         .map(Relationships::findFirst)
-                        .map(Relationship::person))
+                        .map(Relationship::person)
+                        .peek(relative -> visitedRelatives.add(relative.getId())))
                 .filter(person -> isImmigrantCondition.test(person, true))
                 .filter(StreamUtils.distinctByKey(EnrichedPerson::getId))
                 .map(person -> Pair.of(
