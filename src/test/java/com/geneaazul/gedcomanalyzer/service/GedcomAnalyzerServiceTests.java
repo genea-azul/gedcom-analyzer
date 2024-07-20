@@ -267,7 +267,7 @@ public class GedcomAnalyzerServiceTests {
     @Test
     public void getImmigrantsCitiesCardinalityByPlaceOfAnyEvent() throws IOException {
         List<GedcomAnalyzerService.SurenamesCardinality> places = gedcomAnalyzerService
-                .getImmigrantsCitiesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null, null, true, false, false, false, false, true);
+                .getImmigrantsCitiesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null, null, true, true, false, false, false, true);
         int totalImmigrants = places
                 .stream()
                 .mapToInt(GedcomAnalyzerService.SurenamesCardinality::cardinality)
@@ -288,6 +288,10 @@ public class GedcomAnalyzerServiceTests {
                     .stream()
                     .limit(200)
                     .forEach(System.out::println);
+
+            /**
+             * TODO ajustes a output.txt "^[^\s,]+ " y "^([^\s,]+ )+\("
+             */
 
             Pattern COMPOSITE_SURNAME_PATTERN = Pattern.compile("^(.+) (y|dit|dite|dita|detto) .+$");
 
@@ -312,8 +316,9 @@ public class GedcomAnalyzerServiceTests {
                                             new ImmigrantsReduce(List.of(), Set.of()),
                                             output -> new ImmigrantsReduce(
                                                     List.of(Pair.of(
+                                                            // surname and surname for sorting
                                                             output.surname,
-                                                            StringUtils.lowerCase(StringUtils.stripAccents(output.surname)))), // surname and surname for sorting
+                                                            StringUtils.stripAccents(StringUtils.replace(StringUtils.lowerCase(output.surname), "ñ", "o ")))),
                                                     Set.of(new ImmigrantsPlaces(output.place, output.reversedPlace))),
                                             (r1, r2) -> new ImmigrantsReduce(
                                                     mergeSurnamesLists(r1.surnames, r2.surnames),
@@ -505,11 +510,12 @@ public class GedcomAnalyzerServiceTests {
     @Test
     public void findLastModified() {
         System.out.println("findLastModified:");
-        ZonedDateTime minUpdateDate = ZonedDateTime.now(properties.getZoneId()).minusDays(3);
+        ZonedDateTime minUpdateDate = ZonedDateTime.now(properties.getZoneId()).minusDays(5);
         gedcom
                 .getPeople()
                 .stream()
                 .filter(person -> person.getUpdateDate().map(updateDate -> updateDate.isAfter(minUpdateDate)).orElse(false))
+                .sorted(Comparator.comparing(person -> person.getUpdateDate().orElse(null)))
                 .forEach(System.out::println);
     }
 
@@ -692,7 +698,7 @@ public class GedcomAnalyzerServiceTests {
         gedcom
                 .getPeople()
                 .stream()
-                .filter(person -> StringUtils.containsAnyIgnoreCase(person.getDisplayName(), "Mun.", "Pte.", "Diác.", "Padre ", "Sor ", "Mons.", "Cacique", "Gdor.", "Gdora.", "Bto.", "Bta.", "Cde.", "Cdesa.", "Pnt."))
+                .filter(person -> StringUtils.containsAnyIgnoreCase(person.getDisplayName(), "Mun.", "Pte.", "Diác.", "Pbro.", "Padre ", "Rev.", "Sor ", "Mons.", "Cacique", "Gdor.", "Gdora.", "Bto.", "Bta.", "Cde.", "Cdesa.", "Pnt.", "Gral.", "Cnel.", "Ctan.", "Alfz.", "Tte. Cnel."))
                 .filter(Predicate.not(EnrichedPerson::isDistinguishedPerson))
                 .forEach(System.out::println);
     }

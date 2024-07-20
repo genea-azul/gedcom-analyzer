@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Install ICU4J Transliterator in local Maven repo
-# https://github.com/unicode-org/icu
+# Make sure md5sum and sha1sum are working commands
 
 userMvnRepo=~/.m2/repository
 projMvnRepo=./.mvn/repo
