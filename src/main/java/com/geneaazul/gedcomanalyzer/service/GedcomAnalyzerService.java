@@ -522,6 +522,7 @@ public class GedcomAnalyzerService {
                         entry.getValue(),
                         ((float) Math.round((float) entry.getValue() / countriesCount * 1_000_000) / 10_000),
                         surnamesByCountry.get(entry.getKey()),
+                        null,
                         null))
                 .toList();
     }
@@ -531,6 +532,7 @@ public class GedcomAnalyzerService {
             int cardinality,
             float percentage,
             List<String> surnames,
+            List<String> surnamesVariations,
             List<EnrichedPerson> persons) {
 
     }
@@ -625,6 +627,27 @@ public class GedcomAnalyzerService {
                 ? MapUtils.groupByAndOrderHierarchically(citiesAndSurnames)
                 : MapUtils.groupByAndOrderAlphabetically(citiesAndSurnames);
 
+        Map<String, List<String>> surnamesVariationsByCity = cities
+                .stream()
+                .filter(pair -> pair.getLeft().getSurname().isPresent())
+                .collect(Collectors.groupingBy(
+                        Pair::getRight,
+                        Collectors.mapping(
+                                pair -> pair.getLeft().getChildren()
+                                        .stream()
+                                        .filter(child -> child.getSurname().isPresent())
+                                        .filter(child -> child.getSurname().get().normalizedMainWord().equals(pair.getLeft().getSurname().map(Surname::normalizedMainWord).get()))
+                                        .filter(child -> !child.getSurname().get().value().startsWith(pair.getLeft().getSurname().map(Surname::value).get()))
+                                        .map(child -> child.getSurname().get().value())
+                                        .toList(),
+                                Collectors.collectingAndThen(
+                                        Collectors.toList(),
+                                        listsList -> listsList
+                                                .stream()
+                                                .flatMap(List::stream)
+                                                .distinct()
+                                                .toList()))));
+
         Map<String, List<EnrichedPerson>> peopleByCity = cities
                 .stream()
                 .collect(Collectors.groupingBy(
@@ -648,6 +671,7 @@ public class GedcomAnalyzerService {
                         entry.getValue(),
                         ((float) Math.round((float) entry.getValue() / cities.size() * 1_000_000) / 10_000),
                         surnamesByCity.get(entry.getKey()),
+                        surnamesVariationsByCity.get(entry.getKey()),
                         peopleByCity.get(entry.getKey())))
                 .toList();
     }

@@ -25,7 +25,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -302,34 +301,48 @@ public class GedcomAnalyzerServiceTests {
 
             /**
              * TODO ajustes a output.txt "^[^\s,]+ " y "^([^\s,]+ )+\("
+             *   -> De La Torre y Della Torre (Esp / Ita)
+             *   -> Vassallo y Basalo (Ita / Esp)
              */
 
             Pattern COMPOSITE_SURNAME_PATTERN = Pattern.compile("^(.+) (y|dit|dite|dita|detto) .+$");
 
             Map<String, ImmigrantsResult> immigrantSurnames = places
                     .stream()
-                    .flatMap(place -> place.surnames()
-                            .stream()
-                            .map(surnameWithFrequency -> {
-                                String surname = StringUtils.substringBeforeLast(surnameWithFrequency, " (");
-                                int frequency = Integer.parseInt(StringUtils.substringBefore(StringUtils.substringAfterLast(surnameWithFrequency, " ("), ")"));
-                                return new ImmigrantsOutput(
-                                        RegExUtils.replaceAll(StringUtils.remove(surname, "?"), COMPOSITE_SURNAME_PATTERN, "$1"),
-                                        PersonUtils.getShortenedSurnameMainWord(surname, properties.getNormalizedSurnamesMap()).get().normalizedMainWord(),
-                                        frequency,
-                                        place.country(),
-                                        PlaceUtils.reversePlaceWords(place.country()));
-                            }))
+                    .flatMap(place -> {
+                        String[] reversedPlaces = PlaceUtils.reversePlaceWords(place.country());
+                        return Stream.concat(
+                                place.surnames()
+                                        .stream()
+                                        .map(surnameWithFrequency -> {
+                                            String surname = StringUtils.substringBeforeLast(surnameWithFrequency, " (");
+                                            int frequency = Integer.parseInt(StringUtils.substringBefore(StringUtils.substringAfterLast(surnameWithFrequency, " ("), ")"));
+                                            return new ImmigrantsOutput(
+                                                    RegExUtils.replaceAll(StringUtils.remove(surname, "?"), COMPOSITE_SURNAME_PATTERN, "$1"),
+                                                    PersonUtils.getShortenedSurnameMainWord(surname, properties.getNormalizedSurnamesMap()).get().normalizedMainWord(),
+                                                    frequency,
+                                                    place.country(),
+                                                    reversedPlaces);
+                                        }),
+                                place.surnamesVariations()
+                                        .stream()
+                                        .map(surname -> new ImmigrantsOutput(
+                                                RegExUtils.replaceAll(StringUtils.remove(surname, "?"), COMPOSITE_SURNAME_PATTERN, "$1"),
+                                                PersonUtils.getShortenedSurnameMainWord(surname, properties.getNormalizedSurnamesMap()).get().normalizedMainWord(),
+                                                0,
+                                                place.country(),
+                                                reversedPlaces)));
+                    })
                     .collect(Collectors.groupingBy(
                             output -> output.normalizedSurname,
                             Collectors.collectingAndThen(
                                     Collectors.reducing(
                                             new ImmigrantsReduce(List.of(), Set.of()),
                                             output -> new ImmigrantsReduce(
-                                                    List.of(Pair.of(
-                                                            // surname and surname for sorting
+                                                    List.of(new ImmigrantsSurnameReduce(
                                                             output.surname,
-                                                            StringUtils.stripAccents(StringUtils.replace(StringUtils.lowerCase(output.surname), "ñ", "o ")))),
+                                                            StringUtils.stripAccents(StringUtils.replace(StringUtils.lowerCase(output.surname), "ñ", "o ")),
+                                                            output.frequency)),
                                                     Set.of(new ImmigrantsPlaces(output.place, output.reversedPlace))),
                                             (r1, r2) -> new ImmigrantsReduce(
                                                     mergeSurnamesLists(r1.surnames, r2.surnames),
@@ -337,9 +350,9 @@ public class GedcomAnalyzerServiceTests {
                                     reduce -> new ImmigrantsResult(
                                             reduce.surnames
                                                     .stream()
-                                                    .map(Pair::getLeft)
+                                                    .map(ImmigrantsSurnameReduce::surname)
                                                     .collect(Collectors.joining(", ")),
-                                            reduce.surnames.getFirst().getRight(),
+                                            reduce.surnames.getFirst().surnameForSorting,
                                             (reduce.places.size() == 1)
                                                     ? reduce.places
                                                             .stream()
@@ -355,16 +368,24 @@ public class GedcomAnalyzerServiceTests {
                                                             .sorted(Comparator.comparing(ImmigrantsPlaces::reversedPlace, PlaceUtils.REVERSED_PLACE_ARRAY_COMPARATOR))
                                                             .map(ImmigrantsPlaces::place)
                                                             .toList()))));
+
             List<String> lines = immigrantSurnames.entrySet()
                     .stream()
                     .sorted(Comparator.comparing(entry -> entry.getValue().surnameForSorting))
                     .map(Map.Entry::getValue)
                     .flatMap(result -> Stream
                             .of(
-                                    Stream.of(result.surname),
+                                    Stream.of(StringUtils.rightPad(result.surname, 74)),
                                     result.places
                                             .stream()
-                                            .map(place -> StringUtils.leftPad(place, 82)),
+                                            .peek(place -> {
+                                                if (place.length() > 74) {
+                                                    System.err.println(place);
+                                                } else if (place.length() == 74) {
+                                                    System.out.println(place);
+                                                }
+                                            })
+                                            .map(place -> StringUtils.leftPad(place, 74)),
                                     Stream.of(""))
                             .flatMap(Function.identity()))
                     .toList();
@@ -375,7 +396,7 @@ public class GedcomAnalyzerServiceTests {
         }
     }
 
-    private static List<Pair<String, String>> mergeSurnamesLists(List<Pair<String, String>> l1, List<Pair<String, String>> l2) {
+    private static List<ImmigrantsSurnameReduce> mergeSurnamesLists(List<ImmigrantsSurnameReduce> l1, List<ImmigrantsSurnameReduce> l2) {
         if (l1.isEmpty()) {
             return l2;
         }
@@ -383,17 +404,20 @@ public class GedcomAnalyzerServiceTests {
             return l1;
         }
 
-        List<Pair<String, String>> keepFromL1 = l1
+        List<ImmigrantsSurnameReduce> keepFromL1 = l1
                 .stream()
-                .map(valueL1 -> getSamePrefixWithOtherGrammarOrNull(valueL1, l2))
+                .map(valueL1 -> getSameMainWordWithOtherGrammarOrNull(valueL1, l2))
                 .map(valueL1 -> getDePrefixedWithOtherGrammarOrNull(valueL1, l2))
                 .filter(Objects::nonNull)
                 .toList();
 
-        List<Pair<String, String>> keepFromL2 = l2
+        List<ImmigrantsSurnameReduce> keepFromL2 = l2
                 .stream()
-                .filter(valueL2 -> !keepFromL1.contains(valueL2))
-                .map(valueL2 -> getSamePrefixWithOtherGrammarOrNull(valueL2, keepFromL1))
+                .filter(valueL2 -> keepFromL1
+                        .stream()
+                        .map(ImmigrantsSurnameReduce::surname)
+                        .noneMatch(valueL2.surname::equals))
+                .map(valueL2 -> getSameMainWordWithOtherGrammarOrNull(valueL2, keepFromL1))
                 .map(valueL2 -> getDePrefixedWithOtherGrammarOrNull(valueL2, keepFromL1))
                 .filter(Objects::nonNull)
                 .toList();
@@ -404,62 +428,55 @@ public class GedcomAnalyzerServiceTests {
         if (keepFromL1.isEmpty()) {
             return keepFromL2;
         }
-        return ListUtils.union(keepFromL1, keepFromL2);
+        return Stream.of(keepFromL1, keepFromL2)
+                .flatMap(List::stream)
+                .sorted(Comparator.comparing(ImmigrantsSurnameReduce::frequency, Comparator.reverseOrder()))
+                .toList();
     }
 
-    private static Pair<String, String> getSamePrefixWithOtherGrammarOrNull(@Nullable Pair<String, String> test, List<Pair<String, String>> values) {
-        if (test == null || values.isEmpty() || !test.getLeft().contains(" ")) {
+    private static ImmigrantsSurnameReduce getSameMainWordWithOtherGrammarOrNull(@Nullable ImmigrantsSurnameReduce test, List<ImmigrantsSurnameReduce> values) {
+        if (test == null || values.isEmpty() || !test.surname.contains(" ")) {
             return test;
         }
 
-        // Pair left is surname, pair right is "for sorting" value
-        Optional<String> prefixedSurname = values
+        Optional<ImmigrantsSurnameReduce> prefixedSurname = values
                 .stream()
-                .filter(value -> test.getRight().startsWith(value.getRight() + " "))
-                .map(Pair::getLeft)
+                .filter(value -> test.surnameForSorting.startsWith(value.surnameForSorting + " "))
                 .findFirst();
 
         if (prefixedSurname.isEmpty()) {
             return test;
         }
 
-        int spacesOfMatchingPrefix = StringUtils.countMatches(prefixedSurname.get(), " ");
-        int subStrEndPos = StringUtils.ordinalIndexOf(test.getLeft(), " ", spacesOfMatchingPrefix + 1);
+        int spacesOfMatchingPrefix = StringUtils.countMatches(prefixedSurname.get().surname, " ");
+        int subStrEndPos = StringUtils.ordinalIndexOf(test.surname, " ", spacesOfMatchingPrefix + 1);
 
-        String newValue = StringUtils.substring(test.getLeft(), 0, subStrEndPos);
-        String newValueForSorting = StringUtils.substring(test.getRight(), 0, subStrEndPos);
+        String newValue = StringUtils.substring(test.surname, 0, subStrEndPos);
+        String newValueForSorting = StringUtils.substring(test.surnameForSorting, 0, subStrEndPos);
 
-        return newValue.equals(prefixedSurname.get())
+        return newValue.equals(prefixedSurname.get().surname)
                 ? null
-                : Pair.of(newValue, newValueForSorting);
+                : new ImmigrantsSurnameReduce(newValue, newValueForSorting, test.frequency);
     }
 
-    private static Pair<String, String> getDePrefixedWithOtherGrammarOrNull(@Nullable Pair<String, String> test, List<Pair<String, String>> values) {
-        if (test == null || values.isEmpty() || !test.getLeft().startsWith("de ")) {
+    private static ImmigrantsSurnameReduce getDePrefixedWithOtherGrammarOrNull(@Nullable ImmigrantsSurnameReduce test, List<ImmigrantsSurnameReduce> values) {
+        if (test == null || values.isEmpty() || !test.surname.startsWith("de ")) {
             return test;
         }
 
-        // Pair left is surname, pair right is "for sorting" value
-        Optional<String> prefixedSurname = values
+        Optional<ImmigrantsSurnameReduce> prefixedSurname = values
                 .stream()
-                .filter(value -> test.getRight().equals("de " + value.getRight()))
-                .map(Pair::getLeft)
+                .filter(value -> test.surname.equals("de " + value.surname))
                 .findFirst();
 
-        if (prefixedSurname.isEmpty()) {
-            return test;
-        }
-
-        String newValue = StringUtils.substring(test.getLeft(), 3);
-        String newValueForSorting = StringUtils.substring(test.getRight(), 3);
-
-        return newValue.equals(prefixedSurname.get())
-                ? null
-                : Pair.of(newValue, newValueForSorting);
+        return prefixedSurname.isEmpty()
+                ? test
+                : null;
     }
 
     private record ImmigrantsOutput(String surname, String normalizedSurname, int frequency, String place, String[] reversedPlace) { }
-    private record ImmigrantsReduce(List<Pair<String, String>> surnames, Set<ImmigrantsPlaces> places) { }
+    private record ImmigrantsReduce(List<ImmigrantsSurnameReduce> surnames, Set<ImmigrantsPlaces> places) { }
+    private record ImmigrantsSurnameReduce(String surname, String surnameForSorting, int frequency) { }
     private record ImmigrantsResult(String surname, String surnameForSorting, List<String> places) { }
     private record ImmigrantsPlaces(String place, String[] reversedPlace) implements Comparable<ImmigrantsPlaces> {
         @Override
