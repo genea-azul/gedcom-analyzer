@@ -264,6 +264,7 @@ public class GedcomAnalyzerServiceTests {
     }
 
     @Test
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
     public void getImmigrantsCitiesCardinalityByPlaceOfAnyEvent() throws IOException {
         List<GedcomAnalyzerService.SurenamesCardinality> places = gedcomAnalyzerService
                 .getImmigrantsCitiesCardinalityByPlaceOfAnyEvent(
@@ -299,13 +300,18 @@ public class GedcomAnalyzerServiceTests {
                     .limit(200)
                     .forEach(System.out::println);
 
-            /**
-             * TODO ajustes a output.txt "^[^\s,]+ " y "^([^\s,]+ )+\("
+            /*
+             * TODO ajustes a output.txt "^[^\s,]+ \S" y "^([^\s,]+ )+\("
              *   -> De La Torre y Della Torre (Esp / Ita)
              *   -> Vassallo y Basalo (Ita / Esp)
+             *   -> Martines (Por)
+             *   -> Rodrigues (Por)
+             *   -> Almeyda (Por)
+             *   -> Limpiar provincias: Bordachar, Fittipaldi, Fortassin, Indo, Kollmann, Mocciaro, Saks, Sarasúa, Scavuzzo, Valicenti, Vitale
              */
 
-            Pattern COMPOSITE_SURNAME_PATTERN = Pattern.compile("^(.+) (y|dit|dite|dita|detto) .+$");
+            final int OUTPUT_FIXED_WIDTH_CHARS = 74;
+            final Pattern COMPOSITE_SURNAME_PATTERN = Pattern.compile("^(.+) (y|dit|dite|dita|detto) .+$");
 
             Map<String, ImmigrantsResult> immigrantSurnames = places
                     .stream()
@@ -339,11 +345,15 @@ public class GedcomAnalyzerServiceTests {
                                     Collectors.reducing(
                                             new ImmigrantsReduce(List.of(), Set.of()),
                                             output -> new ImmigrantsReduce(
-                                                    List.of(new ImmigrantsSurnameReduce(
-                                                            output.surname,
-                                                            StringUtils.stripAccents(StringUtils.replace(StringUtils.lowerCase(output.surname), "ñ", "o ")),
-                                                            output.frequency)),
-                                                    Set.of(new ImmigrantsPlaces(output.place, output.reversedPlace))),
+                                                    List.of(
+                                                            new ImmigrantsSurnameReduce(
+                                                                    output.surname,
+                                                                    getSurnameForSorting(output.surname),
+                                                                    output.frequency)),
+                                                    Set.of(
+                                                            new ImmigrantsPlaces(
+                                                                    output.place,
+                                                                    output.reversedPlace))),
                                             (r1, r2) -> new ImmigrantsReduce(
                                                     mergeSurnamesLists(r1.surnames, r2.surnames),
                                                     SetUtils.merge(r1.places, r2.places))),
@@ -362,9 +372,10 @@ public class GedcomAnalyzerServiceTests {
                                                             .stream()
                                                             .filter(immiPlaces
                                                                     -> immiPlaces.reversedPlace.length > 2
-                                                                    || reduce.places.stream()
-                                                                               .filter(_p -> !_p.place.equals(immiPlaces.place))
-                                                                               .noneMatch(_p -> _p.place.endsWith(immiPlaces.place)))
+                                                                    || reduce.places
+                                                                            .stream()
+                                                                            .filter(_p -> !_p.place.equals(immiPlaces.place))
+                                                                            .noneMatch(_p -> _p.place.endsWith(immiPlaces.place)))
                                                             .sorted(Comparator.comparing(ImmigrantsPlaces::reversedPlace, PlaceUtils.REVERSED_PLACE_ARRAY_COMPARATOR))
                                                             .map(ImmigrantsPlaces::place)
                                                             .toList()))));
@@ -375,17 +386,17 @@ public class GedcomAnalyzerServiceTests {
                     .map(Map.Entry::getValue)
                     .flatMap(result -> Stream
                             .of(
-                                    Stream.of(StringUtils.rightPad(result.surname, 74)),
+                                    Stream.of(result.surname),
                                     result.places
                                             .stream()
                                             .peek(place -> {
-                                                if (place.length() > 74) {
+                                                if (place.length() > OUTPUT_FIXED_WIDTH_CHARS) {
                                                     System.err.println(place);
-                                                } else if (place.length() == 74) {
+                                                } else if (place.length() == OUTPUT_FIXED_WIDTH_CHARS) {
                                                     System.out.println(place);
                                                 }
                                             })
-                                            .map(place -> StringUtils.leftPad(place, 74)),
+                                            .map(place -> StringUtils.leftPad(place, OUTPUT_FIXED_WIDTH_CHARS)),
                                     Stream.of(""))
                             .flatMap(Function.identity()))
                     .toList();
@@ -394,6 +405,10 @@ public class GedcomAnalyzerServiceTests {
             System.out.println("Surnames in ./target/output.txt: " + immigrantSurnames.size());
             Files.write(Path.of("./target/output.txt"), lines);
         }
+    }
+
+    private static String getSurnameForSorting(String surname) {
+        return StringUtils.stripAccents(StringUtils.replace(StringUtils.lowerCase(surname), "ñ", "o "));
     }
 
     private static List<ImmigrantsSurnameReduce> mergeSurnamesLists(List<ImmigrantsSurnameReduce> l1, List<ImmigrantsSurnameReduce> l2) {
@@ -425,15 +440,12 @@ public class GedcomAnalyzerServiceTests {
                 .filter(Objects::nonNull)
                 .toList();
 
-        if (keepFromL2.isEmpty()) {
-            return keepFromL1;
-        }
-        if (keepFromL1.isEmpty()) {
-            return keepFromL2;
-        }
+        // Always sort lists, even if one of them is empty
         return Stream.of(keepFromL1, keepFromL2)
                 .flatMap(List::stream)
-                .sorted(Comparator.comparing(ImmigrantsSurnameReduce::frequency, Comparator.reverseOrder()))
+                .sorted(Comparator
+                        .comparing(ImmigrantsSurnameReduce::frequency, Comparator.reverseOrder())
+                        .thenComparing(ImmigrantsSurnameReduce::surnameForSorting))
                 .toList();
     }
 
@@ -469,12 +481,19 @@ public class GedcomAnalyzerServiceTests {
 
         Optional<ImmigrantsSurnameReduce> prefixedSurname = values
                 .stream()
-                .filter(value -> test.surname.equals("de " + value.surname))
+                .filter(value -> test.surnameForSorting.equals("de " + value.surnameForSorting))
                 .findFirst();
 
-        return prefixedSurname.isEmpty()
-                ? test
-                : null;
+        if (prefixedSurname.isEmpty()) {
+            return test;
+        }
+
+        String newValue = StringUtils.substring(test.surname, 3);
+        String newValueForSorting = StringUtils.substring(test.surnameForSorting, 3);
+
+        return newValue.equals(prefixedSurname.get().surname)
+                ? null
+                : new ImmigrantsSurnameReduce(newValue, newValueForSorting, test.frequency);
     }
 
     private record ImmigrantsOutput(String surname, String normalizedSurname, int frequency, String place, String[] reversedPlace) { }

@@ -109,6 +109,7 @@ public class NameUtils {
         surname = RegExUtils.replaceAll(surname, SURNAME_COMMON_PREFIX_PATTERN, "$1$2");
         surname = StringUtils.replaceEach(surname, SURNAME_SPECIAL_CASES, SURNAME_SPECIAL_CASES_REPLACEMENT);
         surname = StringUtils.substringBefore(surname, " ");
+        surname = RegExUtils.replaceAll(surname, SURNAME_DOUBLE_LETTERS_PATTERN, "$1");
         surname = StringUtils.replaceEach(surname, SURNAME_SEARCH_CHARS, SURNAME_REPLACEMENT_CHARS);
         surname = RegExUtils.replaceAll(surname, SURNAME_DOUBLE_LETTERS_PATTERN, "$1");
         return Optional.ofNullable(surname)
