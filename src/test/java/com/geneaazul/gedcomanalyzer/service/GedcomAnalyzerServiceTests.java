@@ -409,6 +409,9 @@ public class GedcomAnalyzerServiceTests {
                 .map(valueL1 -> getSameMainWordWithOtherGrammarOrNull(valueL1, l2))
                 .map(valueL1 -> getDePrefixedWithOtherGrammarOrNull(valueL1, l2))
                 .filter(Objects::nonNull)
+                .filter(valueL1 -> l2
+                        .stream()
+                        .noneMatch(valueL2 -> valueL1.surname.equals(valueL2.surname) && valueL1.frequency < valueL2.frequency))
                 .toList();
 
         List<ImmigrantsSurnameReduce> keepFromL2 = l2
