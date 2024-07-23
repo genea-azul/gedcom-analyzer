@@ -386,6 +386,42 @@ public class NameUtilsTests {
                     Surname matching = PersonUtils.getShortenedSurnameMainWord("Iriart", properties.getNormalizedSurnamesMap()).orElse(null);
                     assertThat(surname.matches(matching)).isTrue();
                 });
+
+        name.setSurname("Sujodolski");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("Sujodolski");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("sujodolsci");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("sujodolsc_");
+
+                    Surname matching = PersonUtils.getShortenedSurnameMainWord("Suchodolski", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(matching)).isTrue();
+                });
+
+        name.setSurname("Stock");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("Stock");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("stoc");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("stoc");
+
+                    Surname matching = PersonUtils.getShortenedSurnameMainWord("Stok", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(matching)).isTrue();
+                });
+
+        name.setSurname("Mocciaro");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("Mocciaro");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("mosiaro");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("mosiar_");
+
+                    Surname matching = PersonUtils.getShortenedSurnameMainWord("Móccero", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(matching)).isTrue();
+                });
     }
 
 }
