@@ -1175,7 +1175,8 @@ var getAdoptionSuffixInSpanish = function(adoptionType, sexSuffix) {
 
 var displayErrorCodeInSpanish = function(errorCode) {
     if (errorCode == "TOO-MANY-REQUESTS") {
-        return "<p>Realizaste demasiadas consultas en la &uacute;ltima hora, por favor esper&aacute; unos minutos o contactanos en redes sociales: <b>@genea.azul</b></p>";
+        return "<p>Realizaste demasiadas consultas en la &uacute;ltima hora, por favor esper&aacute; unos minutos o contactanos en redes sociales: <b>@genea.azul</b></p>"
+            + "<p>Este es un proyecto de investigaci&oacute;n sin fines de lucro, no hay costo de servicio. Solicitá acceso al árbol y ayudanos a completar datos. 😊</p>";
     }
     return errorCode;
 };

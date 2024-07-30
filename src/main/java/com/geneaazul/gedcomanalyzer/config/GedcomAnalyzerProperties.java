@@ -14,6 +14,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import jakarta.annotation.PostConstruct;
 
@@ -42,7 +43,9 @@ public class GedcomAnalyzerProperties {
     private Integer maxPyvisNetworkNodesToExport = 500;
 
     private int maxClientRequestsCountThreshold = 12;
+    private int maxClientRequestsCountSpecialThreshold = 2;
     private int maxClientRequestsHoursThreshold = 1;
+    private Set<String> clientsWithSpecialThreshold = Set.of();
 
     private boolean deleteUploadedGedcom = false;
     private boolean storeFamilySearch = true;

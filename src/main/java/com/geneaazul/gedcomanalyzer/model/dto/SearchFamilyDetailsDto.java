@@ -39,7 +39,13 @@ public class SearchFamilyDetailsDto {
     @ToString.Include
     private Boolean isMatch;
     @ToString.Include
+    private Integer potentialResults;
+    @ToString.Include
+    private String errorMessages;
+    @ToString.Include
     private Boolean isReviewed;
+    @ToString.Include
+    private Boolean isObfuscated;
     @ToString.Include
     private String markReviewedLink;
     @ToString.Include

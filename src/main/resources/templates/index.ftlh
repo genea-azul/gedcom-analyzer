@@ -376,6 +376,7 @@
 
     <div class="row bg-light">
       <div class="col text-center small p-1">
+        <b>Genea Azul</b> es un proyecto de investigaci&oacute;n sin fines de lucro.<br/>
         &iexcl;Solicitá acceso al &aacute;rbol y carg&aacute; info!
       </div>
     </div>
