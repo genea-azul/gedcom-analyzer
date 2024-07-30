@@ -44,6 +44,7 @@ services:
         "gedcom-storage-google-drive-file-id" : "$GEDCOM_GOOGLE_DRIVE_FILE_ID",
         "gedcom-storage-local-path" : "/tmp/genea-azul-full-gedcom.ged",
         "temp-dir" : "/tmp",
+        "clients-with-special-threshold" : "181.92.181.58, 186.136.48.25",
         "disable-obfuscate-living" : true
       }'
       LOG_PATH: '/tmp/logs'

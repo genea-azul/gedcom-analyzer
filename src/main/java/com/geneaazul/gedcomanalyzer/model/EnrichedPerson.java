@@ -213,10 +213,12 @@ public class EnrichedPerson {
     }
 
     public List<Place> getPlacesOfAnyEvent() {
-        return getPlacesOfAnyEvent(false);
+        return getPlacesOfAnyEvent(false, false);
     }
 
-    public List<Place> getPlacesOfAnyEvent(boolean includeSpousePlaces) {
+    public List<Place> getPlacesOfAnyEvent(
+            boolean includeSpousePlaces,
+            boolean includeAllChildrenPlaces) {
         return Stream.concat(
                 Stream
                         .of(
@@ -238,10 +240,17 @@ public class EnrichedPerson {
                                         : Stream.of(
                                                 spouseWithChildren.getPlaceOfPartners(),
                                                 spouseWithChildren.getPlaceOfSeparation()),
-                                spouseWithChildren
-                                        .getChildren()
-                                        .stream()
-                                        .map(EnrichedPerson::getPlaceOfBirth))))
+                                includeAllChildrenPlaces
+                                        ? spouseWithChildren
+                                                .getChildren()
+                                                .stream()
+                                                .map(EnrichedPerson::getPlacesOfAnyEvent)
+                                                .flatMap(List::stream)
+                                                .map(Optional::of)
+                                        : spouseWithChildren
+                                                .getChildren()
+                                                .stream()
+                                                .map(EnrichedPerson::getPlaceOfBirth))))
                 .flatMap(Optional::stream)
                 .distinct()
                 .toList();

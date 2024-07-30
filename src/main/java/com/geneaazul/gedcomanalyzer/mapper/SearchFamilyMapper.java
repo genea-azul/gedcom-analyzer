@@ -28,7 +28,10 @@ public class SearchFamilyMapper {
 
     @CheckForNull
     @Transactional(propagation = Propagation.MANDATORY)
-    public SearchFamily toSearchFamilyEntity(SearchFamilyDto searchFamilyDto, @Nullable String clientIpAddress) {
+    public SearchFamily toSearchFamilyEntity(
+            SearchFamilyDto searchFamilyDto,
+            boolean isObfuscated,
+            @Nullable String clientIpAddress) {
         if (isEmpty(searchFamilyDto)) {
             return null;
         }
@@ -47,6 +50,7 @@ public class SearchFamilyMapper {
                 .paternalGrandmother(searchPersonMapper.toSearchPersonEntity(searchFamilyDto.getPaternalGrandmother()))
                 .maternalGrandfather(searchPersonMapper.toSearchPersonEntity(searchFamilyDto.getMaternalGrandfather()))
                 .maternalGrandmother(searchPersonMapper.toSearchPersonEntity(searchFamilyDto.getMaternalGrandmother()))
+                .isObfuscated(isObfuscated)
                 .contact(searchFamilyDto.getContact())
                 .clientIpAddress(clientIpAddress)
                 .build();
@@ -69,7 +73,10 @@ public class SearchFamilyMapper {
                 .maternalGrandfather(searchPersonMapper.toSearchPersonDto(searchFamily.getMaternalGrandfather(), SexType.M))
                 .maternalGrandmother(searchPersonMapper.toSearchPersonDto(searchFamily.getMaternalGrandmother(), SexType.F))
                 .isMatch(searchFamily.getIsMatch())
+                .potentialResults(searchFamily.getPotentialResults())
+                .errorMessages(searchFamily.getErrorMessages())
                 .isReviewed(searchFamily.getIsReviewed())
+                .isObfuscated(searchFamily.getIsObfuscated())
                 .contact(searchFamily.getContact())
                 .createDate(searchFamily.getCreateDate())
                 .clientIpAddress(searchFamily.getClientIpAddress())

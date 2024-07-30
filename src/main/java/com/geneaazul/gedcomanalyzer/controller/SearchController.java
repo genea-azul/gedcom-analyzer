@@ -64,20 +64,6 @@ public class SearchController {
 
         Optional<String> clientIpAddress = InetAddressUtils.getRemoteAddress(request);
 
-        if (!clientIpAddress
-                .map(familyService::isAllowedSearch)
-                .orElse(true)) {
-            return SearchFamilyResultDto.builder()
-                    .errors(List.of("TOO-MANY-REQUESTS"))
-                    .build();
-        }
-
-        Optional<Long> searchId = Optional.empty();
-
-        if (properties.isStoreFamilySearch()) {
-            searchId = familyService.persistSearch(searchFamilyDto, clientIpAddress.orElse(null));
-        }
-
         // default: true
         boolean obfuscateLiving = !properties.isDisableObfuscateLiving()
                 && BooleanUtils.isNotFalse(searchFamilyDto.getObfuscateLiving());
@@ -85,6 +71,24 @@ public class SearchController {
         boolean onlySecondaryDescription = BooleanUtils.isNotFalse(searchFamilyDto.getOnlySecondaryDescription());
         // default: false
         boolean forceRewrite = BooleanUtils.isTrue(searchFamilyDto.getIsForceRewrite());
+
+        Optional<Long> searchId = Optional.empty();
+
+        if (properties.isStoreFamilySearch()) {
+            searchId = familyService.persistSearch(searchFamilyDto, obfuscateLiving, clientIpAddress.orElse(null));
+        }
+
+        if (!clientIpAddress
+                .map(familyService::isAllowedSearch)
+                .orElse(true)) {
+            SearchFamilyResultDto searchFamilyResult =  SearchFamilyResultDto.builder()
+                    .errors(List.of("TOO-MANY-REQUESTS"))
+                    .build();
+
+            updateSearchResult(searchId, searchFamilyResult);
+
+            return searchFamilyResult;
+        }
 
         SearchFamilyResultDto searchFamilyResult = familyService.search(searchFamilyDto);
 
@@ -98,9 +102,7 @@ public class SearchController {
                 searchFamilyResult.getErrors().size(),
                 request.getRequestId());
 
-        searchId
-                .filter(id -> properties.isStoreFamilySearch())
-                .ifPresent(id -> familyService.updateSearchIsMatch(id, !searchFamilyResult.getPeople().isEmpty()));
+        updateSearchResult(searchId, searchFamilyResult);
 
         // Queue PDF Family Tree and HTML Pyvis Network generation
         familyTreeManager.queueFamilyTreeGeneration(
@@ -111,6 +113,17 @@ public class SearchController {
                 List.of(FamilyTreeType.PLAIN_PDF, FamilyTreeType.NETWORK));
 
         return searchFamilyResult;
+    }
+
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+    private void updateSearchResult(Optional<Long> searchId, SearchFamilyResultDto searchFamilyResult) {
+        searchId
+                .filter(_ -> properties.isStoreFamilySearch())
+                .ifPresent(id -> familyService.updateSearchResult(
+                        id,
+                        !searchFamilyResult.getPeople().isEmpty(),
+                        searchFamilyResult.getPotentialResults(),
+                        StringUtils.join(searchFamilyResult.getErrors(), " | ")));
     }
 
     @GetMapping("/family/{searchId}/reviewed")

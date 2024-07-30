@@ -17,7 +17,7 @@ import lombok.experimental.UtilityClass;
 public class MapUtils {
 
     @SuppressWarnings("OptionalGetWithoutIsPresent")
-    public static <T> Map<String, List<T>> groupByAndOrderAlphabetically(List<Pair<String, Optional<T>>> opts) {
+    public static <K, T extends Comparable<T>> Map<K, List<T>> groupByAndOrderAlphabetically(List<Pair<K, Optional<T>>> opts) {
         return opts
                 .stream()
                 .filter(pair -> pair.getRight().isPresent())
@@ -35,7 +35,7 @@ public class MapUtils {
     }
 
     @SuppressWarnings("OptionalGetWithoutIsPresent")
-    public static Map<String, List<String>> groupByAndOrderHierarchically(List<Pair<String, Optional<String>>> opts) {
+    public static <K, T extends Comparable<T>> Map<K, List<String>> groupByAndOrderHierarchically(List<Pair<K, Optional<T>>> opts) {
         return opts
                 .stream()
                 .filter(pair -> pair.getRight().isPresent())
@@ -49,7 +49,7 @@ public class MapUtils {
                                                 .entrySet()
                                                 .stream()
                                                 .sorted(Comparator
-                                                        .<Map.Entry<String, Integer>>comparingInt(Map.Entry::getValue)
+                                                        .<Map.Entry<T, Integer>>comparingInt(Map.Entry::getValue)
                                                         .reversed()
                                                         .thenComparing(Map.Entry::getKey))
                                                 .map(entry -> entry.getKey() + " (" + entry.getValue() + ")")

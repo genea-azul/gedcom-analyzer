@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<metadata>
+<metadata xmlns="http://maven.apache.org/METADATA/1.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/METADATA/1.1.0 https://maven.apache.org/xsd/repository-metadata-1.1.0.xsd">
   <groupId>org.familysearch.gedcom</groupId>
   <artifactId>gedcom-java</artifactId>
   <versioning>
@@ -7,6 +7,6 @@
     <versions>
       <version>1.14.0</version>
     </versions>
-    <lastUpdated>20231214172503</lastUpdated>
+    <lastUpdated>20240719061444</lastUpdated>
   </versioning>
 </metadata>

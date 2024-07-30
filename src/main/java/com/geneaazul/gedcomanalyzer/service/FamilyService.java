@@ -51,17 +51,28 @@ public class FamilyService {
     private final GedcomAnalyzerProperties properties;
 
     @Transactional
-    public Optional<Long> persistSearch(SearchFamilyDto searchFamilyDto, @Nullable String clientIpAddress) {
-        return Optional.ofNullable(searchFamilyMapper.toSearchFamilyEntity(searchFamilyDto, clientIpAddress))
+    public Optional<Long> persistSearch(
+            SearchFamilyDto searchFamilyDto,
+            boolean isObfuscated,
+            @Nullable String clientIpAddress) {
+        return Optional.ofNullable(searchFamilyMapper.toSearchFamilyEntity(searchFamilyDto, isObfuscated, clientIpAddress))
                 .map(searchFamilyRepository::save)
                 .map(SearchFamily::getId);
     }
 
     @Transactional
-    public void updateSearchIsMatch(Long searchFamilyId, Boolean isMatch) {
+    public void updateSearchResult(
+            Long searchFamilyId,
+            boolean isMatch,
+            @Nullable Integer potentialResults,
+            @Nullable String errorMessages) {
         searchFamilyRepository
                 .findById(searchFamilyId)
-                .ifPresent(searchFamily -> searchFamily.setIsMatch(isMatch));
+                .ifPresent(searchFamily -> {
+                    searchFamily.setIsMatch(isMatch);
+                    searchFamily.setPotentialResults(isMatch ? null : potentialResults);
+                    searchFamily.setErrorMessages(StringUtils.substring(StringUtils.trimToNull(errorMessages), 0, 255));
+                });
     }
 
     @Transactional
@@ -137,7 +148,11 @@ public class FamilyService {
         OffsetDateTime createDateFrom = createDateTo.minusHours(properties.getMaxClientRequestsHoursThreshold());
 
         long clientRequests = searchFamilyRepository.countByClientIpAddressAndCreateDateBetween(clientIpAddress, createDateFrom, createDateTo);
-        return clientRequests < properties.getMaxClientRequestsCountThreshold();
+
+        boolean isSpecialThresholdClient = properties.getClientsWithSpecialThreshold().contains(clientIpAddress);
+        return clientRequests < (isSpecialThresholdClient
+                ? properties.getMaxClientRequestsCountSpecialThreshold()
+                : properties.getMaxClientRequestsCountThreshold());
     }
 
     public SearchFamilyResultDto search(SearchFamilyDto searchFamilyDto) {

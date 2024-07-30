@@ -169,7 +169,16 @@ public class SearchFamily {
     private Boolean isMatch;
 
     @ToString.Include
+    private Integer potentialResults;
+
+    @ToString.Include
+    private String errorMessages;
+
+    @ToString.Include
     private Boolean isReviewed;
+
+    @ToString.Include
+    private Boolean isObfuscated;
 
     @ToString.Include
     private String clientIpAddress;
