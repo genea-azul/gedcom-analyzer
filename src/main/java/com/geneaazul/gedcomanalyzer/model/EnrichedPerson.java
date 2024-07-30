@@ -213,11 +213,12 @@ public class EnrichedPerson {
     }
 
     public List<Place> getPlacesOfAnyEvent() {
-        return getPlacesOfAnyEvent(false, false);
+        return getPlacesOfAnyEvent(false, true, false);
     }
 
     public List<Place> getPlacesOfAnyEvent(
             boolean includeSpousePlaces,
+            boolean includeChildrenBirthPlaces,
             boolean includeAllChildrenPlaces) {
         return Stream.concat(
                 Stream
@@ -244,13 +245,79 @@ public class EnrichedPerson {
                                         ? spouseWithChildren
                                                 .getChildren()
                                                 .stream()
-                                                .map(EnrichedPerson::getPlacesOfAnyEvent)
+                                                .map(person -> person.getPlacesOfAnyEvent(false, false, false))
                                                 .flatMap(List::stream)
                                                 .map(Optional::of)
-                                        : spouseWithChildren
+                                        : includeChildrenBirthPlaces
+                                                ? spouseWithChildren
+                                                        .getChildren()
+                                                        .stream()
+                                                        .map(EnrichedPerson::getPlaceOfBirth)
+                                                : Stream.empty())))
+                .flatMap(Optional::stream)
+                .distinct()
+                .toList();
+    }
+
+    public List<PlaceAndDate> getPlaceAndDatesOfAnyEvent() {
+        return getPlaceAndDatesOfAnyEvent(false, true, false);
+    }
+
+    public List<PlaceAndDate> getPlaceAndDatesOfAnyEvent(
+            boolean includeSpousePlaces,
+            boolean includeChildrenBirthPlaces,
+            boolean includeAllChildrenPlaces) {
+        return Stream.concat(
+                Stream.of(
+                        PlaceAndDate.ofPlaceOrEmpty(this.placeOfBirth, this.dateOfBirth),
+                        PlaceAndDate.ofPlaceOrEmpty(this.placeOfDeath, this.dateOfDeath)),
+                this.spousesWithChildren
+                        .stream()
+                        .flatMap(spouseWithChildren -> Stream.concat(
+                                includeSpousePlaces
+                                        ? Stream.of(
+                                                PlaceAndDate.ofPlaceOrEmpty(
+                                                        spouseWithChildren.getPlaceOfPartners(),
+                                                        spouseWithChildren.getDateOfPartners()),
+                                                PlaceAndDate.ofPlaceOrEmpty(
+                                                        spouseWithChildren.getPlaceOfSeparation(),
+                                                        spouseWithChildren.getDateOfSeparation()),
+                                                PlaceAndDate.ofPlaceOrEmpty(
+                                                        spouseWithChildren
+                                                                .getSpouse()
+                                                                .flatMap(EnrichedPerson::getPlaceOfBirth),
+                                                        spouseWithChildren
+                                                                .getSpouse()
+                                                                .flatMap(EnrichedPerson::getDateOfBirth)),
+                                                PlaceAndDate.ofPlaceOrEmpty(
+                                                        spouseWithChildren
+                                                                .getSpouse()
+                                                                .flatMap(EnrichedPerson::getPlaceOfDeath),
+                                                        spouseWithChildren
+                                                                .getSpouse()
+                                                                .flatMap(EnrichedPerson::getDateOfDeath)))
+                                        : Stream.of(
+                                                PlaceAndDate.ofPlaceOrEmpty(
+                                                        spouseWithChildren.getPlaceOfPartners(),
+                                                        spouseWithChildren.getDateOfPartners()),
+                                                PlaceAndDate.ofPlaceOrEmpty(
+                                                        spouseWithChildren.getPlaceOfSeparation(),
+                                                        spouseWithChildren.getDateOfSeparation())),
+                                includeAllChildrenPlaces
+                                        ? spouseWithChildren
                                                 .getChildren()
                                                 .stream()
-                                                .map(EnrichedPerson::getPlaceOfBirth))))
+                                                .map(person -> person.getPlaceAndDatesOfAnyEvent(false, false, false))
+                                                .flatMap(List::stream)
+                                                .map(Optional::of)
+                                        : includeChildrenBirthPlaces
+                                                ? spouseWithChildren
+                                                        .getChildren()
+                                                        .stream()
+                                                        .map(child -> PlaceAndDate.ofPlaceOrEmpty(
+                                                                child.getPlaceOfBirth(),
+                                                                child.getDateOfBirth()))
+                                                : Stream.empty())))
                 .flatMap(Optional::stream)
                 .distinct()
                 .toList();

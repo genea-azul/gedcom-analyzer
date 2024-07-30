@@ -25,6 +25,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -248,11 +249,11 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void getAncestryCountriesCardinalityByPlaceOfBirth() {
-        List<GedcomAnalyzerService.SurenamesCardinality> places = gedcomAnalyzerService
+        List<GedcomAnalyzerService.SurnamesByCountryCardinality> places = gedcomAnalyzerService
                 .getAncestryCountriesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null, true, false);
         int totalSurnames = places
                 .stream()
-                .mapToInt(GedcomAnalyzerService.SurenamesCardinality::cardinality)
+                .mapToInt(GedcomAnalyzerService.SurnamesByCountryCardinality::cardinality)
                 .sum();
         System.out.println("getAncestryCountriesCardinalityByPlaceOfBirth: " + places.size() + " places and " + totalSurnames + " surnames");
         places
@@ -266,7 +267,7 @@ public class GedcomAnalyzerServiceTests {
     @Test
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     public void getImmigrantsCitiesCardinalityByPlaceOfAnyEvent() throws IOException {
-        List<GedcomAnalyzerService.SurenamesCardinality> places = gedcomAnalyzerService
+        List<GedcomAnalyzerService.SurnamesByCityCardinality> places = gedcomAnalyzerService
                 .getImmigrantsCitiesCardinalityByPlaceOfAnyEvent(
                         gedcom.getPeople(),
                         "Azul, Buenos Aires, Argentina",
@@ -277,11 +278,10 @@ public class GedcomAnalyzerServiceTests {
                         true,
                         false,
                         false,
-                        false,
-                        true);
+                        false);
         int totalImmigrants = places
                 .stream()
-                .mapToInt(GedcomAnalyzerService.SurenamesCardinality::cardinality)
+                .mapToInt(GedcomAnalyzerService.SurnamesByCityCardinality::cardinality)
                 .sum();
         System.out.println("getImmigrantsCitiesCardinalityByPlaceOfAnyEvent: " + places.size() + " places and " + totalImmigrants + " immigrants");
         places
@@ -289,7 +289,10 @@ public class GedcomAnalyzerServiceTests {
                         StringUtils.leftPad(cardinality.country(), 80)
                                 + " - " + String.format("%5d", cardinality.cardinality())
                                 + " - " + String.format("%7.4f%%", cardinality.percentage())
-                                + " - " + cardinality.surnames()));
+                                + " - " + cardinality.surnames()
+                                        .stream()
+                                        .map(pair -> pair.getLeft().surname() + " (" + pair.getRight() + ")")
+                                        .toList()));
 
         if (!places.isEmpty()) {
             System.out.println("people by city: " + places.getFirst().country() + " (" + places.getFirst().persons().size() + ")");
@@ -320,16 +323,13 @@ public class GedcomAnalyzerServiceTests {
                         return Stream.concat(
                                 place.surnames()
                                         .stream()
-                                        .map(surnameWithFrequency -> {
-                                            String surname = StringUtils.substringBeforeLast(surnameWithFrequency, " (");
-                                            int frequency = Integer.parseInt(StringUtils.substringBefore(StringUtils.substringAfterLast(surnameWithFrequency, " ("), ")"));
-                                            return new ImmigrantsOutput(
-                                                    RegExUtils.replaceAll(StringUtils.remove(surname, "?"), COMPOSITE_SURNAME_PATTERN, "$1"),
-                                                    PersonUtils.getShortenedSurnameMainWord(surname, properties.getNormalizedSurnamesMap()).get().normalizedMainWord(),
-                                                    frequency,
-                                                    place.country(),
-                                                    reversedPlaces);
-                                        }),
+                                        .map(surnameWithFrequency -> new ImmigrantsOutput(
+                                                RegExUtils.replaceAll(StringUtils.remove(surnameWithFrequency.getLeft().surname(), "?"), COMPOSITE_SURNAME_PATTERN, "$1"),
+                                                PersonUtils.getShortenedSurnameMainWord(surnameWithFrequency.getLeft().surname(), properties.getNormalizedSurnamesMap()).get().normalizedMainWord(),
+                                                surnameWithFrequency.getRight(),
+                                                place.country(),
+                                                reversedPlaces,
+                                                surnameWithFrequency.getLeft().date())),
                                 place.surnamesVariations()
                                         .stream()
                                         .map(surname -> new ImmigrantsOutput(
@@ -337,13 +337,14 @@ public class GedcomAnalyzerServiceTests {
                                                 PersonUtils.getShortenedSurnameMainWord(surname, properties.getNormalizedSurnamesMap()).get().normalizedMainWord(),
                                                 0,
                                                 place.country(),
-                                                reversedPlaces)));
+                                                reversedPlaces,
+                                                null)));
                     })
                     .collect(Collectors.groupingBy(
                             output -> output.normalizedSurname,
                             Collectors.collectingAndThen(
                                     Collectors.reducing(
-                                            new ImmigrantsReduce(List.of(), Set.of()),
+                                            new ImmigrantsReduce(List.of(), Set.of(), null),
                                             output -> new ImmigrantsReduce(
                                                     List.of(
                                                             new ImmigrantsSurnameReduce(
@@ -353,10 +354,14 @@ public class GedcomAnalyzerServiceTests {
                                                     Set.of(
                                                             new ImmigrantsPlaces(
                                                                     output.place,
-                                                                    output.reversedPlace))),
+                                                                    output.reversedPlace)),
+                                                    output.minImmigrationDate),
                                             (r1, r2) -> new ImmigrantsReduce(
                                                     mergeSurnamesLists(r1.surnames, r2.surnames),
-                                                    SetUtils.merge(r1.places, r2.places))),
+                                                    SetUtils.merge(r1.places, r2.places),
+                                                    ObjectUtils.compare(r1.minImmigrationDate, r2.minImmigrationDate, true) < 0
+                                                            ? r1.minImmigrationDate
+                                                            : r2.minImmigrationDate)),
                                     reduce -> new ImmigrantsResult(
                                             reduce.surnames
                                                     .stream()
@@ -378,7 +383,13 @@ public class GedcomAnalyzerServiceTests {
                                                                             .noneMatch(_p -> _p.place.endsWith(immiPlaces.place)))
                                                             .sorted(Comparator.comparing(ImmigrantsPlaces::reversedPlace, PlaceUtils.REVERSED_PLACE_ARRAY_COMPARATOR))
                                                             .map(ImmigrantsPlaces::place)
-                                                            .toList()))));
+                                                            .toList(),
+                                            Optional.ofNullable(reduce.minImmigrationDate)
+                                                    .map(date -> date.isOnlyYearDate()
+                                                            && (date.getOperator() == Date.Operator.ABT || date.getOperator() == Date.Operator.EST)
+                                                            ? "~" + date.getYear()
+                                                            : date.getYear().toString())
+                                                    .orElse(null)))));
 
             List<String> lines = immigrantSurnames.entrySet()
                     .stream()
@@ -386,7 +397,9 @@ public class GedcomAnalyzerServiceTests {
                     .map(Map.Entry::getValue)
                     .flatMap(result -> Stream
                             .of(
-                                    Stream.of(result.surname),
+                                    Stream.of(Optional.ofNullable(result.minImmigrationYear)
+                                            .map(year -> result.surname + "  •  " + year)
+                                            .orElse(result.surname)),
                                     result.places
                                             .stream()
                                             .peek(place -> {
@@ -496,10 +509,10 @@ public class GedcomAnalyzerServiceTests {
                 : new ImmigrantsSurnameReduce(newValue, newValueForSorting, test.frequency);
     }
 
-    private record ImmigrantsOutput(String surname, String normalizedSurname, int frequency, String place, String[] reversedPlace) { }
-    private record ImmigrantsReduce(List<ImmigrantsSurnameReduce> surnames, Set<ImmigrantsPlaces> places) { }
+    private record ImmigrantsOutput(String surname, String normalizedSurname, int frequency, String place, String[] reversedPlace, @Nullable Date minImmigrationDate) { }
+    private record ImmigrantsReduce(List<ImmigrantsSurnameReduce> surnames, Set<ImmigrantsPlaces> places, @Nullable Date minImmigrationDate) { }
     private record ImmigrantsSurnameReduce(String surname, String surnameForSorting, int frequency) { }
-    private record ImmigrantsResult(String surname, String surnameForSorting, List<String> places) { }
+    private record ImmigrantsResult(String surname, String surnameForSorting, List<String> places, @Nullable String minImmigrationYear) { }
     private record ImmigrantsPlaces(String place, String[] reversedPlace) implements Comparable<ImmigrantsPlaces> {
         @Override
         public boolean equals(Object o) {

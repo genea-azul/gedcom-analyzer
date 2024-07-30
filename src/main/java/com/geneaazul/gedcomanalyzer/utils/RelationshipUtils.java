@@ -26,7 +26,7 @@ import lombok.experimental.UtilityClass;
 public class RelationshipUtils {
 
     public static Set<String> getCountriesOfBirth(List<Relationship> relationships) {
-        return getCountriesOfBirth(relationships, r -> true, s -> s);
+        return getCountriesOfBirth(relationships, _ -> true, s -> s);
     }
 
     public static <T extends Collection<String>> T getCountriesOfBirth(

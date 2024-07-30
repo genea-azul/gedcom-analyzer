@@ -35,7 +35,7 @@ public class MapUtils {
     }
 
     @SuppressWarnings("OptionalGetWithoutIsPresent")
-    public static <K, T extends Comparable<T>> Map<K, List<String>> groupByAndOrderHierarchically(List<Pair<K, Optional<T>>> opts) {
+    public static <K, T extends Comparable<T>> Map<K, List<Pair<T, Integer>>> groupByAndOrderHierarchically(List<Pair<K, Optional<T>>> opts) {
         return opts
                 .stream()
                 .filter(pair -> pair.getRight().isPresent())
@@ -52,7 +52,7 @@ public class MapUtils {
                                                         .<Map.Entry<T, Integer>>comparingInt(Map.Entry::getValue)
                                                         .reversed()
                                                         .thenComparing(Map.Entry::getKey))
-                                                .map(entry -> entry.getKey() + " (" + entry.getValue() + ")")
+                                                .map(entry -> Pair.of(entry.getKey(), entry.getValue()))
                                                 .toList()))));
     }
 
