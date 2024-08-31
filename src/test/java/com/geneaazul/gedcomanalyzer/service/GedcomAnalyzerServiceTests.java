@@ -274,8 +274,11 @@ public class GedcomAnalyzerServiceTests {
                         null,
                         new String[]{ "Uruguay", "Brasil", "Chile", "Perú", "Paraguay", "Bolívia", "Océano Atlántico" },
                         null,
+                        // includeSpousePlaces: relates to placeOfAnyEvent, set true for wider range of immigrants
                         true,
-                        true,
+                        // includeAllChildrenPlaces: relates to placeOfAnyEvent, set true for wider range of immigrants
+                        false,
+                        // isExactPlace: relates to placeOfAnyEvent, set true to match exactly instead of "ends with" matching
                         false,
                         false,
                         false);
@@ -291,7 +294,7 @@ public class GedcomAnalyzerServiceTests {
                                 + " - " + String.format("%7.4f%%", cardinality.percentage())
                                 + " - " + cardinality.surnames()
                                         .stream()
-                                        .map(pair -> pair.getLeft().surname() + " (" + pair.getRight() + ")")
+                                        .map(triple -> triple.getLeft() + " (" + triple.getMiddle() + ")")
                                         .toList()));
 
         if (!places.isEmpty()) {
@@ -323,13 +326,15 @@ public class GedcomAnalyzerServiceTests {
                         return Stream.concat(
                                 place.surnames()
                                         .stream()
-                                        .map(surnameWithFrequency -> new ImmigrantsOutput(
-                                                RegExUtils.replaceAll(StringUtils.remove(surnameWithFrequency.getLeft().surname(), "?"), COMPOSITE_SURNAME_PATTERN, "$1"),
-                                                PersonUtils.getShortenedSurnameMainWord(surnameWithFrequency.getLeft().surname(), properties.getNormalizedSurnamesMap()).get().normalizedMainWord(),
-                                                surnameWithFrequency.getRight(),
-                                                place.country(),
-                                                reversedPlaces,
-                                                surnameWithFrequency.getLeft().date())),
+                                        .flatMap(surnameWithFrequency -> surnameWithFrequency.getRight()
+                                                .stream()
+                                                .map(immigrationDate -> new ImmigrantsOutput(
+                                                        RegExUtils.replaceAll(StringUtils.remove(surnameWithFrequency.getLeft(), "?"), COMPOSITE_SURNAME_PATTERN, "$1"),
+                                                        PersonUtils.getShortenedSurnameMainWord(surnameWithFrequency.getLeft(), properties.getNormalizedSurnamesMap()).get().normalizedMainWord(),
+                                                        surnameWithFrequency.getMiddle(),
+                                                        place.country(),
+                                                        reversedPlaces,
+                                                        immigrationDate))),
                                 place.surnamesVariations()
                                         .stream()
                                         .map(surname -> new ImmigrantsOutput(

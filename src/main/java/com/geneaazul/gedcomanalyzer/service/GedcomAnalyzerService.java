@@ -33,9 +33,9 @@ import com.geneaazul.gedcomanalyzer.utils.StreamUtils;
 import org.springframework.stereotype.Service;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.folg.gedcom.model.ChildRef;
 import org.folg.gedcom.model.EventFact;
 import org.folg.gedcom.model.Family;
@@ -538,23 +538,13 @@ public class GedcomAnalyzerService {
             String country,
             int cardinality,
             float percentage,
-            List<Pair<SurnameAndDate, Integer>> surnames,
+            List<Triple<String, Integer, List<Date>>> surnames,
             List<String> surnamesVariations,
             List<EnrichedPerson> persons) { }
 
     public record SurnameAndDate(
             String surname,
-            Date date) implements Comparable<SurnameAndDate> {
-
-        @Override
-        public int compareTo(SurnameAndDate other) {
-            int cmp = this.surname.compareTo(other.surname);
-            if (cmp != 0) {
-                return cmp;
-            }
-            return ObjectUtils.compare(this.date, other.date, true);
-        }
-    }
+            Date date) { }
 
     /**
      * .
@@ -645,7 +635,10 @@ public class GedcomAnalyzerService {
                                 .map(surname -> new SurnameAndDate(surname, pair.getRight().date()))))
                 .toList();
 
-        Map<String, List<Pair<SurnameAndDate, Integer>>> surnamesByCity = MapUtils.groupByAndOrderHierarchically(citiesAndSurnames);
+        Map<String, List<Triple<String, Integer, List<Date>>>> surnamesByCity = MapUtils.groupByAndOrderHierarchically(
+                citiesAndSurnames,
+                SurnameAndDate::surname,
+                SurnameAndDate::date);
 
         Map<String, List<String>> surnamesVariationsByCity = cities
                 .stream()
