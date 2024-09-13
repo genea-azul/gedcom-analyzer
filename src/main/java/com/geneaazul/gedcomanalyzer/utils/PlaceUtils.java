@@ -3,10 +3,12 @@ package com.geneaazul.gedcomanalyzer.utils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import jakarta.annotation.Nullable;
 
@@ -118,6 +120,19 @@ public class PlaceUtils {
         return Optional.ofNullable(place)
                 .map(p -> StringUtils.splitByWholeSeparator(p, ", "))
                 .map(array -> {
+                    // Join-back country name when separator is inside parenthesis: Rumania (antes Temesvár, Temes, Hungría)
+                    if (array.length > 1 && array[array.length - 1].endsWith(")") && !array[array.length - 1].contains("(")) {
+                        int startIndex = array.length - 2;
+                        while (!array[startIndex].contains("(")) {
+                            startIndex--;
+                        }
+
+                        array[startIndex] = Arrays.stream(array, startIndex, array.length)
+                                .collect(Collectors.joining(", "));
+
+                        array = ArrayUtils.subarray(array, 0, startIndex + 1);
+                    }
+
                     ArrayUtils.reverse(array);
                     return array;
                 })
