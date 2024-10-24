@@ -489,7 +489,10 @@ public class GedcomAnalyzerService {
                                         .getPeopleInTree(person, false, true, false)
                                         .stream()
                                         .map(Relationships::findFirst)
-                                        .toList())))
+                                        .toList(),
+                                _ -> true,
+                                true,
+                                s -> s)))
                 .toList();
 
         Map<String, Integer> cardinality = CollectionUtils.getCardinalityMap(

@@ -4,6 +4,7 @@ import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.FamilyTree;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
 import com.geneaazul.gedcomanalyzer.service.PersonService;
+import com.geneaazul.gedcomanalyzer.service.familytree.BalkanFamilyTreeService;
 import com.geneaazul.gedcomanalyzer.service.familytree.NetworkFamilyTreeService;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AppController {
 
     private final PersonService personService;
+    private final BalkanFamilyTreeService balkanFamilyTreeService;
     private final NetworkFamilyTreeService networkFamilyTreeService;
     private final GedcomAnalyzerProperties properties;
 
@@ -68,6 +70,38 @@ public class AppController {
                 "personDisplayName", personDisplayName,
                 "obfuscateLiving", obfuscateLiving);
         return new ModelAndView("pyvis-network/nodes", params);
+    }
+
+    @GetMapping("/family-tree/{personUuid}/balkan")
+    public ResponseEntity<String> balkanFamilyTreeView(
+            @PathVariable UUID personUuid,
+            @RequestParam @Nullable String f,
+            HttpServletRequest request) throws IOException {
+        boolean obfuscateLiving = !properties.isDisableObfuscateLiving() && !"0".equals(f);
+
+        log.info("Balkan family tree [ personUuid={}, obfuscateLiving={}, httpRequestId={} ]",
+                personUuid,
+                obfuscateLiving,
+                request.getRequestId());
+
+        Optional<FamilyTree> maybeFamilyTree = balkanFamilyTreeService
+                .getFamilyTree(personUuid, obfuscateLiving, true, false);
+
+        if (maybeFamilyTree.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .contentType(MediaType.TEXT_HTML)
+                    .cacheControl(CacheControl.noCache())
+                    .body("<h4>Identificador de persona inv&aacute;lido.</h4>"
+                            + "<p>Por favor realiz&aacute; una nueva b&uacute;squeda.</p>");
+        }
+
+        FamilyTree familyTree = maybeFamilyTree.get();
+
+        return ResponseEntity.ok()
+                .contentLength(Files.size(familyTree.path()))
+                .contentType(familyTree.mediaType())
+                .cacheControl(CacheControl.maxAge(Duration.ofDays(365)))
+                .body(Files.readString(familyTree.path(), StandardCharsets.UTF_8));
     }
 
     @GetMapping("/family-tree/{personUuid}/network")

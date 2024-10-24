@@ -54,6 +54,7 @@ public class EnrichedPerson {
     private final boolean isAlive;
     private final Optional<Age> age;
     private final boolean isDistinguishedPerson;
+    private final boolean isNativePerson;
     private final boolean isDisappearedPerson;
     private final Optional<ZonedDateTime> updateDate;
 
@@ -112,6 +113,7 @@ public class EnrichedPerson {
         age = Age.of(dateOfBirth, dateOfDeath
                 .or(() -> isAlive ? Optional.of(Date.now(properties.getZoneId())) : Optional.empty()));
         isDistinguishedPerson = PersonUtils.isDistinguishedPerson(person);
+        isNativePerson = PersonUtils.isNativePerson(person);
         isDisappearedPerson = PersonUtils.isDisappearedPerson(person);
         updateDate = PersonUtils.getUpdateDate(person, properties.getZoneId());
     }

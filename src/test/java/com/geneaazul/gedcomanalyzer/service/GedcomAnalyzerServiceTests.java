@@ -249,18 +249,22 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void getAncestryCountriesCardinalityByPlaceOfBirth() {
+        Boolean isAlive = null;
         List<GedcomAnalyzerService.SurnamesByCountryCardinality> places = gedcomAnalyzerService
-                .getAncestryCountriesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null, true, false);
+                .getAncestryCountriesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", isAlive, true, false);
         int totalSurnames = places
                 .stream()
                 .mapToInt(GedcomAnalyzerService.SurnamesByCountryCardinality::cardinality)
                 .sum();
         System.out.println("getAncestryCountriesCardinalityByPlaceOfBirth: " + places.size() + " places and " + totalSurnames + " surnames");
+        List<EnrichedPerson> people = searchService
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", isAlive, null, true, false, false, gedcom.getPeople());
         places
                 .forEach(cardinality -> System.out.println(
                         StringUtils.rightPad(cardinality.country(), 20)
                                 + " - " + String.format("%5d", cardinality.cardinality())
                                 + " - " + String.format("%7.4f%%", cardinality.percentage())
+                                + " - " + String.format("%7.4f%%", (float) cardinality.cardinality() / people.size() * 100)
                                 + " - " + cardinality.surnames()));
     }
 
@@ -307,16 +311,19 @@ public class GedcomAnalyzerServiceTests {
                     .forEach(System.out::println);
 
             /*
-             * TODO ajustes a output.txt "^[^\s,]+ \S" y "^([^\s,]+ )+\("
+             * TODO ajustes a output.txt "^[^\s,]+ [^\s•] y "^([^\s,]+ )+\("
+             *   -> Revisar: <b>.*[^\s,]+ \S
+             *   -> Revisar: <b>.*([^\s,]+ )+\(
              *   -> De La Torre y Della Torre (Esp / Ita)
              *   -> Vassallo y Basalo (Ita / Esp)
              *   -> Martines (Por)
              *   -> Rodrigues (Por)
              *   -> Almeyda (Por)
              *   -> Limpiar provincias: Bordachar, Fittipaldi, Fortassin, Indo, Kollmann, Mocciaro, Saks, Sarasúa, Scavuzzo, Valicenti, Vitale
+             *   -> Armentano (San Severino Lucano duplicado)
              */
 
-            final int OUTPUT_FIXED_WIDTH_CHARS = 74;
+            final int OUTPUT_FIXED_WIDTH_CHARS = 58;
             final Pattern COMPOSITE_SURNAME_PATTERN = Pattern.compile("^(.+) (y|dit|dite|dita|detto) .+$");
 
             Map<String, ImmigrantsResult> immigrantSurnames = places
@@ -403,10 +410,50 @@ public class GedcomAnalyzerServiceTests {
                     .flatMap(result -> Stream
                             .of(
                                     Stream.of(Optional.ofNullable(result.minImmigrationYear)
-                                            .map(year -> result.surname + "  •  " + year)
-                                            .orElse(result.surname)),
+                                            .map(year -> "<span style=\"font-size:9.5pt;\"><b>" + result.surname + "</b></span>  •  " + year + "<br>")
+                                            .orElseGet(() -> "<span style=\"font-size:9.5pt;\"><b>" + result.surname + "</b></span><br>")),
                                     result.places
                                             .stream()
+                                            .map(place -> {
+                                                if (place.length() > OUTPUT_FIXED_WIDTH_CHARS) {
+                                                    if (place.contains(", Comunidad Valenciana")) {
+                                                        place = place.replace(", Comunidad Valenciana", ", Com. Val.");
+                                                    } else if (place.contains(", Castilla-La Mancha")) {
+                                                        place = place.replace(", Castilla-La Mancha", ", Cast.-La Man.");
+                                                    } else if (place.contains(", Galicia")) {
+                                                        place = place.replace(", Galicia", ", Gal.");
+                                                    } else if (place.contains(", Distrito Nacional")) {
+                                                        place = place.replace(", Distrito Nacional", ", Dist. Nac.");
+                                                    } else if (place.contains(", Aquitania")) {
+                                                        place = place.replace(", Aquitania", ", Aquit.");
+                                                    } else if (place.contains(", Mediodía-Pirineos")) {
+                                                        place = place.replace(", Mediodía-Pirineos", ", Med.-Pir.");
+                                                    } else if (place.contains(", Auvernia-Ródano-Alpes")) {
+                                                        place = place.replace(", Auvernia-Ródano-Alpes", ", Auv.-Ród.-Alpes");
+                                                    } else if (place.startsWith("Contrada Mezzana")) {
+                                                        place = place.replace("Contrada Mezzana, ", "");
+                                                    } else if (place.contains(", Mecklenburg-Vorpommern")) {
+                                                        place = place.replace(", Mecklenburg-Vorpommern", ", Meck.-Vorp.");
+                                                    } else if (place.contains("(")) {
+                                                        place = StringUtils.substringBefore(place, " (") + StringUtils.substringAfter(place, ")");
+                                                    }
+                                                    if (place.length() > OUTPUT_FIXED_WIDTH_CHARS) {
+                                                        if (place.contains(", Pirineos Atlánticos")) {
+                                                            place = place.replace(", Pirineos Atlánticos", ", Pir. Atl.");
+                                                        } else if (place.contains(", Auv.-Ród.-Alpes")) {
+                                                            place = place.replace(", Auv.-Ród.-Alpes", ", Auv.-Ród.");
+                                                        } else if (place.contains("(")) {
+                                                            place = StringUtils.substringBefore(place, " (") + StringUtils.substringAfter(place, ")");
+                                                        }
+                                                    }
+                                                    if (place.length() > OUTPUT_FIXED_WIDTH_CHARS) {
+                                                        if (place.endsWith(", Francia")) {
+                                                            place = place.replace(", Francia", ", Fran.");
+                                                        }
+                                                    }
+                                                }
+                                                return place;
+                                            })
                                             .peek(place -> {
                                                 if (place.length() > OUTPUT_FIXED_WIDTH_CHARS) {
                                                     System.err.println(place);
@@ -414,14 +461,18 @@ public class GedcomAnalyzerServiceTests {
                                                     System.out.println(place);
                                                 }
                                             })
-                                            .map(place -> StringUtils.leftPad(place, OUTPUT_FIXED_WIDTH_CHARS)),
-                                    Stream.of(""))
+                                            .map(place -> {
+                                                int padRepeat = Math.max(OUTPUT_FIXED_WIDTH_CHARS - place.length(), 0);
+                                                String padding = StringUtils.repeat("&nbsp;", padRepeat);
+                                                return "<span style=\"font-size:9.5pt;\">" + padding + place + "</span><br>";
+                                            }),
+                                    Stream.of("<span style=\"font-size:5pt;\">&nbsp;</span><br>"))
                             .flatMap(Function.identity()))
-                    .toList();
+                    .collect(Collectors.toList());
 
             System.out.println();
-            System.out.println("Surnames in ./target/output.txt: " + immigrantSurnames.size());
-            Files.write(Path.of("./target/output.txt"), lines);
+            System.out.println("Surnames in ./target/output.md: " + immigrantSurnames.size());
+            Files.write(Path.of("./target/output.md"), lines);
         }
     }
 
@@ -737,25 +788,30 @@ public class GedcomAnalyzerServiceTests {
     }
 
     @Test
+    public void findNativePeople() {
+        System.out.println("findNativePeople:");
+        gedcom
+                .getPeople()
+                .stream()
+                .filter(EnrichedPerson::isNativePerson)
+                .forEach(System.out::println);
+    }
+
+    @Test
     public void findDistinguishedPersons() {
         System.out.println("findDistinguishedPersons:");
         gedcom
                 .getPeople()
                 .stream()
                 .filter(EnrichedPerson::isDistinguishedPerson)
-                .filter(p -> (
-                        p.isAlive()
-                                ? p.getDateOfBirth()
-                                : p.getDateOfDeath())
-                        .map(Date::isFullDate)
-                        .orElse(false))
                 .sorted(Comparator.comparing(
                         p -> (
-                        p.isAlive()
-                                ? p.getDateOfBirth()
-                                : p.getDateOfDeath())
-                        .map(date -> Pair.of(date.getMonth(), date.getDay()))
-                        .orElse(null),
+                                p.isAlive()
+                                        ? p.getDateOfBirth()
+                                        : p.getDateOfDeath())
+                                .filter(Date::isFullDate)
+                                .map(date -> Pair.of(date.getMonth(), date.getDay()))
+                                .orElse(null),
                         Comparator.nullsLast(Comparator.naturalOrder())))
                 .forEach(System.out::println);
     }
