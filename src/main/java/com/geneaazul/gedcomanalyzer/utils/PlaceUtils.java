@@ -26,6 +26,7 @@ public class PlaceUtils {
             "Catedral",
             "Cementerio",
             "Colegio",
+            "Convento",
             "Ermita",
             "Escuela",
             "Hospital",
