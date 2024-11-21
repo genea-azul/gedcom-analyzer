@@ -67,6 +67,7 @@ public class PersonUtils {
     public static final Set<String> DEATH_TAGS = Set.of("DEAT", "DEATH");
     public static final Set<String> BURIAL_TAGS = Set.of("BURI", "BURIAL");
     public static final Set<String> SEX_TAGS = Set.of("SEX");
+    public static final Set<String> RESI_TAGS = Set.of("RESI");
     public static final Set<String> EVENT_TAGS = Set.of("EVEN", "EVENT");
     public static final Set<String> ETHNICITY_EVENT_TYPES = Set.of("ETHN", "ETHNICITY", "Grupo étnico");
     public static final Set<String> DISAPPEARED_PERSON_EVENT_TYPES = Set.of("Enforced disappearance", "Desaparición forzada");
@@ -80,6 +81,7 @@ public class PersonUtils {
     public static final String FORMER_NAME_TAG = "_FORMERNAME";
     public static final String UPDATED_TAG = "_UPD";
     public static final String PERSONAL_PHOTO_TAG = "_PERSONALPHOTO";
+    public static final String EMAIL_TAG = "EMAIL";
 
     public static final Pattern UPDATE_DATE_PATTERN = Pattern.compile("(\\d{1,2}) (\\w{3}) (\\d{4}) (.{8}) (GMT|UTC)\\s*([+-]\\d{4})");
     public static final DateTimeFormatter UPDATE_DATE_FORMATTER = DateTimeFormatter.ofPattern("d MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
@@ -604,6 +606,15 @@ public class PersonUtils {
                 .flatMap(List::stream)
                 // A child could be repeated when it has biological and adopted relationship with a parent
                 .filter(StreamUtils.distinctByKey(Person::getId))
+                .toList();
+    }
+
+    public static List<String> getEmails(Person person) {
+        return person.getEventsFacts()
+                .stream()
+                .filter(eventFact -> RESI_TAGS.contains(eventFact.getTag()))
+                .filter(eventFact -> EMAIL_TAG.equals(eventFact.getEmailTag()))
+                .map(EventFact::getEmail)
                 .toList();
     }
 

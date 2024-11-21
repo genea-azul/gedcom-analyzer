@@ -7,6 +7,7 @@ import com.geneaazul.gedcomanalyzer.utils.FamilyUtils;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 import com.geneaazul.gedcomanalyzer.utils.StreamUtils;
 
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folg.gedcom.model.EventFact;
@@ -56,6 +57,7 @@ public class EnrichedPerson {
     private final boolean isDistinguishedPerson;
     private final boolean isNativePerson;
     private final boolean isDisappearedPerson;
+    private final List<String> emails;
     private final Optional<ZonedDateTime> updateDate;
 
     // Custom event facts and tag extensions
@@ -115,6 +117,7 @@ public class EnrichedPerson {
         isDistinguishedPerson = PersonUtils.isDistinguishedPerson(person);
         isNativePerson = PersonUtils.isNativePerson(person);
         isDisappearedPerson = PersonUtils.isDisappearedPerson(person);
+        emails = PersonUtils.getEmails(person);
         updateDate = PersonUtils.getUpdateDate(person, properties.getZoneId());
     }
 
@@ -490,12 +493,13 @@ public class EnrichedPerson {
                         .stream()
                         .map(EnrichedPerson::getDisplayName)
                         .collect(Collectors.joining(", ")), 64)
-                + " - " + getSpousesWithChildren()
+                + " - " + StringUtils.rightPad(getSpousesWithChildren()
                         .stream()
                         .map(spouseWithChildren -> spouseWithChildren.getSpouse()
                                 .map(EnrichedPerson::getDisplayName)
                                 .orElse(PersonUtils.NO_SPOUSE) + " (" + spouseWithChildren.getChildren().size() + ")")
-                        .collect(Collectors.joining(", "));
+                        .collect(Collectors.joining(", ")), 64)
+                + " - " + String.join(", ", ListUtils.emptyIfNull(emails));
     }
 
     @Override
