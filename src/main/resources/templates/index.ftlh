@@ -376,8 +376,15 @@
 
     <div class="row bg-light">
       <div class="col text-center small p-1">
-        <b>Genea Azul</b> es un proyecto de investigaci&oacute;n sin fines de lucro.<br/>
-        &iexcl;Solicitá acceso al &aacute;rbol y carg&aacute; info!
+        <p style="margin-bottom: 0.5em;">
+          <b>Genea Azul</b> es una iniciativa comunitaria sin fines de lucro con el fin de investigar, documentar y preservar la historia genealógica del partido de Azul.
+        </p>
+        <p style="margin-bottom: 0.5em;">
+          Declarado de <b>Interés Comunitario, Histórico y Cultural</b> por el Honorable Concejo Deliberante de Azul.
+        </p>
+        <p>
+          &iexcl;Solicitá acceso al &aacute;rbol y carg&aacute; info!
+        </p>
       </div>
     </div>
 
