@@ -2,6 +2,7 @@ package com.geneaazul.gedcomanalyzer.utils;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -9,7 +10,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import jakarta.annotation.Nullable;
 
 import lombok.experimental.UtilityClass;
 
@@ -35,7 +39,10 @@ public class MapUtils {
     }
 
     @SuppressWarnings("OptionalGetWithoutIsPresent")
-    public static <K, T extends Comparable<T>> Map<K, List<String>> groupByAndOrderHierarchically(List<Pair<K, Optional<T>>> opts) {
+    public static <K, T, C extends Comparable<C>, D> Map<K, List<Triple<C, Integer, List<D>>>> groupByAndOrderHierarchically(
+            List<Pair<K, Optional<T>>> opts,
+            Function<T, C> subElementsKeyExtractor,
+            @Nullable Function<T, D> groupedSubElementsMapper) {
         return opts
                 .stream()
                 .filter(pair -> pair.getRight().isPresent())
@@ -45,15 +52,31 @@ public class MapUtils {
                                 pair -> pair.getRight().get(),
                                 Collectors.collectingAndThen(
                                         Collectors.toList(),
-                                        values -> CollectionUtils.getCardinalityMap(values)
-                                                .entrySet()
-                                                .stream()
-                                                .sorted(Comparator
-                                                        .<Map.Entry<T, Integer>>comparingInt(Map.Entry::getValue)
-                                                        .reversed()
-                                                        .thenComparing(Map.Entry::getKey))
-                                                .map(entry -> entry.getKey() + " (" + entry.getValue() + ")")
-                                                .toList()))));
+                                        values -> {
+                                            List<C> subElementKeys = values
+                                                    .stream()
+                                                    .map(subElementsKeyExtractor)
+                                                    .toList();
+                                            Map<C, Integer> cardinality = CollectionUtils.getCardinalityMap(subElementKeys);
+                                            Map<C, List<D>> groupedSubElements = (groupedSubElementsMapper == null)
+                                                    ? Map.of()
+                                                    : values
+                                                            .stream()
+                                                            .collect(Collectors.groupingBy(subElementsKeyExtractor, Collectors.mapping(groupedSubElementsMapper, Collectors.toList())));
+
+                                            return cardinality
+                                                    .entrySet()
+                                                    .stream()
+                                                    .sorted(Comparator
+                                                            .<Map.Entry<C, Integer>>comparingInt(Map.Entry::getValue)
+                                                            .reversed()
+                                                            .thenComparing(Map.Entry::getKey))
+                                                    .map(entry -> Triple.of(
+                                                            entry.getKey(),
+                                                            entry.getValue(),
+                                                            groupedSubElements.get(entry.getKey())))
+                                                    .toList();
+                                        }))));
     }
 
     public static <T, M extends Map<String, Set<T>>> M merge(M m1, M m2) {

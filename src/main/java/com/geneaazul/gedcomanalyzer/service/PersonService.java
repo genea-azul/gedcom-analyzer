@@ -67,6 +67,7 @@ public class PersonService {
         List<String> ancestryCountries = RelationshipUtils.getCountriesOfBirth(
                 lastRelationships,
                 relationship -> relationship.isDirect() && relationship.getGeneration() >= 0 && !relationship.isInLaw(),
+                false,
                 set -> set.stream().sorted().toList());
         AncestryGenerations ancestryGenerations = RelationshipUtils.getAncestryGenerations(lastRelationships);
         Optional<Relationship> maxDistantRelationship = RelationshipUtils.getMaxDistantRelationship(lastRelationships);

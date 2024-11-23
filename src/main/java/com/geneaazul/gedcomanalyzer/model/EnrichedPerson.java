@@ -7,6 +7,7 @@ import com.geneaazul.gedcomanalyzer.utils.FamilyUtils;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 import com.geneaazul.gedcomanalyzer.utils.StreamUtils;
 
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folg.gedcom.model.EventFact;
@@ -54,7 +55,9 @@ public class EnrichedPerson {
     private final boolean isAlive;
     private final Optional<Age> age;
     private final boolean isDistinguishedPerson;
+    private final boolean isNativePerson;
     private final boolean isDisappearedPerson;
+    private final List<String> emails;
     private final Optional<ZonedDateTime> updateDate;
 
     // Custom event facts and tag extensions
@@ -112,7 +115,9 @@ public class EnrichedPerson {
         age = Age.of(dateOfBirth, dateOfDeath
                 .or(() -> isAlive ? Optional.of(Date.now(properties.getZoneId())) : Optional.empty()));
         isDistinguishedPerson = PersonUtils.isDistinguishedPerson(person);
+        isNativePerson = PersonUtils.isNativePerson(person);
         isDisappearedPerson = PersonUtils.isDisappearedPerson(person);
+        emails = PersonUtils.getEmails(person);
         updateDate = PersonUtils.getUpdateDate(person, properties.getZoneId());
     }
 
@@ -213,11 +218,12 @@ public class EnrichedPerson {
     }
 
     public List<Place> getPlacesOfAnyEvent() {
-        return getPlacesOfAnyEvent(false, false);
+        return getPlacesOfAnyEvent(false, true, false);
     }
 
     public List<Place> getPlacesOfAnyEvent(
             boolean includeSpousePlaces,
+            boolean includeChildrenBirthPlaces,
             boolean includeAllChildrenPlaces) {
         return Stream.concat(
                 Stream
@@ -244,13 +250,79 @@ public class EnrichedPerson {
                                         ? spouseWithChildren
                                                 .getChildren()
                                                 .stream()
-                                                .map(EnrichedPerson::getPlacesOfAnyEvent)
+                                                .map(person -> person.getPlacesOfAnyEvent(false, false, false))
                                                 .flatMap(List::stream)
                                                 .map(Optional::of)
-                                        : spouseWithChildren
+                                        : includeChildrenBirthPlaces
+                                                ? spouseWithChildren
+                                                        .getChildren()
+                                                        .stream()
+                                                        .map(EnrichedPerson::getPlaceOfBirth)
+                                                : Stream.empty())))
+                .flatMap(Optional::stream)
+                .distinct()
+                .toList();
+    }
+
+    public List<PlaceAndDate> getPlaceAndDatesOfAnyEvent() {
+        return getPlaceAndDatesOfAnyEvent(false, true, false);
+    }
+
+    public List<PlaceAndDate> getPlaceAndDatesOfAnyEvent(
+            boolean includeSpousePlaces,
+            boolean includeChildrenBirthPlaces,
+            boolean includeAllChildrenPlaces) {
+        return Stream.concat(
+                Stream.of(
+                        PlaceAndDate.ofPlaceOrEmpty(this.placeOfBirth, this.dateOfBirth),
+                        PlaceAndDate.ofPlaceOrEmpty(this.placeOfDeath, this.dateOfDeath)),
+                this.spousesWithChildren
+                        .stream()
+                        .flatMap(spouseWithChildren -> Stream.concat(
+                                includeSpousePlaces
+                                        ? Stream.of(
+                                                PlaceAndDate.ofPlaceOrEmpty(
+                                                        spouseWithChildren.getPlaceOfPartners(),
+                                                        spouseWithChildren.getDateOfPartners()),
+                                                PlaceAndDate.ofPlaceOrEmpty(
+                                                        spouseWithChildren.getPlaceOfSeparation(),
+                                                        spouseWithChildren.getDateOfSeparation()),
+                                                PlaceAndDate.ofPlaceOrEmpty(
+                                                        spouseWithChildren
+                                                                .getSpouse()
+                                                                .flatMap(EnrichedPerson::getPlaceOfBirth),
+                                                        spouseWithChildren
+                                                                .getSpouse()
+                                                                .flatMap(EnrichedPerson::getDateOfBirth)),
+                                                PlaceAndDate.ofPlaceOrEmpty(
+                                                        spouseWithChildren
+                                                                .getSpouse()
+                                                                .flatMap(EnrichedPerson::getPlaceOfDeath),
+                                                        spouseWithChildren
+                                                                .getSpouse()
+                                                                .flatMap(EnrichedPerson::getDateOfDeath)))
+                                        : Stream.of(
+                                                PlaceAndDate.ofPlaceOrEmpty(
+                                                        spouseWithChildren.getPlaceOfPartners(),
+                                                        spouseWithChildren.getDateOfPartners()),
+                                                PlaceAndDate.ofPlaceOrEmpty(
+                                                        spouseWithChildren.getPlaceOfSeparation(),
+                                                        spouseWithChildren.getDateOfSeparation())),
+                                includeAllChildrenPlaces
+                                        ? spouseWithChildren
                                                 .getChildren()
                                                 .stream()
-                                                .map(EnrichedPerson::getPlaceOfBirth))))
+                                                .map(person -> person.getPlaceAndDatesOfAnyEvent(false, false, false))
+                                                .flatMap(List::stream)
+                                                .map(Optional::of)
+                                        : includeChildrenBirthPlaces
+                                                ? spouseWithChildren
+                                                        .getChildren()
+                                                        .stream()
+                                                        .map(child -> PlaceAndDate.ofPlaceOrEmpty(
+                                                                child.getPlaceOfBirth(),
+                                                                child.getDateOfBirth()))
+                                                : Stream.empty())))
                 .flatMap(Optional::stream)
                 .distinct()
                 .toList();
@@ -421,12 +493,13 @@ public class EnrichedPerson {
                         .stream()
                         .map(EnrichedPerson::getDisplayName)
                         .collect(Collectors.joining(", ")), 64)
-                + " - " + getSpousesWithChildren()
+                + " - " + StringUtils.rightPad(getSpousesWithChildren()
                         .stream()
                         .map(spouseWithChildren -> spouseWithChildren.getSpouse()
                                 .map(EnrichedPerson::getDisplayName)
                                 .orElse(PersonUtils.NO_SPOUSE) + " (" + spouseWithChildren.getChildren().size() + ")")
-                        .collect(Collectors.joining(", "));
+                        .collect(Collectors.joining(", ")), 64)
+                + " - " + String.join(", ", ListUtils.emptyIfNull(emails));
     }
 
     @Override

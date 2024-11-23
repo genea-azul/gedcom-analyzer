@@ -2,7 +2,6 @@ package com.geneaazul.gedcomanalyzer.utils;
 
 import com.geneaazul.gedcomanalyzer.model.AncestryGenerations;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
-import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.Surname;
 
@@ -25,21 +24,20 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class RelationshipUtils {
 
-    public static Set<String> getCountriesOfBirth(List<Relationship> relationships) {
-        return getCountriesOfBirth(relationships, r -> true, s -> s);
-    }
-
     public static <T extends Collection<String>> T getCountriesOfBirth(
             List<Relationship> relationships,
             Predicate<Relationship> filter,
+            boolean recognizeNative,
             Function<Set<String>, T> finisher) {
         return relationships
                 .stream()
                 .filter(filter)
                 .map(Relationship::person)
-                .map(EnrichedPerson::getPlaceOfBirth)
-                .flatMap(Optional::stream)
-                .map(Place::country)
+                .filter(p -> p.getPlaceOfBirth().isPresent())
+                .map(p -> Pair.of(p.getPlaceOfBirth().get(), p.isNativePerson()))
+                .map(pair -> recognizeNative && pair.getRight()
+                        ? pair.getLeft().country() + " (pueblos originarios)"
+                        : pair.getLeft().country())
                 .collect(Collectors.collectingAndThen(Collectors.toSet(), finisher));
     }
 

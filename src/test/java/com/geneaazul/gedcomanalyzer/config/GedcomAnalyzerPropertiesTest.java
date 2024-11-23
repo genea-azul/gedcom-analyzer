@@ -56,7 +56,9 @@ public class GedcomAnalyzerPropertiesTest {
                 "sitlain", "citlain",
                 "sitlein", "citlein",
                 "suchodolsi", "suchodolsci",
-                "sujodolsi", "sujodolsci");
+                "sujodolsi", "sujodolsci",
+                "vonsienvis", "voncienvis",
+                "vonsewits", "voncewits");
 
         properties.getNormalizedSurnamesMap()
                 .entrySet()

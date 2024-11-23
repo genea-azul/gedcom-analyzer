@@ -231,7 +231,7 @@ public class SearchService {
                 .filter(person -> isAlive == null || isAlive == person.isAlive())
                 .filter(person -> sex == null || sex == person.getSex())
                 .filter(person -> person
-                        .getPlacesOfAnyEvent(includeSpousePlaces, includeAllChildrenPlaces)
+                        .getPlacesOfAnyEvent(includeSpousePlaces, true, includeAllChildrenPlaces)
                         .stream()
                         .map(Place::forSearch)
                         .anyMatch(place -> isExactPlace
