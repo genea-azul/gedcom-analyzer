@@ -2,25 +2,45 @@ package com.geneaazul.gedcomanalyzer.service;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
+import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.Reference;
+import com.geneaazul.gedcomanalyzer.model.Relationship;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.folg.gedcom.model.CharacterSet;
+import org.folg.gedcom.model.ChildRef;
+import org.folg.gedcom.model.DateTime;
+import org.folg.gedcom.model.Family;
 import org.folg.gedcom.model.Gedcom;
+import org.folg.gedcom.model.GedcomVersion;
+import org.folg.gedcom.model.Header;
+import org.folg.gedcom.model.ParentFamilyRef;
+import org.folg.gedcom.model.Person;
+import org.folg.gedcom.model.SpouseFamilyRef;
+import org.folg.gedcom.model.SpouseRef;
 import org.folg.gedcom.parser.ModelParser;
+import org.folg.gedcom.visitors.GedcomWriter;
 import org.xml.sax.SAXParseException;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
@@ -37,6 +57,9 @@ public class GedcomParsingService {
     public static final String ZIP_FILE_EXTENSION = ".zip";
     public static final String GEDCOM_FILE_EXTENSION = ".ged";
 
+    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd MMM yyyy");
+
+    private final GedcomAnalyzerService gedcomAnalyzerService;
     private final GedcomAnalyzerProperties properties;
 
     public EnrichedGedcom parse(Path gedcomPath) throws IOException, SAXParseException {
@@ -124,6 +147,114 @@ public class GedcomParsingService {
         gedcom.createIndexes();
         gedcom.updateReferences();
         return gedcom;
+    }
+
+    public void format(
+            Gedcom gedcom,
+            List<List<Relationship>> relationshipsList,
+            Path gedcomPath) throws IOException {
+        log.info("Format gedcom: {}", gedcomPath);
+
+        Set<String> personIds = relationshipsList
+                .stream()
+                .map(List::getFirst)
+                .map(Relationship::person)
+                .map(EnrichedPerson::getId)
+                .map(Object::toString)
+                .map(id -> "I" + id)
+                .collect(Collectors.toUnmodifiableSet());
+
+        List<Family> families = gedcom.getFamilies()
+                .stream()
+                .peek(family -> {
+                    List<SpouseRef> husbandRefs = family.getHusbandRefs()
+                            .stream()
+                            .filter(ref -> personIds.contains(ref.getRef()))
+                            .toList();
+                    List<SpouseRef> wifeRefs = family.getWifeRefs()
+                            .stream()
+                            .filter(ref -> personIds.contains(ref.getRef()))
+                            .toList();
+                    List<ChildRef> childRefs = family.getChildRefs()
+                            .stream()
+                            .filter(ref -> personIds.contains(ref.getRef()))
+                            .toList();
+
+                    family.setHusbandRefs(husbandRefs);
+                    family.setWifeRefs(wifeRefs);
+                    family.setChildRefs(childRefs);
+                })
+                .filter(family -> {
+                    if (family.getHusbandRefs().isEmpty() && family.getWifeRefs().isEmpty()) {
+                        return false;
+                    }
+                    if (family.getChildRefs().isEmpty() && (family.getHusbandRefs().size() + family.getWifeRefs().size()) == 1) {
+                        return false;
+                    }
+                    return true;
+                })
+                .toList();
+
+        Set<String> familyIds = families
+                .stream()
+                .map(Family::getId)
+                .collect(Collectors.toUnmodifiableSet());
+
+        List<Person> people = gedcom.getPeople()
+                .stream()
+                .filter(person -> personIds.contains(person.getId()))
+                .peek(person -> {
+                    List<ParentFamilyRef> famc = person.getParentFamilyRefs()
+                            .stream()
+                            .filter(ref -> familyIds.contains(ref.getRef()))
+                            .toList();
+                    List<SpouseFamilyRef> fams = person.getSpouseFamilyRefs()
+                            .stream()
+                            .filter(ref -> familyIds.contains(ref.getRef()))
+                            .toList();
+
+                    person.setParentFamilyRefs(famc);
+                    person.setSpouseFamilyRefs(fams);
+                })
+                .toList();
+
+        Header header = new Header();
+
+        CharacterSet charsetSet = new CharacterSet();
+        charsetSet.setValue("UTF-8");
+        header.setCharacterSet(charsetSet);
+
+        GedcomVersion gedcomVersion = new GedcomVersion();
+        gedcomVersion.setVersion("5.5.1");
+        gedcomVersion.setForm("LINEAGE-LINKED");
+        header.setGedcomVersion(gedcomVersion);
+
+        header.setLanguage("Spanish");
+
+        DateTime dateTime = new DateTime();
+        dateTime.setValue(DATE_TIME_FORMATTER.format(LocalDate.now(properties.getZoneId())).toUpperCase());
+        header.setDateTime(dateTime);
+
+        Gedcom newGedcom = new Gedcom();
+        newGedcom.setHeader(header);
+        newGedcom.setPeople(people);
+        newGedcom.setFamilies(families);
+        newGedcom.createIndexes();
+        newGedcom.updateReferences();
+
+        List<Reference> missingReferences = gedcomAnalyzerService
+                .getMissingReferences(newGedcom);
+
+        if (!missingReferences.isEmpty()) {
+            missingReferences
+                    .forEach(System.err::println);
+            throw new RuntimeException("Missing references!");
+        }
+
+        try (OutputStream out = new FileOutputStream(gedcomPath.toFile())) {
+            GedcomWriter writer = new GedcomWriter();
+            writer.write(newGedcom, out);
+        }
     }
 
 }

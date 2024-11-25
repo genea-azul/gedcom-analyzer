@@ -9,10 +9,10 @@ import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
 import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
-import com.geneaazul.gedcomanalyzer.model.Relationships;
 import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.model.dto.RelationshipDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
+import com.geneaazul.gedcomanalyzer.service.familytree.FamilyTreeHelper;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.DateUtils.AstrologicalSign;
 import com.geneaazul.gedcomanalyzer.utils.PathUtils;
@@ -68,9 +68,13 @@ public class GedcomAnalyzerServiceTests {
     @Autowired
     private SurnameService surnameService;
     @Autowired
+    private FamilyTreeHelper familyTreeHelper;
+    @Autowired
     private RelationshipMapper relationshipMapper;
     @Autowired
     private GedcomAnalyzerProperties properties;
+    @Autowired
+    private GedcomParsingService gedcomParsingService;
 
     private EnrichedGedcom gedcom;
 
@@ -840,7 +844,7 @@ public class GedcomAnalyzerServiceTests {
     @Test
     public void getPeopleInTree() {
         EnrichedPerson person = Objects.requireNonNull(gedcom.getPersonById(4));
-        List<Relationships> relationshipsList = personService.setTransientProperties(person, false);
+        List<List<Relationship>> relationshipsList = familyTreeHelper.getRelationshipsWithNotInLawPriority(person);
 
         System.out.println("setTransientProperties (excludeRootPerson = false):");
         System.out.println("personsCountInTree: " + person.getPersonsCountInTree());
@@ -852,14 +856,6 @@ public class GedcomAnalyzerServiceTests {
         System.out.println("\ngetPeopleInTree:");
         relationshipsList
                 .stream()
-                // Order internal elements of each relationship group: first not-in-law, then in-law
-                .map(relationships -> {
-                    if (relationships.size() == 2 && relationships.findFirst().isInLaw()) {
-                        return List.of(relationships.findLast(), relationships.findFirst());
-                    }
-                    return List.copyOf(relationships.getOrderedRelationships());
-                })
-                .sorted(Comparator.comparing(List::getFirst))
                 .limit(50)
                 .forEach(relationships -> System.out.println(
                         relationships
@@ -940,6 +936,18 @@ public class GedcomAnalyzerServiceTests {
             return displayName + "  (" + dateStr + ")";
         }
         return displayName + "  (" + dateStr + ", " + person.getPlaceOfBirth().map(Place::country).orElseThrow() + ")";
+    }
+
+    @Test
+    public void generateSubGedcom() throws IOException {
+        System.out.println("generateSubGedcom:");
+        // I9: Son B&A
+        EnrichedPerson person = Objects.requireNonNull(gedcom.getPersonById(554782));
+        List<List<Relationship>> relationshipsList = familyTreeHelper.getRelationshipsWithNotInLawPriority(person);
+        gedcomParsingService.format(
+                gedcom.getLegacyGedcom().get(),
+                relationshipsList,
+                properties.getTempDir().resolve("sub-gedcom-test.ged"));
     }
 
 }
