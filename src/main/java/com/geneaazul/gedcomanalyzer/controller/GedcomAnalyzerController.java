@@ -51,7 +51,7 @@ public class GedcomAnalyzerController {
 
     @GetMapping("/metadata")
     public GedcomMetadataDto getGedcomMetadata() {
-        return gedcomAnalyzerService.getGedcomMetadata();
+        return gedcomAnalyzerService.getGedcomMetadata(gedcomHolder.getGedcom());
     }
 
     @GetMapping("/reload")
@@ -59,7 +59,7 @@ public class GedcomAnalyzerController {
         Instant startInstant = Instant.now();
         gedcomHolder.reloadFromStorage(true);
         Duration reloadDuration = Duration.between(startInstant, Instant.now());
-        return gedcomAnalyzerService.getGedcomMetadata(reloadDuration);
+        return gedcomAnalyzerService.getGedcomMetadata(gedcomHolder.getGedcom(), reloadDuration);
     }
 
     @PostMapping

@@ -3,7 +3,6 @@ package com.geneaazul.gedcomanalyzer.service;
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
-import com.geneaazul.gedcomanalyzer.model.Reference;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 
 import org.springframework.stereotype.Service;
@@ -59,7 +58,6 @@ public class GedcomParsingService {
 
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd MMM yyyy");
 
-    private final GedcomAnalyzerService gedcomAnalyzerService;
     private final GedcomAnalyzerProperties properties;
 
     public EnrichedGedcom parse(Path gedcomPath) throws IOException, SAXParseException {
@@ -241,15 +239,6 @@ public class GedcomParsingService {
         newGedcom.setFamilies(families);
         newGedcom.createIndexes();
         newGedcom.updateReferences();
-
-        List<Reference> missingReferences = gedcomAnalyzerService
-                .getMissingReferences(newGedcom);
-
-        if (!missingReferences.isEmpty()) {
-            missingReferences
-                    .forEach(System.err::println);
-            throw new RuntimeException("Missing references!");
-        }
 
         try (OutputStream out = new FileOutputStream(gedcomPath.toFile())) {
             GedcomWriter writer = new GedcomWriter();

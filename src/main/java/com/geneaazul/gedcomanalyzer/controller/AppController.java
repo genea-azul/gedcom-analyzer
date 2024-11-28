@@ -6,6 +6,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
 import com.geneaazul.gedcomanalyzer.service.PersonService;
 import com.geneaazul.gedcomanalyzer.service.familytree.BalkanFamilyTreeService;
 import com.geneaazul.gedcomanalyzer.service.familytree.NetworkFamilyTreeService;
+import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.CacheControl;
@@ -36,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AppController {
 
+    private final GedcomHolder gedcomHolder;
     private final PersonService personService;
     private final BalkanFamilyTreeService balkanFamilyTreeService;
     private final NetworkFamilyTreeService networkFamilyTreeService;
@@ -60,7 +62,7 @@ public class AppController {
         boolean obfuscateLiving = !properties.isDisableObfuscateLiving() && !"0".equals(f);
 
         String personDisplayName = personService
-                .getPersonDto(personUuid)
+                .getPersonDto(gedcomHolder.getGedcom(), personUuid)
                 .map(PersonDto::getName)
                 .orElse("?");
 

@@ -19,7 +19,6 @@ import com.geneaazul.gedcomanalyzer.model.dto.GedcomMetadataDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateDto;
 import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
-import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.DateUtils;
 import com.geneaazul.gedcomanalyzer.utils.EnumCollectionUtils;
 import com.geneaazul.gedcomanalyzer.utils.FamilyUtils;
@@ -77,16 +76,14 @@ public class GedcomAnalyzerService {
 
     private final SearchService searchService;
     private final PersonService personService;
-    private final GedcomHolder gedcomHolder;
     private final PersonMapper personMapper;
     private final GedcomMapper gedcomMapper;
 
-    public GedcomMetadataDto getGedcomMetadata() {
-        return getGedcomMetadata(null);
+    public GedcomMetadataDto getGedcomMetadata(EnrichedGedcom gedcom) {
+        return getGedcomMetadata(gedcom, null);
     }
 
-    public GedcomMetadataDto getGedcomMetadata(@Nullable Duration reloadDuration) {
-        EnrichedGedcom gedcom = gedcomHolder.getGedcom();
+    public GedcomMetadataDto getGedcomMetadata(EnrichedGedcom gedcom, @Nullable Duration reloadDuration) {
         return gedcomMapper.toGedcomMetadataDto(gedcom, reloadDuration);
     }
 

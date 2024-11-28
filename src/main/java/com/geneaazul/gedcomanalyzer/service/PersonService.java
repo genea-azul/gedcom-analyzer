@@ -15,7 +15,6 @@ import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.model.dto.TreeSideType;
-import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.RelationshipUtils;
 import com.geneaazul.gedcomanalyzer.utils.SetUtils;
 
@@ -43,11 +42,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PersonService {
 
-    private final GedcomHolder gedcomHolder;
     private final PersonMapper personMapper;
 
-    public Optional<PersonDto> getPersonDto(UUID personUuid) {
-        EnrichedGedcom gedcom = gedcomHolder.getGedcom();
+    public Optional<PersonDto> getPersonDto(EnrichedGedcom gedcom, UUID personUuid) {
         EnrichedPerson person = gedcom.getPersonByUuid(personUuid);
         return Optional.ofNullable(person)
                 .map(p -> personMapper.toPersonDto(p, ObfuscationType.SKIP_MAIN_PERSON_NAME));
