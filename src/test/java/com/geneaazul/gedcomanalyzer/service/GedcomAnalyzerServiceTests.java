@@ -942,8 +942,8 @@ public class GedcomAnalyzerServiceTests {
     public void generateSubGedcom() throws IOException {
         // I9: Son B&A
         EnrichedPerson person = Objects.requireNonNull(gedcom.getPersonById(9));
-        System.out.println("generateSubGedcom: " + person.getDisplayName());
         List<List<Relationship>> relationshipsList = familyTreeHelper.getRelationshipsWithNotInLawPriority(person);
+        System.out.println("generateSubGedcom: " + person.getDisplayName() + " - People count: " + relationshipsList.size());
         gedcomParsingService.format(
                 gedcom.getLegacyGedcom().get(),
                 relationshipsList,
