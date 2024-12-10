@@ -20,7 +20,9 @@ import lombok.NonNull;
 
 public record Relationship(
         EnrichedPerson person,
+        // The direct distance between the root person of the tree and the common ancestor shared with this relationship
         int distanceToAncestorRootPerson,
+        // The direct distance between this relationship and the common ancestor shared with the root person of the tree
         int distanceToAncestorThisPerson,
         boolean isInLaw,
         boolean isHalf,
