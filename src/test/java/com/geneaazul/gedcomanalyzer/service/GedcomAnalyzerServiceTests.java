@@ -949,6 +949,7 @@ public class GedcomAnalyzerServiceTests {
                 relationshipsList,
                 properties.getTempDir().resolve("sub-gedcom-test.ged"),
                 250,
+                4,
                 3);
     }
 

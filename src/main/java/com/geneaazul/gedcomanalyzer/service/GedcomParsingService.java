@@ -152,7 +152,8 @@ public class GedcomParsingService {
             List<List<Relationship>> relationshipsList,
             Path gedcomPath,
             int maxPeopleInGedcomThreshold,
-            int maxDistanceThreshold) throws IOException {
+            int maxAscDistanceThreshold,
+            int maxDescDistanceThreshold) throws IOException {
         log.info("Format gedcom: {}, people in tree: {}, max people threshold: {}",
                 gedcomPath, relationshipsList.size(), maxPeopleInGedcomThreshold);
 
@@ -164,13 +165,12 @@ public class GedcomParsingService {
         Set<String> personIds = relationshipsList
                 .stream()
                 .filter(l -> !trimGedcom
-                        || l.getFirst().distanceToAncestorRootPerson() < maxDistanceThreshold
-                                && l.getFirst().distanceToAncestorThisPerson() <= maxDistanceThreshold * 2
-                        || l.getFirst().distanceToAncestorRootPerson() == maxDistanceThreshold
-                                && (l.getFirst().distanceToAncestorThisPerson() < maxDistanceThreshold
-                                || l.getFirst().distanceToAncestorThisPerson() == maxDistanceThreshold
+                        || l.getFirst().distanceToAncestorRootPerson() < maxAscDistanceThreshold
+                        || l.getFirst().distanceToAncestorRootPerson() == maxAscDistanceThreshold
+                                && (l.getFirst().distanceToAncestorThisPerson() < maxDescDistanceThreshold
+                                || l.getFirst().distanceToAncestorThisPerson() == maxDescDistanceThreshold
                                         && (includeSpousesOfDescendantsA || !l.getFirst().isInLaw()))
-                        || l.getFirst().distanceToAncestorRootPerson() > maxDistanceThreshold
+                        || l.getFirst().distanceToAncestorRootPerson() > maxAscDistanceThreshold
                                 && (l.getFirst().distanceToAncestorThisPerson() < 1
                                 || l.getFirst().distanceToAncestorThisPerson() == 1
                                         && (includeSpousesOfDescendantsB || !l.getFirst().isInLaw())))
