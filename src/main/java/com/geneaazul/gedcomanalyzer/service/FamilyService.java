@@ -150,7 +150,8 @@ public class FamilyService {
         long clientRequests = searchFamilyRepository.countByClientIpAddressAndCreateDateBetween(clientIpAddress, createDateFrom, createDateTo);
 
         boolean isSpecialThresholdClient = properties.getClientsWithSpecialThreshold().contains(clientIpAddress);
-        return clientRequests < (isSpecialThresholdClient
+        int offset = 1; // Since search is persisted before setting the result we need to skip last persisted one
+        return (clientRequests - offset) < (isSpecialThresholdClient
                 ? properties.getMaxClientRequestsCountSpecialThreshold()
                 : properties.getMaxClientRequestsCountThreshold());
     }

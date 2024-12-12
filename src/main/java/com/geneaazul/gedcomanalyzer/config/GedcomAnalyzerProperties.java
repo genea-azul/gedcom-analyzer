@@ -43,7 +43,7 @@ public class GedcomAnalyzerProperties {
     private Integer maxPyvisNetworkNodesToExport = 500;
 
     private int maxClientRequestsCountThreshold = 12;
-    private int maxClientRequestsCountSpecialThreshold = 2;
+    private int maxClientRequestsCountSpecialThreshold = 3;
     private int maxClientRequestsHoursThreshold = 1;
     private Set<String> clientsWithSpecialThreshold = Set.of();
 
