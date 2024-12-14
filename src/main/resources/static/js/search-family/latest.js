@@ -10,6 +10,7 @@ $(document).ready(function() {
             size: searchParams.get("size") || undefined,
             isMatch: searchParams.get("isMatch") || undefined,
             isReviewed: (isToReview ? false : (searchParams.get("isReviewed") || undefined)),
+            isIgnored: (isNotIgnored ? false : (searchParams.get("isIgnored") || undefined)),
             hasContact: searchParams.get("hasContact") || undefined
         },
         success: function(data) {

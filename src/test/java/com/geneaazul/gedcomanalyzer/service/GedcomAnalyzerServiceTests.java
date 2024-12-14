@@ -947,7 +947,10 @@ public class GedcomAnalyzerServiceTests {
         gedcomParsingService.format(
                 gedcom.getLegacyGedcom().get(),
                 relationshipsList,
-                properties.getTempDir().resolve("sub-gedcom-test.ged"));
+                properties.getTempDir().resolve("sub-gedcom-test.ged"),
+                250,
+                4,
+                3);
     }
 
 }

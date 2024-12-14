@@ -153,4 +153,13 @@ public class AppController {
         return new ModelAndView("search-family/latest", params);
     }
 
+    @GetMapping("/search-family/latestToReviewNotIgnored")
+    public ModelAndView searchFamilyToReviewNotIgnored() {
+        Map<String, ?> params = Map.of(
+                "projectVersion", projectVersion,
+                "toReview", true,
+                "notIgnored", true);
+        return new ModelAndView("search-family/latest", params);
+    }
+
 }

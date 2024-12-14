@@ -87,10 +87,23 @@ public class FamilyService {
                 .orElseThrow(() -> new RuntimeException("SearchFamily not found id=" + searchFamilyId));
     }
 
+    @Transactional
+    public SearchFamilyDetailsDto updateSearchIsIgnored(Long searchFamilyId, Boolean isIgnored) {
+        return searchFamilyRepository
+                .findById(searchFamilyId)
+                .map(searchFamily -> {
+                    searchFamily.setIsIgnored(isIgnored);
+                    return searchFamily;
+                })
+                .map(searchFamilyMapper::toSearchFamilyDetailsDto)
+                .orElseThrow(() -> new RuntimeException("SearchFamily not found id=" + searchFamilyId));
+    }
+
     @Transactional(readOnly = true)
     public List<SearchFamilyDetailsDto> getSearchFamilies(
             @Nullable Boolean isMatch,
             @Nullable Boolean isReviewed,
+            @Nullable Boolean isIgnored,
             @Nullable Boolean hasContact,
             int page,
             int size,
@@ -108,6 +121,7 @@ public class FamilyService {
                 .findAll(Specification
                         .where(SearchFamilyRepository.isMatch(isMatch))
                         .and(SearchFamilyRepository.isReviewed(isReviewed))
+                        .and(SearchFamilyRepository.isIgnored(isIgnored))
                         .and(SearchFamilyRepository.hasContact(hasContact)), pageable)
                 .stream()
                 .map(searchFamilyMapper::toSearchFamilyDetailsDto)
@@ -115,6 +129,9 @@ public class FamilyService {
                     //noinspection DataFlowIssue
                     if (context != null && !Boolean.TRUE.equals(details.getIsReviewed())) {
                         details.setMarkReviewedLink(context + "/api/search/family/" + details.getId() + "/reviewed");
+                    }
+                    if (context != null && !Boolean.TRUE.equals(details.getIsIgnored())) {
+                        details.setMarkIgnoredLink(context + "/api/search/family/" + details.getId() + "/ignored");
                     }
                 })
                 .toList();
@@ -124,6 +141,7 @@ public class FamilyService {
     public List<SearchFamilyDetailsDto> getLatest(
             @Nullable Boolean isMatch,
             @Nullable Boolean isReviewed,
+            @Nullable Boolean isIgnored,
             @Nullable Boolean hasContact,
             int page,
             int size,
@@ -131,6 +149,7 @@ public class FamilyService {
         return getSearchFamilies(
                 isMatch,
                 isReviewed,
+                isIgnored,
                 hasContact,
                 page,
                 size,
@@ -150,7 +169,8 @@ public class FamilyService {
         long clientRequests = searchFamilyRepository.countByClientIpAddressAndCreateDateBetween(clientIpAddress, createDateFrom, createDateTo);
 
         boolean isSpecialThresholdClient = properties.getClientsWithSpecialThreshold().contains(clientIpAddress);
-        return clientRequests < (isSpecialThresholdClient
+        int offset = 1; // Since search is persisted before setting the result we need to skip last persisted one
+        return (clientRequests - offset) < (isSpecialThresholdClient
                 ? properties.getMaxClientRequestsCountSpecialThreshold()
                 : properties.getMaxClientRequestsCountThreshold());
     }

@@ -134,18 +134,27 @@ public class SearchController {
         return familyService.updateSearchIsReviewed(searchId, isReviewed);
     }
 
+    @GetMapping("/family/{searchId}/ignored")
+    public SearchFamilyDetailsDto markFamilyIgnored(
+            @PathVariable Long searchId,
+            @RequestParam(defaultValue = BooleanUtils.TRUE) Boolean isIgnored) {
+        log.info("Mark family ignored [ searchId={}, isIgnored={} ]", searchId, isIgnored);
+        return familyService.updateSearchIsIgnored(searchId, isIgnored);
+    }
+
     @GetMapping("/family/latest")
     public List<SearchFamilyDetailsDto> getLatest(
             @RequestParam @Nullable Boolean isMatch,
             @RequestParam @Nullable Boolean isReviewed,
+            @RequestParam @Nullable Boolean isIgnored,
             @RequestParam @Nullable Boolean hasContact,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request) {
-        log.info("Search family latest [ isMatch={}, isReviewed={}, hasContact={}, page={}, size={} ]",
-                isMatch, isReviewed, hasContact, page, size);
+        log.info("Search family latest [ isMatch={}, isReviewed={}, isIgnored={}, hasContact={}, page={}, size={} ]",
+                isMatch, isReviewed, isIgnored, hasContact, page, size);
         String context = StringUtils.substringBefore(request.getRequestURL().toString(), "/api");
-        return familyService.getLatest(isMatch, isReviewed, hasContact, page, size, context);
+        return familyService.getLatest(isMatch, isReviewed, isIgnored, hasContact, page, size, context);
     }
 
     @PostMapping("/surnames")

@@ -150,15 +150,33 @@ public class GedcomParsingService {
     public void format(
             Gedcom gedcom,
             List<List<Relationship>> relationshipsList,
-            Path gedcomPath) throws IOException {
-        log.info("Format gedcom: {}", gedcomPath);
+            Path gedcomPath,
+            int maxPeopleInGedcomThreshold,
+            int maxAscDistanceThreshold,
+            int maxDescDistanceThreshold) throws IOException {
+        log.info("Format gedcom: {}, people in tree: {}, max people threshold: {}",
+                gedcomPath, relationshipsList.size(), maxPeopleInGedcomThreshold);
 
+        boolean trimGedcom = maxPeopleInGedcomThreshold > 0 && relationshipsList.size() > maxPeopleInGedcomThreshold;
+        boolean includeSpousesOfDescendantsA = true;
+        boolean includeSpousesOfDescendantsB = true;
+
+        //noinspection ConstantValue
         Set<String> personIds = relationshipsList
                 .stream()
+                .filter(l -> !trimGedcom
+                        || l.getFirst().distanceToAncestorRootPerson() < maxAscDistanceThreshold
+                        || l.getFirst().distanceToAncestorRootPerson() == maxAscDistanceThreshold
+                                && (l.getFirst().distanceToAncestorThisPerson() < maxDescDistanceThreshold
+                                || l.getFirst().distanceToAncestorThisPerson() == maxDescDistanceThreshold
+                                        && (includeSpousesOfDescendantsA || !l.getFirst().isInLaw()))
+                        || l.getFirst().distanceToAncestorRootPerson() > maxAscDistanceThreshold
+                                && (l.getFirst().distanceToAncestorThisPerson() < 1
+                                || l.getFirst().distanceToAncestorThisPerson() == 1
+                                        && (includeSpousesOfDescendantsB || !l.getFirst().isInLaw())))
                 .map(List::getFirst)
                 .map(Relationship::person)
                 .map(EnrichedPerson::getId)
-                .map(Object::toString)
                 .map(id -> "I" + id)
                 .collect(Collectors.toUnmodifiableSet());
 
@@ -243,6 +261,11 @@ public class GedcomParsingService {
         try (OutputStream out = new FileOutputStream(gedcomPath.toFile())) {
             GedcomWriter writer = new GedcomWriter();
             writer.write(newGedcom, out);
+        }
+
+        if (trimGedcom) {
+            log.warn("Gedcom was trimmed! people in tree: {}, max people threshold: {}, final people in tree: {}",
+                    relationshipsList.size(), maxPeopleInGedcomThreshold, personIds.size());
         }
     }
 
