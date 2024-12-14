@@ -27,6 +27,10 @@ public interface SearchFamilyRepository extends JpaRepository<SearchFamily, Long
         return (searchFamily, cq, cb) -> evaluateIsTrue(searchFamily, cb, "isReviewed", isReviewed);
     }
 
+    static Specification<SearchFamily> isIgnored(@Nullable Boolean isIgnored) {
+        return (searchFamily, cq, cb) -> evaluateIsTrue(searchFamily, cb, "isIgnored", isIgnored);
+    }
+
     static Specification<SearchFamily> hasContact(@Nullable Boolean hasContact) {
         return (searchFamily, cq, cb) -> hasContact == null
                 ? cb.conjunction()

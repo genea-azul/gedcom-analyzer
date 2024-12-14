@@ -38,7 +38,8 @@ import lombok.ToString;
 @Table(indexes = {
         @Index(name = "search_family_client_ip_address_create_date_idx", columnList = "clientIpAddress, createDate"),
         @Index(name = "search_family_is_match_idx", columnList = "isMatch"),
-        @Index(name = "search_family_is_reviewed_idx", columnList = "isReviewed")
+        @Index(name = "search_family_is_reviewed_idx", columnList = "isReviewed"),
+        @Index(name = "search_family_is_ignored_idx", columnList = "isIgnored")
 })
 public class SearchFamily {
 
@@ -176,6 +177,9 @@ public class SearchFamily {
 
     @ToString.Include
     private Boolean isReviewed;
+
+    @ToString.Include
+    private Boolean isIgnored;
 
     @ToString.Include
     private Boolean isObfuscated;

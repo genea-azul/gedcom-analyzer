@@ -45,9 +45,13 @@ public class SearchFamilyDetailsDto {
     @ToString.Include
     private Boolean isReviewed;
     @ToString.Include
+    private Boolean isIgnored;
+    @ToString.Include
     private Boolean isObfuscated;
     @ToString.Include
     private String markReviewedLink;
+    @ToString.Include
+    private String markIgnoredLink;
     @ToString.Include
     private String contact;
     @ToString.Include

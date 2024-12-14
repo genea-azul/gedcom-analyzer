@@ -76,6 +76,7 @@ public class SearchFamilyMapper {
                 .potentialResults(searchFamily.getPotentialResults())
                 .errorMessages(searchFamily.getErrorMessages())
                 .isReviewed(searchFamily.getIsReviewed())
+                .isIgnored(searchFamily.getIsIgnored())
                 .isObfuscated(searchFamily.getIsObfuscated())
                 .contact(searchFamily.getContact())
                 .createDate(searchFamily.getCreateDate())
