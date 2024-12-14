@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # stage 1
-FROM eclipse-temurin:22.0.1_8-jre-alpine as jre-py
+FROM eclipse-temurin:22.0.1_8-jre-alpine AS jre-py
 
 ## Install python/pip
 ENV PYTHONUNBUFFERED=1
@@ -11,7 +11,7 @@ RUN rm /usr/lib/python*/EXTERNALLY-MANAGED && \
     pip3 install --no-cache --upgrade --break-system-packages pip setuptools pyvis==0.3.2 pandas==2.2.2
 
 # stage 2
-FROM jre-py as jre-py-app
+FROM jre-py AS jre-py-app
 
 VOLUME /tmp
 COPY target/*.jar app.jar
