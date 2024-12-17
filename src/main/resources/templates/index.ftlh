@@ -3066,7 +3066,7 @@
                   <li>Mazzei</li>
                   <li>Melo</li>
                   <li>Mendiburu</li>
-                  <li>Mendonça</li>
+                  <li>Mendon&ccedil;a</li>
                   <li>Mercadal</li>
                   <li>Merodio</li>
                   <li>Mesa <span class="text-secondary">(Meza)</span></li>
@@ -3090,7 +3090,7 @@
                   <li>Nicuez</li>
                   <li>Nigoul</li>
                   <li>Notararigo</li>
-                  <li>Oçafrain</li>
+                  <li>O&ccedil;afrain</li>
                   <li>Oca&ntilde;a</li>
                   <li>Ojea</li>
                   <li>Oliva</li>
@@ -3824,7 +3824,7 @@
                   <li>Elbey</li>
                   <li>El&iacute;a</li>
                   <li>El&iacute;as</li>
-                  <li>Eliçabe</li>
+                  <li>Eli&ccedil;abe</li>
                   <li>Elichalt</li>
                   <li>Elortegui</li>
                   <li>Elze</li>
@@ -3919,7 +3919,7 @@
                   <li>Fourquet</li>
                   <li>Fracchia</li>
                   <li>Fraga</li>
-                  <li>Français</li>
+                  <li>Fran&ccedil;ais</li>
                   <li>Francar</li>
                   <li>Francesena</li>
                   <li>Franchesena</li>
@@ -4098,7 +4098,7 @@
                   <li>Igarz&aacute;bal</li>
                   <li>Igrometro</li>
                   <li>Illanes</li>
-                  <li>Ill&aacute;š</li>
+                  <li>Ill&aacute;&scaron;</li>
                   <li>Illobre</li>
                   <li>Inchaurrondo</li>
                   <li>Inchauspe</li>
@@ -4846,7 +4846,7 @@
                   <li>Tabernero</li>
                   <li>Taboada</li>
                   <li>Taborda</li>
-                  <li>Tailbo?</li>
+                  <li>Tailbo</li>
                   <li>Taj&aacute;n</li>
                   <li>Talazac</li>
                   <li>Talice</li>
@@ -4974,7 +4974,7 @@
                   <li>Williams</li>
                   <li>Wilson</li>
                   <li>Winkel Lauding</li>
-                  <li>Worsøe Kastrup</li>
+                  <li>Wors&oslash;e Kastrup</li>
                   <li>Wynne</li>
                   <li>Yart&uacute;</li>
                   <li>Yarza</li>
