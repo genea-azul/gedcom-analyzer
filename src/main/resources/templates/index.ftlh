@@ -15,7 +15,9 @@
   <body class="container">
 
     <div class="d-flex flex-row gap-3 justify-content-between align-items-start">
-      <img src="img/genea-azul-logo.png?v${projectVersion}" width="120" height="60" class="rounded float-start mt-2" alt="Genea Azul logo" />
+      <a href="https://geneaazul.com.ar" title="Genea Azul">
+        <img src="img/genea-azul-logo.png?v${projectVersion}" width="120" height="60" class="rounded float-start mt-2" alt="Genea Azul logo" />
+      </a>
 
       <!-- Nav tabs -->
       <ul class="nav nav-tabs mt-3 flex-grow-1">
@@ -437,11 +439,11 @@
           <dt class="col-7 col-sm-6 px-2 text-end fw-semibold">Personas desaparecidas:</dt>
           <dd class="col-5 col-sm-6 px-2 mb-0">26</dd>
           <dt class="col-7 col-sm-6 px-2 text-end fw-semibold">Personalidades destacadas:</dt>
-          <dd class="col-5 col-sm-6 px-2 mb-0">206</dd>
+          <dd class="col-5 col-sm-6 px-2 mb-0">207</dd>
           <dt class="col-7 col-sm-6 px-2 text-end fw-semibold">Cantidad de pa&iacute;ses:</dt>
           <dd class="col-5 col-sm-6 px-2 mb-0">50</dd>
           <dt class="col-7 col-sm-6 px-2 text-end fw-semibold">Apellidos azule&ntilde;os:</dt>
-          <dd class="col-5 col-sm-6 px-2">4.293</dd>
+          <dd class="col-5 col-sm-6 px-2">4.292</dd>
         </dl>
 
         <div class="accordion accordion-flush" id="statistics-accordion">
@@ -497,7 +499,7 @@
           <div class="accordion-item">
             <h2 class="accordion-header" id="flush-headingTwo">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseTwo" aria-expanded="false" aria-controls="flush-collapseTwo">
-                <span class="fw-semibold">Personalidades destacadas</span> <span class="ms-1 small text-secondary">(206)</span>
+                <span class="fw-semibold">Personalidades destacadas</span> <span class="ms-1 small text-secondary">(207)</span>
               </button>
             </h2>
             <div id="flush-collapseTwo" class="accordion-collapse collapse" aria-labelledby="flush-headingTwo" data-bs-parent="#statistics-accordion">
@@ -513,13 +515,13 @@
                   <li><span class="text-secondary">Dr.</span> <span>Cosme Mariano</span> <span class="fw-semibold">Argerich</span></li>
                   <li><span class="text-secondary">Int. Mun.</span> <span>Alejandro</span> <span class="fw-semibold">Armend&aacute;riz</span></li>
                   <li><span class="text-secondary">Gdor.</span> <span>Alejandro</span> <span class="fw-semibold">Armend&aacute;riz</span></li>
-                  <li><span>Sara Amelia</span> <span class="fw-semibold">Arrouy</span></li>
+                  <li><span>Sara Amelia</span> <span class="fw-semibold">Arrouy</span><span class="text-secondary">, de Marchisio</span></li>
                   <li><span class="text-secondary">Gdor. Gral.</span> <span>Jos&eacute; Gervasio</span> <span class="fw-semibold">Artigas</span></li>
                   <li><span class="text-secondary">Alfz. Real Ctan.</span> <span>Gaspar</span> <span class="fw-semibold">Avellaneda</span></li>
                   <li><span class="text-secondary">Cnel.</span> <span>Santiago Climaco</span> <span class="fw-semibold">Avenda&ntilde;o</span></li>
                   <li><span>Antonio Enrique</span> <span class="fw-semibold">Aztiria</span></li>
                   <li><span class="text-secondary">Int. Mun.</span> <span>Manuel Cenobio</span> <span class="fw-semibold">Aztiria</span></li>
-                  <li><span>Mar&iacute;a Leticia</span> <span class="fw-semibold">Aztiria</span></li>
+                  <li><span>Mar&iacute;a Leticia</span> <span class="fw-semibold">Aztiria</span><span class="text-secondary">, de Gurruchaga</span></li>
                   <li><span class="text-secondary">Pte. Mun. Cte.</span> <span>Mat&iacute;as</span> <span class="fw-semibold">B. y Mi&ntilde;ana</span></li>
                   <li><span>Osvaldo Arturo</span> <span class="fw-semibold">Balderrama</span></li>
                   <li><span>Jacinto</span> <span class="fw-semibold">Balmaceda</span></li>
@@ -560,8 +562,9 @@
                   <li><span class="text-secondary">Cacique</span> <span>Marcelino</span> <span class="fw-semibold">Catriel</span></li>
                   <li><span class="text-secondary">Cnel. Dr.</span> <span>Feliciano Antonio</span> <span class="fw-semibold">Chiclana</span></li>
                   <li><span>Guillermo Ram&oacute;n</span> <span class="fst-italic">"Turco"</span> <span class="fw-semibold">Chiodi</span></li>
-                  <li><span>Elma</span> <span class="fw-semibold">Cort&aacute;zar</span></li>
+                  <li><span>Elma</span> <span class="fw-semibold">Cort&aacute;zar</span><span class="text-secondary">, de Layús</span></li>
                   <li><span class="text-secondary">Cnel.</span> <span>Ambroise J&eacute;rome</span> <span class="fw-semibold">Cramer</span></li>
+                  <li><span>Mar&iacute;a Araceli</span> <span class="fw-semibold">Cristeche</span><span class="text-secondary">, de Cauh&eacute;p&eacute;</span></li>
                   <li><span>Ernestina Francisca Mar&iacute;a</span> <span class="fw-semibold">Darhanp&eacute;</span></li>
                   <li><span>Tom&aacute;s Manuel</span> <span class="fw-semibold">de Anchorena</span></li>
                   <li><span class="text-secondary">Alc. Prov. Ctan.</span> <span>Mart&iacute;n Jos&eacute;</span> <span class="fw-semibold">de Artigas</span></li>
@@ -591,7 +594,7 @@
                   <li><span class="text-secondary">Di&aacute;c.</span> <span>Rub&eacute;n Daniel</span> <span class="fw-semibold">Gennuso</span></li>
                   <li><span class="text-secondary">Sldo.</span> <span>Jos&eacute; Basilio</span> <span class="fw-semibold">G&eacute;nova</span></li>
                   <li><span class="text-secondary">Sldo.</span> <span>Pascual</span> <span class="fw-semibold">G&eacute;nova</span></li>
-                  <li><span>Mar&iacute;a de las Nieves Clara</span> <span class="fw-semibold">Gim&eacute;nez</span></li>
+                  <li><span>Mar&iacute;a de las Nieves Clara</span> <span class="fst-italic">"Santa"</span> <span class="fw-semibold">Gim&eacute;nez</span><span class="text-secondary">, de Ronco</span></li>
                   <li><span>Roberto An&iacute;bal</span> <span class="fw-semibold">Glorioso</span></li>
                   <li><span>Santo</span> <span class="fw-semibold">Glorioso</span></li>
                   <li><span>Mar&iacute;a Rosal&iacute;a</span> <span class="fw-semibold">G&oacute;mez</span></li>
@@ -603,12 +606,13 @@
                   <li><span class="text-secondary">Pte. Mun.</span> <span>Rafael Vicente Ildefonso</span> <span class="fw-semibold">Guedes</span></li>
                   <li><span class="text-secondary">Int. Mun.</span> <span>Pedro</span> <span class="fw-semibold">Guiraut</span></li>
                   <li><span>Antonia</span> <span class="fw-semibold">Guzm&aacute;n</span></li>
+                  <li><span>Jos&eacute; Rafael</span> <span class="fw-semibold">Hern&aacute;ndez</span></li>
                   <li><span class="text-secondary">Mons.</span> <span>Miguel Esteban</span> <span class="fw-semibold">Hesayne</span></li>
                   <li><span>Carlos Santiago</span> <span class="fw-semibold">Hourcade</span></li>
                   <li><span>Arturo Mateo</span> <span class="fw-semibold">Ibarra</span></li>
                   <li><span class="text-secondary">Int. Mun. Dr.</span> <span>Jos&eacute; Manuel</span> <span class="fw-semibold">Inza</span></li>
                   <li><span>Kevin Andrew</span> <span class="fw-semibold">Johansen</span></li>
-                  <li><span>Mar&iacute;a Amalia Sara</span> <span class="fw-semibold">Lacroze</span></li>
+                  <li><span>Mar&iacute;a Amalia Sara</span> <span class="fw-semibold">Lacroze</span><span class="text-secondary">, de Fortabat</span></li>
                   <li><span>Hip&oacute;lito Anacarsis</span> <span class="fw-semibold">Lan&uacute;s</span></li>
                   <li><span>Luis Federico</span> <span class="fw-semibold">Leloir</span></li>
                   <li><span class="text-secondary">Int. Mun.</span> <span>Jos&eacute; Mar&iacute;a</span> <span class="fw-semibold">Lier</span></li>
@@ -663,7 +667,6 @@
                   <li><span>Alfonso</span> <span class="fw-semibold">Prat Gay</span></li>
                   <li><span>Miguel &Aacute;ngel</span> <span class="fw-semibold">Prezioso</span></li>
                   <li><span>Honorio Cirilo</span> <span class="fw-semibold">Pueyrred&oacute;n</span></li>
-                  <li><span>Isabel</span> <span class="fw-semibold">Pueyrred&oacute;n</span></li>
                   <li><span class="text-secondary">Tte. Cnel.</span> <span>Jos&eacute; Cipriano Andr&eacute;s</span> <span class="fw-semibold">Pueyrred&oacute;n</span></li>
                   <li><span class="text-secondary">Brig. Gral.</span> <span>Juan Mart&iacute;n Mariano</span> <span class="fw-semibold">Pueyrred&oacute;n</span></li>
                   <li><span class="text-secondary">Cnel.</span> <span>Manuel Alejandro</span> <span class="fw-semibold">Pueyrred&oacute;n</span></li>
@@ -685,14 +688,14 @@
                   <li><span class="text-secondary">Com. Mun. Tte. Cnel.</span> <span>Guillermo Rodolfo</span> <span class="fw-semibold">Sarmiento</span></li>
                   <li><span>Alberto Nicomedes</span> <span class="fst-italic">"Beto"</span> <span class="fw-semibold">Sarramone</span></li>
                   <li><span>Mat&iacute;as Esteban</span> <span class="fw-semibold">Sasale</span></li>
-                  <li><span>Leocadia</span> <span class="fw-semibold">Say&uacute;s</span></li>
+                  <li><span>Leocadia</span> <span class="fw-semibold">Say&uacute;s</span><span class="text-secondary">, de Rodr&iacute;guez Oc&oacute;n</span></li>
                   <li><span class="text-secondary">Sldo.</span> <span>Juan Eugenio</span> <span class="fw-semibold">Silva</span></li>
                   <li><span class="text-secondary">Cbo.</span> <span>Mariano</span> <span class="fw-semibold">Silva</span></li>
                   <li><span class="text-secondary">Tte.</span> <span>Jos&eacute; Dionisio</span> <span class="fw-semibold">Solano</span></li>
                   <li><span class="text-secondary">Ctan.</span> <span>Rufino</span> <span class="fw-semibold">Solano</span></li>
                   <li><span class="text-secondary">Int. Mun.</span> <span>Nelson Desiderio</span> <span class="fst-italic">"Negro"</span> <span class="fw-semibold">Sombra</span></li>
                   <li><span class="text-secondary">Com. Mun. Esc.</span> <span>Enrique Carlos</span> <span class="fw-semibold">Squirru</span></li>
-                  <li><span>Mar&iacute;a Ang&eacute;lica</span> <span class="fw-semibold">Squirru</span></li>
+                  <li><span>Mar&iacute;a Ang&eacute;lica</span> <span class="fw-semibold">Squirru</span><span class="text-secondary">, de Miranda</span></li>
                   <li><span>Raquel Nora</span> <span class="fw-semibold">Taccari</span></li>
                   <li><span>Carlos Jos&eacute;</span> <span class="fst-italic">"El Abuelo"</span> <span class="fw-semibold">T&aacute;rtara</span></li>
                   <li><span class="text-secondary">Int. Mun.</span> <span>Floro Evaristo</span> <span class="fw-semibold">Toscano</span></li>
@@ -716,7 +719,7 @@
           <div class="accordion-item">
             <h2 class="accordion-header" id="flush-headingThree">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseThree" aria-expanded="false" aria-controls="flush-collapseThree">
-                <span class="fw-semibold">Apellidos azule&ntilde;os</span> <span class="ms-1 small text-secondary">(4.293 ordenados seg&uacute;n cantidad de apariciones)</span>
+                <span class="fw-semibold">Apellidos azule&ntilde;os</span> <span class="ms-1 small text-secondary">(4.292 ordenados seg&uacute;n cantidad de apariciones)</span>
               </button>
             </h2>
             <div id="flush-collapseThree" class="accordion-collapse collapse" aria-labelledby="flush-headingThree" data-bs-parent="#statistics-accordion">
@@ -1891,7 +1894,7 @@
                   <li>Cort&eacute;s</li>
                   <li>Crespo</li>
                   <li>Cr&uuml;cer</li>
-                  <li>da Costa Abrantes</li>
+                  <li>da Costa</li>
                   <li>Delmasso</li>
                   <li>Detlefsen</li>
                   <li>Dumerauf</li>
@@ -2291,7 +2294,7 @@
                   <li>Basso</li>
                   <li>Basterra</li>
                   <li>Becca&aacute;s <span class="text-secondary">(Beca&aacute;s)</span></li>
-                  <li>Berm&uacute;dez &Aacute;vila <span class="text-secondary">(Berm&uacute;dez)</span></li>
+                  <li>Berm&uacute;dez</li>
                   <li>Bernasconi</li>
                   <li>Bettinelli</li>
                   <li>Bevans</li>
@@ -3802,7 +3805,7 @@
                   <li>Dichiardi</li>
                   <li>Diehl</li>
                   <li>Dieste</li>
-                  <li>Diez Garc&iacute;a</li>
+                  <li>Diez</li>
                   <li>Digliano</li>
                   <li>Dingianna</li>
                   <li>Dini</li>
@@ -4522,7 +4525,6 @@
                   <li>Oxoteguy</li>
                   <li>Oyhanart</li>
                   <li>Ozafr&aacute;n</li>
-                  <li>P</li>
                   <li>Pacharotti</li>
                   <li>Pache</li>
                   <li>Pachico</li>
