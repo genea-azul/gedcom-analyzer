@@ -181,7 +181,7 @@ public class GedcomAnalyzerServiceTests {
         gedcomAnalyzerService
                 .getPlacesOfBirthCardinality(gedcom.getPeople(), true)
                 .stream()
-                .filter(pair -> pair.getRight() > 10)
+                .filter(pair -> pair.getRight() > 10 || pair.getLeft().endsWith("Azul, Buenos Aires, Argentina"))
                 .forEach(pair -> System.out.println(pair.getLeft() + " (" + pair.getRight() + ")"));
     }
 
@@ -219,6 +219,7 @@ public class GedcomAnalyzerServiceTests {
                                     .toList(),
                             gedcom.getProperties().getNormalizedSurnamesMap());
 
+                    /* Default printing */
                     System.out.println(
                             cardinality.value()
                             + " - "
@@ -228,27 +229,22 @@ public class GedcomAnalyzerServiceTests {
                                             .stream()
                                             .collect(Collectors.joining(", ", " (", ")"))
                                     : ""));
-                });
 
-        /*
-        System.out.println("getSurnamesCardinalityByPlaceOfAnyEvent (2):");
-        gedcomAnalyzerService
-                .getSurnamesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null, true, false)
-                .stream()
-                .limit(576)
-                .forEach(cardinality -> System.out.println(
-                        cardinality.mainSurname().normalizedMainWord()
-                        + " - " + cardinality.value()
-                        + " - " + Stream.concat(
-                                        Stream.of(cardinality.mainSurname().value() + " (" + cardinality.mainSurnameCardinality() + ")"),
-                                        cardinality.variantsCardinality()
-                                                .stream()
-                                                .map(pair -> pair.getLeft() + " (" + pair.getRight() + ")"))
-                                .collect(Collectors.joining(", "))
-                        + (cardinality.relatedNormalized().isEmpty()
-                                ? ""
-                                : " - Related: " + String.join(", ", cardinality.relatedNormalized()))));
-         */
+                    /* Generate HTMl <li> list */
+                    /*
+                    System.out.println(
+                            "<li>"
+                            + cardinality.mainSurname().value()
+                            + (!variants.isEmpty()
+                                    ? " <span class=\"text-secondary\">"
+                                            + variants
+                                                    .stream()
+                                                    .collect(Collectors.joining(", ", "(", ")"))
+                                            + "</span>"
+                                    : "")
+                            + "</li>");
+                    */
+                });
     }
 
     @Test
@@ -804,6 +800,8 @@ public class GedcomAnalyzerServiceTests {
     @Test
     public void findDistinguishedPersons() {
         System.out.println("findDistinguishedPersons:");
+
+        /* Default printing */
         gedcom
                 .getPeople()
                 .stream()
@@ -818,6 +816,22 @@ public class GedcomAnalyzerServiceTests {
                                 .orElse(null),
                         Comparator.nullsLast(Comparator.naturalOrder())))
                 .forEach(System.out::println);
+
+        /* Generate HTMl <li> list */
+        /*
+        gedcom
+                .getPeople()
+                .stream()
+                .filter(EnrichedPerson::isDistinguishedPerson)
+                .sorted(Comparator
+                        .<EnrichedPerson, String>comparing(
+                                p -> p.getSurname().map(Surname::simplified).orElse(null),
+                                Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(
+                                p -> p.getGivenName().map(GivenName::simplified).orElse(null),
+                                Comparator.nullsLast(Comparator.naturalOrder())))
+                .forEach(p -> System.out.println("<li>" + p.getDisplayName() + "</li>"));
+         */
     }
 
     @Test
