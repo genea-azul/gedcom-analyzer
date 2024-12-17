@@ -8,7 +8,7 @@
     <meta name="author" content="Nico Ciri" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" integrity="sha384-XGjxtQfXaH2tnPFa9x+ruJTuLE3Aa6LhHSWRr1XeTyhezb4abCG4ccI5AkVDxqC+" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" integrity="sha384-XGjxtQfXaH2tnPFa9x+ruJTuLE3Aa6LhHSWRr1XeTyhezb4abCG4ccI5AkVDxqC+" crossorigin="anonymous" />
     <link rel="stylesheet" href="/css/main.css?v${projectVersion}" />
   </head>
 
@@ -20,13 +20,18 @@
       <!-- Nav tabs -->
       <ul class="nav nav-tabs mt-3 flex-grow-1">
         <li class="nav-item">
-          <a class="nav-link active" data-bs-toggle="tab" href="#buscador" title="Buscador">
+          <a class="nav-link active" data-bs-toggle="tab" href="#search-tab" title="Buscador">
             <i class="bi bi-search"></i> <span class="d-none d-sm-inline">Buscador</span>
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" data-bs-toggle="tab" href="#estadisticas" title="Estad&iacute;sticas">
+          <a class="nav-link" data-bs-toggle="tab" href="#stats-tab" title="Estad&iacute;sticas">
             <i class="bi bi-graph-up"></i> <span class="d-none d-sm-inline">Estad&iacute;sticas</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="tab" href="#connections-tab" title="Conexiones">
+            <i class="bi bi-bezier2"></i> <span class="d-none d-sm-inline">Conexiones</span>
           </a>
         </li>
       </ul>
@@ -46,8 +51,7 @@
 
     <!-- Tab panes -->
     <div class="tab-content">
-      <div class="tab-pane container active" id="buscador">
-
+      <div class="tab-pane container fade p-0 active show" id="search-tab">
         <div class="text-center">
           <div class="h3 m-0 d-none d-xl-block">
             Buscador de personas
@@ -63,7 +67,7 @@
           </div>
         </div>
 
-        <div class="small mt-2 mb-3">Todos los campos son opcionales, para obtener un mejor resultado complet&aacute; la mayor cantidad de datos posibles.</div>
+        <div class="small my-3">Todos los campos son opcionales, para obtener un mejor resultado complet&aacute; la mayor cantidad de datos posibles.</div>
 
         <div class="row mb-3">
           <div class="col-xl-auto">
@@ -398,12 +402,20 @@
         </div>
       </div>
 
-      <div class="tab-pane container fade p-2" id="estadisticas">
-        <div class="alert alert-secondary text-center mt-1" role="alert">
-          Estad&iacute;sticas actualizadas al 16/12/2024
+      <div class="tab-pane container fade p-0" id="stats-tab">
+        <div class="text-center">
+          <div class="h3 m-0 d-none d-xl-block">
+            Estad&iacute;sticas del &aacute;rbol de Azul
+          </div>
+          <div class="h5 m-0 d-xl-none">
+            Estad&iacute;sticas del &aacute;rbol de Azul
+          </div>
+          <div class="small">
+            actualizadas al 16/12/2024
+          </div>
         </div>
 
-        <dl class="row small">
+        <dl class="row small my-3">
           <dt class="col-7 col-sm-6 px-2 text-end fw-semibold">Personas en el &aacute;rbol:</dt>
           <dd class="col-5 col-sm-6 px-2">60.524</dd>
           <dt class="col-7 col-sm-6 px-2 text-end fw-semibold">Hombres:</dt>
@@ -5008,22 +5020,26 @@
             </div>
           </div>
         </div>
+      </div>
 
+      <div class="tab-pane container fade p-0" id="connections-tab">
+        <div class="alert alert-warning text-center my-3" role="alert">
+          <p class="fw-semibold"><i class="bi bi-exclamation-triangle"></i> Sección en desarrollo</p>
+          <p>Pr&oacute;ximamente vas a poder ver tu relaci&oacute;n con otras personas en el &aacute;rbol.</p>
+        </div>
       </div>
     </div>
 
-    <div class="row bg-light mt-4">
-      <div class="col text-center small p-1">
-        <p style="margin-bottom: 0.5em;">
-          <b>Genea Azul</b> es una iniciativa comunitaria sin fines de lucro con el fin de investigar, documentar y preservar la historia geneal&oacute;gica del partido de Azul.
-        </p>
-        <p style="margin-bottom: 0.5em;">
-          Declarado de <b>Inter&eacute;s Comunitario, Hist&oacute;rico y Cultural</b> por el Honorable Concejo Deliberante de Azul.
-        </p>
-        <p>
-          &iexcl;Solicit&aacute; acceso al &aacute;rbol y carg&aacute; info!
-        </p>
-      </div>
+    <div class="alert alert-light bg-light text-center small mt-4 mb-0" role="alert">
+      <p>
+        <b>Genea Azul</b> es una iniciativa comunitaria sin fines de lucro con el fin de investigar, documentar y preservar la historia geneal&oacute;gica del partido de Azul.
+      </p>
+      <p>
+        Declarado de <b>Inter&eacute;s Comunitario, Hist&oacute;rico y Cultural</b> por el Honorable Concejo Deliberante de Azul.
+      </p>
+      <p>
+        &iexcl;Solicit&aacute; acceso al &aacute;rbol y carg&aacute; info!
+      </p>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js" integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V" crossorigin="anonymous"></script>
