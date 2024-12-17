@@ -439,7 +439,7 @@
           <dt class="col-7 col-sm-6 px-2 text-end fw-semibold">Personas desaparecidas:</dt>
           <dd class="col-5 col-sm-6 px-2 mb-0">26</dd>
           <dt class="col-7 col-sm-6 px-2 text-end fw-semibold">Personalidades destacadas:</dt>
-          <dd class="col-5 col-sm-6 px-2 mb-0">207</dd>
+          <dd class="col-5 col-sm-6 px-2 mb-0">208</dd>
           <dt class="col-7 col-sm-6 px-2 text-end fw-semibold">Cantidad de pa&iacute;ses:</dt>
           <dd class="col-5 col-sm-6 px-2 mb-0">50</dd>
           <dt class="col-7 col-sm-6 px-2 text-end fw-semibold">Apellidos azule&ntilde;os:</dt>
@@ -499,7 +499,7 @@
           <div class="accordion-item">
             <h2 class="accordion-header" id="flush-headingTwo">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseTwo" aria-expanded="false" aria-controls="flush-collapseTwo">
-                <span class="fw-semibold">Personalidades destacadas</span> <span class="ms-1 small text-secondary">(207)</span>
+                <span class="fw-semibold">Personalidades destacadas</span> <span class="ms-1 small text-secondary">(208)</span>
               </button>
             </h2>
             <div id="flush-collapseTwo" class="accordion-collapse collapse" aria-labelledby="flush-headingTwo" data-bs-parent="#statistics-accordion">
@@ -572,6 +572,7 @@
                   <li><span class="text-secondary">Ctan.</span> <span>Juan</span> <span class="fw-semibold">de Burgos y Celis</span></li>
                   <li><span class="text-secondary">Int. Mun. Prof.</span> <span>Rub&eacute;n C&eacute;sar</span> <span class="fst-italic">"Poliya"</span> <span class="fw-semibold">De Paula</span></li>
                   <li><span class="text-secondary">Pte. Gral.</span> <span>Justo Jos&eacute; Faustino</span> <span class="fw-semibold">de Urquiza</span></li>
+                  <li><span class="text-secondary">Alfz.</span> <span>Gonzalo</span> <span class="fw-semibold">de Z&aacute;rate</span></li>
                   <li><span>Federico</span> <span class="fw-semibold">Delbonis</span></li>
                   <li><span class="text-secondary">Pte. Mun.</span> <span>Jean Blaise</span> <span class="fw-semibold">Dhers</span></li>
                   <li><span class="text-secondary">Int. Mun.</span> <span>Amado</span> <span class="fw-semibold">Diab</span></li>
