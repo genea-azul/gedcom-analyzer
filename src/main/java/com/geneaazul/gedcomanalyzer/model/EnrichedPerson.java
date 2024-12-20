@@ -328,6 +328,26 @@ public class EnrichedPerson {
                 .toList();
     }
 
+    public List<Date> getDatesOfAnyEvent() {
+        return Stream.concat(
+                        Stream.of(
+                                this.dateOfBirth,
+                                this.dateOfDeath),
+                        this.spousesWithChildren
+                                .stream()
+                                .flatMap(spouseWithChildren -> Stream.concat(
+                                        Stream.of(
+                                                spouseWithChildren.getDateOfPartners(),
+                                                spouseWithChildren.getDateOfSeparation()),
+                                        spouseWithChildren
+                                                .getChildren()
+                                                .stream()
+                                                .map(EnrichedPerson::getDateOfBirth))))
+                .flatMap(Optional::stream)
+                .distinct()
+                .toList();
+    }
+
     public void analyzeCustomEventFactsAndTagExtensions(Gedcom gedcom) {
         getLegacyPerson()
                 .ifPresent(person -> {

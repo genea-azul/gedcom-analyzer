@@ -438,17 +438,36 @@ public class SearchService {
 
             // Dates are not matched by day, we can discard persons with existing but not matching parents
             if (!bothHaveParents || matchesParents) {
+
+                int baseValue = 60;
+
+                // Look for matching spouses
+                boolean bothHaveSpouses = !person.getSpouses().isEmpty() && !compare.getSpouses().isEmpty();
+                if (bothHaveSpouses) {
+                    boolean pMatchesSpouses = person.matchesAnySpouses(compare);
+                    boolean cMatchesSpouses = compare.matchesAnySpouses(person);
+                    if (pMatchesSpouses || cMatchesSpouses) {
+                        baseValue = 40;
+                    }
+
+                    boolean pMatchesSpousesWithOptionalGivenName = person.matchesAnySpousesWhenMissingGivenName(compare);
+                    boolean cMatchesSpousesWithOptionalGivenName = compare.matchesAnySpousesWhenMissingGivenName(person);
+                    if (pMatchesSpousesWithOptionalGivenName || cMatchesSpousesWithOptionalGivenName) {
+                        baseValue = 45;
+                    }
+                }
+
                 if (person.matchesDateOfBirthByMonth(compare) && (notBothHaveDodSet || person.matchesDateOfDeathByAny(compare))) {
-                    return fullMatchesParents ? 60 : 65;
+                    return fullMatchesParents ? baseValue : baseValue + 5;
                 }
                 if (person.matchesDateOfDeathByMonth(compare) && (notBothHaveDobSet || person.matchesDateOfBirthByAny(compare))) {
-                    return fullMatchesParents ? 61 : 66;
+                    return fullMatchesParents ? baseValue + 1 : baseValue + 6;
                 }
                 if (person.matchesDateOfBirthByYear(compare) && (notBothHaveDodSet || person.matchesDateOfDeathByAny(compare))) {
-                    return fullMatchesParents ? 80 : 85;
+                    return fullMatchesParents ? baseValue + 10 : baseValue + 15;
                 }
                 if (person.matchesDateOfDeathByYear(compare) && (notBothHaveDobSet || person.matchesDateOfBirthByAny(compare))) {
-                    return fullMatchesParents ? 81 : 86;
+                    return fullMatchesParents ? baseValue + 11 : baseValue + 16;
                 }
             }
         }
