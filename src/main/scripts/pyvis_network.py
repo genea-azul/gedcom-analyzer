@@ -88,4 +88,8 @@ net.set_options('''
   }
 ''')
 
-net.show(exportFile, notebook=False)
+# Somehow in MacOS the notebook param is not recognized
+if sys.platform == 'darwin':
+    net.show(exportFile)
+else:
+    net.show(exportFile, notebook=False)
