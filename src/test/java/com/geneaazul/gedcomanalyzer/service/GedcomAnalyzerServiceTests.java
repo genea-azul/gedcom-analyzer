@@ -727,6 +727,22 @@ public class GedcomAnalyzerServiceTests {
                 .filter(person -> person.getDateOfBirth().isPresent())
                 .filter(person -> person.getDateOfDeath().isPresent())
                 .count());
+        System.out.println("First event: " + personsByPlace
+                .stream()
+                .min((p1, p2) -> {
+                    Optional<Date> date1 = p1.getDatesOfAnyEvent()
+                            .stream()
+                            .min(Date::compareTo);
+                    Optional<Date> date2 = p2.getDatesOfAnyEvent()
+                            .stream()
+                            .min(Date::compareTo);
+                    return date2
+                            .map(value -> date1
+                                    .map(date -> date.compareTo(value))
+                                    .orElse(1))
+                            .orElseGet(() -> date1.isEmpty() ? 0 : -1);
+                })
+                .orElse(null));
         System.out.println("\nOlder men: " + aliveMenByPlace.size());
         aliveMenByPlace
                 .stream()
