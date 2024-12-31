@@ -59,7 +59,7 @@ public class SearchController {
     private final PlainFamilyTreePdfService plainFamilyTreePdfService;
 
     @PostMapping("/family")
-    @CrossOrigin(originPatterns = { "http://localhost:[*]", "https://localhost:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
+    @CrossOrigin(originPatterns = { "http://localhost:[*]", "https://localhost:[*]", "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
     public SearchFamilyResultDto searchFamily(
             @Valid @RequestBody SearchFamilyDto searchFamilyDto,
             HttpServletRequest request) {
@@ -160,7 +160,7 @@ public class SearchController {
     }
 
     @PostMapping("/surnames")
-    @CrossOrigin(originPatterns = { "http://localhost:[*]", "https://localhost:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
+    @CrossOrigin(originPatterns = { "http://localhost:[*]", "https://localhost:[*]", "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
     public SearchSurnamesResultDto searchSurnames(@Valid @RequestBody SearchSurnamesDto searchSurnamesDto, HttpServletRequest request) {
 
         Optional<String> clientIpAddress = InetAddressUtils.getRemoteAddress(request);
@@ -186,7 +186,7 @@ public class SearchController {
     }
 
     @GetMapping("/family-tree/{personUuid}/plainPdf")
-    @CrossOrigin(originPatterns = { "http://localhost:[*]", "https://localhost:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
+    @CrossOrigin(originPatterns = { "http://localhost:[*]", "https://localhost:[*]", "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
     public ResponseEntity<Resource> getPlainFamilyTreePdf(
             @PathVariable UUID personUuid,
             @RequestParam @Nullable Boolean obfuscateLiving,

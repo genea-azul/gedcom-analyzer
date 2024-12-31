@@ -43,7 +43,7 @@ public class GedcomAnalyzerController {
     private String projectVersion;
 
     @GetMapping
-    @CrossOrigin(originPatterns = { "http://localhost:[*]", "https://localhost:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
+    @CrossOrigin(originPatterns = { "http://localhost:[*]", "https://localhost:[*]", "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
     public Map<String, Object> analyzeGedcom() {
         // Used for health check
         return Map.of(
@@ -53,7 +53,7 @@ public class GedcomAnalyzerController {
     }
 
     @GetMapping("/metadata")
-    @CrossOrigin(originPatterns = { "http://localhost:[*]", "https://localhost:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
+    @CrossOrigin(originPatterns = { "http://localhost:[*]", "https://localhost:[*]", "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
     public GedcomMetadataDto getGedcomMetadata() {
         return gedcomAnalyzerService.getGedcomMetadata(gedcomHolder.getGedcom());
     }
