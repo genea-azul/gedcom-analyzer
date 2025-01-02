@@ -38,7 +38,20 @@
     .vertical-center {
         vertical-align: middle !important;
     }
+    .border-secondary-vars {
+        --bs-border-opacity: 1;
+        --bs-border-color: rgba(var(--bs-secondary-rgb), var(--bs-border-opacity));
+    }
+    .border-1-5 {
+        --bs-border-width: 1.5px;
+    }
+    .nav-tabs .nav-link.active {
+        --bs-nav-tabs-link-active-bg: #f5f8fd;
+    }
     @media (max-width: 575px) {
+        .w-xs-200 {
+            width: 200% !important;
+        }
         .smaller {
             font-size: .75em !important;
         }
@@ -150,10 +163,7 @@
       <!-- Search container start -->
       <div class="d-none" id="search-container">
         <div class="text-center">
-          <div class="h3 m-0 d-none d-xl-block">
-            Buscador de personas
-          </div>
-          <div class="h5 m-0 d-xl-none">
+          <div class="h3 m-0">
             Buscador de personas
           </div>
           <div class="small">
@@ -503,10 +513,7 @@
     <!-- Stats tab -->
     <div class="tab-pane container fade p-0" id="stats-tab">
       <div class="text-center">
-        <div class="h3 m-0 d-none d-xl-block">
-          Estad&iacute;sticas del &aacute;rbol de Azul
-        </div>
-        <div class="h5 m-0 d-xl-none">
+        <div class="h3 m-0">
           Estad&iacute;sticas del &aacute;rbol de Azul
         </div>
         <div class="small">
@@ -659,7 +666,7 @@
                 <li><span class="text-secondary">Cacique</span> <span>Marcelino</span> <span class="fw-semibold">Catriel</span></li>
                 <li><span class="text-secondary">Cnel. Dr.</span> <span>Feliciano Antonio</span> <span class="fw-semibold">Chiclana</span></li>
                 <li><span>Guillermo Ram&oacute;n</span> <span class="fst-italic">"Turco"</span> <span class="fw-semibold">Chiodi</span></li>
-                <li><span>Elma</span> <span class="fw-semibold">Cort&aacute;zar</span><span class="text-secondary">, de Layús</span></li>
+                <li><span>Elma</span> <span class="fw-semibold">Cort&aacute;zar</span><span class="text-secondary">, de Lay&uacute;s</span></li>
                 <li><span class="text-secondary">Cnel.</span> <span>Ambroise J&eacute;rome</span> <span class="fw-semibold">Cramer</span></li>
                 <li><span>Mar&iacute;a Araceli</span> <span class="fw-semibold">Cristeche</span><span class="text-secondary">, de Cauh&eacute;p&eacute;</span></li>
                 <li><span>Ernestina Francisca Mar&iacute;a</span> <span class="fw-semibold">Darhanp&eacute;</span></li>
@@ -5125,19 +5132,16 @@
     <!-- Families tab -->
     <div class="tab-pane container fade p-0" id="families-tab">
       <div class="text-center">
-        <div class="h3 m-0 d-none d-xl-block">
-          Familias azule&ntilde;as destacadas
-        </div>
-        <div class="h5 m-0 d-xl-none">
+        <div class="h3 m-0">
           Familias azule&ntilde;as destacadas
         </div>
       </div>
 
-      <div class="h4 mt-5 mb-2">Catriel</div>
+      <div class="h5 mt-5 mb-2">Catriel</div>
 
-      <table class="table table-striped smaller vertical-center">
+      <table class="table table-striped w-xs-200 smaller vertical-center">
         <thead class="table-light">
-          <tr class="border-bottom border-dark border-1">
+          <tr class="border-bottom border-dark border-1-5">
             <th scope="col">Nombre</th>
             <th scope="col">Fecha de nac.</th>
             <th scope="col">Lugar de nac.</th>
@@ -5150,7 +5154,9 @@
         <tbody>
           <tr>
             <td>
-              <a href="https://familysearch.org/tree/person/details/LJG7-N9P" target="_blank"><b>Cacique Juan José Catriel</b></a>
+              <a href="https://familysearch.org/tree/person/details/LJG7-N9P" target="_blank" class="fw-semibold">
+                Cacique Juan Jos&eacute; Catriel
+              </a>
             </td>
             <td>aprox. 1830</td>
             <td>pcia. de BA</td>
@@ -5167,7 +5173,9 @@
           </tr>
           <tr>
             <td>
-              <a href="https://familysearch.org/tree/person/details/KGLG-LDQ" target="_blank"><b>Cacique Marcelino Catriel</b></a>
+              <a href="https://familysearch.org/tree/person/details/KGLG-LDQ" target="_blank" class="fw-semibold">
+                Cacique Marcelino Catriel
+              </a>
             </td>
             <td>aprox. 1834</td>
             <td>pcia. de BA</td>
@@ -5180,7 +5188,9 @@
           </tr>
           <tr>
             <td>
-              <a href="https://familysearch.org/tree/person/details/LJG7-F16" target="_blank"><b>Cacique Cipriano Catriel</b></a>
+              <a href="https://familysearch.org/tree/person/details/LJG7-F16" target="_blank" class="fw-semibold">
+                Cacique Cipriano Catriel
+              </a>
             </td>
             <td>aprox. 1837</td>
             <td>pcia. de BA</td>
@@ -5195,7 +5205,9 @@
           </tr>
           <tr>
             <td>
-              <a href="https://familysearch.org/tree/person/details/9DX1-FF9" target="_blank"><b>Francisca Catriel</b></a>
+              <a href="https://familysearch.org/tree/person/details/9DX1-FF9" target="_blank" class="fw-semibold">
+                Francisca Catriel
+              </a>
             </td>
             <td>aprox. 1839</td>
             <td>Azul</td>
@@ -5207,7 +5219,9 @@
           </tr>
           <tr>
             <td>
-              <a href="https://familysearch.org/tree/person/details/LJG7-NWR" target="_blank"><b>Marcelina Catriel</b></a>
+              <a href="https://familysearch.org/tree/person/details/LJG7-NWR" target="_blank" class="fw-semibold">
+                Marcelina Catriel
+              </a>
             </td>
             <td>aprox. 1844</td>
             <td>Azul</td>
@@ -5220,11 +5234,11 @@
         </tbody>
       </table>
 
-      <div class="h4 mt-5 mb-2">Piazza</div>
+      <div class="h5 mt-5 mb-2">Marchisio</div>
 
-      <table class="table table-striped smaller vertical-center">
+      <table class="table table-striped w-xs-200 smaller vertical-center">
         <thead class="table-light">
-          <tr class="border-bottom border-dark border-1">
+          <tr class="border-bottom border-dark border-1-5">
             <th scope="col">Nombre</th>
             <th scope="col">Fecha de nac.</th>
             <th scope="col">Lugar de nac.</th>
@@ -5237,13 +5251,53 @@
         <tbody>
           <tr>
             <td>
-              <b>Lorenzo Piazza</b>
+              <a href="https://familysearch.org/tree/person/details/LY96-XBN" target="_blank" class="fw-semibold">
+                Giuseppe Leopoldo Marchisio
+              </a>
             </td>
-            <td></td>
+            <td>02/03/1872</td>
+            <td>Brozolo, IT</td>
+            <td>12/04/1966</td>
+            <td>Azul</td>
+            <td>
+              <p>Mar&iacute;a Francisca Piazza (3)</p>
+            </td>
+            <td rowspan="1">
+              <p>Giacinto Marchisio</p>
+              <p>Paolina Schierano</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="h5 mt-5 mb-2">Piazza</div>
+
+      <table class="table table-striped w-xs-200 smaller vertical-center">
+        <thead class="table-light">
+          <tr class="border-bottom border-dark border-1-5">
+            <th scope="col">Nombre</th>
+            <th scope="col">Fecha de nac.</th>
+            <th scope="col">Lugar de nac.</th>
+            <th scope="col">Fecha de def.</th>
+            <th scope="col">Lugar de def.</th>
+            <th scope="col">Pareja (hijos)</th>
+            <th scope="col">Padre y madre</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/L7P4-ZX9" target="_blank" class="fw-semibold">
+                Lorenzo Piazza
+              </a>
+            </td>
+            <td>15/05/1853</td>
             <td>Craveggia, IT</td>
-            <td></td>
-            <td></td>
-            <td></td>
+            <td>19/02/1935</td>
+            <td>Azul</td>
+            <td>
+              <p>Rosa Caterina Motti (10)</p>
+            </td>
             <td rowspan="8">
               <p>Giuseppe Antonio Piazza</p>
               <p>Maria Rizzo</p>
@@ -5251,82 +5305,118 @@
           </tr>
           <tr>
             <td>
-              <b>Caterina Piazza</b><br/>(Catalina Piazza)
+              <a href="https://familysearch.org/tree/person/details/27T2-QS3" target="_blank" class="fw-semibold">
+                Caterina Piazza
+              </a>
+              <br/>(Catalina Piazza)
             </td>
-            <td></td>
+            <td>aprox. 1856</td>
             <td>Craveggia, IT</td>
-            <td></td>
-            <td></td>
-            <td></td>
+            <td>07/04/1892</td>
+            <td>Azul</td>
+            <td>
+              <p>Nicola Zezza (0)</p>
+              <p>Pietro Guglielmetti (2)</p>
+            </td>
           </tr>
           <tr>
             <td>
-              <b>Francesco Piazza</b><br/>(Francisco Piazza)
+              <a href="https://familysearch.org/tree/person/details/27T2-3PB" target="_blank" class="fw-semibold">
+                Francesco Piazza
+              </a>
+              <br/>(Francisco Piazza)
             </td>
-            <td></td>
+            <td>aprox. 1858</td>
             <td>Craveggia, IT</td>
-            <td></td>
-            <td></td>
-            <td></td>
+            <td>1908</td>
+            <td>Azul</td>
+            <td>
+              <p>Gregoria &Aacute;lzaga (8)</p>
+            </td>
           </tr>
           <tr>
             <td>
-              <b>Remigio Piazza</b>
+              <a href="https://familysearch.org/tree/person/details/KGNH-BCF" target="_blank" class="fw-semibold">
+                Remigio Piazza
+              </a>
             </td>
-            <td></td>
+            <td>aprox. 1860</td>
             <td>Craveggia, IT</td>
             <td></td>
-            <td></td>
-            <td></td>
+            <td>Azul</td>
+            <td>
+              <p>Honoria Lier (2)</p>
+              <p>Isabel Olmos (0)</p>
+            </td>
           </tr>
           <tr>
             <td>
-              <b>Felice Emilio Piazza</b><br/>(F&eacute;lix Emilio Piazza)
+              <a href="https://familysearch.org/tree/person/details/KNRW-73T" target="_blank" class="fw-semibold">
+                Felice Emilio Piazza
+              </a>
+              <br/>(F&eacute;lix Emilio Piazza)
             </td>
-            <td></td>
+            <td>aprox. 1862</td>
             <td>Craveggia, IT</td>
-            <td></td>
-            <td></td>
-            <td></td>
+            <td>21/01/1931</td>
+            <td>Azul</td>
+            <td>
+              <p>Mar&iacute;a Lafont dite Basque (6)</p>
+            </td>
           </tr>
           <tr>
             <td>
-              <b>Maria Piazza</b>
+              <a href="https://familysearch.org/tree/person/details/LJ2Q-VGN" target="_blank" class="fw-semibold">
+                Maria Piazza
+              </a>
             </td>
-            <td></td>
+            <td>aprox. 1864</td>
             <td>Craveggia, IT</td>
             <td></td>
-            <td></td>
-            <td></td>
+            <td>Azul</td>
+            <td>
+              <p>Antonio Fiscalini (7)</p>
+            </td>
           </tr>
           <tr>
             <td>
-              <b>Antonia Piazza</b>
+              <a href="https://familysearch.org/tree/person/details/KN51-M9K" target="_blank" class="fw-semibold">
+                Antonia Piazza
+              </a>
             </td>
-            <td></td>
+            <td>aprox. 1867</td>
             <td>Craveggia, IT</td>
             <td></td>
             <td></td>
-            <td></td>
+            <td>
+              <p>Giuseppe Antonietti (2)</p>
+            </td>
           </tr>
           <tr>
             <td>
-              <b>Pietro Luigi Piazza</b><br/>(Pedro Luis Piazza)
+              <a href="https://familysearch.org/tree/person/details/LY98-2LZ" target="_blank" class="fw-semibold">
+                Pietro Luigi Piazza
+              </a>
+              <br/>(Pedro Luis Piazza)
             </td>
-            <td></td>
+            <td>aprox. 1870</td>
             <td>Craveggia, IT</td>
-            <td></td>
-            <td></td>
-            <td></td>
-          </tr>
-          <tr class="border-top border-2">
+            <td>07/05/1955</td>
+            <td>Azul</td>
             <td>
-              <a href="https://familysearch.org/tree/person/details/9N61-HQG" target="_blank"><b>Giacomo Maria Piazza</b></a>
+              <p>Emilia Josefa Arbuc&oacute; (6)</p>
+            </td>
+          </tr>
+          <tr class="border-top border-secondary-vars border-1-5">
+            <td>
+              <a href="https://familysearch.org/tree/person/details/9N61-HQG" target="_blank" class="fw-semibold">
+                Giacomo Maria Piazza
+              </a>
               <br/>(Santiago Mar&iacute;a Piazza)</td>
             <td>aprox. 1849</td>
             <td>Craveggia, IT</td>
             <td></td>
-            <td></td>
+            <td>Azul</td>
             <td>
               <p>Margherita Mattei (6)</p>
             </td>
@@ -5336,7 +5426,12 @@
             </td>
           </tr>
           <tr>
-            <td><b>Giovanni Giacomo Piazza</b><br/>(Juan Santiago Piazza)</td>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/LDT7-M2H" target="_blank" class="fw-semibold">
+                Giovanni Giacomo Piazza
+              </a>
+              <br/>(Juan Santiago Piazza)
+            </td>
             <td>aprox. 1851</td>
             <td>Craveggia, IT</td>
             <td></td>
@@ -5346,20 +5441,34 @@
             </td>
           </tr>
           <tr>
-            <td><b>Felice Antonio Piazza</b><br/>(F&eacute;lix Antonio Piazza)</td>
-            <td></td>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/LQY8-HNS" target="_blank" class="fw-semibold">
+                Felice Antonio Piazza
+              </a>
+              <br/>(F&eacute;lix Antonio Piazza)
+            </td>
+            <td>aprox. 1853</td>
             <td>Craveggia, IT</td>
             <td></td>
             <td></td>
-            <td></td>
+            <td>
+              <p>Angela Pirinoli (8)</p>
+            </td>
           </tr>
           <tr>
-            <td><b>Costantino Piazza</b><br/>(Constantino Piazza)</td>
-            <td></td>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/KGNS-CLF" target="_blank" class="fw-semibold">
+                Costantino Piazza
+              </a>
+              <br/>(Constantino Piazza)
+            </td>
+            <td>aprox. 1862</td>
             <td>Craveggia, IT</td>
             <td></td>
-            <td></td>
-            <td></td>
+            <td>Azul</td>
+            <td>
+              <p>Ernesta Tortonese (8)</p>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -5368,7 +5477,7 @@
     <!-- Connections tab -->
     <div class="tab-pane container fade p-0" id="connections-tab">
       <div class="alert alert-warning text-center my-3" role="alert">
-        <p class="fw-semibold"><i class="bi bi-exclamation-triangle"></i> Sección en desarrollo</p>
+        <p class="fw-semibold"><i class="bi bi-exclamation-triangle"></i> Secci&oacute;n en desarrollo</p>
         <p>Pr&oacute;ximamente vas a poder ver tu relaci&oacute;n con otras personas en el &aacute;rbol.</p>
       </div>
     </div>
@@ -5633,7 +5742,7 @@
                                   .append("<p>Edit&aacute; la b&uacute;squeda agregando fechas o completando nombres de padres y parejas.</p>")
                                   .append($("<p>")
                                           .addClass("text-center")
-                                          .html("&iexcl;Solicitá acceso al &aacute;rbol y carg&aacute; info!")
+                                          .html("&iexcl;Solicit&aacute; acceso al &aacute;rbol y carg&aacute; info!")
                                           .append($("<a>")
                                                   .addClass("link-secondary text-decoration-none ms-2")
                                                   .attr("href", "https://instagram.com/_u/genea.azul")
@@ -6557,7 +6666,7 @@
   var displayErrorCodeInSpanish = function(errorCode) {
       if (errorCode == "TOO-MANY-REQUESTS") {
           return "<p>Realizaste demasiadas consultas en la &uacute;ltima hora, por favor esper&aacute; unos minutos o contactanos en redes sociales: <b>@genea.azul</b></p>"
-              + "<p>Este es un proyecto de investigaci&oacute;n sin fines de lucro, no hay costo de servicio. Solicitá acceso al árbol y ayudanos a completar datos. 😊</p>";
+              + "<p>Este es un proyecto de investigaci&oacute;n sin fines de lucro, no hay costo de servicio. Solicit&aacute; acceso al &aacute;rbol y ayudanos a completar datos. 😊</p>";
       }
       return errorCode;
   };
