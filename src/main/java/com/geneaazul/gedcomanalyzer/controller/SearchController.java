@@ -304,6 +304,14 @@ public class SearchController {
                 });
     }
 
+    @GetMapping("/connection/{searchId}/reviewed")
+    public SearchConnectionDetailsDto markConnectionReviewed(
+            @PathVariable Long searchId,
+            @RequestParam(defaultValue = BooleanUtils.TRUE) Boolean isReviewed) {
+        log.info("Mark connection reviewed [ searchId={}, isReviewed={} ]", searchId, isReviewed);
+        return connectionService.updateConnectionSearchIsReviewed(searchId, isReviewed);
+    }
+
     @GetMapping("/connection/latest")
     public List<SearchConnectionDetailsDto> getLatestConnections(
             @RequestParam @Nullable Boolean isMatch,
@@ -312,7 +320,7 @@ public class SearchController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request) {
-        log.info("Search family latest [ isMatch={}, isReviewed={}, hasContact={}, page={}, size={} ]",
+        log.info("Search connection latest [ isMatch={}, isReviewed={}, hasContact={}, page={}, size={} ]",
                 isMatch, isReviewed, hasContact, page, size);
         String context = StringUtils.substringBefore(request.getRequestURL().toString(), "/api");
         return connectionService.getLatest(isMatch, isReviewed, hasContact, page, size, context);

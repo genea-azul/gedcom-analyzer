@@ -162,4 +162,19 @@ public class AppController {
         return new ModelAndView("search-family/latest", params);
     }
 
+    @GetMapping("/search-connection/latest")
+    public ModelAndView searchConnection() {
+        Map<String, ?> params = Map.of(
+                "projectVersion", projectVersion);
+        return new ModelAndView("search-connection/latest", params);
+    }
+
+    @GetMapping("/search-connection/latestToReview")
+    public ModelAndView searchConnectionToReview() {
+        Map<String, ?> params = Map.of(
+                "projectVersion", projectVersion,
+                "toReview", true);
+        return new ModelAndView("search-connection/latest", params);
+    }
+
 }
