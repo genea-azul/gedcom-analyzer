@@ -3,7 +3,11 @@
 <head>
   <title>Genea Azul</title>
   <meta charset="UTF-8" />
+  <meta name="description" content="Genea Azul. Estudio de genealog&iacute;a azule&ntilde;a." />
+  <meta name="keywords" content="genealogia, historia familiar, arbol genealogico, ascendencia, descendencia, azul, ciudad de azul, historia de azul, azuleños destacados, azuleñas destacadas" />
+  <meta name="author" content="Nico Ciri" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="index,follow" />
   <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="pragma" content="no-cache" />
   <meta http-equiv="expires" content="0" />
@@ -13,8 +17,8 @@
     body {
         height: 100vh;
     }
-    #pre-container {
-        height: 100%;
+    #loading-container {
+        height: 50vh;
     }
     .form-floating > label {
         width: 110% !important;
@@ -32,77 +36,67 @@
     p {
         margin-bottom: 0.5em;
     }
+    .vertical-center {
+        vertical-align: middle !important;
+    }
+    .border-1-5 {
+        --bs-border-width: 1.5px;
+    }
+    .nav-tabs .nav-link.active {
+        --bs-nav-tabs-link-active-bg: #f5f8fd;
+    }
+    @media (max-width: 575px) {
+        .w-xs-200 {
+            width: 200% !important;
+        }
+        .smaller {
+            font-size: .75em !important;
+        }
+    }
+    @media (min-width: 576px) {
+        .smaller {
+            font-size: .875em !important;
+        }
+    }
   </style>
 </head>
 
 <body class="container">
-<div class="d-flex flex-column align-items-center justify-content-center" id="pre-container">
-  <img class="img-fluid" src="img/genea-azul-logo.png?v1.0.0" alt="Genea Azul logo" />
 
-  <div class="invisible small mt-5" id="spinner-container">
-    <div class="spinner-border spinner-border-sm" role="status"></div>
-    Iniciando el buscador, esper&aacute; unos segundos...
-  </div>
-
-  <div class="d-none small mt-5 ps-3 pe-3" id="vacations-container">
-    <p>Nos tomamos vacaciones <i class="bi bi-suitcase2"></i> y apagamos el servidor <i class="bi bi-server"></i>.</p>
-    <p>La p&aacute;gina volver&aacute; a estar disponible a mediados de abril.</p>
-    <p>Ponete en contacto para solicitar acceso al &aacute;rbol en <b>MyHeritage</b>:</p>
-    <ul class="list-group list-group-flush">
-      <li class="list-group-item">
-        <a class="link-secondary text-decoration-none" href="https://instagram.com/_u/genea.azul">
-          <i class="bi bi-instagram"></i>
-        </a>
-        <a class="link-secondary" href="https://instagram.com/_u/genea.azul">
-          genea.azul
-        </a>
-      </li>
-      <li class="list-group-item">
-        <a class="link-secondary text-decoration-none" href="https://facebook.com/genea.azul">
-          <i class="bi bi-facebook"></i>
-        </a>
-        <a class="link-secondary" href="https://facebook.com/genea.azul">
-          genea.azul
-        </a>
-      </li>
-      <li class="list-group-item">
-        <a class="link-secondary text-decoration-none" href="mailto:genea.azul@gmail.com">
-          <i class="bi bi-envelope"></i>
-        </a>
-        <a class="link-secondary" href="mailto:genea.azul@gmail.com">
-          genea.azul@gmail.com
-        </a>
-      </li>
-    </ul>
-  </div>
-</div>
-
-<div class="d-none" id="main-container">
+  <!-- Header -->
   <div class="d-flex flex-row gap-3 justify-content-between align-items-start">
+    <!-- Small logo -->
     <a href="https://geneaazul.com.ar" title="Genea Azul">
-      <img src="img/genea-azul-logo.png?v1.0.0" width="120" height="60" class="rounded float-start mt-2" alt="Genea Azul logo" />
+      <img src="img/genea-azul-logo-simple.png?v1" width="70" height="70" class="d-sm-none float-start mt-2" alt="Genea Azul logo" />
+      <img src="img/genea-azul-logo.png?v1" width="120" height="60" class="d-none d-sm-block float-start mt-2" alt="Genea Azul logo" />
     </a>
 
     <!-- Nav tabs -->
     <ul class="nav nav-tabs mt-3 flex-grow-1">
       <li class="nav-item">
         <a class="nav-link active" data-bs-toggle="tab" href="#search-tab" title="Buscador">
-          <i class="bi bi-search"></i> <span class="d-none d-sm-inline">Buscador</span>
+          <i class="bi bi-search"></i> <span class="d-none d-md-inline">Buscador</span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link" data-bs-toggle="tab" href="#stats-tab" title="Estad&iacute;sticas">
-          <i class="bi bi-graph-up"></i> <span class="d-none d-sm-inline">Estad&iacute;sticas</span>
+          <i class="bi bi-graph-up"></i> <span class="d-none d-md-inline">Estad&iacute;sticas</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#families-tab" title="Familias">
+          <i class="bi bi-people"></i> <span class="d-none d-md-inline">Familias</span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link" data-bs-toggle="tab" href="#connections-tab" title="Conexiones">
-          <i class="bi bi-bezier2"></i> <span class="d-none d-sm-inline">Conexiones</span>
+          <i class="bi bi-bezier2"></i> <span class="d-none d-md-inline">Conexiones</span>
         </a>
       </li>
     </ul>
 
-    <div class="mt-2 d-flex flex-column flex-sm-row">
+    <!-- Social networks buttons -->
+    <div class="mt-2 d-flex flex-column flex-lg-row">
       <a class="link-secondary text-decoration-none ms-1 me-1" href="https://instagram.com/_u/genea.azul" target="_blank" title="@genea.azul">
         <i class="bi bi-instagram"></i>
       </a>
@@ -117,361 +111,406 @@
 
   <!-- Tab panes -->
   <div class="tab-content">
+    <!-- Search tab start -->
     <div class="tab-pane container fade p-0 active show" id="search-tab">
-      <div class="text-center">
-        <div class="h3 m-0 d-none d-xl-block">
-          Buscador de personas
+
+      <!-- Loading container start -->
+      <div class="d-flex flex-column align-items-center justify-content-center" id="loading-container">
+        <img class="img-fluid" src="img/genea-azul-logo.png?v1" alt="Genea Azul logo" />
+
+        <div class="invisible small mt-5" id="spinner-container">
+          <div class="spinner-border spinner-border-sm" role="status"></div>
+          Iniciando el buscador, esper&aacute; unos segundos...
         </div>
-        <div class="h5 m-0 d-xl-none">
-          Buscador de personas
+
+        <div class="d-none small mt-5 ps-3 pe-3" id="vacations-container">
+          <p>Nos tomamos vacaciones <i class="bi bi-suitcase2"></i> y apagamos el servidor <i class="bi bi-server"></i>.</p>
+          <p>La p&aacute;gina volver&aacute; a estar disponible a mediados de abril.</p>
+          <p>Ponete en contacto para solicitar acceso al &aacute;rbol en <b>MyHeritage</b>:</p>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+              <a class="link-secondary text-decoration-none" href="https://instagram.com/_u/genea.azul">
+                <i class="bi bi-instagram"></i>
+              </a>
+              <a class="link-secondary" href="https://instagram.com/_u/genea.azul">
+                genea.azul
+              </a>
+            </li>
+            <li class="list-group-item">
+              <a class="link-secondary text-decoration-none" href="https://facebook.com/genea.azul">
+                <i class="bi bi-facebook"></i>
+              </a>
+              <a class="link-secondary" href="https://facebook.com/genea.azul">
+                genea.azul
+              </a>
+            </li>
+            <li class="list-group-item">
+              <a class="link-secondary text-decoration-none" href="mailto:genea.azul@gmail.com">
+                <i class="bi bi-envelope"></i>
+              </a>
+              <a class="link-secondary" href="mailto:genea.azul@gmail.com">
+                genea.azul@gmail.com
+              </a>
+            </li>
+          </ul>
         </div>
-        <div class="small">
-          Personas en el &aacute;rbol:
-          <span id="persons-count-container">
+      </div>
+      <!-- Loading container end -->
+
+      <!-- Search container start -->
+      <div class="d-none" id="search-container">
+        <div class="text-center">
+          <div class="h3 m-0">
+            Buscador de personas
+          </div>
+          <div class="small">
+            Personas en el &aacute;rbol:
+            <span id="persons-count-container">
               <span class="spinner-border spinner-border-sm" role="status"></span>
             </span>
-        </div>
-      </div>
-
-      <div class="small my-3">Todos los campos son opcionales, para obtener un mejor resultado complet&aacute; la mayor cantidad de datos posibles.</div>
-
-      <div class="row mb-3">
-        <div class="col-xl-auto">
-          <div class="card border-dark mb-2" id="individualCard">
-            <div class="card-header text-bg-dark">
-              <i class="card-header-icon float-end"></i>
-              Persona principal
-            </div>
-            <div class="card-body">
-              <span class="small text-secondary d-none">Sexo:</span>
-              <div class="btn-group btn-group-sm d-none" role="group" aria-label="Sexo">
-                <input type="radio" class="btn-check" name="individualSex" id="individualSexF" value="F" autocomplete="off" />
-                <label class="btn btn-outline-danger" for="individualSexF">Mujer</label>
-                <input type="radio" class="btn-check" name="individualSex" id="individualSexM" value="M" autocomplete="off" />
-                <label class="btn btn-outline-secondary" for="individualSexM">Hombre</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="text" class="form-control" id="individualGivenName" maxlength="60" />
-                <label for="individualGivenName">Nombre</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="text" class="form-control" id="individualSurname" maxlength="60" />
-                <label for="individualSurname">Apellido</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="number" class="form-control" id="individualYearOfBirth" max="2050" />
-                <label for="individualYearOfBirth">A&ntilde;o de nacimiento</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="text" class="form-control" id="individualPlaceOfBirth" maxlength="80" />
-                <label for="individualPlaceOfBirth">Lugar de nacimiento</label>
-              </div>
-              <div class="form-check mt-1">
-                <input class="form-check-input" type="checkbox" id="individualIsAlive" checked="checked" />
-                <label class="form-check-label" for="individualIsAlive">Vive</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="number" class="form-control" id="individualYearOfDeath" max="2050" disabled="disabled" />
-                <label for="individualYearOfDeath">A&ntilde;o de fallecimiento</label>
-              </div>
-            </div>
           </div>
         </div>
-        <div class="col-xl-auto">
-          <div class="card border-dark mb-2" id="spouseCard">
-            <div class="card-header text-bg-dark">
-              <i class="card-header-icon float-end"></i>
-              Pareja
-            </div>
-            <div class="card-body">
-              <div class="alert alert-light mb-0" role="alert" id="spouseContainerShowBtnContainer">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="spouseContainerShowBtn" />
-                  <label class="form-check-label text-break card-label-max-width d-none d-xl-block" for="spouseContainerShowBtn">Agregar informaci&oacute;n de pareja</label>
-                  <label class="form-check-label text-break d-xl-none" for="spouseContainerShowBtn">Agregar informaci&oacute;n de pareja</label>
-                </div>
+
+        <div class="small my-3">Todos los campos son opcionales, para obtener un mejor resultado complet&aacute; la mayor cantidad de datos posibles.</div>
+
+        <div class="row mb-3">
+          <div class="col-xl-auto">
+            <div class="card border-dark mb-2" id="individualCard">
+              <div class="card-header text-bg-dark">
+                <i class="card-header-icon float-end"></i>
+                Persona principal
               </div>
-              <div class="d-none" id="spouseContainer">
+              <div class="card-body">
                 <span class="small text-secondary d-none">Sexo:</span>
                 <div class="btn-group btn-group-sm d-none" role="group" aria-label="Sexo">
-                  <input type="radio" class="btn-check" name="spouseSex" id="spouseSexF" value="F" autocomplete="off" />
-                  <label class="btn btn-outline-danger" for="spouseSexF">Mujer</label>
-                  <input type="radio" class="btn-check" name="spouseSex" id="spouseSexM" value="M" autocomplete="off" />
-                  <label class="btn btn-outline-secondary" for="spouseSexM">Hombre</label>
+                  <input type="radio" class="btn-check" name="individualSex" id="individualSexF" value="F" autocomplete="off" />
+                  <label class="btn btn-outline-danger" for="individualSexF">Mujer</label>
+                  <input type="radio" class="btn-check" name="individualSex" id="individualSexM" value="M" autocomplete="off" />
+                  <label class="btn btn-outline-secondary" for="individualSexM">Hombre</label>
                 </div>
                 <div class="form-floating mt-1">
-                  <input type="text" class="form-control" id="spouseGivenName" maxlength="60" />
-                  <label for="spouseGivenName">Nombre</label>
+                  <input type="text" class="form-control" id="individualGivenName" maxlength="60" />
+                  <label for="individualGivenName">Nombre</label>
                 </div>
                 <div class="form-floating mt-1">
-                  <input type="text" class="form-control" id="spouseSurname" maxlength="60" />
-                  <label for="spouseSurname">Apellido</label>
+                  <input type="text" class="form-control" id="individualSurname" maxlength="60" />
+                  <label for="individualSurname">Apellido</label>
                 </div>
                 <div class="form-floating mt-1">
-                  <input type="number" class="form-control" id="spouseYearOfBirth" max="2050" />
-                  <label for="spouseYearOfBirth">A&ntilde;o de nacimiento</label>
+                  <input type="number" class="form-control" id="individualYearOfBirth" max="2050" />
+                  <label for="individualYearOfBirth">A&ntilde;o de nacimiento</label>
                 </div>
                 <div class="form-floating mt-1">
-                  <input type="text" class="form-control" id="spousePlaceOfBirth" maxlength="80" />
-                  <label for="spousePlaceOfBirth">Lugar de nacimiento</label>
+                  <input type="text" class="form-control" id="individualPlaceOfBirth" maxlength="80" />
+                  <label for="individualPlaceOfBirth">Lugar de nacimiento</label>
                 </div>
                 <div class="form-check mt-1">
-                  <input class="form-check-input" type="checkbox" id="spouseIsAlive" checked="checked" />
-                  <label class="form-check-label" for="spouseIsAlive">Vive</label>
+                  <input class="form-check-input" type="checkbox" id="individualIsAlive" checked="checked" />
+                  <label class="form-check-label" for="individualIsAlive">Vive</label>
                 </div>
                 <div class="form-floating mt-1">
-                  <input type="number" class="form-control" id="spouseYearOfDeath" max="2050" disabled="disabled" />
-                  <label for="spouseYearOfDeath">A&ntilde;o de fallecimiento</label>
+                  <input type="number" class="form-control" id="individualYearOfDeath" max="2050" disabled="disabled" />
+                  <label for="individualYearOfDeath">A&ntilde;o de fallecimiento</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-auto">
+            <div class="card border-dark mb-2" id="spouseCard">
+              <div class="card-header text-bg-dark">
+                <i class="card-header-icon float-end"></i>
+                Pareja
+              </div>
+              <div class="card-body">
+                <div class="alert alert-light mb-0" role="alert" id="spouseContainerShowBtnContainer">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="spouseContainerShowBtn" />
+                    <label class="form-check-label text-break card-label-max-width d-none d-xl-block" for="spouseContainerShowBtn">Agregar informaci&oacute;n de pareja</label>
+                    <label class="form-check-label text-break d-xl-none" for="spouseContainerShowBtn">Agregar informaci&oacute;n de pareja</label>
+                  </div>
+                </div>
+                <div class="d-none" id="spouseContainer">
+                  <span class="small text-secondary d-none">Sexo:</span>
+                  <div class="btn-group btn-group-sm d-none" role="group" aria-label="Sexo">
+                    <input type="radio" class="btn-check" name="spouseSex" id="spouseSexF" value="F" autocomplete="off" />
+                    <label class="btn btn-outline-danger" for="spouseSexF">Mujer</label>
+                    <input type="radio" class="btn-check" name="spouseSex" id="spouseSexM" value="M" autocomplete="off" />
+                    <label class="btn btn-outline-secondary" for="spouseSexM">Hombre</label>
+                  </div>
+                  <div class="form-floating mt-1">
+                    <input type="text" class="form-control" id="spouseGivenName" maxlength="60" />
+                    <label for="spouseGivenName">Nombre</label>
+                  </div>
+                  <div class="form-floating mt-1">
+                    <input type="text" class="form-control" id="spouseSurname" maxlength="60" />
+                    <label for="spouseSurname">Apellido</label>
+                  </div>
+                  <div class="form-floating mt-1">
+                    <input type="number" class="form-control" id="spouseYearOfBirth" max="2050" />
+                    <label for="spouseYearOfBirth">A&ntilde;o de nacimiento</label>
+                  </div>
+                  <div class="form-floating mt-1">
+                    <input type="text" class="form-control" id="spousePlaceOfBirth" maxlength="80" />
+                    <label for="spousePlaceOfBirth">Lugar de nacimiento</label>
+                  </div>
+                  <div class="form-check mt-1">
+                    <input class="form-check-input" type="checkbox" id="spouseIsAlive" checked="checked" />
+                    <label class="form-check-label" for="spouseIsAlive">Vive</label>
+                  </div>
+                  <div class="form-floating mt-1">
+                    <input type="number" class="form-control" id="spouseYearOfDeath" max="2050" disabled="disabled" />
+                    <label for="spouseYearOfDeath">A&ntilde;o de fallecimiento</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-auto">
+            <div class="card border-secondary mb-2">
+              <div class="card-header text-bg-secondary">Padre</div>
+              <div class="card-body">
+                <div class="form-floating">
+                  <input type="text" class="form-control" id="fatherGivenName" maxlength="60" />
+                  <label for="fatherGivenName">Nombre</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="text" class="form-control" id="fatherSurname" maxlength="60" />
+                  <label for="fatherSurname">Apellido</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="number" class="form-control" id="fatherYearOfBirth" max="2050" />
+                  <label for="fatherYearOfBirth">A&ntilde;o de nacimiento</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="text" class="form-control" id="fatherPlaceOfBirth" maxlength="80" />
+                  <label for="fatherPlaceOfBirth">Lugar de nacimiento</label>
+                </div>
+                <div class="form-check mt-1">
+                  <input class="form-check-input" type="checkbox" id="fatherIsAlive" checked="checked" />
+                  <label class="form-check-label" for="fatherIsAlive">Vive</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="number" class="form-control" id="fatherYearOfDeath" max="2050" disabled="disabled" />
+                  <label for="fatherYearOfDeath">A&ntilde;o de fallecimiento</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-auto">
+            <div class="card border-danger mb-2">
+              <div class="card-header text-bg-danger">Madre</div>
+              <div class="card-body">
+                <div class="form-floating">
+                  <input type="text" class="form-control" id="motherGivenName" maxlength="60" />
+                  <label for="motherGivenName">Nombre</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="text" class="form-control" id="motherSurname" maxlength="60" />
+                  <label for="motherSurname">Apellido</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="number" class="form-control" id="motherYearOfBirth" max="2050" />
+                  <label for="motherYearOfBirth">A&ntilde;o de nacimiento</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="text" class="form-control" id="motherPlaceOfBirth" maxlength="80" />
+                  <label for="motherPlaceOfBirth">Lugar de nacimiento</label>
+                </div>
+                <div class="form-check mt-1">
+                  <input class="form-check-input" type="checkbox" id="motherIsAlive" checked="checked" />
+                  <label class="form-check-label" for="motherIsAlive">Vive</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="number" class="form-control" id="motherYearOfDeath" max="2050" disabled="disabled" />
+                  <label for="motherYearOfDeath">A&ntilde;o de fallecimiento</label>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="col-xl-auto">
-          <div class="card border-secondary mb-2">
-            <div class="card-header text-bg-secondary">Padre</div>
-            <div class="card-body">
-              <div class="form-floating">
-                <input type="text" class="form-control" id="fatherGivenName" maxlength="60" />
-                <label for="fatherGivenName">Nombre</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="text" class="form-control" id="fatherSurname" maxlength="60" />
-                <label for="fatherSurname">Apellido</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="number" class="form-control" id="fatherYearOfBirth" max="2050" />
-                <label for="fatherYearOfBirth">A&ntilde;o de nacimiento</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="text" class="form-control" id="fatherPlaceOfBirth" maxlength="80" />
-                <label for="fatherPlaceOfBirth">Lugar de nacimiento</label>
-              </div>
-              <div class="form-check mt-1">
-                <input class="form-check-input" type="checkbox" id="fatherIsAlive" checked="checked" />
-                <label class="form-check-label" for="fatherIsAlive">Vive</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="number" class="form-control" id="fatherYearOfDeath" max="2050" disabled="disabled" />
-                <label for="fatherYearOfDeath">A&ntilde;o de fallecimiento</label>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-xl-auto">
-          <div class="card border-danger mb-2">
-            <div class="card-header text-bg-danger">Madre</div>
-            <div class="card-body">
-              <div class="form-floating">
-                <input type="text" class="form-control" id="motherGivenName" maxlength="60" />
-                <label for="motherGivenName">Nombre</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="text" class="form-control" id="motherSurname" maxlength="60" />
-                <label for="motherSurname">Apellido</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="number" class="form-control" id="motherYearOfBirth" max="2050" />
-                <label for="motherYearOfBirth">A&ntilde;o de nacimiento</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="text" class="form-control" id="motherPlaceOfBirth" maxlength="80" />
-                <label for="motherPlaceOfBirth">Lugar de nacimiento</label>
-              </div>
-              <div class="form-check mt-1">
-                <input class="form-check-input" type="checkbox" id="motherIsAlive" checked="checked" />
-                <label class="form-check-label" for="motherIsAlive">Vive</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="number" class="form-control" id="motherYearOfDeath" max="2050" disabled="disabled" />
-                <label for="motherYearOfDeath">A&ntilde;o de fallecimiento</label>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <div class="row mb-3" id="grandparentsContainerShowBtnContainer">
-        <div class="col-xl-auto">
-          <div class="card border-dark mb-2">
-            <div class="card-header text-bg-dark">Abuelos/as</div>
-            <div class="card-body">
-              <div class="alert alert-light mb-0" role="alert">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="grandparentsContainerShowBtn" />
-                  <label class="form-check-label" for="grandparentsContainerShowBtn">Agregar informaci&oacute;n de abuelos/as</label>
+        <div class="row mb-3" id="grandparentsContainerShowBtnContainer">
+          <div class="col-xl-auto">
+            <div class="card border-dark mb-2">
+              <div class="card-header text-bg-dark">Abuelos/as</div>
+              <div class="card-body">
+                <div class="alert alert-light mb-0" role="alert">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="grandparentsContainerShowBtn" />
+                    <label class="form-check-label" for="grandparentsContainerShowBtn">Agregar informaci&oacute;n de abuelos/as</label>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="row mb-3 d-none" id="grandparentsContainer">
-        <div class="col-xl-auto">
-          <div class="card border-secondary mb-2">
-            <div class="card-header text-bg-secondary">Abuelo paterno</div>
-            <div class="card-body">
-              <div class="form-floating">
-                <input type="text" class="form-control" id="paternalGrandfatherGivenName" maxlength="60" />
-                <label for="paternalGrandfatherGivenName">Nombre</label>
+        <div class="row mb-3 d-none" id="grandparentsContainer">
+          <div class="col-xl-auto">
+            <div class="card border-secondary mb-2">
+              <div class="card-header text-bg-secondary">Abuelo paterno</div>
+              <div class="card-body">
+                <div class="form-floating">
+                  <input type="text" class="form-control" id="paternalGrandfatherGivenName" maxlength="60" />
+                  <label for="paternalGrandfatherGivenName">Nombre</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="text" class="form-control" id="paternalGrandfatherSurname" maxlength="60" />
+                  <label for="paternalGrandfatherSurname">Apellido</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="number" class="form-control" id="paternalGrandfatherYearOfBirth" max="2050" />
+                  <label for="paternalGrandfatherYearOfBirth">A&ntilde;o de nacimiento</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="text" class="form-control" id="paternalGrandfatherPlaceOfBirth" maxlength="80" />
+                  <label for="paternalGrandfatherPlaceOfBirth">Lugar de nacimiento</label>
+                </div>
+                <div class="form-check mt-1">
+                  <input class="form-check-input" type="checkbox" id="paternalGrandfatherIsAlive" checked="checked" />
+                  <label class="form-check-label" for="paternalGrandfatherIsAlive">Vive</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="number" class="form-control" id="paternalGrandfatherYearOfDeath" max="2050" disabled="disabled" />
+                  <label for="paternalGrandfatherYearOfDeath">A&ntilde;o de fallecimiento</label>
+                </div>
               </div>
-              <div class="form-floating mt-1">
-                <input type="text" class="form-control" id="paternalGrandfatherSurname" maxlength="60" />
-                <label for="paternalGrandfatherSurname">Apellido</label>
+            </div>
+          </div>
+          <div class="col-xl-auto">
+            <div class="card border-danger mb-2">
+              <div class="card-header text-bg-danger">Abuela paterna</div>
+              <div class="card-body">
+                <div class="form-floating">
+                  <input type="text" class="form-control" id="paternalGrandmotherGivenName" maxlength="60" />
+                  <label for="paternalGrandmotherGivenName">Nombre</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="text" class="form-control" id="paternalGrandmotherSurname" maxlength="60" />
+                  <label for="paternalGrandmotherSurname">Apellido</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="number" class="form-control" id="paternalGrandmotherYearOfBirth" max="2050" />
+                  <label for="paternalGrandmotherYearOfBirth">A&ntilde;o de nacimiento</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="text" class="form-control" id="paternalGrandmotherPlaceOfBirth" maxlength="80" />
+                  <label for="paternalGrandmotherPlaceOfBirth">Lugar de nacimiento</label>
+                </div>
+                <div class="form-check mt-1">
+                  <input class="form-check-input" type="checkbox" id="paternalGrandmotherIsAlive" checked="checked" />
+                  <label class="form-check-label" for="paternalGrandmotherIsAlive">Vive</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="number" class="form-control" id="paternalGrandmotherYearOfDeath" max="2050" disabled="disabled" />
+                  <label for="paternalGrandmotherYearOfDeath">A&ntilde;o de fallecimiento</label>
+                </div>
               </div>
-              <div class="form-floating mt-1">
-                <input type="number" class="form-control" id="paternalGrandfatherYearOfBirth" max="2050" />
-                <label for="paternalGrandfatherYearOfBirth">A&ntilde;o de nacimiento</label>
+            </div>
+          </div>
+          <div class="col-xl-auto">
+            <div class="card border-secondary mb-2">
+              <div class="card-header text-bg-secondary">Abuelo materno</div>
+              <div class="card-body">
+                <div class="form-floating">
+                  <input type="text" class="form-control" id="maternalGrandfatherGivenName" maxlength="60" />
+                  <label for="maternalGrandfatherGivenName">Nombre</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="text" class="form-control" id="maternalGrandfatherSurname" maxlength="60" />
+                  <label for="maternalGrandfatherSurname">Apellido</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="number" class="form-control" id="maternalGrandfatherYearOfBirth" max="2050" />
+                  <label for="maternalGrandfatherYearOfBirth">A&ntilde;o de nacimiento</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="text" class="form-control" id="maternalGrandfatherPlaceOfBirth" maxlength="80" />
+                  <label for="maternalGrandfatherPlaceOfBirth">Lugar de nacimiento</label>
+                </div>
+                <div class="form-check mt-1">
+                  <input class="form-check-input" type="checkbox" id="maternalGrandfatherIsAlive" checked="checked" />
+                  <label class="form-check-label" for="maternalGrandfatherIsAlive">Vive</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="number" class="form-control" id="maternalGrandfatherYearOfDeath" max="2050" disabled="disabled" />
+                  <label for="maternalGrandfatherYearOfDeath">A&ntilde;o de fallecimiento</label>
+                </div>
               </div>
-              <div class="form-floating mt-1">
-                <input type="text" class="form-control" id="paternalGrandfatherPlaceOfBirth" maxlength="80" />
-                <label for="paternalGrandfatherPlaceOfBirth">Lugar de nacimiento</label>
-              </div>
-              <div class="form-check mt-1">
-                <input class="form-check-input" type="checkbox" id="paternalGrandfatherIsAlive" checked="checked" />
-                <label class="form-check-label" for="paternalGrandfatherIsAlive">Vive</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="number" class="form-control" id="paternalGrandfatherYearOfDeath" max="2050" disabled="disabled" />
-                <label for="paternalGrandfatherYearOfDeath">A&ntilde;o de fallecimiento</label>
+            </div>
+          </div>
+          <div class="col-xl-auto">
+            <div class="card border-danger mb-2">
+              <div class="card-header text-bg-danger">Abuela materna</div>
+              <div class="card-body">
+                <div class="form-floating">
+                  <input type="text" class="form-control" id="maternalGrandmotherGivenName" maxlength="60" />
+                  <label for="maternalGrandmotherGivenName">Nombre</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="text" class="form-control" id="maternalGrandmotherSurname" maxlength="60" />
+                  <label for="maternalGrandmotherSurname">Apellido</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="number" class="form-control" id="maternalGrandmotherYearOfBirth" max="2050" />
+                  <label for="maternalGrandmotherYearOfBirth">A&ntilde;o de nacimiento</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="text" class="form-control" id="maternalGrandmotherPlaceOfBirth" maxlength="80" />
+                  <label for="maternalGrandmotherPlaceOfBirth">Lugar de nacimiento</label>
+                </div>
+                <div class="form-check mt-1">
+                  <input class="form-check-input" type="checkbox" id="maternalGrandmotherIsAlive" checked="checked" />
+                  <label class="form-check-label" for="maternalGrandmotherIsAlive">Vive</label>
+                </div>
+                <div class="form-floating mt-1">
+                  <input type="number" class="form-control" id="maternalGrandmotherYearOfDeath" max="2050" disabled="disabled" />
+                  <label for="maternalGrandmotherYearOfDeath">A&ntilde;o de fallecimiento</label>
+                </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="col-xl-auto">
-          <div class="card border-danger mb-2">
-            <div class="card-header text-bg-danger">Abuela paterna</div>
-            <div class="card-body">
-              <div class="form-floating">
-                <input type="text" class="form-control" id="paternalGrandmotherGivenName" maxlength="60" />
-                <label for="paternalGrandmotherGivenName">Nombre</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="text" class="form-control" id="paternalGrandmotherSurname" maxlength="60" />
-                <label for="paternalGrandmotherSurname">Apellido</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="number" class="form-control" id="paternalGrandmotherYearOfBirth" max="2050" />
-                <label for="paternalGrandmotherYearOfBirth">A&ntilde;o de nacimiento</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="text" class="form-control" id="paternalGrandmotherPlaceOfBirth" maxlength="80" />
-                <label for="paternalGrandmotherPlaceOfBirth">Lugar de nacimiento</label>
-              </div>
-              <div class="form-check mt-1">
-                <input class="form-check-input" type="checkbox" id="paternalGrandmotherIsAlive" checked="checked" />
-                <label class="form-check-label" for="paternalGrandmotherIsAlive">Vive</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="number" class="form-control" id="paternalGrandmotherYearOfDeath" max="2050" disabled="disabled" />
-                <label for="paternalGrandmotherYearOfDeath">A&ntilde;o de fallecimiento</label>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-xl-auto">
-          <div class="card border-secondary mb-2">
-            <div class="card-header text-bg-secondary">Abuelo materno</div>
-            <div class="card-body">
-              <div class="form-floating">
-                <input type="text" class="form-control" id="maternalGrandfatherGivenName" maxlength="60" />
-                <label for="maternalGrandfatherGivenName">Nombre</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="text" class="form-control" id="maternalGrandfatherSurname" maxlength="60" />
-                <label for="maternalGrandfatherSurname">Apellido</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="number" class="form-control" id="maternalGrandfatherYearOfBirth" max="2050" />
-                <label for="maternalGrandfatherYearOfBirth">A&ntilde;o de nacimiento</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="text" class="form-control" id="maternalGrandfatherPlaceOfBirth" maxlength="80" />
-                <label for="maternalGrandfatherPlaceOfBirth">Lugar de nacimiento</label>
-              </div>
-              <div class="form-check mt-1">
-                <input class="form-check-input" type="checkbox" id="maternalGrandfatherIsAlive" checked="checked" />
-                <label class="form-check-label" for="maternalGrandfatherIsAlive">Vive</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="number" class="form-control" id="maternalGrandfatherYearOfDeath" max="2050" disabled="disabled" />
-                <label for="maternalGrandfatherYearOfDeath">A&ntilde;o de fallecimiento</label>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-xl-auto">
-          <div class="card border-danger mb-2">
-            <div class="card-header text-bg-danger">Abuela materna</div>
-            <div class="card-body">
-              <div class="form-floating">
-                <input type="text" class="form-control" id="maternalGrandmotherGivenName" maxlength="60" />
-                <label for="maternalGrandmotherGivenName">Nombre</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="text" class="form-control" id="maternalGrandmotherSurname" maxlength="60" />
-                <label for="maternalGrandmotherSurname">Apellido</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="number" class="form-control" id="maternalGrandmotherYearOfBirth" max="2050" />
-                <label for="maternalGrandmotherYearOfBirth">A&ntilde;o de nacimiento</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="text" class="form-control" id="maternalGrandmotherPlaceOfBirth" maxlength="80" />
-                <label for="maternalGrandmotherPlaceOfBirth">Lugar de nacimiento</label>
-              </div>
-              <div class="form-check mt-1">
-                <input class="form-check-input" type="checkbox" id="maternalGrandmotherIsAlive" checked="checked" />
-                <label class="form-check-label" for="maternalGrandmotherIsAlive">Vive</label>
-              </div>
-              <div class="form-floating mt-1">
-                <input type="number" class="form-control" id="maternalGrandmotherYearOfDeath" max="2050" disabled="disabled" />
-                <label for="maternalGrandmotherYearOfDeath">A&ntilde;o de fallecimiento</label>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <div class="row mb-3">
-        <div class="col-xl-auto col-xxl-auto"></div>
-        <div class="col-xl-5 col-xxl-4">
-          <div class="small mb-3 text-center">
-            Dejanos tu <b>email</b>, <b>Whatsapp</b> o <b>Instagram</b> y nos pondremos en contacto en caso de encontrar personas relacionadas a tu b&uacute;squeda en un futuro.
-          </div>
-          <div class="row justify-content-center align-items-center">
-            <div class="col-auto mb-3">
-              <div class="form-floating">
-                <input type="text" class="form-control" id="individualContact" size="24" />
-                <label for="individualContact">Email, Whatsapp o Instagram</label>
+        <div class="row mb-3">
+          <div class="col-xl-auto col-xxl-auto"></div>
+          <div class="col-xl-5 col-xxl-4">
+            <div class="small mb-3 text-center">
+              Dejanos tu <b>email</b>, <b>Whatsapp</b> o <b>Instagram</b> y nos pondremos en contacto en caso de encontrar personas relacionadas a tu b&uacute;squeda en un futuro.
+            </div>
+            <div class="row justify-content-center align-items-center">
+              <div class="col-auto mb-3">
+                <div class="form-floating">
+                  <input type="text" class="form-control" id="individualContact" size="24" />
+                  <label for="individualContact">Email, Whatsapp o Instagram</label>
+                </div>
+              </div>
+              <div class="col-auto mb-3">
+                <button type="button" class="btn btn-dark" id="searchBtn">Buscar</button>
               </div>
             </div>
-            <div class="col-auto mb-3">
-              <button type="button" class="btn btn-dark" id="searchBtn">Buscar</button>
-            </div>
           </div>
-        </div>
-        <div class="col-xl-5 col-xxl-4">
-          <div class="card border-dark" id="searchResultCard">
-            <div class="card-header text-bg-dark">
-              <div>Resultado de la b&uacute;squeda</div>
-              <div id="obfuscated-info" class="small">
-                Los datos de personas vivas <b>ser&aacute;n ocultados</b>
+          <div class="col-xl-5 col-xxl-4">
+            <div class="card border-dark" id="searchResultCard">
+              <div class="card-header text-bg-dark">
+                <div>Resultado de la b&uacute;squeda</div>
+                <div id="obfuscated-info" class="small">
+                  Los datos de personas vivas <b>ser&aacute;n ocultados</b>
+                </div>
               </div>
+              <div class="card-body overflow-auto"></div>
             </div>
-            <div class="card-body overflow-auto"></div>
           </div>
         </div>
       </div>
+      <!-- Search container end -->
     </div>
+    <!-- Search tab end -->
 
+    <!-- Stats tab start -->
     <div class="tab-pane container fade p-0" id="stats-tab">
       <div class="text-center">
-        <div class="h3 m-0 d-none d-xl-block">
-          Estad&iacute;sticas del &aacute;rbol de Azul
-        </div>
-        <div class="h5 m-0 d-xl-none">
+        <div class="h3 m-0">
           Estad&iacute;sticas del &aacute;rbol de Azul
         </div>
         <div class="small">
@@ -501,7 +540,7 @@
         <dt class="col-7 col-sm-6 px-2 text-end fw-semibold">Personas desaparecidas:</dt>
         <dd class="col-5 col-sm-6 px-2 mb-0">26</dd>
         <dt class="col-7 col-sm-6 px-2 text-end fw-semibold">Personalidades destacadas:</dt>
-        <dd class="col-5 col-sm-6 px-2 mb-0">208</dd>
+        <dd class="col-5 col-sm-6 px-2 mb-0">211</dd>
         <dt class="col-7 col-sm-6 px-2 text-end fw-semibold">Cantidad de pa&iacute;ses:</dt>
         <dd class="col-5 col-sm-6 px-2 mb-0">50</dd>
         <dt class="col-7 col-sm-6 px-2 text-end fw-semibold">Apellidos azule&ntilde;os:</dt>
@@ -561,7 +600,7 @@
         <div class="accordion-item">
           <h2 class="accordion-header" id="flush-headingTwo">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseTwo" aria-expanded="false" aria-controls="flush-collapseTwo">
-              <span class="fw-semibold">Personalidades destacadas</span> <span class="ms-1 small text-secondary">(208)</span>
+              <span class="fw-semibold">Personalidades destacadas</span> <span class="ms-1 small text-secondary">(211)</span>
             </button>
           </h2>
           <div id="flush-collapseTwo" class="accordion-collapse collapse" aria-labelledby="flush-headingTwo" data-bs-parent="#statistics-accordion">
@@ -609,6 +648,7 @@
                 <li><span>Esteban Jos&eacute;</span> <span class="fw-semibold">Bullrich</span></li>
                 <li><span>Patricia</span> <span class="fw-semibold">Bullrich</span></li>
                 <li><span class="text-secondary">Jz. Pz. Cnel.</span> <span>Pedro</span> <span class="fw-semibold">Burgos</span></li>
+                <li><span class="text-secondary">Ctan.</span> <span>Bartolom&eacute;</span> <span class="fw-semibold">Bustos</span></li>
                 <li><span class="text-secondary">Alfz. Real Stte.</span> <span>Jos&eacute; Antonio</span> <span class="fw-semibold">Capdevila</span></li>
                 <li><span class="text-secondary">Jz. Pz. Ctan.</span> <span>Manuel</span> <span class="fw-semibold">Capdevila</span></li>
                 <li><span class="text-secondary">Com. Mun.</span> <span>Silverio</span> <span class="fw-semibold">Carbone</span></li>
@@ -624,7 +664,7 @@
                 <li><span class="text-secondary">Cacique</span> <span>Marcelino</span> <span class="fw-semibold">Catriel</span></li>
                 <li><span class="text-secondary">Cnel. Dr.</span> <span>Feliciano Antonio</span> <span class="fw-semibold">Chiclana</span></li>
                 <li><span>Guillermo Ram&oacute;n</span> <span class="fst-italic">"Turco"</span> <span class="fw-semibold">Chiodi</span></li>
-                <li><span>Elma</span> <span class="fw-semibold">Cort&aacute;zar</span><span class="text-secondary">, de Layús</span></li>
+                <li><span>Elma</span> <span class="fw-semibold">Cort&aacute;zar</span><span class="text-secondary">, de Lay&uacute;s</span></li>
                 <li><span class="text-secondary">Cnel.</span> <span>Ambroise J&eacute;rome</span> <span class="fw-semibold">Cramer</span></li>
                 <li><span>Mar&iacute;a Araceli</span> <span class="fw-semibold">Cristeche</span><span class="text-secondary">, de Cauh&eacute;p&eacute;</span></li>
                 <li><span>Ernestina Francisca Mar&iacute;a</span> <span class="fw-semibold">Darhanp&eacute;</span></li>
@@ -660,7 +700,7 @@
                 <li><span>Mar&iacute;a de las Nieves Clara</span> <span class="fst-italic">"Santa"</span> <span class="fw-semibold">Gim&eacute;nez</span><span class="text-secondary">, de Ronco</span></li>
                 <li><span>Roberto An&iacute;bal</span> <span class="fw-semibold">Glorioso</span></li>
                 <li><span>Santo</span> <span class="fw-semibold">Glorioso</span></li>
-                <li><span>Mar&iacute;a Rosal&iacute;a</span> <span class="fw-semibold">G&oacute;mez</span></li>
+                <li><span>Mar&iacute;a Rosal&iacute;a</span> <span class="fw-semibold">G&oacute;mez</span><span class="text-secondary">, de Enciso</span></li>
                 <li><span class="text-secondary">Com. Mun. Cnel.</span> <span>Fortunato Carlos</span> <span class="fw-semibold">G&oacute;mez Romero</span></li>
                 <li><span>Francisco Vicente</span> <span class="fw-semibold">Gonz&aacute;lez Pereyra de Lucena</span></li>
                 <li><span>Elva Hayd&eacute;e</span> <span class="fw-semibold">Grat&aacute;s Abot</span></li>
@@ -729,12 +769,14 @@
                 <li><span>Juan</span> <span class="fw-semibold">Prat</span></li>
                 <li><span>Alfonso</span> <span class="fw-semibold">Prat Gay</span></li>
                 <li><span>Miguel &Aacute;ngel</span> <span class="fw-semibold">Prezioso</span></li>
+                <li><span class="text-secondary">Dr.</span> <span>Emilio Severino</span> <span class="fw-semibold">Puente</span></li>
                 <li><span>Honorio Cirilo</span> <span class="fw-semibold">Pueyrred&oacute;n</span></li>
                 <li><span class="text-secondary">Tte. Cnel.</span> <span>Jos&eacute; Cipriano Andr&eacute;s</span> <span class="fw-semibold">Pueyrred&oacute;n</span></li>
                 <li><span class="text-secondary">Brig. Gral.</span> <span>Juan Mart&iacute;n Mariano</span> <span class="fw-semibold">Pueyrred&oacute;n</span></li>
                 <li><span class="text-secondary">Cnel.</span> <span>Manuel Alejandro</span> <span class="fw-semibold">Pueyrred&oacute;n</span></li>
                 <li><span class="text-secondary">Com. Mun. Esc.</span> <span>Pedro Luis Gregorio</span> <span class="fw-semibold">Ram&iacute;rez Drake</span></li>
                 <li><span class="text-secondary">Bto.</span> <span>Jos&eacute;</span> <span class="fw-semibold">Rescalvo Ruiz</span><span class="text-secondary">, presb&iacute;tero y m&aacute;rtir</span></li>
+                <li><span>Carlos H&eacute;ctor</span> <span class="fst-italic">"Don Goyo"</span> <span class="fw-semibold">Retaco Piovi</span></li>
                 <li><span class="text-secondary">Com. Mun. Agr.</span> <span>Floriano Marcelino</span> <span class="fw-semibold">Rivi&egrave;re</span></li>
                 <li><span>Eduardo Facundo</span> <span class="fw-semibold">Rodr&iacute;guez</span></li>
                 <li><span class="text-secondary">Int. Mun. Dr.</span> <span>H&eacute;ctor Jos&eacute;</span> <span class="fw-semibold">Rodr&iacute;guez</span></li>
@@ -5086,27 +5128,877 @@
         </div>
       </div>
     </div>
+    <!-- Stats tab end -->
 
+    <!-- Families tab start -->
+    <div class="tab-pane container fade p-0" id="families-tab">
+      <div class="text-center">
+        <div class="h3 m-0">
+          Familias azule&ntilde;as
+        </div>
+        <div class="small">
+          se ir&aacute;n agregando paulatinamente al sitio
+        </div>
+      </div>
+
+      <div class="h5 mt-5 mb-2">Andrich</div>
+
+      <table class="table table-striped w-xs-200 smaller vertical-center">
+        <thead class="table-light">
+        <tr class="border-bottom border-dark border-1-5">
+          <th scope="col">Nombre</th>
+          <th scope="col">Fecha de nac.</th>
+          <th scope="col">Lugar de nac.</th>
+          <th scope="col">Fecha de def.</th>
+          <th scope="col">Lugar de def.</th>
+          <th scope="col">Pareja (hijos)</th>
+          <th scope="col">Padre y madre</th>
+        </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/GHPN-8LP" target="_blank" class="fw-semibold">
+                Antonio Carlos Jes&uacute;s Andrich
+              </a>
+            </td>
+            <td>1899</td>
+            <td>San Isidro</td>
+            <td>15/11/1986</td>
+            <td>Azul</td>
+            <td>
+              <p>Enriqueta Filomena Condomines (8)</p>
+            </td>
+            <td rowspan="1">
+              <p>Johann Andrich, 🇦🇹🇮🇹</p>
+              <p>Francisca Crua&ntilde;az, 🇪🇸</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="h5 mt-5 mb-2">Cachenaut</div>
+
+      <table class="table table-striped w-xs-200 smaller vertical-center">
+        <thead class="table-light">
+          <tr class="border-bottom border-dark border-1-5">
+            <th scope="col">Nombre</th>
+            <th scope="col">Fecha de nac.</th>
+            <th scope="col">Lugar de nac.</th>
+            <th scope="col">Fecha de def.</th>
+            <th scope="col">Lugar de def.</th>
+            <th scope="col">Pareja (hijos)</th>
+            <th scope="col">Padre y madre</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/L7MS-45S" target="_blank" class="fw-semibold">
+                Arnaud Cachenaut
+              </a>
+              <br/>(Arnaldo Cachenaut)
+            </td>
+            <td>13/07/1845</td>
+            <td>B&eacute;hasque-Lapiste, 🇫🇷</td>
+            <td>27/01/1893</td>
+            <td>Azul</td>
+            <td>
+              <p>Mar&iacute;a Iriburu (10)</p>
+            </td>
+            <td rowspan="1">
+              <p>Marie Quinthal dit Cachenaut</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="h5 mt-5 mb-2">Catriel</div>
+
+      <table class="table table-striped w-xs-200 smaller vertical-center">
+        <thead class="table-light">
+          <tr class="border-bottom border-dark border-1-5">
+            <th scope="col">Nombre</th>
+            <th scope="col">Fecha de nac.</th>
+            <th scope="col">Lugar de nac.</th>
+            <th scope="col">Fecha de def.</th>
+            <th scope="col">Lugar de def.</th>
+            <th scope="col">Pareja (hijos)</th>
+            <th scope="col">Padre y madre</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/LJG7-N9P" target="_blank" class="fw-semibold">
+                Cacique Juan Jos&eacute; Catriel
+              </a>
+            </td>
+            <td>aprox. 1830</td>
+            <td>pcia. de BA</td>
+            <td>16/11/1910</td>
+            <td>Olavarr&iacute;a</td>
+            <td>
+              <p>Sin pareja (1)</p>
+              <p>Juana Gallardo (2)</p>
+              <p>Mira L&oacute;pez (1)</p>
+            </td>
+            <td rowspan="5">
+              <p>Cacique Juan "El Joven" Catriel</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/KGLG-LDQ" target="_blank" class="fw-semibold">
+                Cacique Marcelino Catriel
+              </a>
+            </td>
+            <td>aprox. 1834</td>
+            <td>pcia. de BA</td>
+            <td>1916</td>
+            <td>Sierras Bayas</td>
+            <td>
+              <p>Sin pareja (1)</p>
+              <p>Ana Peralta (6)</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/LJG7-F16" target="_blank" class="fw-semibold">
+                Cacique Cipriano Catriel
+              </a>
+            </td>
+            <td>aprox. 1837</td>
+            <td>pcia. de BA</td>
+            <td>24/11/1874</td>
+            <td>Olavarr&iacute;a</td>
+            <td>
+              <p>Lorenza (1)</p>
+              <p>Eufemia (4)</p>
+              <p>Rafaela Burgos (1)</p>
+              <p>Bibiana Garc&iacute;a (1)</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/9DX1-FF9" target="_blank" class="fw-semibold">
+                Francisca Catriel
+              </a>
+            </td>
+            <td>aprox. 1839</td>
+            <td>Azul</td>
+            <td></td>
+            <td></td>
+            <td>
+              <p>Juan M&aacute;rmol (6)</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/LJG7-NWR" target="_blank" class="fw-semibold">
+                Marcelina Catriel
+              </a>
+            </td>
+            <td>aprox. 1844</td>
+            <td>Azul</td>
+            <td></td>
+            <td></td>
+            <td>
+              <p>Sin pareja (4)</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="mt-5 mb-2">
+        <span class="h5">Ciotta</span> <span class="fw-semibold text-secondary">(Siotta)</span>
+      </div>
+
+      <table class="table table-striped w-xs-200 smaller vertical-center">
+        <thead class="table-light">
+          <tr class="border-bottom border-dark border-1-5">
+            <th scope="col">Nombre</th>
+            <th scope="col">Fecha de nac.</th>
+            <th scope="col">Lugar de nac.</th>
+            <th scope="col">Fecha de def.</th>
+            <th scope="col">Lugar de def.</th>
+            <th scope="col">Pareja (hijos)</th>
+            <th scope="col">Padre y madre</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/GZYC-Z6T" target="_blank" class="fw-semibold">
+                Pietro Ciotta
+              </a>
+              <br/>(Pedro Ciotta)
+            </td>
+            <td>21/04/1893</td>
+            <td>Nicosia, 🇮🇹</td>
+            <td></td>
+            <td>Azul</td>
+            <td>
+              <p>Petrona Matta (3)</p>
+            </td>
+            <td rowspan="5">
+              <p>Natale Ciotta</p>
+              <p>Maria Spallina</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/GZYC-FP7" target="_blank" class="fw-semibold">
+                Cataldo Ciotta
+              </a>
+            </td>
+            <td>10/05/1895</td>
+            <td>Nicosia, 🇮🇹</td>
+            <td></td>
+            <td>Azul</td>
+            <td>
+              <p>María Teresa Tedesco (1)</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/GF44-7ZL" target="_blank" class="fw-semibold">
+                Salvatore Ciotta
+              </a>
+              <br/>(Salvador Ciotta)
+            </td>
+            <td>02/04/1897</td>
+            <td>Nicosia, 🇮🇹</td>
+            <td></td>
+            <td>Azul</td>
+            <td>
+              <p>Teodora Franco (1)</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/GZYC-VB8" target="_blank" class="fw-semibold">
+                Rosaria Ciotta
+              </a>
+              <br/>(Rosal&iacute;a Ciotta)
+            </td>
+            <td>02/02/1899</td>
+            <td>Nicosia, 🇮🇹</td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/GFKS-DVN" target="_blank" class="fw-semibold">
+                Jos&eacute; Ciotta
+              </a>
+            </td>
+            <td>26/07/1905</td>
+            <td>Azul</td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="h5 mt-5 mb-2">G&eacute;nova</div>
+
+      <table class="table table-striped w-xs-200 smaller vertical-center">
+        <thead class="table-light">
+        <tr class="border-bottom border-dark border-1-5">
+          <th scope="col">Nombre</th>
+          <th scope="col">Fecha de nac.</th>
+          <th scope="col">Lugar de nac.</th>
+          <th scope="col">Fecha de def.</th>
+          <th scope="col">Lugar de def.</th>
+          <th scope="col">Pareja (hijos)</th>
+          <th scope="col">Padre y madre</th>
+        </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/KGFT-W7N" target="_blank" class="fw-semibold">
+                Sldo. Jos&eacute; Basilio G&eacute;nova
+              </a>
+              <br/>(fundador de Azul)
+            </td>
+            <td>aprox. 1801</td>
+            <td>Ranchos</td>
+            <td>28/05/1858</td>
+            <td>Ranchos</td>
+            <td>
+              <p>Mar&iacute;a Hilaria Navas (6)</p>
+              <p>Rosa Mori&ntilde;o (2)</p>
+            </td>
+            <td rowspan="2">
+              <p>Manuel G&eacute;nova, 🇪🇸</p>
+              <p>Mar&iacute;a Francisca Duarte, 🇪🇸</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/KGFT-W7N" target="_blank" class="fw-semibold">
+                Sldo. Pascual G&eacute;nova
+              </a>
+              <br/>(fundador de Azul)
+            </td>
+            <td>aprox. 1818</td>
+            <td>Ranchos</td>
+            <td>aprox. 1870</td>
+            <td>Cachar&iacute;</td>
+            <td>
+              <p>Micaela de los Dolores Navas (14)</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="h5 mt-5 mb-2">Losardo</div>
+
+      <table class="table table-striped w-xs-200 smaller vertical-center">
+        <thead class="table-light">
+          <tr class="border-bottom border-dark border-1-5">
+            <th scope="col">Nombre</th>
+            <th scope="col">Fecha de nac.</th>
+            <th scope="col">Lugar de nac.</th>
+            <th scope="col">Fecha de def.</th>
+            <th scope="col">Lugar de def.</th>
+            <th scope="col">Pareja (hijos)</th>
+            <th scope="col">Padre y madre</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/KGRD-CFT" target="_blank" class="fw-semibold">
+                Giovanni Battista Losardo
+              </a>
+              <br/>(Juan Bautista Losardo)
+            </td>
+            <td>02/02/1851</td>
+            <td>Cetraro, 🇮🇹</td>
+            <td>1925</td>
+            <td>Azul</td>
+            <td>
+              <p>Maria Annunziata Bellusci (12)</p>
+            </td>
+            <td rowspan="2">
+              <p>Saverio Losardo</p>
+              <p>Marianna Scorzo</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/LT8Y-4VL" target="_blank" class="fw-semibold">
+                Luigi Losardo
+              </a>
+              <br/>(Luis Losardo)
+            </td>
+            <td>18/04/1858</td>
+            <td>Cetraro, 🇮🇹</td>
+            <td>28/02/1915</td>
+            <td>Azul</td>
+            <td>
+              <p>Maria Aristea Pucci</p>
+              <p>Maria Carmela Cesario (7)</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="h5 mt-5 mb-2">Marchisio</div>
+
+      <table class="table table-striped w-xs-200 smaller vertical-center">
+        <thead class="table-light">
+          <tr class="border-bottom border-dark border-1-5">
+            <th scope="col">Nombre</th>
+            <th scope="col">Fecha de nac.</th>
+            <th scope="col">Lugar de nac.</th>
+            <th scope="col">Fecha de def.</th>
+            <th scope="col">Lugar de def.</th>
+            <th scope="col">Pareja (hijos)</th>
+            <th scope="col">Padre y madre</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/LY96-XBN" target="_blank" class="fw-semibold">
+                Giuseppe Leopoldo Marchisio
+              </a>
+              <br/>(Jos&eacute; Leopoldo Marchisio)
+            </td>
+            <td>02/03/1872</td>
+            <td>Brozolo, 🇮🇹</td>
+            <td>12/04/1966</td>
+            <td>Azul</td>
+            <td>
+              <p>Mar&iacute;a Francisca Piazza (3)</p>
+            </td>
+            <td rowspan="1">
+              <p>Giacinto Marchisio</p>
+              <p>Paolina Schierano</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="h5 mt-5 mb-2">Navas</div>
+
+      <table class="table table-striped w-xs-200 smaller vertical-center">
+        <thead class="table-light">
+          <tr class="border-bottom border-dark border-1-5">
+            <th scope="col">Nombre</th>
+            <th scope="col">Fecha de nac.</th>
+            <th scope="col">Lugar de nac.</th>
+            <th scope="col">Fecha de def.</th>
+            <th scope="col">Lugar de def.</th>
+            <th scope="col">Pareja (hijos)</th>
+            <th scope="col">Padre y madre</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/KNLZ-DD1" target="_blank" class="fw-semibold">
+                Pedro Luis Navas
+              </a>
+            </td>
+            <td>15/09/1805</td>
+            <td>San Vicente</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td rowspan="8">
+              <p>Pedro Navas, 🇪🇸</p>
+              <p>Mar&iacute;a Ger&oacute;nima Medina Almir&oacute;n, 🇦🇷</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/KNLZ-DD1" target="_blank" class="fw-semibold">
+                Sldo. Nicol&aacute;s Navas
+              </a>
+              <br/>(fundador de Azul)
+            </td>
+            <td>aprox. 1807</td>
+            <td>Ranchos</td>
+            <td></td>
+            <td>Azul</td>
+            <td>
+              <p>Catalina Giles (9)</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/KJV7-XWT" target="_blank" class="fw-semibold">
+                Sldo. Andr&eacute;s Navas
+              </a>
+              <br/>(fundador de Azul)
+            </td>
+            <td>30/11/1811</td>
+            <td>Ranchos</td>
+            <td>08/10/1877</td>
+            <td>Azul</td>
+            <td>
+              <p>Mar&iacute;a Salom&eacute; Silva (9)</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/G738-JRT" target="_blank" class="fw-semibold">
+                Mar&iacute;a Hilaria Navas
+              </a>
+            </td>
+            <td>12/12/1813</td>
+            <td>Ranchos</td>
+            <td>30/09/1849</td>
+            <td>Azul</td>
+            <td>
+              <p>Sldo. Jos&eacute; Basilio G&eacute;nova (6)</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/9DK9-WR9" target="_blank" class="fw-semibold">
+                Encarnaci&oacute;n Navas
+              </a>
+            </td>
+            <td>aprox. 1815</td>
+            <td>Argentina</td>
+            <td>21/02/1894</td>
+            <td>Azul</td>
+            <td>
+              <p>Basilio V&aacute;zquez (8)</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/L4RQ-83N" target="_blank" class="fw-semibold">
+                Lucas Navas
+              </a>
+            </td>
+            <td>18/10/1816</td>
+            <td>San Miguel del Monte</td>
+            <td>08/01/1872</td>
+            <td>Azul</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/GCT1-8YP" target="_blank" class="fw-semibold">
+                Micaela de los Dolores Navas
+              </a>
+            </td>
+            <td>29/09/1823</td>
+            <td>Ranchos</td>
+            <td>12/12/1876</td>
+            <td>Azul</td>
+            <td>
+              <p>Sldo. Pascual G&eacute;nova (14)</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/G738-P6V" target="_blank" class="fw-semibold">
+                Gavino Navas
+              </a>
+            </td>
+            <td>25/10/1830</td>
+            <td>Chascom&uacute;s</td>
+            <td>25/10/1887</td>
+            <td>Azul</td>
+            <td>
+              <p>Jes&uacute;s Alderete (1)</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="h5 mt-5 mb-2">Piazza</div>
+
+      <table class="table table-striped w-xs-200 smaller vertical-center">
+        <thead class="table-light">
+          <tr class="border-bottom border-dark border-1-5">
+            <th scope="col">Nombre</th>
+            <th scope="col">Fecha de nac.</th>
+            <th scope="col">Lugar de nac.</th>
+            <th scope="col">Fecha de def.</th>
+            <th scope="col">Lugar de def.</th>
+            <th scope="col">Pareja (hijos)</th>
+            <th scope="col">Padre y madre</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/L7P4-ZX9" target="_blank" class="fw-semibold">
+                Lorenzo Piazza
+              </a>
+            </td>
+            <td>15/05/1853</td>
+            <td>Craveggia, 🇮🇹</td>
+            <td>19/02/1935</td>
+            <td>Azul</td>
+            <td>
+              <p>Rosa Caterina Motti (10)</p>
+            </td>
+            <td rowspan="8">
+              <p>Giuseppe Antonio Piazza</p>
+              <p>Maria Rizzo</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/27T2-QS3" target="_blank" class="fw-semibold">
+                Caterina Piazza
+              </a>
+              <br/>(Catalina Piazza)
+            </td>
+            <td>aprox. 1856</td>
+            <td>Craveggia, 🇮🇹</td>
+            <td>07/04/1892</td>
+            <td>Azul</td>
+            <td>
+              <p>Nicola Zezza (0)</p>
+              <p>Pietro Guglielmetti (2)</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/27T2-3PB" target="_blank" class="fw-semibold">
+                Francesco Piazza
+              </a>
+              <br/>(Francisco Piazza)
+            </td>
+            <td>aprox. 1858</td>
+            <td>Craveggia, 🇮🇹</td>
+            <td>1908</td>
+            <td>Azul</td>
+            <td>
+              <p>Gregoria &Aacute;lzaga (8)</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/KGNH-BCF" target="_blank" class="fw-semibold">
+                Remigio Piazza
+              </a>
+            </td>
+            <td>aprox. 1860</td>
+            <td>Craveggia, 🇮🇹</td>
+            <td></td>
+            <td>Azul</td>
+            <td>
+              <p>Honoria Lier (2)</p>
+              <p>Isabel Olmos (0)</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/KNRW-73T" target="_blank" class="fw-semibold">
+                Felice Emilio Piazza
+              </a>
+              <br/>(F&eacute;lix Emilio Piazza)
+            </td>
+            <td>aprox. 1862</td>
+            <td>Craveggia, 🇮🇹</td>
+            <td>21/01/1931</td>
+            <td>Azul</td>
+            <td>
+              <p>Mar&iacute;a Lafont dite Basque (6)</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/LJ2Q-VGN" target="_blank" class="fw-semibold">
+                Maria Piazza
+              </a>
+            </td>
+            <td>aprox. 1864</td>
+            <td>Craveggia, 🇮🇹</td>
+            <td></td>
+            <td>Azul</td>
+            <td>
+              <p>Antonio Fiscalini (7)</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/KN51-M9K" target="_blank" class="fw-semibold">
+                Antonia Piazza
+              </a>
+            </td>
+            <td>aprox. 1867</td>
+            <td>Craveggia, 🇮🇹</td>
+            <td></td>
+            <td></td>
+            <td>
+              <p>Giuseppe Antonietti (2)</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/LY98-2LZ" target="_blank" class="fw-semibold">
+                Pietro Luigi Piazza
+              </a>
+              <br/>(Pedro Luis Piazza)
+            </td>
+            <td>aprox. 1870</td>
+            <td>Craveggia, 🇮🇹</td>
+            <td>07/05/1955</td>
+            <td>Azul</td>
+            <td>
+              <p>Emilia Josefa Arbuc&oacute; (6)</p>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="7">
+              <hr class="my-2" />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/9N61-HQG" target="_blank" class="fw-semibold">
+                Giacomo Maria Piazza
+              </a>
+              <br/>(Santiago Mar&iacute;a Piazza)</td>
+            <td>aprox. 1849</td>
+            <td>Craveggia, 🇮🇹</td>
+            <td></td>
+            <td>Azul</td>
+            <td>
+              <p>Margherita Mattei (6)</p>
+            </td>
+            <td rowspan="4">
+              <p>Benedetto Piazza</p>
+              <p>Marta Maria Gandolfi</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/LDT7-M2H" target="_blank" class="fw-semibold">
+                Giovanni Giacomo Piazza
+              </a>
+              <br/>(Juan Santiago Piazza)
+            </td>
+            <td>aprox. 1851</td>
+            <td>Craveggia, 🇮🇹</td>
+            <td></td>
+            <td>Olavarr&iacute;a</td>
+            <td>
+              <p>Maria Luigia Corona (9)</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/LQY8-HNS" target="_blank" class="fw-semibold">
+                Felice Antonio Piazza
+              </a>
+              <br/>(F&eacute;lix Antonio Piazza)
+            </td>
+            <td>aprox. 1853</td>
+            <td>Craveggia, 🇮🇹</td>
+            <td></td>
+            <td></td>
+            <td>
+              <p>Angela Pirinoli (8)</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/KGNS-CLF" target="_blank" class="fw-semibold">
+                Costantino Piazza
+              </a>
+              <br/>(Constantino Piazza)
+            </td>
+            <td>aprox. 1862</td>
+            <td>Craveggia, 🇮🇹</td>
+            <td></td>
+            <td>Azul</td>
+            <td>
+              <p>Ernesta Tortonese (8)</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="mt-5 mb-2">
+        <span class="h5">Sagarna</span>
+      </div>
+
+      <table class="table table-striped w-xs-200 smaller vertical-center">
+        <thead class="table-light">
+          <tr class="border-bottom border-dark border-1-5">
+            <th scope="col">Nombre</th>
+            <th scope="col">Fecha de nac.</th>
+            <th scope="col">Lugar de nac.</th>
+            <th scope="col">Fecha de def.</th>
+            <th scope="col">Lugar de def.</th>
+            <th scope="col">Pareja (hijos)</th>
+            <th scope="col">Padre y madre</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/M5YF-JWM" target="_blank" class="fw-semibold">
+                Antonio Sagarna
+              </a>
+            </td>
+            <td>17/01/1832</td>
+            <td>Ce&aacute;nuri, <span title="Bandera del Pa&iacute;s Vasco">&#x1F3F4;&#xE0065;&#xE0073;&#xE0070;&#xE0076;&#xE007F;</span>🇪🇸</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td rowspan="2">
+              <p>Santiago Sagarna</p>
+              <p>Juana Ort&uacute;zar</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/G3LS-PBM" target="_blank" class="fw-semibold">
+                Dionisio Sagarna
+              </a>
+            </td>
+            <td>aprox. 1849</td>
+            <td>Ce&aacute;nuri, <span title="Bandera del Pa&iacute;s Vasco">&#x1F3F4;&#xE0065;&#xE0073;&#xE0070;&#xE0076;&#xE007F;</span>🇪🇸</td>
+            <td>15/12/1928</td>
+            <td>Azul</td>
+            <td>
+              <p>Josefa Antonia Iturrioz (9)</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="mt-5 mb-2">
+        <span class="h5">Sassali</span> <span class="fw-semibold text-secondary">(Sasale, Sasali, Sassale, Zasali, Zazzali)</span>
+      </div>
+
+      <table class="table table-striped w-xs-200 smaller vertical-center">
+        <thead class="table-light">
+          <tr class="border-bottom border-dark border-1-5">
+            <th scope="col">Nombre</th>
+            <th scope="col">Fecha de nac.</th>
+            <th scope="col">Lugar de nac.</th>
+            <th scope="col">Fecha de def.</th>
+            <th scope="col">Lugar de def.</th>
+            <th scope="col">Pareja (hijos)</th>
+            <th scope="col">Padre y madre</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <a href="https://familysearch.org/tree/person/details/L1VC-CPC" target="_blank" class="fw-semibold">
+                Andrea Sassali
+              </a>
+              <br/>(Andr&eacute;s Sassali)
+            </td>
+            <td>aprox. 1842</td>
+            <td>Parma, 🇮🇹</td>
+            <td></td>
+            <td>Azul</td>
+            <td>
+              <p>Benigna Falomir (4)</p>
+            </td>
+            <td rowspan="1">
+              <p>Bartolomeo Zazzali</p>
+              <p>Giovanna Brucci</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- Families tab end -->
+
+    <!-- Connections tab start -->
     <div class="tab-pane container fade p-0" id="connections-tab">
       <div class="alert alert-warning text-center my-3" role="alert">
-        <p class="fw-semibold"><i class="bi bi-exclamation-triangle"></i> Sección en desarrollo</p>
+        <p class="fw-semibold"><i class="bi bi-exclamation-triangle"></i> Secci&oacute;n en desarrollo</p>
         <p>Pr&oacute;ximamente vas a poder ver tu relaci&oacute;n con otras personas en el &aacute;rbol.</p>
       </div>
     </div>
+    <!-- Connections tab end -->
   </div>
 
+  <!-- Footer -->
   <div class="alert alert-light bg-light text-center small mt-4 mb-0" role="alert">
     <p>
       <b>Genea Azul</b> es una iniciativa comunitaria sin fines de lucro con el fin de investigar, documentar y preservar la historia geneal&oacute;gica del partido de Azul.
     </p>
     <p>
-      Declarado de <b>Inter&eacute;s Comunitario, Hist&oacute;rico y Cultural</b> por el Honorable Concejo Deliberante de Azul.
+      Declarado de <b>Inter&eacute;s Comunitario, Hist&oacute;rico y Cultural</b> por el Concejo Deliberante de Azul.
     </p>
     <p>
       &iexcl;Solicit&aacute; acceso al &aacute;rbol y carg&aacute; info!
     </p>
   </div>
-</div>
 
 <script>
   var siteUrl = "https://geneaazul-2.ddns.net";
@@ -5354,7 +6246,7 @@
                                   .append("<p>Edit&aacute; la b&uacute;squeda agregando fechas o completando nombres de padres y parejas.</p>")
                                   .append($("<p>")
                                           .addClass("text-center")
-                                          .html("&iexcl;Solicitá acceso al &aacute;rbol y carg&aacute; info!")
+                                          .html("&iexcl;Solicit&aacute; acceso al &aacute;rbol y carg&aacute; info!")
                                           .append($("<a>")
                                                   .addClass("link-secondary text-decoration-none ms-2")
                                                   .attr("href", "https://instagram.com/_u/genea.azul")
@@ -6278,7 +7170,7 @@
   var displayErrorCodeInSpanish = function(errorCode) {
       if (errorCode == "TOO-MANY-REQUESTS") {
           return "<p>Realizaste demasiadas consultas en la &uacute;ltima hora, por favor esper&aacute; unos minutos o contactanos en redes sociales: <b>@genea.azul</b></p>"
-              + "<p>Este es un proyecto de investigaci&oacute;n sin fines de lucro, no hay costo de servicio. Solicitá acceso al árbol y ayudanos a completar datos. 😊</p>";
+              + "<p>Este es un proyecto de investigaci&oacute;n sin fines de lucro, no hay costo de servicio. Solicit&aacute; acceso al &aacute;rbol y ayudanos a completar datos. 😊</p>";
       }
       return errorCode;
   };
@@ -6305,8 +7197,8 @@
           timeout: 10000, // in ms
           contentType: "application/json",
           success: function(data) {
-              $("#pre-container").addClass("d-none");
-              $("#main-container").removeClass("d-none");
+              $("#loading-container").addClass("d-none");
+              $("#search-container").removeClass("d-none");
               // Then check obfuscation default params
               if (data.disableObfuscateLiving) {
                   obfuscateLiving = false;
@@ -6314,6 +7206,7 @@
               }
           },
           error: function(xmlHttpRequest, textStatus, errorThrown) {
+              $("#loading-container img").addClass("d-none");
               $("#spinner-container")
                   .empty()
                   .append("<h6>Hubo un problema iniciando el buscador</h6>")

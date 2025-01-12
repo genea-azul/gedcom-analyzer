@@ -199,9 +199,9 @@ public class PersonServiceTests {
                         "Son B4 Father B - Couple",
                         "Son B3 Mother B - Couple",
                         // adopted children of biological parents (adoptive siblings)
-                        "Son A1 Father B - Mother B",
+                        "Son A1 Father B - Mother B", // TODO check why sometimes test result switches lines
                         // adopted children of biological and adoptive parents (adoptive siblings)
-                        "Son A2 Father A - Mother B",
+                        "Son A2 Father A - Mother B", // TODO check why sometimes test result switches lines
                         // adopted children of biological parents with other couples (adoptive half siblings)
                         "Son A4 Father B - Couple",
                         "Son A3 Mother B - Couple",
