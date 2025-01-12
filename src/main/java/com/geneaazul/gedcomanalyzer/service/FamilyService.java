@@ -12,6 +12,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDetailsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyResultDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchPersonDto;
+import com.geneaazul.gedcomanalyzer.repository.SearchConnectionRepository;
 import com.geneaazul.gedcomanalyzer.repository.SearchFamilyRepository;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.StreamUtils;
@@ -46,12 +47,13 @@ public class FamilyService {
     private final PersonService personService;
     private final SearchService searchService;
     private final SearchFamilyRepository searchFamilyRepository;
+    private final SearchConnectionRepository searchConnectionRepository;
     private final SearchFamilyMapper searchFamilyMapper;
     private final PersonMapper personMapper;
     private final GedcomAnalyzerProperties properties;
 
     @Transactional
-    public Optional<Long> persistSearch(
+    public Optional<Long> persistFamilySearch(
             SearchFamilyDto searchFamilyDto,
             boolean isObfuscated,
             @Nullable String clientIpAddress) {
@@ -61,7 +63,7 @@ public class FamilyService {
     }
 
     @Transactional
-    public void updateSearchResult(
+    public void updateFamilySearchResult(
             Long searchFamilyId,
             boolean isMatch,
             @Nullable Integer potentialResults,
@@ -76,7 +78,7 @@ public class FamilyService {
     }
 
     @Transactional
-    public SearchFamilyDetailsDto updateSearchIsReviewed(Long searchFamilyId, Boolean isReviewed) {
+    public SearchFamilyDetailsDto updateFamilySearchIsReviewed(Long searchFamilyId, Boolean isReviewed) {
         return searchFamilyRepository
                 .findById(searchFamilyId)
                 .map(searchFamily -> {
@@ -88,7 +90,7 @@ public class FamilyService {
     }
 
     @Transactional
-    public SearchFamilyDetailsDto updateSearchIsIgnored(Long searchFamilyId, Boolean isIgnored) {
+    public SearchFamilyDetailsDto updateFamilySearchIsIgnored(Long searchFamilyId, Boolean isIgnored) {
         return searchFamilyRepository
                 .findById(searchFamilyId)
                 .map(searchFamily -> {
@@ -166,11 +168,12 @@ public class FamilyService {
         OffsetDateTime createDateTo = OffsetDateTime.now();
         OffsetDateTime createDateFrom = createDateTo.minusHours(properties.getMaxClientRequestsHoursThreshold());
 
-        long clientRequests = searchFamilyRepository.countByClientIpAddressAndCreateDateBetween(clientIpAddress, createDateFrom, createDateTo);
+        long familyClientRequests = searchFamilyRepository.countByClientIpAddressAndCreateDateBetween(clientIpAddress, createDateFrom, createDateTo);
+        long connectionClientRequests = searchConnectionRepository.countByClientIpAddressAndCreateDateBetween(clientIpAddress, createDateFrom, createDateTo);
 
         boolean isSpecialThresholdClient = properties.getClientsWithSpecialThreshold().contains(clientIpAddress);
         int offset = 1; // Since search is persisted before setting the result we need to skip last persisted one
-        return (clientRequests - offset) < (isSpecialThresholdClient
+        return (familyClientRequests + connectionClientRequests - offset) < (isSpecialThresholdClient
                 ? properties.getMaxClientRequestsCountSpecialThreshold()
                 : properties.getMaxClientRequestsCountThreshold());
     }

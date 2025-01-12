@@ -45,6 +45,12 @@
     .nav-tabs .nav-link.active {
         --bs-nav-tabs-link-active-bg: #f5f8fd;
     }
+    .min-w-16 {
+        min-width: 16em !important;
+    }
+    .nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active {
+        color: var(--bs-nav-tabs-link-active-color) !important;
+    }
     @media (max-width: 575px) {
         .w-xs-200 {
             width: 200% !important;
@@ -79,18 +85,18 @@
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" data-bs-toggle="tab" href="#stats-tab" title="Estad&iacute;sticas">
+        <a class="nav-link text-danger" data-bs-toggle="tab" href="#connections-tab" title="Conexiones">
+          <i class="bi bi-bezier2"></i> <span class="d-none d-md-inline">Conexiones</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link text-success" data-bs-toggle="tab" href="#stats-tab" title="Estad&iacute;sticas">
           <i class="bi bi-graph-up"></i> <span class="d-none d-md-inline">Estad&iacute;sticas</span>
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" data-bs-toggle="tab" href="#families-tab" title="Familias">
+        <a class="nav-link text-dark" data-bs-toggle="tab" href="#families-tab" title="Familias">
           <i class="bi bi-people"></i> <span class="d-none d-md-inline">Familias</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" data-bs-toggle="tab" href="#connections-tab" title="Conexiones">
-          <i class="bi bi-bezier2"></i> <span class="d-none d-md-inline">Conexiones</span>
         </a>
       </li>
     </ul>
@@ -197,7 +203,7 @@
                   <label for="individualSurname">Apellido</label>
                 </div>
                 <div class="form-floating mt-1">
-                  <input type="number" class="form-control" id="individualYearOfBirth" max="2050" />
+                  <input type="number" class="form-control" id="individualYearOfBirth" min="1400" max="2050" />
                   <label for="individualYearOfBirth">A&ntilde;o de nacimiento</label>
                 </div>
                 <div class="form-floating mt-1">
@@ -209,7 +215,7 @@
                   <label class="form-check-label" for="individualIsAlive">Vive</label>
                 </div>
                 <div class="form-floating mt-1">
-                  <input type="number" class="form-control" id="individualYearOfDeath" max="2050" disabled="disabled" />
+                  <input type="number" class="form-control" id="individualYearOfDeath" min="1400" max="2050" disabled="disabled" />
                   <label for="individualYearOfDeath">A&ntilde;o de fallecimiento</label>
                 </div>
               </div>
@@ -246,7 +252,7 @@
                     <label for="spouseSurname">Apellido</label>
                   </div>
                   <div class="form-floating mt-1">
-                    <input type="number" class="form-control" id="spouseYearOfBirth" max="2050" />
+                    <input type="number" class="form-control" id="spouseYearOfBirth" min="1400" max="2050" />
                     <label for="spouseYearOfBirth">A&ntilde;o de nacimiento</label>
                   </div>
                   <div class="form-floating mt-1">
@@ -258,7 +264,7 @@
                     <label class="form-check-label" for="spouseIsAlive">Vive</label>
                   </div>
                   <div class="form-floating mt-1">
-                    <input type="number" class="form-control" id="spouseYearOfDeath" max="2050" disabled="disabled" />
+                    <input type="number" class="form-control" id="spouseYearOfDeath" min="1400" max="2050" disabled="disabled" />
                     <label for="spouseYearOfDeath">A&ntilde;o de fallecimiento</label>
                   </div>
                 </div>
@@ -278,7 +284,7 @@
                   <label for="fatherSurname">Apellido</label>
                 </div>
                 <div class="form-floating mt-1">
-                  <input type="number" class="form-control" id="fatherYearOfBirth" max="2050" />
+                  <input type="number" class="form-control" id="fatherYearOfBirth" min="1400" max="2050" />
                   <label for="fatherYearOfBirth">A&ntilde;o de nacimiento</label>
                 </div>
                 <div class="form-floating mt-1">
@@ -290,7 +296,7 @@
                   <label class="form-check-label" for="fatherIsAlive">Vive</label>
                 </div>
                 <div class="form-floating mt-1">
-                  <input type="number" class="form-control" id="fatherYearOfDeath" max="2050" disabled="disabled" />
+                  <input type="number" class="form-control" id="fatherYearOfDeath" min="1400" max="2050" disabled="disabled" />
                   <label for="fatherYearOfDeath">A&ntilde;o de fallecimiento</label>
                 </div>
               </div>
@@ -309,7 +315,7 @@
                   <label for="motherSurname">Apellido</label>
                 </div>
                 <div class="form-floating mt-1">
-                  <input type="number" class="form-control" id="motherYearOfBirth" max="2050" />
+                  <input type="number" class="form-control" id="motherYearOfBirth" min="1400" max="2050" />
                   <label for="motherYearOfBirth">A&ntilde;o de nacimiento</label>
                 </div>
                 <div class="form-floating mt-1">
@@ -321,7 +327,7 @@
                   <label class="form-check-label" for="motherIsAlive">Vive</label>
                 </div>
                 <div class="form-floating mt-1">
-                  <input type="number" class="form-control" id="motherYearOfDeath" max="2050" disabled="disabled" />
+                  <input type="number" class="form-control" id="motherYearOfDeath" min="1400" max="2050" disabled="disabled" />
                   <label for="motherYearOfDeath">A&ntilde;o de fallecimiento</label>
                 </div>
               </div>
@@ -359,7 +365,7 @@
                   <label for="paternalGrandfatherSurname">Apellido</label>
                 </div>
                 <div class="form-floating mt-1">
-                  <input type="number" class="form-control" id="paternalGrandfatherYearOfBirth" max="2050" />
+                  <input type="number" class="form-control" id="paternalGrandfatherYearOfBirth" min="1400" max="2050" />
                   <label for="paternalGrandfatherYearOfBirth">A&ntilde;o de nacimiento</label>
                 </div>
                 <div class="form-floating mt-1">
@@ -371,7 +377,7 @@
                   <label class="form-check-label" for="paternalGrandfatherIsAlive">Vive</label>
                 </div>
                 <div class="form-floating mt-1">
-                  <input type="number" class="form-control" id="paternalGrandfatherYearOfDeath" max="2050" disabled="disabled" />
+                  <input type="number" class="form-control" id="paternalGrandfatherYearOfDeath" min="1400" max="2050" disabled="disabled" />
                   <label for="paternalGrandfatherYearOfDeath">A&ntilde;o de fallecimiento</label>
                 </div>
               </div>
@@ -390,7 +396,7 @@
                   <label for="paternalGrandmotherSurname">Apellido</label>
                 </div>
                 <div class="form-floating mt-1">
-                  <input type="number" class="form-control" id="paternalGrandmotherYearOfBirth" max="2050" />
+                  <input type="number" class="form-control" id="paternalGrandmotherYearOfBirth" min="1400" max="2050" />
                   <label for="paternalGrandmotherYearOfBirth">A&ntilde;o de nacimiento</label>
                 </div>
                 <div class="form-floating mt-1">
@@ -402,7 +408,7 @@
                   <label class="form-check-label" for="paternalGrandmotherIsAlive">Vive</label>
                 </div>
                 <div class="form-floating mt-1">
-                  <input type="number" class="form-control" id="paternalGrandmotherYearOfDeath" max="2050" disabled="disabled" />
+                  <input type="number" class="form-control" id="paternalGrandmotherYearOfDeath" min="1400" max="2050" disabled="disabled" />
                   <label for="paternalGrandmotherYearOfDeath">A&ntilde;o de fallecimiento</label>
                 </div>
               </div>
@@ -421,7 +427,7 @@
                   <label for="maternalGrandfatherSurname">Apellido</label>
                 </div>
                 <div class="form-floating mt-1">
-                  <input type="number" class="form-control" id="maternalGrandfatherYearOfBirth" max="2050" />
+                  <input type="number" class="form-control" id="maternalGrandfatherYearOfBirth" min="1400" max="2050" />
                   <label for="maternalGrandfatherYearOfBirth">A&ntilde;o de nacimiento</label>
                 </div>
                 <div class="form-floating mt-1">
@@ -433,7 +439,7 @@
                   <label class="form-check-label" for="maternalGrandfatherIsAlive">Vive</label>
                 </div>
                 <div class="form-floating mt-1">
-                  <input type="number" class="form-control" id="maternalGrandfatherYearOfDeath" max="2050" disabled="disabled" />
+                  <input type="number" class="form-control" id="maternalGrandfatherYearOfDeath" min="1400" max="2050" disabled="disabled" />
                   <label for="maternalGrandfatherYearOfDeath">A&ntilde;o de fallecimiento</label>
                 </div>
               </div>
@@ -452,7 +458,7 @@
                   <label for="maternalGrandmotherSurname">Apellido</label>
                 </div>
                 <div class="form-floating mt-1">
-                  <input type="number" class="form-control" id="maternalGrandmotherYearOfBirth" max="2050" />
+                  <input type="number" class="form-control" id="maternalGrandmotherYearOfBirth" min="1400" max="2050" />
                   <label for="maternalGrandmotherYearOfBirth">A&ntilde;o de nacimiento</label>
                 </div>
                 <div class="form-floating mt-1">
@@ -464,7 +470,7 @@
                   <label class="form-check-label" for="maternalGrandmotherIsAlive">Vive</label>
                 </div>
                 <div class="form-floating mt-1">
-                  <input type="number" class="form-control" id="maternalGrandmotherYearOfDeath" max="2050" disabled="disabled" />
+                  <input type="number" class="form-control" id="maternalGrandmotherYearOfDeath" min="1400" max="2050" disabled="disabled" />
                   <label for="maternalGrandmotherYearOfDeath">A&ntilde;o de fallecimiento</label>
                 </div>
               </div>
@@ -506,6 +512,78 @@
       <!-- Search container end -->
     </div>
     <!-- Search tab end -->
+
+    <!-- Connections tab start -->
+    <div class="tab-pane container fade p-0" id="connections-tab">
+      <div class="text-center">
+        <div class="h3 m-0">
+          Conexiones entre personas
+        </div>
+        <div class="small">
+          Se visualiza c&oacute;mo est&aacute;n relacionadas dos personas en el &aacute;rbol
+        </div>
+      </div>
+
+      <div class="row my-3">
+        <div class="col-lg-auto">
+          <div class="card border-dark mb-2" id="person1Card">
+            <div class="card-header text-bg-secondary">
+              <i class="card-header-icon float-end"></i>
+              Persona 1
+            </div>
+            <div class="card-body">
+              <div class="form-floating mt-1">
+                <input type="text" class="form-control" id="person1GivenName" maxlength="60" required />
+                <label for="person1GivenName">Nombre</label>
+              </div>
+              <div class="form-floating mt-1">
+                <input type="text" class="form-control" id="person1Surname" maxlength="60" required />
+                <label for="person1Surname">Apellido</label>
+              </div>
+              <div class="form-floating mt-1">
+                <input type="number" class="form-control" id="person1YearOfBirth" min="1400" max="2050" />
+                <label for="person1YearOfBirth">A&ntilde;o de nacimiento</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-auto">
+          <div class="card border-dark mb-2" id="person2Card">
+            <div class="card-header text-bg-secondary">
+              <i class="card-header-icon float-end"></i>
+              Persona 2
+            </div>
+            <div class="card-body">
+              <div class="form-floating mt-1">
+                <input type="text" class="form-control" id="person2GivenName" maxlength="60" required />
+                <label for="person2GivenName">Nombre</label>
+              </div>
+              <div class="form-floating mt-1">
+                <input type="text" class="form-control" id="person2Surname" maxlength="60" required />
+                <label for="person2Surname">Apellido</label>
+              </div>
+              <div class="form-floating mt-1">
+                <input type="number" class="form-control" id="person2YearOfBirth" min="1400" max="2050" required />
+                <label for="person2YearOfBirth">A&ntilde;o de nacimiento</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-auto">
+          <div class="d-flex flex-column gap-1 align-items-center justify-content-center">
+            <button type="button" class="btn btn-dark" id="searchConnectionsBtn">Buscar</button>
+            <div class="card border-dark min-w-16" id="searchConnectionsResultCard">
+              <div class="card-header text-bg-secondary">
+                <div>Resultado de conexiones</div>
+              </div>
+              <div class="card-body overflow-auto"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- Connections tab end -->
 
     <!-- Stats tab start -->
     <div class="tab-pane container fade p-0" id="stats-tab">
@@ -5956,9 +6034,9 @@
           <tr>
             <td>
               <a href="https://familysearch.org/tree/person/details/L1VC-CPC" target="_blank" class="fw-semibold">
-                Andrea Sassali
+                Andrea Zazzali
               </a>
-              <br/>(Andr&eacute;s Sassali)
+              <br/>(Andr&eacute;s Zazzali)
             </td>
             <td>aprox. 1842</td>
             <td>Parma, 🇮🇹</td>
@@ -5976,15 +6054,6 @@
       </table>
     </div>
     <!-- Families tab end -->
-
-    <!-- Connections tab start -->
-    <div class="tab-pane container fade p-0" id="connections-tab">
-      <div class="alert alert-warning text-center my-3" role="alert">
-        <p class="fw-semibold"><i class="bi bi-exclamation-triangle"></i> Secci&oacute;n en desarrollo</p>
-        <p>Pr&oacute;ximamente vas a poder ver tu relaci&oacute;n con otras personas en el &aacute;rbol.</p>
-      </div>
-    </div>
-    <!-- Connections tab end -->
   </div>
 
   <!-- Footer -->
@@ -6120,7 +6189,10 @@
       $("#searchBtn").on("click", function(event) {
           event.preventDefault();
 
-          $("#searchBtn").prop("disabled", true);
+          var searchBtnLocator = "#searchBtn";
+          var searchResultCardLocator = "#searchResultCard";
+
+          $(searchBtnLocator).prop("disabled", true);
 
           var resultComponentLocator = "#searchResultCard div.card-body";
           var $resultComponent = $(resultComponentLocator)
@@ -6209,7 +6281,7 @@
               $resultComponent.html(
                   $("<div>")
                       .html(errorMsg));
-              finalizeSearch();
+              finalizeSearch(searchBtnLocator, searchResultCardLocator);
               return;
           }
 
@@ -6287,30 +6359,117 @@
                                               .addClass("spinner-border spinner-border-sm")
                                               .attr("role", "status"))));
 
-                      finalizeSearch(function() {
+                      finalizeSearch(searchBtnLocator, searchResultCardLocator, function() {
                           setTimeout(function() {
                               searchSurnames(surnamesInRequest);
                           }, 1500);
                       });
                   } else {
-                      finalizeSearch();
+                      finalizeSearch(searchBtnLocator, searchResultCardLocator);
                   }
               },
               error: function(xhr) {
                   handleError(xhr, resultComponentLocator);
-                  finalizeSearch();
+                  finalizeSearch(searchBtnLocator, searchResultCardLocator);
               }
           });
       });
   });
 
-  var finalizeSearch = function(callback = function() {}) {
+  $(document).ready(function() {
+      $("#searchConnectionsBtn").on("click", function(event) {
+          event.preventDefault();
+
+          var searchBtnLocator = "#searchConnectionsBtn";
+          var searchResultCardLocator = "#searchConnectionsResultCard";
+
+          $(searchBtnLocator).prop("disabled", true);
+
+          var resultComponentLocator = "#searchConnectionsResultCard div.card-body";
+          var $resultComponent = $(resultComponentLocator)
+              .html("<p>Buscando...</p>");
+
+          var searchConnectionsRequest = {
+              "person1": {
+                  "givenName": trimToNull($("#person1GivenName").val()),
+                  "surname": trimToNull($("#person1Surname").val()),
+                  "yearOfBirth": toNumber($("#person1YearOfBirth").val())
+              },
+              "person2": {
+                  "givenName": trimToNull($("#person2GivenName").val()),
+                  "surname": trimToNull($("#person2Surname").val()),
+                  "yearOfBirth": toNumber($("#person2YearOfBirth").val())
+              }
+          };
+
+          if (isConnectionsRequestEmpty(searchConnectionsRequest)) {
+              var errorMsg = "<p><b>Error:</b> Ten&eacute;s que llenar todos los datos.</p>";
+              $resultComponent.html(
+                  $("<div>")
+                      .html(errorMsg));
+              finalizeSearch(searchBtnLocator, searchResultCardLocator);
+              return;
+          }
+
+          $.ajax({
+              type: "POST",
+              url: siteUrl + "/api/search/connection",
+              dataType: "json",
+              contentType: "application/json",
+              data: JSON.stringify(searchConnectionsRequest),
+              success: function(data) {
+                  // remove the "searching.." message
+                  $resultComponent.empty();
+
+                  $resultComponent.append(
+                      $("<div>")
+                          .addClass("fw-semibold mb-3")
+                          .html("Distancia entre personas: " + (data.connections.length - 1)));
+
+                  data.connections.forEach((connection, index) => {
+                      var $connectionComponent = getConnectionComponent(connection, index);
+                      $resultComponent.append($connectionComponent);
+                  });
+
+                  if (data.connections.length == 0) {
+                      if (data.errors.length > 0) {
+                          $resultComponent.html("<p>⚠️ Error en la b&uacute;squeda. ⚠️</p>");
+                          data.errors.forEach((errorCode, index) => {
+                              $resultComponent.append(displayErrorCodeInSpanish(errorCode));
+                          });
+                      } else {
+                          $resultComponent
+                              .html("<p>🔎 No se encontr&oacute; una conexi&oacute;n 🔍</p>")
+                              .append($("<p>")
+                                      .addClass("text-center")
+                                      .html("&iexcl;Solicit&aacute; acceso al &aacute;rbol y carg&aacute; info!")
+                                      .append($("<a>")
+                                              .addClass("link-secondary text-decoration-none ms-2")
+                                              .attr("href", "https://instagram.com/_u/genea.azul")
+                                              .attr("target", "_blank")
+                                              .attr("title", "@genea.azul")
+                                              .append($("<i>")
+                                                      .addClass("bi bi-instagram"))));
+                      }
+                  }
+
+                  finalizeSearch(searchBtnLocator, searchResultCardLocator);
+              },
+              error: function(xhr) {
+                  handleError(xhr, resultComponentLocator);
+                  finalizeSearch(searchBtnLocator, searchResultCardLocator);
+              }
+          });
+      });
+  });
+
+  var finalizeSearch = function(searchBtnLocator, searchResultCardLocator, callback = function() {}) {
       $("html, body")
-          .animate({ scrollTop: $("#searchResultCard").offset().top }, 600)
+          .animate({ scrollTop: $(searchResultCardLocator).offset().top }, 600)
           .promise()
           .done(function () {
               callback();
-              $("#searchBtn").prop("disabled", false);
+              $(searchBtnLocator).prop("disabled", false);
           });
   };
 
@@ -6497,6 +6656,34 @@
           }
       }
       return true;
+  };
+
+  var isConnectionsRequestEmpty = function(searchConnectionsRequest) {
+      if (!searchConnectionsRequest["person1"]) {
+          return true;
+      }
+      if (!searchConnectionsRequest["person1"]["givenName"]) {
+          return true;
+      }
+      if (!searchConnectionsRequest["person1"]["surname"]) {
+          return true;
+      }
+      if (!searchConnectionsRequest["person1"]["yearOfBirth"]) {
+          return true;
+      }
+      if (!searchConnectionsRequest["person2"]) {
+          return true;
+      }
+      if (!searchConnectionsRequest["person2"]["givenName"]) {
+          return true;
+      }
+      if (!searchConnectionsRequest["person2"]["surname"]) {
+          return true;
+      }
+      if (!searchConnectionsRequest["person2"]["yearOfBirth"]) {
+          return true;
+      }
+      return false;
   };
 
   var getSurnamesInRequest = function(searchFamilyRequest) {
@@ -6787,6 +6974,40 @@
               $("<div>")
                   .addClass("d-none text-center mt-2")
                   .attr("id", "search-family-tree-error-" + person.uuid));
+
+      return $card.html($cardBody);
+  };
+
+  var getConnectionComponent = function(connection, index) {
+      var $card = $("<div>")
+              .addClass("border-light text-bg-light")
+              .attr("id", "connection-card-" + index);
+
+      if (index > 0) {
+          $card.addClass("mt-2");
+      }
+
+      var $cardBody = $("<div>").addClass("small");
+
+      if (!isEmpty(connection.relationship)) {
+          $cardBody.append(
+              $("<div>")
+                  .html(connection.relationship + " de"));
+      }
+
+      $personName = $("<div>")
+          .addClass("ps-2");
+
+      $personName.append(
+          $("<span>")
+              .addClass("fw-semibold me-2")
+              .html(connection.personName));
+
+      if (!isEmpty(connection.personData)) {
+          $personName.append("(" + connection.personData + ")");
+      }
+
+      $cardBody.append($personName);
 
       return $card.html($cardBody);
   };
@@ -7172,7 +7393,27 @@
           return "<p>Realizaste demasiadas consultas en la &uacute;ltima hora, por favor esper&aacute; unos minutos o contactanos en redes sociales: <b>@genea.azul</b></p>"
               + "<p>Este es un proyecto de investigaci&oacute;n sin fines de lucro, no hay costo de servicio. Solicit&aacute; acceso al &aacute;rbol y ayudanos a completar datos. 😊</p>";
       }
-      return errorCode;
+      if (errorCode == "CONNECTIONS-PERSON-1-NOT-FOUND") {
+          return "<p class=\"fw-semibold ps-1\">La persona 1 no fue encontrada</p>"
+              + "<p>La persona no se encuentra en el sistema, o quiz&aacute;s falta completar alg&uacute;n dato en el &aacute;rbol. En ese caso ponete en contacto con nosotros para que carguemos la info 😊</p>";
+      }
+      if (errorCode == "CONNECTIONS-PERSON-1-AMBIGUOUS") {
+          return "<p class=\"fw-semibold ps-1\">M&aacute;s de un resultado para la persona 1</p>"
+              + "<p>Hay m&aacute;s de una persona con los datos ingresados, complet&aacute; el segundo nombre (en caso de que corresponda).</p>";
+      }
+      if (errorCode == "CONNECTIONS-PERSON-2-NOT-FOUND") {
+          return "<p class=\"fw-semibold ps-1\">La persona 2 no fue encontrada</p>"
+              + "<p>La persona no se encuentra en el sistema, o quiz&aacute;s falta completar alg&uacute;n dato en el &aacute;rbol. En ese caso ponete en contacto con nosotros para que carguemos la info 😊</p>";
+      }
+      if (errorCode == "CONNECTIONS-PERSON-2-AMBIGUOUS") {
+          return "<p class=\"fw-semibold ps-1\">M&aacute;s de un resultado para la persona 1</p>"
+              + "<p>Hay m&aacute;s de una persona con los datos ingresados, complet&aacute; el segundo nombre (en caso de que corresponda).</p>";
+      }
+      if (errorCode == "CONNECTIONS-SAME-PERSON") {
+          return "<p class=\"fw-semibold ps-1\">Las personas 1 y 2 son las mismas</p>"
+              + "<p>No se puede calcular la conexi&oacute;n entre mismas personas.</p>";
+      }
+      return "<p>" + errorCode + "</p>";
   };
 </script>
 

@@ -1,6 +1,7 @@
 package com.geneaazul.gedcomanalyzer.controller;
 
 import com.geneaazul.gedcomanalyzer.GedcomAnalyzerApplication;
+import com.geneaazul.gedcomanalyzer.repository.SearchConnectionRepository;
 import com.geneaazul.gedcomanalyzer.repository.SearchFamilyRepository;
 
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -15,5 +16,7 @@ public abstract class AbstractControllerIT {
 
     @MockBean
     protected SearchFamilyRepository searchFamilyRepository;
+    @MockBean
+    protected SearchConnectionRepository searchConnectionRepository;
 
 }

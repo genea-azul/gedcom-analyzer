@@ -1,6 +1,7 @@
 package com.geneaazul.gedcomanalyzer.mapper;
 
 import com.geneaazul.gedcomanalyzer.domain.SearchPerson;
+import com.geneaazul.gedcomanalyzer.domain.SearchPersonSimple;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchPersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
@@ -38,7 +39,20 @@ public class SearchPersonMapper {
 
     @CheckForNull
     @Transactional(propagation = Propagation.MANDATORY)
-    public SearchPersonDto toSearchPersonDto(@Nullable SearchPerson searchPerson, SexType sex) {
+    public SearchPersonSimple toSearchPersonSimpleEntity(SearchPersonDto searchPersonDto) {
+        if (isEmpty(searchPersonDto)) {
+            return null;
+        }
+        return SearchPersonSimple.builder()
+                .givenName(searchPersonDto.getGivenName())
+                .surname(searchPersonDto.getSurname())
+                .yearOfBirth(searchPersonDto.getYearOfBirth())
+                .build();
+    }
+
+    @CheckForNull
+    @Transactional(propagation = Propagation.MANDATORY)
+    public SearchPersonDto toSearchPersonDto(@Nullable SearchPerson searchPerson, @Nullable SexType sex) {
         if (searchPerson == null) {
             return null;
         }
@@ -50,6 +64,19 @@ public class SearchPersonMapper {
                 .yearOfBirth(searchPerson.getYearOfBirth())
                 .yearOfDeath(searchPerson.getYearOfDeath())
                 .placeOfBirth(searchPerson.getPlaceOfBirth())
+                .build();
+    }
+
+    @CheckForNull
+    @Transactional(propagation = Propagation.MANDATORY)
+    public SearchPersonDto toSearchPersonDto(@Nullable SearchPersonSimple searchPersonSimple) {
+        if (searchPersonSimple == null) {
+            return null;
+        }
+        return SearchPersonDto.builder()
+                .givenName(searchPersonSimple.getGivenName())
+                .surname(searchPersonSimple.getSurname())
+                .yearOfBirth(searchPersonSimple.getYearOfBirth())
                 .build();
     }
 

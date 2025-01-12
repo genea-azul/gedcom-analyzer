@@ -49,6 +49,7 @@ public class GedcomAnalyzerProperties {
 
     private boolean deleteUploadedGedcom = false;
     private boolean storeFamilySearch = true;
+    private boolean storeConnectionSearch = true;
     private boolean keepReferenceToLegacyGedcom = false;
     private boolean disableObfuscateLiving = false;
 
