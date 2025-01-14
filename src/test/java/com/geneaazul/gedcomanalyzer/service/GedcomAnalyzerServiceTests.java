@@ -234,11 +234,12 @@ public class GedcomAnalyzerServiceTests {
                     /*
                     System.out.println(
                             "<li>"
-                            + cardinality.mainSurname().value()
+                            + StringEscapeUtils.escapeHtml4(cardinality.mainSurname().value())
                             + (!variants.isEmpty()
                                     ? " <span class=\"text-secondary\">"
                                             + variants
                                                     .stream()
+                                                    .map(StringEscapeUtils::escapeHtml4)
                                                     .collect(Collectors.joining(", ", "(", ")"))
                                             + "</span>"
                                     : "")
