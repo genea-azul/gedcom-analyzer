@@ -5,6 +5,7 @@ import com.geneaazul.gedcomanalyzer.domain.SearchFamily;
 import com.geneaazul.gedcomanalyzer.mapper.ObfuscationType;
 import com.geneaazul.gedcomanalyzer.mapper.PersonMapper;
 import com.geneaazul.gedcomanalyzer.mapper.SearchFamilyMapper;
+import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
@@ -359,8 +360,19 @@ public class FamilyService {
         Integer potentialResultsCount = null;
 
         if (result.isEmpty()) {
+           @Nullable Boolean hasAnyParentGivenName = Optional
+                    .ofNullable(searchFamilyDto.getFather())
+                    .map(SearchPersonDto::getGivenName)
+                    .filter(StringUtils::isNotBlank)
+                    .or(() -> Optional
+                            .ofNullable(searchFamilyDto.getMother())
+                            .map(SearchPersonDto::getGivenName)
+                            .filter(StringUtils::isNotBlank))
+                    .map(_ -> Boolean.TRUE)
+                    .orElse(Boolean.FALSE);
+
             List<EnrichedPerson> potentialResults = new ArrayList<>();
-            potentialResults.addAll(getPotentialResults(searchFamilyDto.getIndividual(), individualSurname, gedcom));
+            potentialResults.addAll(getPotentialResults(searchFamilyDto.getIndividual(), individualSurname, hasAnyParentGivenName, gedcom));
             potentialResults.addAll(getPotentialResults(searchFamilyDto.getSpouse(), spouseSurname, gedcom));
             potentialResults.addAll(getPotentialResults(searchFamilyDto.getFather(), fatherSurname, gedcom));
             potentialResults.addAll(getPotentialResults(searchFamilyDto.getMother(), motherSurname, gedcom));
@@ -385,11 +397,39 @@ public class FamilyService {
             @Nullable SearchPersonDto searchPerson,
             @Nullable String personSurname,
             EnrichedGedcom gedcom) {
+        return getPotentialResults(
+                searchPerson,
+                personSurname,
+                null,
+                gedcom);
+    }
+
+    private List<EnrichedPerson> getPotentialResults(
+            @Nullable SearchPersonDto searchPerson,
+            @Nullable String personSurname,
+            @Nullable Boolean hasAnyParentGivenName,
+            EnrichedGedcom gedcom) {
         if (hasSurnameButMissingDates(searchPerson, personSurname)) {
             return searchPersonByNameOrSurname(searchPerson, personSurname, gedcom);
         }
         if (hasAnyDateAndSurnameButMissingGivenName(searchPerson, personSurname)) {
             return searchPersonBySurnameAndYear(searchPerson, personSurname, gedcom);
+        }
+        if (Boolean.FALSE.equals(hasAnyParentGivenName) && hasGivenNameAndSurnameAndAnyDate(searchPerson, personSurname)) {
+            return searchPersonByNameOrSurname(searchPerson, personSurname, gedcom)
+                    .stream()
+                    .filter(person
+                            -> searchPerson.getYearOfBirth() != null
+                                    && (person.getDateOfBirth().isEmpty() || person.getDateOfBirth()
+                                            .map(Date::getYear)
+                                            .map(year -> Math.abs(year.getValue() - searchPerson.getYearOfBirth()) <= 3)
+                                            .orElse(false))
+                            || searchPerson.getYearOfDeath() != null
+                                    && (person.getDateOfDeath().isEmpty() || person.getDateOfDeath()
+                                            .map(Date::getYear)
+                                            .map(year -> Math.abs(year.getValue() - searchPerson.getYearOfDeath()) <= 3)
+                                            .orElse(false)))
+                    .toList();
         }
         return List.of();
     }
@@ -409,6 +449,15 @@ public class FamilyService {
         return searchPerson != null
                 && personSurname != null
                 && StringUtils.isBlank(searchPerson.getGivenName())
+                && (searchPerson.getYearOfBirth() != null || searchPerson.getYearOfDeath() != null);
+    }
+
+    private boolean hasGivenNameAndSurnameAndAnyDate(
+            @Nullable SearchPersonDto searchPerson,
+            @Nullable String personSurname) {
+        return searchPerson != null
+                && StringUtils.isNotBlank(searchPerson.getGivenName())
+                && personSurname != null
                 && (searchPerson.getYearOfBirth() != null || searchPerson.getYearOfDeath() != null);
     }
 

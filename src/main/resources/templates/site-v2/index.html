@@ -6315,7 +6315,7 @@
                           } else {
                               $resultComponent
                                   .html("<p>🔎 No se encontraron resultados. 🔍</p>")
-                                  .append("<p>Edit&aacute; la b&uacute;squeda agregando fechas o completando nombres de padres y parejas.</p>")
+                                  .append("<p>Edit&aacute; la b&uacute;squeda agregando <span class=\"fw-semibold\">fechas</span> o completando nombres de <span class=\"fw-semibold\">padres</span> y <span class=\"fw-semibold\">parejas</span>.</p>")
                                   .append($("<p>")
                                           .addClass("text-center")
                                           .html("&iexcl;Solicit&aacute; acceso al &aacute;rbol y carg&aacute; info!")
@@ -6328,13 +6328,13 @@
                                                           .addClass("bi bi-instagram"))));
                               if (!!searchFamilyRequest["individual"]["sex"]) {
                                   $resultComponent
-                                      .append("<p>Verific&aacute; que el <span class=\"text-danger fw-bold\">sexo</span> de la persona est&eacute; bien seleccionado.</p>");
+                                      .append("<p>Verific&aacute; que el <span class=\"text-danger fw-semibold\">sexo</span> de la persona est&eacute; bien seleccionado.</p>");
                               }
                           }
                       } else {
                           $resultComponent
                               .html("<p>⚠️ La b&uacute;squeda es ambigua. ⚠️</p>")
-                              .append("<p>Refin&aacute; la b&uacute;squeda agregando fechas o completando nombres de padres y parejas.</p>")
+                              .append("<p>Refin&aacute; la b&uacute;squeda agregando <span class=\"fw-semibold\">fechas</span> o completando nombres de <span class=\"fw-semibold\">padres</span> y <span class=\"fw-semibold\">parejas</span> (es probable que nos falte alguna fecha de la persona principal en nuestra base de datos).</p>")
                               .append("<p><b>Potenciales resultados:</b> " + data.potentialResults + "</p>");
                       }
                   }
@@ -6440,6 +6440,7 @@
                       } else {
                           $resultComponent
                               .html("<p>🔎 No se encontr&oacute; una conexi&oacute;n 🔍</p>")
+                              .append("<p>Si bien ambas personas existen en el &aacute;rbol, no pudimos encontrar un camino entre ellas.</p>")
                               .append($("<p>")
                                       .addClass("text-center")
                                       .html("&iexcl;Solicit&aacute; acceso al &aacute;rbol y carg&aacute; info!")
