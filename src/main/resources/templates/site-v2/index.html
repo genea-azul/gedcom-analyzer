@@ -64,6 +64,30 @@
             font-size: .875em !important;
         }
     }
+    abbr[title] {
+        position: relative;
+        /* ensure consistent styling across browsers */
+        text-decoration: underline dotted;
+    }
+    abbr[title]:hover::after,
+    abbr[title]:focus::after {
+        content: attr(title);
+
+        /* position tooltip like the native one */
+        position: absolute;
+        left: 0;
+        bottom: -30px;
+        width: auto;
+        white-space: nowrap;
+
+        /* style tooltip */
+        background-color: #1e1e1e;
+        color: #fff;
+        border-radius: 3px;
+        box-shadow: 1px 1px 5px 0 rgba(0,0,0,0.4);
+        font-size: 14px;
+        padding: 3px 5px;
+    }
   </style>
 </head>
 
@@ -618,7 +642,7 @@
         <dt class="col-7 col-sm-6 px-2 text-end fw-semibold">Personas desaparecidas:</dt>
         <dd class="col-5 col-sm-6 px-2 mb-0">26</dd>
         <dt class="col-7 col-sm-6 px-2 text-end fw-semibold">Personalidades destacadas:</dt>
-        <dd class="col-5 col-sm-6 px-2 mb-0">212</dd>
+        <dd class="col-5 col-sm-6 px-2 mb-0">228</dd>
         <dt class="col-7 col-sm-6 px-2 text-end fw-semibold">Cantidad de pa&iacute;ses:</dt>
         <dd class="col-5 col-sm-6 px-2 mb-0">50</dd>
         <dt class="col-7 col-sm-6 px-2 text-end fw-semibold">Apellidos azule&ntilde;os:</dt>
@@ -678,224 +702,240 @@
         <div class="accordion-item">
           <h2 class="accordion-header" id="flush-headingTwo">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseTwo" aria-expanded="false" aria-controls="flush-collapseTwo">
-              <span class="fw-semibold">Personalidades destacadas</span> <span class="ms-1 small text-secondary">(212)</span>
+              <span class="fw-semibold">Personalidades destacadas</span> <span class="ms-1 small text-secondary">(228)</span>
             </button>
           </h2>
           <div id="flush-collapseTwo" class="accordion-collapse collapse" aria-labelledby="flush-headingTwo" data-bs-parent="#statistics-accordion">
             <div class="accordion-body">
               <ul class="small">
-                <li><span>Pablo</span> <span class="fw-semibold">Acosta</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>C&eacute;sar Ram&oacute;n</span> <span class="fw-semibold">Adrogu&eacute;</span></li>
-                <li><span>Esteban Antonino</span> <span class="fw-semibold">Adrogu&eacute;</span></li>
-                <li><span>Mat&iacute;as Jes&uacute;s</span> <span class="fst-italic">"Pelado"</span> <span class="fw-semibold">Almeyda</span></li>
-                <li><span>Carlos Alberto</span> <span class="fst-italic">"El Negro"</span> <span class="fw-semibold">&Aacute;lvarez</span></li>
-                <li><span>Javier Segundo</span> <span class="fw-semibold">&Aacute;lvarez</span></li>
-                <li><span class="text-secondary">Dr.</span> <span>Rodolfo H&eacute;rcules</span> <span class="fw-semibold">&Aacute;lvarez Prat</span></li>
-                <li><span class="text-secondary">Dr.</span> <span>Cosme Mariano</span> <span class="fw-semibold">Argerich</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>Alejandro</span> <span class="fw-semibold">Armend&aacute;riz</span></li>
-                <li><span class="text-secondary">Gdor.</span> <span>Alejandro</span> <span class="fw-semibold">Armend&aacute;riz</span></li>
-                <li><span>Sara Amelia</span> <span class="fw-semibold">Arrouy</span><span class="text-secondary">, de Marchisio</span></li>
-                <li><span class="text-secondary">Gdor. Gral.</span> <span>Jos&eacute; Gervasio</span> <span class="fw-semibold">Artigas</span></li>
-                <li><span class="text-secondary">Alfz. Real Ctan.</span> <span>Gaspar</span> <span class="fw-semibold">Avellaneda</span></li>
-                <li><span class="text-secondary">Cnel.</span> <span>Santiago Climaco</span> <span class="fw-semibold">Avenda&ntilde;o</span></li>
-                <li><span>Antonio Enrique</span> <span class="fw-semibold">Aztiria</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>Manuel Cenobio</span> <span class="fw-semibold">Aztiria</span></li>
-                <li><span>Mar&iacute;a Leticia</span> <span class="fw-semibold">Aztiria</span><span class="text-secondary">, de Gurruchaga</span></li>
-                <li><span class="text-secondary">Pte. Mun. Cte.</span> <span>Mat&iacute;as</span> <span class="fw-semibold">B. y Mi&ntilde;ana</span></li>
-                <li><span>Osvaldo Arturo</span> <span class="fw-semibold">Balderrama</span></li>
-                <li><span>Jacinto</span> <span class="fw-semibold">Balmaceda</span></li>
-                <li><span>Mateo</span> <span class="fw-semibold">Banks</span></li>
-                <li><span class="text-secondary">Int. Mun. Dr.</span> <span>Juan Atilio</span> <span class="fw-semibold">Barberena</span></li>
-                <li><span>Clara</span> <span class="fw-semibold">Barberi</span></li>
-                <li><span class="text-secondary">Cbo.</span> <span>Antonio</span> <span class="fw-semibold">Barda</span></li>
-                <li><span>Angelo Maria</span> <span class="fw-semibold">Bardi</span></li>
-                <li><span class="text-secondary">Tte. Cnel.</span> <span>Ventura</span> <span class="fw-semibold">Barrag&aacute;n y Mi&ntilde;ana</span></li>
-                <li><span class="text-secondary">Pbro.</span> <span>Nicol&aacute;s Orlando</span> <span class="fw-semibold">Basile</span></li>
-                <li><span class="text-secondary">Com. Mun. Esc.</span> <span>Alfredo</span> <span class="fw-semibold">Begbeder</span></li>
-                <li><span class="text-secondary">Gral.</span> <span>Manuel Jos&eacute; Joaqu&iacute;n del Coraz&oacute;n de Jes&uacute;s</span> <span class="fw-semibold">Belgrano</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>Mariano</span> <span class="fw-semibold">Berdi&ntilde;as</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>Venancio Eduardo</span> <span class="fw-semibold">Berdi&ntilde;as</span></li>
-                <li><span class="text-secondary">Papa</span> <span>Jorge Mario</span> <span class="fst-italic">"Francisco"</span> <span class="fw-semibold">Bergoglio</span></li>
-                <li><span class="text-secondary">Sor</span> <span>Mar&iacute;a Cecilia Alejandra</span> <span class="fw-semibold">Bergoglio</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>Federico Hern&aacute;n</span> <span class="fw-semibold">Bertellys</span></li>
-                <li><span>Emilia</span> <span class="fw-semibold">Bettinelli</span></li>
-                <li><span class="text-secondary">Gdor.</span> <span>Oscar Ra&uacute;l</span> <span class="fw-semibold">Bidegain</span></li>
-                <li><span class="text-secondary">Dr.</span> <span>Palmiro Bartolom&eacute;</span> <span class="fw-semibold">Bogliano</span></li>
-                <li><span class="text-secondary">Pbro.</span> <span>Mart&iacute;n Honorio</span> <span class="fw-semibold">Bourdette</span></li>
-                <li><span>Adolfo Jacobo Jorge</span> <span class="fw-semibold">Bullrich</span></li>
-                <li><span>Esteban Jos&eacute;</span> <span class="fw-semibold">Bullrich</span></li>
-                <li><span>Patricia</span> <span class="fw-semibold">Bullrich</span></li>
-                <li><span class="text-secondary">Jz. Pz. Cnel.</span> <span>Pedro</span> <span class="fw-semibold">Burgos</span></li>
-                <li><span class="text-secondary">Ctan.</span> <span>Bartolom&eacute;</span> <span class="fw-semibold">Bustos</span></li>
-                <li><span class="text-secondary">Alfz. Real Stte.</span> <span>Jos&eacute; Antonio</span> <span class="fw-semibold">Capdevila</span></li>
-                <li><span class="text-secondary">Jz. Pz. Ctan.</span> <span>Manuel</span> <span class="fw-semibold">Capdevila</span></li>
-                <li><span class="text-secondary">Com. Mun.</span> <span>Silverio</span> <span class="fw-semibold">Carbone</span></li>
-                <li><span class="text-secondary">Jz.</span> <span>Benito Jos&eacute;</span> <span class="fw-semibold">Carrasco</span></li>
-                <li><span class="text-secondary">Dr.</span> <span>Pedro Buenaventura</span> <span class="fw-semibold">Carrasco</span></li>
-                <li><span class="text-secondary">Int. Mun. Dr.</span> <span>Agust&iacute;n Juan</span> <span class="fw-semibold">Car&uacute;s</span></li>
-                <li><span>Mar&iacute;a Clotilde</span> <span class="fst-italic">"Morena"</span> <span class="fw-semibold">Car&uacute;s</span></li>
-                <li><span class="text-secondary">Sor</span> <span>Mar&iacute;a Sof&iacute;a</span> <span class="fw-semibold">Car&uacute;s</span></li>
-                <li><span class="text-secondary">Cdesa. Pnt.</span> <span>Mar&iacute;a Luisa de las Mercedes</span> <span class="fw-semibold">Castellanos</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>Manuel Alfonso</span> <span class="fw-semibold">Castell&aacute;r</span></li>
-                <li><span class="text-secondary">Cacique</span> <span>Cipriano</span> <span class="fst-italic">"Mari &Ntilde;anc&uacute;"</span> <span class="fw-semibold">Catriel</span></li>
-                <li><span class="text-secondary">Cacique</span> <span>Juan Jos&eacute;</span> <span class="fw-semibold">Catriel</span></li>
-                <li><span class="text-secondary">Cacique</span> <span>Marcelino</span> <span class="fw-semibold">Catriel</span></li>
-                <li><span class="text-secondary">Cnel. Dr.</span> <span>Feliciano Antonio</span> <span class="fw-semibold">Chiclana</span></li>
-                <li><span>Guillermo Ram&oacute;n</span> <span class="fst-italic">"Turco"</span> <span class="fw-semibold">Chiodi</span></li>
-                <li><span>Elma</span> <span class="fw-semibold">Cort&aacute;zar</span><span class="text-secondary">, de Lay&uacute;s</span></li>
-                <li><span class="text-secondary">Cnel.</span> <span>Ambroise J&eacute;rome</span> <span class="fw-semibold">Cramer</span></li>
-                <li><span>Mar&iacute;a Araceli</span> <span class="fw-semibold">Cristeche</span><span class="text-secondary">, de Cauh&eacute;p&eacute;</span></li>
-                <li><span>Ernestina Francisca Mar&iacute;a</span> <span class="fw-semibold">Darhanp&eacute;</span></li>
-                <li><span>Tom&aacute;s Manuel</span> <span class="fw-semibold">de Anchorena</span></li>
-                <li><span class="text-secondary">Alc. Prov. Ctan.</span> <span>Mart&iacute;n Jos&eacute;</span> <span class="fw-semibold">de Artigas</span></li>
-                <li><span class="text-secondary">Alc. Prov. Ctan.</span> <span>Juan Antonio</span> <span class="fw-semibold">de Artigas y Ordob&aacute;s</span></li>
-                <li><span class="text-secondary">Ctan.</span> <span>Juan</span> <span class="fw-semibold">de Burgos y Celis</span></li>
-                <li><span class="text-secondary">Int. Mun. Prof.</span> <span>Rub&eacute;n C&eacute;sar</span> <span class="fst-italic">"Poliya"</span> <span class="fw-semibold">De Paula</span></li>
-                <li><span class="text-secondary">Pte. Gral.</span> <span>Justo Jos&eacute; Faustino</span> <span class="fw-semibold">de Urquiza</span></li>
-                <li><span class="text-secondary">Alfz.</span> <span>Gonzalo</span> <span class="fw-semibold">de Z&aacute;rate</span></li>
-                <li><span>Federico</span> <span class="fw-semibold">Delbonis</span></li>
-                <li><span class="text-secondary">Pte. Mun.</span> <span>Jean Blaise</span> <span class="fw-semibold">Dhers</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>Amado</span> <span class="fw-semibold">Diab</span></li>
-                <li><span>Cecilia Argentina</span> <span class="fw-semibold">Diego</span></li>
-                <li><span class="text-secondary">Int. Mun. Dr.</span> <span>Omar Arnaldo</span> <span class="fw-semibold">Ducl&oacute;s</span></li>
-                <li><span class="text-secondary">Bar&oacute;n</span> <span>Luis</span> <span class="fw-semibold">Elola Naharro</span></li>
-                <li><span>Miguel Osvaldo</span> <span class="fw-semibold">Etchecolatz</span></li>
-                <li><span>Mariano Urbano</span> <span class="fw-semibold">Falomir</span></li>
-                <li><span class="text-secondary">Ing. Agr.</span> <span>Eduardo Luis</span> <span class="fw-semibold">Farina</span></li>
-                <li><span>Mar&iacute;a Lucila</span> <span class="fst-italic">"Luli"</span> <span class="fw-semibold">Fern&aacute;ndez</span></li>
-                <li><span>H&eacute;ctor Edgardo</span> <span class="fst-italic">"Cacho Nebbia"</span> <span class="fw-semibold">Ferrarello</span></li>
-                <li><span class="text-secondary">Com. Mun. Dr.</span> <span>Alfredo Pascual</span> <span class="fw-semibold">Ferro</span></li>
-                <li><span class="text-secondary">Del. Mun. Dr.</span> <span>Horacio N&eacute;stor</span> <span class="fw-semibold">Ferro</span></li>
-                <li><span>Oscar Mauricio</span> <span class="fst-italic">"Cacho"</span> <span class="fw-semibold">Franco</span></li>
-                <li><span>Otto Alfredo</span> <span class="fw-semibold">Freitas</span></li>
-                <li><span>Rolando V&iacute;ctor</span> <span class="fw-semibold">Garc&iacute;a</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>Vicente Bernardo</span> <span class="fw-semibold">Gauthier</span></li>
-                <li><span class="text-secondary">Int. Mun. Ing.</span> <span>Enrique Gustavo</span> <span class="fw-semibold">Gennuso</span></li>
-                <li><span class="text-secondary">Pbro.</span> <span>Esteban Daniel</span> <span class="fst-italic">"Pepo"</span> <span class="fw-semibold">Gennuso</span></li>
-                <li><span class="text-secondary">Di&aacute;c.</span> <span>Rub&eacute;n Daniel</span> <span class="fw-semibold">Gennuso</span></li>
-                <li><span class="text-secondary">Sldo.</span> <span>Jos&eacute; Basilio</span> <span class="fw-semibold">G&eacute;nova</span></li>
-                <li><span class="text-secondary">Sldo.</span> <span>Pascual</span> <span class="fw-semibold">G&eacute;nova</span></li>
-                <li><span>Mar&iacute;a de las Nieves Clara</span> <span class="fst-italic">"Santa"</span> <span class="fw-semibold">Gim&eacute;nez</span><span class="text-secondary">, de Ronco</span></li>
-                <li><span>Roberto An&iacute;bal</span> <span class="fw-semibold">Glorioso</span></li>
-                <li><span>Santo</span> <span class="fw-semibold">Glorioso</span></li>
-                <li><span>Mar&iacute;a Rosal&iacute;a</span> <span class="fw-semibold">G&oacute;mez</span><span class="text-secondary">, de Enciso</span></li>
-                <li><span class="text-secondary">Com. Mun. Cnel.</span> <span>Fortunato Carlos</span> <span class="fw-semibold">G&oacute;mez Romero</span></li>
-                <li><span>Francisco Vicente</span> <span class="fw-semibold">Gonz&aacute;lez Pereyra de Lucena</span></li>
-                <li><span>Elva Hayd&eacute;e</span> <span class="fw-semibold">Grat&aacute;s Abot</span></li>
-                <li><span class="text-secondary">Dra.</span> <span>Cecilia</span> <span class="fw-semibold">Grierson</span></li>
-                <li><span>Mar&iacute;a Silvina</span> <span class="fw-semibold">Grierson</span></li>
-                <li><span class="text-secondary">Pte. Mun.</span> <span>Rafael Vicente Ildefonso</span> <span class="fw-semibold">Guedes</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>Pedro</span> <span class="fw-semibold">Guiraut</span></li>
-                <li><span>Antonia</span> <span class="fw-semibold">Guzm&aacute;n</span></li>
-                <li><span>Jos&eacute; Rafael</span> <span class="fw-semibold">Hern&aacute;ndez</span></li>
-                <li><span class="text-secondary">Mons.</span> <span>Miguel Esteban</span> <span class="fw-semibold">Hesayne</span></li>
-                <li><span>Carlos Santiago</span> <span class="fw-semibold">Hourcade</span></li>
-                <li><span>Arturo Mateo</span> <span class="fw-semibold">Ibarra</span></li>
-                <li><span class="text-secondary">Int. Mun. Dr.</span> <span>Jos&eacute; Manuel</span> <span class="fw-semibold">Inza</span></li>
-                <li><span>Kevin Andrew</span> <span class="fw-semibold">Johansen</span></li>
-                <li><span>Mar&iacute;a Amalia Sara</span> <span class="fw-semibold">Lacroze</span><span class="text-secondary">, de Fortabat</span></li>
-                <li><span>Hip&oacute;lito Anacarsis</span> <span class="fw-semibold">Lan&uacute;s</span></li>
-                <li><span>Luis Federico</span> <span class="fw-semibold">Leloir</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>Jos&eacute; Mar&iacute;a</span> <span class="fw-semibold">Lier</span></li>
-                <li><span class="text-secondary">Gdor.</span> <span>Felipe Esteban</span> <span class="fw-semibold">Llavallol</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>Pedro Armando</span> <span class="fw-semibold">L&oacute;pez</span></li>
-                <li><span>Alberto</span> <span class="fw-semibold">L&oacute;pez Claro</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>Alberto Rubens</span> <span class="fw-semibold">L&oacute;pez Claro</span></li>
-                <li><span class="text-secondary">Com. Mun. Dr.</span> <span>Guillermo</span> <span class="fw-semibold">L&oacute;pez Maffoni</span></li>
-                <li><span>Aurelio C&eacute;sar</span> <span class="fst-italic">"Pich&oacute;n"</span> <span class="fw-semibold">L&oacute;pez Oc&oacute;n</span></li>
-                <li><span class="text-secondary">Pbro.</span> <span>Bautista Ferm&iacute;n</span> <span class="fw-semibold">Losardo</span></li>
-                <li><span class="text-secondary">Ing. Agr.</span> <span>Omar Jos&eacute; Mar&iacute;a</span> <span class="fw-semibold">Losardo</span></li>
-                <li><span class="text-secondary">Di&aacute;c.</span> <span>Tom&aacute;s Nicol&aacute;s</span> <span class="fw-semibold">Mac Cabe</span></li>
-                <li><span class="text-secondary">Cacique</span> <span>Juan Rafael</span> <span class="fw-semibold">Maic&aacute;</span></li>
-                <li><span class="text-secondary">Sgto. Mor.</span> <span>Mariano</span> <span class="fw-semibold">Maic&aacute;</span></li>
-                <li><span>Dominga</span> <span class="fw-semibold">Maldonado</span></li>
-                <li><span class="text-secondary">Int. Mun. Dr.</span> <span>Ernesto Mar&iacute;a</span> <span class="fw-semibold">Mal&egrave;re</span></li>
-                <li><span class="text-secondary">Dra.</span> <span>Mar&iacute;a Mercedes</span> <span class="fw-semibold">Mal&egrave;re</span></li>
-                <li><span>Mart&iacute;n Arturo</span> <span class="fw-semibold">Malharro</span></li>
-                <li><span>Eduardo Alberto</span> <span class="fw-semibold">Mallea</span></li>
-                <li><span class="text-secondary">Gral.</span> <span>Lucio Norberto</span> <span class="fw-semibold">Mansilla</span></li>
-                <li><span>Mario Miguel</span> <span class="fw-semibold">Marateo</span></li>
-                <li><span>Giuseppe Leopoldo</span> <span class="fw-semibold">Marchisio</span></li>
-                <li><span>Ercilia</span> <span class="fw-semibold">Moreira</span><span class="text-secondary">, de Cestac</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>Juan Jos&eacute;</span> <span class="fw-semibold">Mujica</span></li>
-                <li><span>Roberto Antonio</span> <span class="fw-semibold">Nanni</span></li>
-                <li><span class="text-secondary">Sldo.</span> <span>Andr&eacute;s</span> <span class="fw-semibold">Navas</span></li>
-                <li><span class="text-secondary">Sldo.</span> <span>Nicol&aacute;s</span> <span class="fw-semibold">Navas</span></li>
-                <li><span class="text-secondary">Brig. Gral.</span> <span>Juan Manuel Jos&eacute; Domingo</span> <span class="fw-semibold">Ortiz de Rosas</span></li>
-                <li><span class="text-secondary">Gral.</span> <span>Prudencio Domingo del Coraz&oacute;n de Jes&uacute;s</span> <span class="fw-semibold">Ortiz de Rosas</span></li>
-                <li><span>Alberto Carlos</span> <span class="fw-semibold">Otero Maffoni</span></li>
-                <li><span>Juan Miguel</span> <span class="fst-italic">"el Viejo"</span> <span class="fw-semibold">Oyhanarte</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>Jos&eacute; Mar&iacute;a</span> <span class="fw-semibold">Peluffo</span></li>
-                <li><span>Juan</span> <span class="fw-semibold">Penoucos</span></li>
-                <li><span>Patricio Pascual</span> <span class="fw-semibold">Peralta Ramos</span></li>
-                <li><span class="text-secondary">Int. Mun. Dr.</span> <span>Juan Carlos</span> <span class="fw-semibold">Peralta Reyes</span></li>
-                <li><span>Vicente</span> <span class="fw-semibold">Pereda</span></li>
-                <li><span class="text-secondary">Tte. Cnel.</span> <span>Felipe Antonio</span> <span class="fw-semibold">Pereyra Lucena</span></li>
-                <li><span>Felice Emilio</span> <span class="fw-semibold">Piazza</span></li>
-                <li><span>Francesco</span> <span class="fw-semibold">Piazza</span></li>
-                <li><span class="text-secondary">Sor</span> <span>Herminia Emilia</span> <span class="fw-semibold">Piazza</span></li>
-                <li><span>Lorenzo</span> <span class="fw-semibold">Piazza</span></li>
-                <li><span>Pietro Luigi</span> <span class="fw-semibold">Piazza</span></li>
-                <li><span>Remigio</span> <span class="fw-semibold">Piazza</span></li>
-                <li><span class="text-secondary">Pbro.</span> <span>Marcos Juan</span> <span class="fw-semibold">Picaroni</span></li>
-                <li><span class="text-secondary">Int. Mun. Dr.</span> <span>&Aacute;ngel de la Concepci&oacute;n</span> <span class="fw-semibold">Pintos</span></li>
-                <li><span class="text-secondary">Dr.</span> <span>Ignacio</span> <span class="fw-semibold">Pirovano</span></li>
-                <li><span class="text-secondary">Tte. Cnel.</span> <span>Sebasti&aacute;n</span> <span class="fw-semibold">Pizarro</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>Francisco Octaviano</span> <span class="fw-semibold">Pourtal&eacute;</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>Pascual Martiniano</span> <span class="fw-semibold">Pourtal&eacute;</span></li>
-                <li><span class="text-secondary">Esc.</span> <span>Alfredo</span> <span class="fw-semibold">Prat</span></li>
-                <li><span>Juan</span> <span class="fw-semibold">Prat</span></li>
-                <li><span>Alfonso</span> <span class="fw-semibold">Prat Gay</span></li>
-                <li><span>Miguel &Aacute;ngel</span> <span class="fw-semibold">Prezioso</span></li>
-                <li><span class="text-secondary">Dr.</span> <span>Emilio Severino</span> <span class="fw-semibold">Puente</span></li>
-                <li><span>Honorio Cirilo</span> <span class="fw-semibold">Pueyrred&oacute;n</span></li>
-                <li><span class="text-secondary">Tte. Cnel.</span> <span>Jos&eacute; Cipriano Andr&eacute;s</span> <span class="fw-semibold">Pueyrred&oacute;n</span></li>
-                <li><span class="text-secondary">Brig. Gral.</span> <span>Juan Mart&iacute;n Mariano</span> <span class="fw-semibold">Pueyrred&oacute;n</span></li>
-                <li><span class="text-secondary">Cnel.</span> <span>Manuel Alejandro</span> <span class="fw-semibold">Pueyrred&oacute;n</span></li>
-                <li><span class="text-secondary">Com. Mun. Esc.</span> <span>Pedro Luis Gregorio</span> <span class="fw-semibold">Ram&iacute;rez Drake</span></li>
-                <li><span class="text-secondary">Bto.</span> <span>Jos&eacute;</span> <span class="fw-semibold">Rescalvo Ruiz</span><span class="text-secondary">, presb&iacute;tero y m&aacute;rtir</span></li>
-                <li><span>Carlos H&eacute;ctor</span> <span class="fst-italic">"Don Goyo"</span> <span class="fw-semibold">Retaco Piovi</span></li>
-                <li><span class="text-secondary">Com. Mun. Agr.</span> <span>Floriano Marcelino</span> <span class="fw-semibold">Rivi&egrave;re</span></li>
-                <li><span>Eduardo Facundo</span> <span class="fw-semibold">Rodr&iacute;guez</span></li>
-                <li><span class="text-secondary">Int. Mun. Dr.</span> <span>H&eacute;ctor Jos&eacute;</span> <span class="fw-semibold">Rodr&iacute;guez</span></li>
-                <li><span>Hugo Pelayo</span> <span class="fst-italic">"Loco"</span> <span class="fw-semibold">Rodr&iacute;guez</span></li>
-                <li><span>Horacio Antonio</span> <span class="fw-semibold">Rodr&iacute;guez Larreta</span></li>
-                <li><span>Beatriz Leocadia</span> <span class="fst-italic">"Buchita"</span> <span class="fw-semibold">Rodr&iacute;guez Oc&oacute;n</span></li>
-                <li><span>Bartolom&eacute; Jos&eacute;</span> <span class="fw-semibold">Ronco</span></li>
-                <li><span class="text-secondary">Jz. Pz. Cnel.</span> <span>Pedro Pablo</span> <span class="fw-semibold">Rosas y Belgrano</span></li>
-                <li><span class="text-secondary">Dra.</span> <span>Mar&iacute;a del Carmen</span> <span class="fw-semibold">Ruiz</span></li>
-                <li><span>Diego Sebasti&aacute;n</span> <span class="fst-italic">"Chino"</span> <span class="fw-semibold">Saja</span></li>
-                <li><span>Norberto Juan</span> <span class="fst-italic">"Papi"</span> <span class="fw-semibold">S&aacute;nchez</span></li>
-                <li><span>An&iacute;bal</span> <span class="fw-semibold">S&aacute;nchez Reulet</span></li>
-                <li><span>Ram&oacute;n Joaqu&iacute;n</span> <span class="fw-semibold">Santamarina</span></li>
-                <li><span class="text-secondary">Com. Mun. Tte. Cnel.</span> <span>Guillermo Rodolfo</span> <span class="fw-semibold">Sarmiento</span></li>
-                <li><span>Alberto Nicomedes</span> <span class="fst-italic">"Beto"</span> <span class="fw-semibold">Sarramone</span></li>
-                <li><span>Mat&iacute;as Esteban</span> <span class="fw-semibold">Sasale</span></li>
-                <li><span>Leocadia</span> <span class="fw-semibold">Say&uacute;s</span><span class="text-secondary">, de Rodr&iacute;guez Oc&oacute;n</span></li>
-                <li><span class="text-secondary">Int. Mun. Dr.</span> <span>Pedro Isidoro</span> <span class="fw-semibold">Say&uacute;s</span></li>
-                <li><span class="text-secondary">Sldo.</span> <span>Juan Eugenio</span> <span class="fw-semibold">Silva</span></li>
-                <li><span class="text-secondary">Cbo.</span> <span>Mariano</span> <span class="fw-semibold">Silva</span></li>
-                <li><span class="text-secondary">Tte.</span> <span>Jos&eacute; Dionisio</span> <span class="fw-semibold">Solano</span></li>
-                <li><span class="text-secondary">Ctan.</span> <span>Rufino</span> <span class="fw-semibold">Solano</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>Nelson Desiderio</span> <span class="fst-italic">"Negro"</span> <span class="fw-semibold">Sombra</span></li>
-                <li><span class="text-secondary">Com. Mun. Esc.</span> <span>Enrique Carlos</span> <span class="fw-semibold">Squirru</span></li>
-                <li><span>Mar&iacute;a Ang&eacute;lica</span> <span class="fw-semibold">Squirru</span><span class="text-secondary">, de Miranda</span></li>
-                <li><span>Raquel Nora</span> <span class="fw-semibold">Taccari</span></li>
-                <li><span>Carlos Jos&eacute;</span> <span class="fst-italic">"El Abuelo"</span> <span class="fw-semibold">T&aacute;rtara</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>Floro Evaristo</span> <span class="fw-semibold">Toscano</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>Francisco</span> <span class="fw-semibold">Toscano</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>Manuel Mariano</span> <span class="fw-semibold">Toscano</span></li>
-                <li><span>Osvaldo Ra&uacute;l</span> <span class="fst-italic">"Flaco"</span> <span class="fw-semibold">Urbina</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>Federico F&eacute;lix</span> <span class="fw-semibold">Urioste</span></li>
-                <li><span>I&ntilde;aki</span> <span class="fw-semibold">Urlezaga</span></li>
-                <li><span class="text-secondary">Dr.</span> <span>Jos&eacute; H&eacute;ctor</span> <span class="fst-italic">"Pichi"</span> <span class="fw-semibold">Url&eacute;zaga</span></li>
-                <li><span>Mar&iacute;a Alejandra</span> <span class="fst-italic">"Al&eacute;x"</span> <span class="fw-semibold">Urrutia Artieda</span></li>
-                <li><span class="text-secondary">Int. Mun.</span> <span>Carlos Manuel Silvano</span> <span class="fw-semibold">Vega Belgrano</span></li>
-                <li><span class="text-secondary">Pte. Mun.</span> <span>Manuel</span> <span class="fw-semibold">Vega Belgrano</span></li>
-                <li><span>Olga Alicia</span> <span class="fw-semibold">Vignau</span></li>
-                <li><span>Susana Lydia</span> <span class="fw-semibold">Vilardeb&oacute;</span></li>
-                <li><span>Tom&aacute;s</span> <span class="fw-semibold">Villanueva</span></li>
-                <li><span>Eufemio</span> <span class="fw-semibold">Zavala y Garc&iacute;a</span></li>
+                <li>Pablo <span class="fw-semibold">Acosta</span> <span class="small text-secondary ps-1">(aprox. 1802&ndash;1840)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> C&eacute;sar Ram&oacute;n <span class="fw-semibold">Adrogu&eacute;</span> <span class="small text-secondary ps-1">(1854&ndash;1934)</span></li>
+                <li>Esteban Antonino <span class="fw-semibold">Adrogu&eacute;</span> <span class="small text-secondary ps-1">(1815&ndash;1903)</span></li>
+                <li>Mat&iacute;as Jes&uacute;s <span class="fst-italic">"Pelado"</span> <span class="fw-semibold">Almeyda</span> <span class="small text-secondary ps-1">(1974&ndash;vive)</span></li>
+                <li>Carlos Alberto <span class="fst-italic">"El Negro"</span> <span class="fw-semibold">&Aacute;lvarez</span> <span class="small text-secondary ps-1">(1945&ndash;vive)</span></li>
+                <li>Javier Segundo <span class="fw-semibold">&Aacute;lvarez</span> <span class="small text-secondary ps-1">(1862&ndash;1922)</span></li>
+                <li><span class="text-secondary"><abbr title="Doctor" tabindex="0">Dr.</abbr></span> Rodolfo H&eacute;rcules <span class="fw-semibold">&Aacute;lvarez Prat</span> <span class="small text-secondary ps-1">(1947&ndash;2022)</span></li>
+                <li><span class="text-secondary"><abbr title="Doctor" tabindex="0">Dr.</abbr></span> Cosme Mariano <span class="fw-semibold">Argerich</span> <span class="small text-secondary ps-1">(1758&ndash;1820)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Alejandro <span class="fw-semibold">Armend&aacute;riz</span> <span class="small text-secondary ps-1">(1895&ndash;1974)</span></li>
+                <li><span class="text-secondary"><abbr title="Gobernador" tabindex="0">Gdor.</abbr></span> Alejandro <span class="fw-semibold">Armend&aacute;riz</span> <span class="small text-secondary ps-1">(1923&ndash;2005)</span></li>
+                <li>Sara Amelia <span class="fw-semibold">Arrouy</span><span class="text-secondary">, de Marchisio</span> <span class="small text-secondary ps-1">(1918&ndash;2001)</span></li>
+                <li><span class="text-secondary"><abbr title="Gobernador General" tabindex="0">Gdor. Gral.</abbr></span> Jos&eacute; Gervasio <span class="fw-semibold">Artigas</span> <span class="small text-secondary ps-1">(1764&ndash;1850)</span></li>
+                <li><span class="text-secondary"><abbr title="Alf&eacute;rez Real Capit&aacute;n" tabindex="0">Alfz. Real Ctan.</abbr></span> Gaspar <span class="fw-semibold">Avellaneda</span> <span class="small text-secondary ps-1">(1654&ndash;?)</span></li>
+                <li><span class="text-secondary"><abbr title="Coronel" tabindex="0">Cnel.</abbr></span> Santiago Climaco <span class="fw-semibold">Avenda&ntilde;o</span> <span class="small text-secondary ps-1">(1833&ndash;1874)</span></li>
+                <li>Antonio Enrique <span class="fw-semibold">Aztiria</span> <span class="small text-secondary ps-1">(1881&ndash;?)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Manuel Cenobio <span class="fw-semibold">Aztiria</span> <span class="small text-secondary ps-1">(1870&ndash;?)</span></li>
+                <li>Mar&iacute;a Leticia <span class="fw-semibold">Aztiria</span><span class="text-secondary">, de Gurruchaga</span> <span class="small text-secondary ps-1">(?&ndash;2013)</span></li>
+                <li><span class="text-secondary"><abbr title="Presidente Municipal Comandante" tabindex="0">Pte. Mun. Cte.</abbr></span> Mat&iacute;as <span class="fw-semibold">B. y Mi&ntilde;ana</span> <span class="small text-secondary ps-1">(aprox. 1832&ndash;1905)</span></li>
+                <li>Osvaldo Arturo <span class="fw-semibold">Balderrama</span> <span class="small text-secondary ps-1">(1942&ndash;2021)</span></li>
+                <li>Jacinto <span class="fw-semibold">Balmaceda</span></li>
+                <li>Mateo <span class="fw-semibold">Banks</span> <span class="small text-secondary ps-1">(1872&ndash;1949)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal Doctor" tabindex="0">Int. Mun. Dr.</abbr></span> Juan Atilio <span class="fw-semibold">Barberena</span></li>
+                <li>Clara <span class="fw-semibold">Barberi</span> <span class="small text-secondary ps-1">(1992&ndash;vive)</span></li>
+                <li><span class="text-secondary"><abbr title="Cabo" tabindex="0">Cbo.</abbr></span> Antonio <span class="fw-semibold">Barda</span> <span class="small text-secondary ps-1">(aprox. 1760&ndash;1821)</span></li>
+                <li>Angelo Maria <span class="fw-semibold">Bardi</span> <span class="small text-secondary ps-1">(1848&ndash;1940)</span></li>
+                <li><span class="text-secondary"><abbr title="Teniente Coronel" tabindex="0">Tte. Cnel.</abbr></span> Ventura <span class="fw-semibold">Barrag&aacute;n y Mi&ntilde;ana</span></li>
+                <li><span class="text-secondary"><abbr title="Presb&iacute;tero" tabindex="0">Pbro.</abbr></span> Nicol&aacute;s Orlando <span class="fw-semibold">Basile</span> <span class="small text-secondary ps-1">(1921&ndash;2011)</span></li>
+                <li><span class="text-secondary"><abbr title="Comisionado Municipal Escribano" tabindex="0">Com. Mun. Esc.</abbr></span> Alfredo <span class="fw-semibold">Begbeder</span> <span class="small text-secondary ps-1">(1914&ndash;2006)</span></li>
+                <li><span class="text-secondary"><abbr title="General" tabindex="0">Gral.</abbr></span> Manuel Jos&eacute; Joaqu&iacute;n del Coraz&oacute;n de Jes&uacute;s <span class="fw-semibold">Belgrano</span> <span class="small text-secondary ps-1">(1770&ndash;1820)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Mariano <span class="fw-semibold">Berdi&ntilde;as</span> <span class="small text-secondary ps-1">(1881&ndash;1960)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Venancio Eduardo <span class="fw-semibold">Berdi&ntilde;as</span></li>
+                <li><span class="text-secondary">Papa</span> Jorge Mario <span class="fst-italic">"Francisco"</span> <span class="fw-semibold">Bergoglio</span> <span class="small text-secondary ps-1">(1936&ndash;vive)</span></li>
+                <li><span class="text-secondary">Sor</span> Mar&iacute;a Cecilia Alejandra <span class="fw-semibold">Bergoglio</span> <span class="small text-secondary ps-1">(1957&ndash;vive)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Federico Hern&aacute;n <span class="fw-semibold">Bertellys</span> <span class="small text-secondary ps-1">(1963&ndash;vive)</span></li>
+                <li>Emilia <span class="fw-semibold">Bettinelli</span> <span class="small text-secondary ps-1">(1890&ndash;?)</span></li>
+                <li><span class="text-secondary"><abbr title="Gobernador" tabindex="0">Gdor.</abbr></span> Oscar Ra&uacute;l <span class="fw-semibold">Bidegain</span> <span class="small text-secondary ps-1">(1905&ndash;1994)</span></li>
+                <li><span class="text-secondary"><abbr title="Doctor" tabindex="0">Dr.</abbr></span> Palmiro Bartolom&eacute; <span class="fw-semibold">Bogliano</span> <span class="small text-secondary ps-1">(1914&ndash;1972)</span></li>
+                <li><span class="text-secondary"><abbr title="Presb&iacute;tero" tabindex="0">Pbro.</abbr></span> Mart&iacute;n Honorio <span class="fw-semibold">Bourdette</span> <span class="small text-secondary ps-1">(1971&ndash;vive)</span></li>
+                <li>Adolfo Jacobo Jorge <span class="fw-semibold">Bullrich</span> <span class="small text-secondary ps-1">(1833&ndash;1904)</span></li>
+                <li>Esteban Jos&eacute; <span class="fw-semibold">Bullrich</span> <span class="small text-secondary ps-1">(1969&ndash;vive)</span></li>
+                <li>Patricia <span class="fw-semibold">Bullrich</span> <span class="small text-secondary ps-1">(1956&ndash;vive)</span></li>
+                <li><span class="text-secondary"><abbr title="Juez de Paz Coronel" tabindex="0">Jz. Pz. Cnel.</abbr></span> Pedro <span class="fw-semibold">Burgos</span> <span class="small text-secondary ps-1">(1776&ndash;1852)</span></li>
+                <li><span class="text-secondary"><abbr title="Capit&aacute;n" tabindex="0">Ctan.</abbr></span> Bartolom&eacute; <span class="fw-semibold">Bustos</span> <span class="small text-secondary ps-1">(aprox. 1520&ndash;aprox. 1593)</span></li>
+                <li><span class="text-secondary"><abbr title="Alf&eacute;rez Real Subteniente" tabindex="0">Alfz. Real Stte.</abbr></span> Jos&eacute; Antonio <span class="fw-semibold">Capdevila</span> <span class="small text-secondary ps-1">(aprox. 1765&ndash;1841)</span></li>
+                <li><span class="text-secondary"><abbr title="Juez de Paz Capit&aacute;n" tabindex="0">Jz. Pz. Ctan.</abbr></span> Manuel <span class="fw-semibold">Capdevila</span> <span class="small text-secondary ps-1">(aprox. 1800&ndash;?)</span></li>
+                <li><span class="text-secondary"><abbr title="Comisionado Municipal" tabindex="0">Com. Mun.</abbr></span> Silverio <span class="fw-semibold">Carbone</span> <span class="small text-secondary ps-1">(1879&ndash;?)</span></li>
+                <li><span class="text-secondary"><abbr title="Juez" tabindex="0">Jz.</abbr></span> Benito Jos&eacute; <span class="fw-semibold">Carrasco</span> <span class="small text-secondary ps-1">(1815&ndash;1871)</span></li>
+                <li><span class="text-secondary"><abbr title="Doctor" tabindex="0">Dr.</abbr></span> Pedro Buenaventura <span class="fw-semibold">Carrasco</span> <span class="small text-secondary ps-1">(1780&ndash;1839)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal Doctor" tabindex="0">Int. Mun. Dr.</abbr></span> Agust&iacute;n Juan <span class="fw-semibold">Car&uacute;s</span> <span class="small text-secondary ps-1">(1887&ndash;1963)</span></li>
+                <li>Mar&iacute;a Clotilde <span class="fst-italic">"Morena"</span> <span class="fw-semibold">Car&uacute;s</span> <span class="small text-secondary ps-1">(1917&ndash;2006)</span></li>
+                <li><span class="text-secondary">Sor</span> Mar&iacute;a Sof&iacute;a <span class="fw-semibold">Car&uacute;s</span> <span class="small text-secondary ps-1">(1963&ndash;vive)</span></li>
+                <li><span class="text-secondary"><abbr title="Gobernador" tabindex="0">Gdor.</abbr></span> Carlos Gumersindo <span class="fw-semibold">Casares</span> <span class="small text-secondary ps-1">(1830&ndash;1883)</span></li>
+                <li>Vicente Lorenzo del Rosario <span class="fw-semibold">Casares</span> <span class="small text-secondary ps-1">(1844&ndash;1910)</span></li>
+                <li><span class="text-secondary"><abbr title="Condesa Pontificia" tabindex="0">Cdesa. Pnt.</abbr></span> Mar&iacute;a Luisa de las Mercedes <span class="fw-semibold">Castellanos</span> <span class="small text-secondary ps-1">(1840&ndash;1920)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Manuel Alfonso <span class="fw-semibold">Castell&aacute;r</span> <span class="small text-secondary ps-1">(1859&ndash;1925)</span></li>
+                <li><span class="text-secondary">Cacique</span> Cipriano <span class="fst-italic">"Mari &Ntilde;anc&uacute;"</span> <span class="fw-semibold">Catriel</span> <span class="small text-secondary ps-1">(aprox. 1837&ndash;1874)</span></li>
+                <li><span class="text-secondary">Cacique</span> Juan Jos&eacute; <span class="fw-semibold">Catriel</span> <span class="small text-secondary ps-1">(aprox. 1830&ndash;1910)</span></li>
+                <li><span class="text-secondary">Cacique</span> Marcelino <span class="fw-semibold">Catriel</span> <span class="small text-secondary ps-1">(aprox. 1834&ndash;1916)</span></li>
+                <li><span class="text-secondary"><abbr title="Coronel Doctor" tabindex="0">Cnel. Dr.</abbr></span> Feliciano Antonio <span class="fw-semibold">Chiclana</span> <span class="small text-secondary ps-1">(1761&ndash;1826)</span></li>
+                <li>Guillermo Ram&oacute;n <span class="fst-italic">"Turco"</span> <span class="fw-semibold">Chiodi</span> <span class="small text-secondary ps-1">(1969&ndash;vive)</span></li>
+                <li>Elma <span class="fw-semibold">Cort&aacute;zar</span><span class="text-secondary">, de Lay&uacute;s</span> <span class="small text-secondary ps-1">(aprox. 1916&ndash;2011)</span></li>
+                <li><span class="text-secondary"><abbr title="Coronel" tabindex="0">Cnel.</abbr></span> Ambroise J&eacute;rome <span class="fw-semibold">Cramer</span> <span class="small text-secondary ps-1">(1790&ndash;1839)</span></li>
+                <li>Mar&iacute;a Araceli <span class="fw-semibold">Cristeche</span><span class="text-secondary">, de Cauh&eacute;p&eacute;</span></li>
+                <li>Ernestina Francisca Mar&iacute;a <span class="fw-semibold">Darhanp&eacute;</span> <span class="small text-secondary ps-1">(1882&ndash;1940)</span></li>
+                <li><span class="text-secondary"><abbr title="Brigadier General" tabindex="0">Brig. Gral.</abbr></span> Carlos Antonio del Santo &Aacute;ngel Guardi&aacute;n <span class="fw-semibold">de Alvear</span> <span class="small text-secondary ps-1">(1789&ndash;1852)</span></li>
+                <li><span class="text-secondary"><abbr title="Presidente" tabindex="0">Pte.</abbr></span> M&aacute;ximo Marcelo Torcuato <span class="fw-semibold">de Alvear</span> <span class="small text-secondary ps-1">(1868&ndash;1942)</span></li>
+                <li>Torcuato Antonio <span class="fw-semibold">de Alvear</span> <span class="small text-secondary ps-1">(1822&ndash;1890)</span></li>
+                <li>Tom&aacute;s Manuel <span class="fw-semibold">de Anchorena</span> <span class="small text-secondary ps-1">(1783&ndash;1847)</span></li>
+                <li><span class="text-secondary"><abbr title="Alcalde Provincial Capit&aacute;n" tabindex="0">Alc. Prov. Ctan.</abbr></span> Mart&iacute;n Jos&eacute; <span class="fw-semibold">de Artigas</span> <span class="small text-secondary ps-1">(1733&ndash;1822)</span></li>
+                <li><span class="text-secondary"><abbr title="Alcalde Provincial Capit&aacute;n" tabindex="0">Alc. Prov. Ctan.</abbr></span> Juan Antonio <span class="fw-semibold">de Artigas y Ordob&aacute;s</span> <span class="small text-secondary ps-1">(aprox. 1693&ndash;1775)</span></li>
+                <li><span class="text-secondary"><abbr title="Capit&aacute;n" tabindex="0">Ctan.</abbr></span> Juan <span class="fw-semibold">de Burgos y Celis</span> <span class="small text-secondary ps-1">(aprox. 1545&ndash;1604)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal Profesor" tabindex="0">Int. Mun. Prof.</abbr></span> Rub&eacute;n C&eacute;sar <span class="fst-italic">"Poliya"</span> <span class="fw-semibold">De Paula</span> <span class="small text-secondary ps-1">(1932&ndash;1994)</span></li>
+                <li><span class="text-secondary"><abbr title="Presidente General" tabindex="0">Pte. Gral.</abbr></span> Justo Jos&eacute; Faustino <span class="fw-semibold">de Urquiza</span> <span class="small text-secondary ps-1">(1801&ndash;1870)</span></li>
+                <li><span class="text-secondary"><abbr title="Alf&eacute;rez" tabindex="0">Alfz.</abbr></span> Gonzalo <span class="fw-semibold">de Z&aacute;rate</span> <span class="small text-secondary ps-1">(1657&ndash;1711)</span></li>
+                <li>Federico <span class="fw-semibold">Delbonis</span> <span class="small text-secondary ps-1">(1990&ndash;vive)</span></li>
+                <li><span class="text-secondary"><abbr title="Presidente Municipal" tabindex="0">Pte. Mun.</abbr></span> Jean Blaise <span class="fw-semibold">Dhers</span> <span class="small text-secondary ps-1">(1821&ndash;1886)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Amado <span class="fw-semibold">Diab</span> <span class="small text-secondary ps-1">(1920&ndash;1963)</span></li>
+                <li>Cecilia Argentina <span class="fw-semibold">Diego</span> <span class="small text-secondary ps-1">(1888&ndash;1975)</span></li>
+                <li>Mar&iacute;a Eva <span class="fw-semibold">Duarte</span><span class="text-secondary">, de Per&oacute;n</span> <span class="small text-secondary ps-1">(1919&ndash;1952)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal Doctor" tabindex="0">Int. Mun. Dr.</abbr></span> Omar Arnaldo <span class="fw-semibold">Ducl&oacute;s</span> <span class="small text-secondary ps-1">(1966&ndash;vive)</span></li>
+                <li><span class="text-secondary">Bar&oacute;n</span> Luis <span class="fw-semibold">Elola Naharro</span> <span class="small text-secondary ps-1">(aprox. 1843&ndash;1903)</span></li>
+                <li>Miguel Osvaldo <span class="fw-semibold">Etchecolatz</span> <span class="small text-secondary ps-1">(1929&ndash;2022)</span></li>
+                <li>Mariano Urbano <span class="fw-semibold">Falomir</span> <span class="small text-secondary ps-1">(1849&ndash;1915)</span></li>
+                <li><span class="text-secondary"><abbr title="Ingeniero Agr&oacute;nomo" tabindex="0">Ing. Agr.</abbr></span> Eduardo Luis <span class="fw-semibold">Farina</span> <span class="small text-secondary ps-1">(1954&ndash;vive)</span></li>
+                <li>Mar&iacute;a Lucila <span class="fst-italic">"Luli"</span> <span class="fw-semibold">Fern&aacute;ndez</span> <span class="small text-secondary ps-1">(1988&ndash;vive)</span></li>
+                <li>H&eacute;ctor Edgardo <span class="fst-italic">"Cacho Nebbia"</span> <span class="fw-semibold">Ferrarello</span> <span class="small text-secondary ps-1">(1940&ndash;2017)</span></li>
+                <li><span class="text-secondary"><abbr title="Comisionado Municipal Doctor" tabindex="0">Com. Mun. Dr.</abbr></span> Alfredo Pascual <span class="fw-semibold">Ferro</span> <span class="small text-secondary ps-1">(?&ndash;1969)</span></li>
+                <li><span class="text-secondary"><abbr title="Delegado Municipal Doctor" tabindex="0">Del. Mun. Dr.</abbr></span> Horacio N&eacute;stor <span class="fw-semibold">Ferro</span> <span class="small text-secondary ps-1">(1914&ndash;1961)</span></li>
+                <li>Oscar Mauricio <span class="fst-italic">"Cacho"</span> <span class="fw-semibold">Franco</span> <span class="small text-secondary ps-1">(1945&ndash;vive)</span></li>
+                <li>Otto Alfredo <span class="fw-semibold">Freitas</span> <span class="small text-secondary ps-1">(1915&ndash;1963)</span></li>
+                <li>Rolando V&iacute;ctor <span class="fw-semibold">Garc&iacute;a</span> <span class="small text-secondary ps-1">(1919&ndash;2012)</span></li>
+                <li>Juana <span class="fw-semibold">Garc&iacute;a Gonz&aacute;lez</span> <span class="small text-secondary ps-1">(aprox. 1792&ndash;1868)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Vicente Bernardo <span class="fw-semibold">Gauthier</span> <span class="small text-secondary ps-1">(aprox. 1873&ndash;?)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal Ingeniero" tabindex="0">Int. Mun. Ing.</abbr></span> Enrique Gustavo <span class="fw-semibold">Gennuso</span> <span class="small text-secondary ps-1">(1959&ndash;vive)</span></li>
+                <li><span class="text-secondary"><abbr title="Presb&iacute;tero" tabindex="0">Pbro.</abbr></span> Esteban Daniel <span class="fst-italic">"Pepo"</span> <span class="fw-semibold">Gennuso</span> <span class="small text-secondary ps-1">(1991&ndash;vive)</span></li>
+                <li><span class="text-secondary"><abbr title="Di&aacute;cono" tabindex="0">Di&aacute;c.</abbr></span> Rub&eacute;n Daniel <span class="fw-semibold">Gennuso</span> <span class="small text-secondary ps-1">(1953&ndash;vive)</span></li>
+                <li><span class="text-secondary"><abbr title="Soldado" tabindex="0">Sldo.</abbr></span> Jos&eacute; Basilio <span class="fw-semibold">G&eacute;nova</span> <span class="small text-secondary ps-1">(aprox. 1801&ndash;1858)</span></li>
+                <li><span class="text-secondary"><abbr title="Soldado" tabindex="0">Sldo.</abbr></span> Pascual <span class="fw-semibold">G&eacute;nova</span> <span class="small text-secondary ps-1">(aprox. 1818&ndash;aprox. 1870)</span></li>
+                <li>Mar&iacute;a de las Nieves Clara <span class="fst-italic">"Santa"</span> <span class="fw-semibold">Gim&eacute;nez</span><span class="text-secondary">, de Ronco</span> <span class="small text-secondary ps-1">(aprox. 1886&ndash;1984)</span></li>
+                <li>Roberto An&iacute;bal <span class="fw-semibold">Glorioso</span> <span class="small text-secondary ps-1">(1951&ndash;2018)</span></li>
+                <li>Santo <span class="fw-semibold">Glorioso</span> <span class="small text-secondary ps-1">(1910&ndash;1995)</span></li>
+                <li>Mar&iacute;a Rosal&iacute;a <span class="fw-semibold">G&oacute;mez</span><span class="text-secondary">, de Enciso</span> <span class="small text-secondary ps-1">(1867&ndash;1920)</span></li>
+                <li><span class="text-secondary"><abbr title="Comisionado Municipal Coronel" tabindex="0">Com. Mun. Cnel.</abbr></span> Fortunato Carlos <span class="fw-semibold">G&oacute;mez Romero</span> <span class="small text-secondary ps-1">(?&ndash;2007)</span></li>
+                <li>Francisco Vicente <span class="fw-semibold">Gonz&aacute;lez Pereyra de Lucena</span> <span class="small text-secondary ps-1">(aprox. 1710&ndash;?)</span></li>
+                <li>Elva Hayd&eacute;e <span class="fw-semibold">Grat&aacute;s Abot</span> <span class="small text-secondary ps-1">(1934&ndash;2024)</span></li>
+                <li><span class="text-secondary"><abbr title="Doctora" tabindex="0">Dra.</abbr></span> Cecilia <span class="fw-semibold">Grierson</span> <span class="small text-secondary ps-1">(1859&ndash;1934)</span></li>
+                <li>Mar&iacute;a Silvina <span class="fw-semibold">Grierson</span> <span class="small text-secondary ps-1">(1973&ndash;2009)</span></li>
+                <li><span class="text-secondary"><abbr title="Presidente Municipal" tabindex="0">Pte. Mun.</abbr></span> Rafael Vicente Ildefonso <span class="fw-semibold">Guedes</span> <span class="small text-secondary ps-1">(1824&ndash;1881)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Pedro <span class="fw-semibold">Guiraut</span> <span class="small text-secondary ps-1">(1872&ndash;1937)</span></li>
+                <li>Antonia <span class="fw-semibold">Guzm&aacute;n</span></li>
+                <li>Jos&eacute; Rafael <span class="fw-semibold">Hern&aacute;ndez</span> <span class="small text-secondary ps-1">(1834&ndash;1886)</span></li>
+                <li><span class="text-secondary"><abbr title="Monse&ntilde;or" tabindex="0">Mons.</abbr></span> Miguel Esteban <span class="fw-semibold">Hesayne</span> <span class="small text-secondary ps-1">(1922&ndash;2019)</span></li>
+                <li>Carlos Santiago <span class="fw-semibold">Hourcade</span> <span class="small text-secondary ps-1">(1961&ndash;2019)</span></li>
+                <li>Arturo Mateo <span class="fw-semibold">Ibarra</span> <span class="small text-secondary ps-1">(1945&ndash;2008)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal Doctor" tabindex="0">Int. Mun. Dr.</abbr></span> Jos&eacute; Manuel <span class="fw-semibold">Inza</span> <span class="small text-secondary ps-1">(1952&ndash;vive)</span></li>
+                <li>Kevin Andrew <span class="fw-semibold">Johansen</span> <span class="small text-secondary ps-1">(1964&ndash;vive)</span></li>
+                <li>Mar&iacute;a Amalia Sara <span class="fw-semibold">Lacroze</span><span class="text-secondary">, de Fortabat</span> <span class="small text-secondary ps-1">(1921&ndash;2012)</span></li>
+                <li>Hip&oacute;lito Anacarsis <span class="fw-semibold">Lan&uacute;s</span> <span class="small text-secondary ps-1">(1820&ndash;1888)</span></li>
+                <li>Luis Federico <span class="fw-semibold">Leloir</span> <span class="small text-secondary ps-1">(1906&ndash;1987)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Jos&eacute; Mar&iacute;a <span class="fw-semibold">Lier</span> <span class="small text-secondary ps-1">(1871&ndash;1953)</span></li>
+                <li><span class="text-secondary"><abbr title="Gobernador" tabindex="0">Gdor.</abbr></span> Felipe Esteban <span class="fw-semibold">Llavallol</span> <span class="small text-secondary ps-1">(1802&ndash;1874)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Pedro Armando <span class="fw-semibold">L&oacute;pez</span> <span class="small text-secondary ps-1">(1915&ndash;2005)</span></li>
+                <li>Alberto <span class="fw-semibold">L&oacute;pez Claro</span> <span class="small text-secondary ps-1">(1882&ndash;1952)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Alberto Rubens <span class="fw-semibold">L&oacute;pez Claro</span> <span class="small text-secondary ps-1">(1909&ndash;?)</span></li>
+                <li><span class="text-secondary"><abbr title="Comisionado Municipal Doctor" tabindex="0">Com. Mun. Dr.</abbr></span> Guillermo <span class="fw-semibold">L&oacute;pez Maffoni</span> <span class="small text-secondary ps-1">(1909&ndash;1980)</span></li>
+                <li>Aurelio C&eacute;sar <span class="fst-italic">"Pich&oacute;n"</span> <span class="fw-semibold">L&oacute;pez Oc&oacute;n</span> <span class="small text-secondary ps-1">(1914&ndash;1973)</span></li>
+                <li><span class="text-secondary"><abbr title="Presb&iacute;tero" tabindex="0">Pbro.</abbr></span> Bautista Ferm&iacute;n <span class="fw-semibold">Losardo</span> <span class="small text-secondary ps-1">(?&ndash;2011)</span></li>
+                <li><span class="text-secondary"><abbr title="Ingeniero Agr&oacute;nomo" tabindex="0">Ing. Agr.</abbr></span> Omar Jos&eacute; Mar&iacute;a <span class="fw-semibold">Losardo</span> <span class="small text-secondary ps-1">(1957&ndash;vive)</span></li>
+                <li><span class="text-secondary"><abbr title="Di&aacute;cono" tabindex="0">Di&aacute;c.</abbr></span> Tom&aacute;s Nicol&aacute;s <span class="fw-semibold">Mac Cabe</span> <span class="small text-secondary ps-1">(1916&ndash;2008)</span></li>
+                <li><span class="text-secondary">Cacique</span> Juan Rafael <span class="fw-semibold">Maic&aacute;</span></li>
+                <li><span class="text-secondary"><abbr title="Sargento Mayor" tabindex="0">Sgto. Mor.</abbr></span> Mariano <span class="fw-semibold">Maic&aacute;</span> <span class="small text-secondary ps-1">(aprox. 1832&ndash;1868)</span></li>
+                <li>Dominga <span class="fw-semibold">Maldonado</span> <span class="small text-secondary ps-1">(?&ndash;1779)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal Doctor" tabindex="0">Int. Mun. Dr.</abbr></span> Ernesto Mar&iacute;a <span class="fw-semibold">Mal&egrave;re</span> <span class="small text-secondary ps-1">(1921&ndash;1975)</span></li>
+                <li><span class="text-secondary"><abbr title="Doctora" tabindex="0">Dra.</abbr></span> Mar&iacute;a Mercedes <span class="fw-semibold">Mal&egrave;re</span> <span class="small text-secondary ps-1">(1951&ndash;vive)</span></li>
+                <li>Mart&iacute;n Arturo <span class="fw-semibold">Malharro</span> <span class="small text-secondary ps-1">(1865&ndash;1911)</span></li>
+                <li>Eduardo Alberto <span class="fw-semibold">Mallea</span> <span class="small text-secondary ps-1">(1903&ndash;1982)</span></li>
+                <li><span class="text-secondary"><abbr title="General" tabindex="0">Gral.</abbr></span> Lucio Norberto <span class="fw-semibold">Mansilla</span> <span class="small text-secondary ps-1">(1792&ndash;1871)</span></li>
+                <li>Mario Miguel <span class="fw-semibold">Marateo</span> <span class="small text-secondary ps-1">(1928&ndash;2018)</span></li>
+                <li>Giuseppe Leopoldo <span class="fw-semibold">Marchisio</span> <span class="small text-secondary ps-1">(1872&ndash;1966)</span></li>
+                <li><span class="text-secondary"><abbr title="Presidenta" tabindex="0">Pta.</abbr></span> Mar&iacute;a Estela <span class="fst-italic">"Isabelita"</span> <span class="fw-semibold">Mart&iacute;nez</span><span class="text-secondary">, de Per&oacute;n</span> <span class="small text-secondary ps-1">(1931&ndash;vive)</span></li>
+                <li><span class="text-secondary"><abbr title="Gobernador" tabindex="0">Gdor.</abbr></span> Federico Lorenzo <span class="fw-semibold">Mart&iacute;nez de Hoz</span> <span class="small text-secondary ps-1">(1866&ndash;1935)</span></li>
+                <li>Jos&eacute; Alfredo <span class="fw-semibold">Mart&iacute;nez de Hoz</span> <span class="small text-secondary ps-1">(1925&ndash;1981)</span></li>
+                <li><span class="text-secondary"><abbr title="Coronel" tabindex="0">Cnel.</abbr></span> Miguel Florencio <span class="fw-semibold">Mart&iacute;nez de Hoz</span> <span class="small text-secondary ps-1">(1832&ndash;1868)</span></li>
+                <li>Ercilia <span class="fw-semibold">Moreira</span><span class="text-secondary">, de Cestac</span> <span class="small text-secondary ps-1">(aprox. 1925&ndash;2011)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Juan Jos&eacute; <span class="fw-semibold">Mujica</span> <span class="small text-secondary ps-1">(aprox. 1886&ndash;1927)</span></li>
+                <li>Roberto Antonio <span class="fw-semibold">Nanni</span> <span class="small text-secondary ps-1">(1981&ndash;vive)</span></li>
+                <li><span class="text-secondary"><abbr title="Soldado" tabindex="0">Sldo.</abbr></span> Andr&eacute;s <span class="fw-semibold">Navas</span> <span class="small text-secondary ps-1">(1811&ndash;1877)</span></li>
+                <li><span class="text-secondary"><abbr title="Soldado" tabindex="0">Sldo.</abbr></span> Nicol&aacute;s <span class="fw-semibold">Navas</span> <span class="small text-secondary ps-1">(aprox. 1807&ndash;?)</span></li>
+                <li><span class="text-secondary"><abbr title="Mayor" tabindex="0">Mor.</abbr></span> Manuel Anselmo Gregorio <span class="fw-semibold">Ocampo</span> <span class="small text-secondary ps-1">(1833&ndash;1917)</span></li>
+                <li><span class="text-secondary"><abbr title="Brigadier General" tabindex="0">Brig. Gral.</abbr></span> Juan Manuel Jos&eacute; Domingo <span class="fw-semibold">Ortiz de Rosas</span> <span class="small text-secondary ps-1">(1793&ndash;1877)</span></li>
+                <li><span class="text-secondary"><abbr title="General" tabindex="0">Gral.</abbr></span> Prudencio Domingo del Coraz&oacute;n de Jes&uacute;s <span class="fw-semibold">Ortiz de Rosas</span> <span class="small text-secondary ps-1">(1800&ndash;1857)</span></li>
+                <li>Alberto Carlos <span class="fw-semibold">Otero Maffoni</span> <span class="small text-secondary ps-1">(1920&ndash;1991)</span></li>
+                <li>Juan Miguel <span class="fst-italic">"el Viejo"</span> <span class="fw-semibold">Oyhanarte</span> <span class="small text-secondary ps-1">(1926&ndash;2009)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Jos&eacute; Mar&iacute;a <span class="fw-semibold">Peluffo</span> <span class="small text-secondary ps-1">(1892&ndash;1952)</span></li>
+                <li>Juan <span class="fw-semibold">Penoucos</span> <span class="small text-secondary ps-1">(2005&ndash;vive)</span></li>
+                <li>Patricio Pascual <span class="fw-semibold">Peralta Ramos</span> <span class="small text-secondary ps-1">(1814&ndash;1887)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal Doctor" tabindex="0">Int. Mun. Dr.</abbr></span> Juan Carlos <span class="fw-semibold">Peralta Reyes</span> <span class="small text-secondary ps-1">(1908&ndash;1976)</span></li>
+                <li>Vicente <span class="fw-semibold">Pereda</span> <span class="small text-secondary ps-1">(1826&ndash;1914)</span></li>
+                <li><span class="text-secondary"><abbr title="Teniente Coronel" tabindex="0">Tte. Cnel.</abbr></span> Felipe Antonio <span class="fw-semibold">Pereyra Lucena</span> <span class="small text-secondary ps-1">(1789&ndash;1811)</span></li>
+                <li><span class="text-secondary"><abbr title="Presidente Teniente General" tabindex="0">Pte. Tte. Gral.</abbr></span> Juan Domingo <span class="fw-semibold">Per&oacute;n</span> <span class="small text-secondary ps-1">(1895&ndash;1974)</span></li>
+                <li>Felice Emilio <span class="fw-semibold">Piazza</span> <span class="small text-secondary ps-1">(aprox. 1862&ndash;1931)</span></li>
+                <li>Francesco <span class="fw-semibold">Piazza</span> <span class="small text-secondary ps-1">(aprox. 1858&ndash;1908)</span></li>
+                <li><span class="text-secondary">Sor</span> Herminia Emilia <span class="fw-semibold">Piazza</span> <span class="small text-secondary ps-1">(1903&ndash;?)</span></li>
+                <li>Lorenzo <span class="fw-semibold">Piazza</span> <span class="small text-secondary ps-1">(1853&ndash;1935)</span></li>
+                <li>Pietro Luigi <span class="fw-semibold">Piazza</span> <span class="small text-secondary ps-1">(aprox. 1870&ndash;1955)</span></li>
+                <li>Remigio <span class="fw-semibold">Piazza</span> <span class="small text-secondary ps-1">(aprox. 1860&ndash;?)</span></li>
+                <li><span class="text-secondary"><abbr title="Presb&iacute;tero" tabindex="0">Pbro.</abbr></span> Marcos Juan <span class="fw-semibold">Picaroni</span> <span class="small text-secondary ps-1">(1966&ndash;vive)</span></li>
+                <li><span class="text-secondary"><abbr title="Gobernador General" tabindex="0">Gdor. Gral.</abbr></span> Manuel Antonio Guillermo <span class="fw-semibold">Pinto</span> <span class="small text-secondary ps-1">(1783&ndash;1853)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal Doctor" tabindex="0">Int. Mun. Dr.</abbr></span> &Aacute;ngel de la Concepci&oacute;n <span class="fw-semibold">Pintos</span> <span class="small text-secondary ps-1">(1854&ndash;1944)</span></li>
+                <li><span class="text-secondary"><abbr title="Doctor" tabindex="0">Dr.</abbr></span> Ignacio <span class="fw-semibold">Pirovano</span> <span class="small text-secondary ps-1">(1844&ndash;1895)</span></li>
+                <li><span class="text-secondary"><abbr title="Teniente Coronel" tabindex="0">Tte. Cnel.</abbr></span> Sebasti&aacute;n <span class="fw-semibold">Pizarro</span> <span class="small text-secondary ps-1">(aprox. 1722&ndash;1796)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Francisco Octaviano <span class="fw-semibold">Pourtal&eacute;</span> <span class="small text-secondary ps-1">(1874&ndash;1938)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Pascual Martiniano <span class="fw-semibold">Pourtal&eacute;</span> <span class="small text-secondary ps-1">(1881&ndash;?)</span></li>
+                <li><span class="text-secondary"><abbr title="Escribano" tabindex="0">Esc.</abbr></span> Alfredo <span class="fw-semibold">Prat</span> <span class="small text-secondary ps-1">(1905&ndash;1985)</span></li>
+                <li>Juan <span class="fw-semibold">Prat</span> <span class="small text-secondary ps-1">(1896&ndash;1966)</span></li>
+                <li>Alfonso <span class="fw-semibold">Prat Gay</span> <span class="small text-secondary ps-1">(1965&ndash;vive)</span></li>
+                <li>Miguel &Aacute;ngel <span class="fw-semibold">Prezioso</span> <span class="small text-secondary ps-1">(1934&ndash;2007)</span></li>
+                <li><span class="text-secondary"><abbr title="Doctor" tabindex="0">Dr.</abbr></span> Emilio Severino <span class="fw-semibold">Puente</span> <span class="small text-secondary ps-1">(1912&ndash;1972)</span></li>
+                <li>Honorio Cirilo <span class="fw-semibold">Pueyrred&oacute;n</span> <span class="small text-secondary ps-1">(1876&ndash;1945)</span></li>
+                <li><span class="text-secondary"><abbr title="Teniente Coronel" tabindex="0">Tte. Cnel.</abbr></span> Jos&eacute; Cipriano Andr&eacute;s <span class="fw-semibold">Pueyrred&oacute;n</span> <span class="small text-secondary ps-1">(1779&ndash;1827)</span></li>
+                <li><span class="text-secondary"><abbr title="Brigadier General" tabindex="0">Brig. Gral.</abbr></span> Juan Mart&iacute;n Mariano <span class="fw-semibold">Pueyrred&oacute;n</span> <span class="small text-secondary ps-1">(1777&ndash;1850)</span></li>
+                <li><span class="text-secondary"><abbr title="Coronel" tabindex="0">Cnel.</abbr></span> Manuel Alejandro <span class="fw-semibold">Pueyrred&oacute;n</span> <span class="small text-secondary ps-1">(1802&ndash;1865)</span></li>
+                <li><span class="text-secondary"><abbr title="Comisionado Municipal Escribano" tabindex="0">Com. Mun. Esc.</abbr></span> Pedro Luis Gregorio <span class="fw-semibold">Ram&iacute;rez Drake</span> <span class="small text-secondary ps-1">(1906&ndash;1983)</span></li>
+                <li><span class="text-secondary"><abbr title="Beato" tabindex="0">Bto.</abbr></span> Jos&eacute; <span class="fw-semibold">Rescalvo Ruiz</span><span class="text-secondary">, presb&iacute;tero y m&aacute;rtir</span> <span class="small text-secondary ps-1">(1880&ndash;1936)</span></li>
+                <li>Carlos H&eacute;ctor <span class="fst-italic">"Don Goyo"</span> <span class="fw-semibold">Retaco Piovi</span> <span class="small text-secondary ps-1">(1929&ndash;2017)</span></li>
+                <li><span class="text-secondary"><abbr title="Comisionado Municipal Agrimensor" tabindex="0">Com. Mun. Agr.</abbr></span> Floriano Marcelino <span class="fw-semibold">Rivi&egrave;re</span> <span class="small text-secondary ps-1">(1916&ndash;1979)</span></li>
+                <li>Eduardo Facundo <span class="fw-semibold">Rodr&iacute;guez</span> <span class="small text-secondary ps-1">(1980&ndash;vive)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal Doctor" tabindex="0">Int. Mun. Dr.</abbr></span> H&eacute;ctor Jos&eacute; <span class="fw-semibold">Rodr&iacute;guez</span> <span class="small text-secondary ps-1">(1945&ndash;2003)</span></li>
+                <li>Hugo Pelayo <span class="fst-italic">"Loco"</span> <span class="fw-semibold">Rodr&iacute;guez</span> <span class="small text-secondary ps-1">(1944&ndash;2023)</span></li>
+                <li>Horacio Antonio <span class="fw-semibold">Rodr&iacute;guez Larreta</span> <span class="small text-secondary ps-1">(1965&ndash;vive)</span></li>
+                <li>Beatriz Leocadia <span class="fst-italic">"Buchita"</span> <span class="fw-semibold">Rodr&iacute;guez Oc&oacute;n</span> <span class="small text-secondary ps-1">(1927&ndash;1972)</span></li>
+                <li>Bartolom&eacute; Jos&eacute; <span class="fw-semibold">Ronco</span> <span class="small text-secondary ps-1">(1881&ndash;1952)</span></li>
+                <li><span class="text-secondary"><abbr title="Juez de Paz Coronel" tabindex="0">Jz. Pz. Cnel.</abbr></span> Pedro Pablo <span class="fw-semibold">Rosas y Belgrano</span> <span class="small text-secondary ps-1">(1813&ndash;1863)</span></li>
+                <li>C&eacute;sar Luis <span class="fst-italic">"Quelo"</span> <span class="fw-semibold">Rossi</span> <span class="small text-secondary ps-1">(1936&ndash;2017)</span></li>
+                <li><span class="text-secondary"><abbr title="Doctora" tabindex="0">Dra.</abbr></span> Mar&iacute;a del Carmen <span class="fw-semibold">Ruiz</span> <span class="small text-secondary ps-1">(1955&ndash;2020)</span></li>
+                <li>Diego Sebasti&aacute;n <span class="fst-italic">"Chino"</span> <span class="fw-semibold">Saja</span> <span class="small text-secondary ps-1">(1979&ndash;vive)</span></li>
+                <li>Norberto Juan <span class="fst-italic">"Papi"</span> <span class="fw-semibold">S&aacute;nchez</span> <span class="small text-secondary ps-1">(1941&ndash;2022)</span></li>
+                <li>An&iacute;bal <span class="fw-semibold">S&aacute;nchez Reulet</span> <span class="small text-secondary ps-1">(1910&ndash;1997)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Ram&oacute;n Joaqu&iacute;n Manuel Ces&aacute;reo <span class="fw-semibold">Santamarina</span> <span class="small text-secondary ps-1">(1827&ndash;1904)</span></li>
+                <li><span class="text-secondary"><abbr title="Comisionado Municipal Teniente Coronel" tabindex="0">Com. Mun. Tte. Cnel.</abbr></span> Guillermo Rodolfo <span class="fw-semibold">Sarmiento</span> <span class="small text-secondary ps-1">(?&ndash;1972)</span></li>
+                <li>Alberto Nicomedes <span class="fst-italic">"Beto"</span> <span class="fw-semibold">Sarramone</span> <span class="small text-secondary ps-1">(1935&ndash;vive)</span></li>
+                <li>Mat&iacute;as Esteban <span class="fw-semibold">Sasale</span> <span class="small text-secondary ps-1">(1987&ndash;vive)</span></li>
+                <li>Leocadia <span class="fw-semibold">Say&uacute;s</span><span class="text-secondary">, de Rodr&iacute;guez Oc&oacute;n</span> <span class="small text-secondary ps-1">(aprox. 1907&ndash;?)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal Doctor" tabindex="0">Int. Mun. Dr.</abbr></span> Pedro Isidoro <span class="fw-semibold">Say&uacute;s</span> <span class="small text-secondary ps-1">(1851&ndash;aprox. 1935)</span></li>
+                <li><span class="text-secondary"><abbr title="Soldado" tabindex="0">Sldo.</abbr></span> Juan Eugenio <span class="fw-semibold">Silva</span> <span class="small text-secondary ps-1">(aprox. 1760&ndash;?)</span></li>
+                <li><span class="text-secondary"><abbr title="Cabo" tabindex="0">Cbo.</abbr></span> Mariano <span class="fw-semibold">Silva</span> <span class="small text-secondary ps-1">(aprox. 1790&ndash;?)</span></li>
+                <li><span class="text-secondary"><abbr title="Teniente" tabindex="0">Tte.</abbr></span> Jos&eacute; Dionisio <span class="fw-semibold">Solano</span> <span class="small text-secondary ps-1">(aprox. 1794&ndash;1882)</span></li>
+                <li><span class="text-secondary"><abbr title="Capit&aacute;n" tabindex="0">Ctan.</abbr></span> Rufino <span class="fw-semibold">Solano</span> <span class="small text-secondary ps-1">(1838&ndash;1913)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Nelson Desiderio <span class="fst-italic">"Negro"</span> <span class="fw-semibold">Sombra</span> <span class="small text-secondary ps-1">(1972&ndash;vive)</span></li>
+                <li><span class="text-secondary"><abbr title="Comisionado Municipal Escribano" tabindex="0">Com. Mun. Esc.</abbr></span> Enrique Carlos <span class="fw-semibold">Squirru</span> <span class="small text-secondary ps-1">(1905&ndash;1978)</span></li>
+                <li>Mar&iacute;a Ang&eacute;lica <span class="fw-semibold">Squirru</span><span class="text-secondary">, de Miranda</span> <span class="small text-secondary ps-1">(1907&ndash;1995)</span></li>
+                <li>Raquel Nora <span class="fw-semibold">Taccari</span> <span class="small text-secondary ps-1">(1930&ndash;2018)</span></li>
+                <li>Carlos Jos&eacute; <span class="fst-italic">"El Abuelo"</span> <span class="fw-semibold">T&aacute;rtara</span> <span class="small text-secondary ps-1">(1921&ndash;2002)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Floro Evaristo <span class="fw-semibold">Toscano</span> <span class="small text-secondary ps-1">(1862&ndash;?)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Francisco <span class="fw-semibold">Toscano</span> <span class="small text-secondary ps-1">(1903&ndash;1979)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Manuel Mariano <span class="fw-semibold">Toscano</span> <span class="small text-secondary ps-1">(1859&ndash;?)</span></li>
+                <li>Osvaldo Ra&uacute;l <span class="fst-italic">"Flaco"</span> <span class="fw-semibold">Urbina</span> <span class="small text-secondary ps-1">(1937&ndash;2017)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Federico F&eacute;lix <span class="fw-semibold">Urioste</span> <span class="small text-secondary ps-1">(1867&ndash;?)</span></li>
+                <li>I&ntilde;aki <span class="fw-semibold">Urlezaga</span> <span class="small text-secondary ps-1">(1975&ndash;vive)</span></li>
+                <li><span class="text-secondary"><abbr title="Doctor" tabindex="0">Dr.</abbr></span> Jos&eacute; H&eacute;ctor <span class="fst-italic">"Pichi"</span> <span class="fw-semibold">Url&eacute;zaga</span> <span class="small text-secondary ps-1">(1955&ndash;2014)</span></li>
+                <li>Mar&iacute;a Alejandra <span class="fst-italic">"Al&eacute;x"</span> <span class="fw-semibold">Urrutia Artieda</span> <span class="small text-secondary ps-1">(1903&ndash;1982)</span></li>
+                <li><span class="text-secondary"><abbr title="Intendente Municipal" tabindex="0">Int. Mun.</abbr></span> Carlos Manuel Silvano <span class="fw-semibold">Vega Belgrano</span> <span class="small text-secondary ps-1">(1858&ndash;1930)</span></li>
+                <li><span class="text-secondary"><abbr title="Presidente Municipal" tabindex="0">Pte. Mun.</abbr></span> Manuel <span class="fw-semibold">Vega Belgrano</span> <span class="small text-secondary ps-1">(aprox. 1813&ndash;1875)</span></li>
+                <li><span class="text-secondary"><abbr title="General" tabindex="0">Gral.</abbr></span> Juan Jos&eacute; <span class="fw-semibold">Viamonte</span> <span class="small text-secondary ps-1">(1774&ndash;1843)</span></li>
+                <li>Olga Alicia <span class="fw-semibold">Vignau</span> <span class="small text-secondary ps-1">(1928&ndash;1953)</span></li>
+                <li>Susana Lydia <span class="fw-semibold">Vilardeb&oacute;</span> <span class="small text-secondary ps-1">(?&ndash;2008)</span></li>
+                <li>Tom&aacute;s <span class="fw-semibold">Villanueva</span></li>
+                <li>Eufemio <span class="fw-semibold">Zavala y Garc&iacute;a</span> <span class="small text-secondary ps-1">(1839&ndash;1906)</span></li>
               </ul>
             </div>
           </div>

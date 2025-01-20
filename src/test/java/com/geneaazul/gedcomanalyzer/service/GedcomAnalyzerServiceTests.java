@@ -816,13 +816,16 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void findDistinguishedPersons() {
-        System.out.println("findDistinguishedPersons:");
-
-        /* Default printing */
-        gedcom
+        List<EnrichedPerson> distinguishedPeople = gedcom
                 .getPeople()
                 .stream()
                 .filter(EnrichedPerson::isDistinguishedPerson)
+                .toList();
+        System.out.println("findDistinguishedPersons (" + distinguishedPeople.size() + "):");
+
+        /* Default printing */
+        distinguishedPeople
+                .stream()
                 .sorted(Comparator.comparing(
                         p -> (
                                 p.isAlive()
@@ -836,10 +839,8 @@ public class GedcomAnalyzerServiceTests {
 
         /* Generate HTMl <li> list */
         /*
-        gedcom
-                .getPeople()
+        distinguishedPeople
                 .stream()
-                .filter(EnrichedPerson::isDistinguishedPerson)
                 .sorted(Comparator
                         .<EnrichedPerson, String>comparing(
                                 p -> p.getSurname().map(Surname::simplified).orElse(null),
@@ -847,7 +848,12 @@ public class GedcomAnalyzerServiceTests {
                         .thenComparing(
                                 p -> p.getGivenName().map(GivenName::simplified).orElse(null),
                                 Comparator.nullsLast(Comparator.naturalOrder())))
-                .forEach(p -> System.out.println("<li>" + p.getDisplayName() + "</li>"));
+                .forEach(p -> {
+                    String nameWithFormat = PersonUtils.getDistinguishedPersonNameForSite(
+                            p.getLegacyPerson().orElseThrow(),
+                            properties.getNamePrefixesMap());
+                    System.out.println("<li>" + nameWithFormat + "</li>");
+                });
          */
     }
 
