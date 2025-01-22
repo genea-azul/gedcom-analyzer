@@ -248,7 +248,21 @@ public class PersonUtils {
                                     ? "aprox. " + date.getYear()
                                     : String.valueOf(date.getYear())));
                     if (yob.isPresent() || yod.isPresent()) {
-                        displayName = trimAndAppend(displayName, "<span class=\"small text-secondary ps-1\">(" + yob.orElse("?") + "&ndash;" + (isAlive ? "vive" : yod.orElse("?")) + ")</span>");
+                        String birthTag = yob.orElse("?");
+                        String deathTag = isAlive ? "vive" : yod.orElse("?");
+                        if (yob.isPresent()) {
+                            Optional<String> pob = PersonUtils.getPlaceOfBirth(person);
+                            if (pob.isPresent()) {
+                                birthTag = "<span title=\"" + pob.get() + "\">" + birthTag + "</span>";
+                            }
+                        }
+                        if (yod.isPresent()) {
+                            Optional<String> pod = PersonUtils.getPlaceOfDeath(person);
+                            if (pod.isPresent()) {
+                                deathTag = "<span title=\"" + pod.get() + "\">" + deathTag + "</span>";
+                            }
+                        }
+                        displayName = trimAndAppend(displayName, "<span class=\"small text-secondary ps-1\">(" + birthTag + "&ndash;" + deathTag + ")</span>");
                     }
 
                     return displayName;
