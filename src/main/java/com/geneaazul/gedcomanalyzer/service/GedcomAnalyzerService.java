@@ -485,7 +485,8 @@ public class GedcomAnalyzerService {
                                 personService
                                         .getPeopleInTree(person, false, true, false)
                                         .stream()
-                                        .map(Relationships::findFirst)
+                                        // Actually, it doesn't matter which one to take cause it is the same person for all of them
+                                        .map(Relationships::findLast)
                                         .toList(),
                                 _ -> true,
                                 true,

@@ -106,15 +106,15 @@ public class Relationships {
         return orderedRelationships.last();
     }
 
-    public int size() {
-        return orderedRelationships.size();
-    }
-
     public Optional<Relationship> findFirstNotInLaw() {
         return orderedRelationships
                 .stream()
                 .filter(relationship -> !relationship.isInLaw())
                 .findFirst();
+    }
+
+    public int size() {
+        return orderedRelationships.size();
     }
 
     public void propagateTreeSidesToRelationships() {

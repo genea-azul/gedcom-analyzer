@@ -57,6 +57,8 @@ public class PersonService {
         List<Relationship> lastRelationships = relationships
                 .stream()
                 // Getting the last will prioritize the not-in-law relationships
+                // When using CLOSEST_KEEPING_CLOSER_IN_LAW_WHEN_EXISTS_ANY_NOT_IN_LAW strategy,
+                //   the only case of getting an in-law relationship (size 2) is when it has lower distance than the not-in-law
                 .map(Relationships::findLast)
                 .toList();
 
