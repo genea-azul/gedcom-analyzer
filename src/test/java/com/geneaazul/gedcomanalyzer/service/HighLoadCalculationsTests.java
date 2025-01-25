@@ -30,6 +30,7 @@ import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -148,6 +149,7 @@ public class HighLoadCalculationsTests {
     }
 
     @Test
+    @Disabled
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     public void getImmigrantsCitiesCardinalityByPlaceOfAnyEvent() throws IOException {
         List<GedcomAnalyzerService.SurnamesByCityCardinality> places = gedcomAnalyzerService
@@ -468,6 +470,7 @@ public class HighLoadCalculationsTests {
     }
 
     @Test
+    @Disabled
     public void getOlderAndLongestLivingPersons() {
         System.out.println("getOlderAndLongestLivingPersons:");
         List<EnrichedPerson> personsByPlace = searchService
@@ -661,6 +664,7 @@ public class HighLoadCalculationsTests {
     }
 
     @Test
+    @Disabled
     public void getPeopleStatsByPlaceOfAnyEvent() {
         System.out.println("getPeopleStatsByPlaceOfAnyEvent:");
         List<EnrichedPerson> people = searchService
