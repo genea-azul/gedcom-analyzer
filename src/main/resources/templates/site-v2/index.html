@@ -6164,7 +6164,7 @@
   </div>
 
 <script>
-  var siteUrl = "https://geneaazul-2.ddns.net";
+  var siteUrl = "https://geneaazul-{url-version}.ddns.net";
   var onVacations = false;
   var obfuscateLiving = true;
 </script>
@@ -6176,6 +6176,11 @@
   const FAMILY_TREE_PROCESS_PERSONS_BY_SEC = 250;
   const FAMILY_TREE_PROCESS_FIXED_DELAY_MILLIS = 3250;
   const MIN_MILLIS_TO_DISPLAY_WAIT_COUNT_DOWN = 7500;
+  const URL_VERSION = "3";
+
+  var replaceUrlVersion = function(url) {
+      return url.replace("\{url-version\}", URL_VERSION);
+  };
 
   var toggleYearOfDeath = function(isAliveComponent, yearOfDeathComponent) {
       $(isAliveComponent).on("change", function() {
@@ -6267,7 +6272,7 @@
   $(document).ready(function() {
       $.ajax({
           type: "GET",
-          url: siteUrl + "/api/gedcom-analyzer/metadata",
+          url: replaceUrlVersion(siteUrl) + "/api/gedcom-analyzer/metadata",
           contentType: "application/json",
           success: function(data) {
               $("#persons-count-container")
@@ -6381,7 +6386,7 @@
 
           $.ajax({
               type: "POST",
-              url: siteUrl + "/api/search/family",
+              url: replaceUrlVersion(siteUrl) + "/api/search/family",
               dataType: "json",
               contentType: "application/json",
               data: JSON.stringify(searchFamilyRequest),
@@ -6507,7 +6512,7 @@
 
           $.ajax({
               type: "POST",
-              url: siteUrl + "/api/search/connection",
+              url: replaceUrlVersion(siteUrl) + "/api/search/connection",
               dataType: "json",
               contentType: "application/json",
               data: JSON.stringify(searchConnectionsRequest),
@@ -6618,7 +6623,7 @@
 
       $.ajax({
           type: "POST",
-          url: siteUrl + "/api/search/surnames",
+          url: replaceUrlVersion(siteUrl) + "/api/search/surnames",
           dataType: "json",
           contentType: "application/json",
           data: JSON.stringify(searchSurnamesRequest),
@@ -6645,7 +6650,7 @@
       var obfuscate = (obfuscateLiving ? "" : "?obfuscateLiving=false");
 
       // var domain = window.location.protocol + '//' + window.location.host;
-      var win = window.open(siteUrl + "/api/search/family-tree/" + event.data.personUuid + "/plainPdf" + obfuscate, "_blank");
+      var win = window.open(replaceUrlVersion(siteUrl) + "/api/search/family-tree/" + event.data.personUuid + "/plainPdf" + obfuscate, "_blank");
       if (!win) {
           handleError("El navegador bloque&oacute; la descarga, por favor intent&aacute; desde otro como Chrome.", event.data.errorLocator);
       }
@@ -7062,7 +7067,7 @@
                           .addClass("btn btn-sm btn-dark view-family-tree-btn disabled")
                           .attr("id", "view-family-tree-btn-" + person.uuid)
                           .attr("role", "button")
-                          .attr("href", siteUrl + "/family-tree/" + person.uuid + (obfuscateLiving ? "" : "?f=0"))
+                          .attr("href", replaceUrlVersion(siteUrl) + "/family-tree/" + person.uuid + (obfuscateLiving ? "" : "?f=0"))
                           .attr("target", "_blank")
                           .html("Ver &aacute;rbol geneal&oacute;gico online")))
           .append(
@@ -7518,7 +7523,7 @@
           return;
       }
 
-      var healthCheckUrl = siteUrl + "/api/gedcom-analyzer";
+      var healthCheckUrl = replaceUrlVersion(siteUrl) + "/api/gedcom-analyzer";
 
       // First check obfuscation search params
       var searchParams = new URLSearchParams(window.location.search);
