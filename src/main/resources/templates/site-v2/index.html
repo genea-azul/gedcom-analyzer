@@ -36,6 +36,9 @@
     .card-label-max-width {
         max-width: 147px !important;
     }
+    .nav-link {
+        --bs-nav-link-padding-x: 0.8rem;
+    }
     .profile-picture-small {
         max-width: 50px !important;
         max-height: 50px !important;
@@ -115,7 +118,7 @@
 <body class="container">
 
   <!-- Header -->
-  <div class="d-flex flex-row gap-3 justify-content-between align-items-start">
+  <div class="d-flex flex-row gap-4 justify-content-between align-items-start">
     <!-- Small logo -->
     <a href="https://geneaazul.com.ar" title="Genea Azul">
       <img src="img/genea-azul-logo-simple.png?v1" width="70" height="70" class="d-sm-none float-start mt-2" alt="Genea Azul logo" />
@@ -126,33 +129,33 @@
     <ul class="nav nav-tabs mt-3 flex-grow-1">
       <li class="nav-item">
         <a class="nav-link active" data-bs-toggle="tab" href="#search-tab" title="Buscador">
-          <i class="bi bi-search"></i> <span class="d-none d-md-inline">Buscador</span>
+          <i class="bi bi-search"></i> <span class="d-none d-lg-inline">Buscador</span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link text-danger" data-bs-toggle="tab" href="#connections-tab" title="Conexiones">
-          <i class="bi bi-bezier2"></i> <span class="d-none d-md-inline">Conexiones</span>
+          <i class="bi bi-bezier2"></i> <span class="d-none d-lg-inline">Conexiones</span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link text-success" data-bs-toggle="tab" href="#stats-tab" title="Estad&iacute;sticas">
-          <i class="bi bi-graph-up"></i> <span class="d-none d-md-inline">Estad&iacute;sticas</span>
+          <i class="bi bi-graph-up"></i> <span class="d-none d-lg-inline">Estad&iacute;sticas</span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link text-purple" data-bs-toggle="tab" href="#families-tab" title="Familias">
-          <i class="bi bi-people"></i> <span class="d-none d-md-inline">Familias</span>
+          <i class="bi bi-people"></i> <span class="d-none d-lg-inline">Familias</span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link text-dark" data-bs-toggle="tab" href="#history-tab" title="Historia">
-          <i class="bi bi-clock-history"></i> <span class="d-none d-md-inline">Historia</span>
+          <i class="bi bi-clock-history"></i> <span class="d-none d-lg-inline">Historia</span>
         </a>
       </li>
     </ul>
 
-    <!-- Social networks buttons -->
-    <div class="mt-2 d-flex flex-column flex-lg-row">
+    <!-- Social networks buttons (1) -->
+    <div class="mt-2 d-none d-sm-flex flex-column flex-lg-row">
       <a class="link-secondary text-decoration-none ms-1 me-1" href="https://instagram.com/_u/genea.azul" target="_blank" title="@genea.azul">
         <i class="bi bi-instagram"></i>
       </a>
@@ -6217,6 +6220,18 @@
     <p>
       &iexcl;Solicit&aacute; acceso al &aacute;rbol y carg&aacute; info!
     </p>
+    <!-- Social networks buttons (2) -->
+    <div class="d-flex flex-row justify-content-center">
+      <a class="link-secondary text-decoration-none ms-1 me-1" href="https://instagram.com/_u/genea.azul" target="_blank" title="@genea.azul">
+        <i class="bi bi-instagram"></i>
+      </a>
+      <a class="link-secondary text-decoration-none ms-1 me-1" href="https://facebook.com/genea.azul" target="_blank" title="@genea.azul">
+        <i class="bi bi-facebook"></i>
+      </a>
+      <a class="link-secondary text-decoration-none ms-1 me-1" href="mailto:genea.azul@gmail.com" target="_blank" title="genea.azul@gmail.com">
+        <i class="bi bi-envelope"></i>
+      </a>
+    </div>
   </div>
 
 <script>
