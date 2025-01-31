@@ -29,10 +29,11 @@ services:
       JAVA_OPTS: '-Xms512m -Xmx1024m'
       SPRING_PROFILES_ACTIVE: 'prod'
       SPRING_APPLICATION_JSON: '{
-        "docker.enabled" : true,
-        "spring.datasource.url"  : "jdbc:mariadb://mariadb:$MYSQLDB_DOCKER_PORT/$MYSQLDB_DATABASE",
+        "spring.datasource.url" : "jdbc:mariadb://mariadb:$MYSQLDB_DOCKER_PORT/$MYSQLDB_DATABASE",
         "spring.datasource.username" : "$MYSQLDB_USER",
         "spring.datasource.password" : "$MYSQLDB_PASSWORD",
+        "spring.datasource.driver-class-name" : "org.mariadb.jdbc.Driver",
+        "spring.jpa.database-platform" : "org.hibernate.dialect.MariaDBDialect",
         "server.port" : $SPRING_DOCKER_PORT,
         "server.ssl.enabled" : $SSL_ENABLED,
         "server.ssl.key-store-type" : "$SSL_KEYSTORE_TYPE",

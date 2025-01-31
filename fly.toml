@@ -1,0 +1,38 @@
+# fly.toml app configuration file generated for gedcom-analyzer-app on 2025-01-30T21:22:23-03:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'gedcom-analyzer-app'
+primary_region = 'iad'
+
+[build]
+
+[env]
+  JAVA_OPTS = '-Xms512m -Xmx1024m'
+  LOG_PATH = '/tmp/logs'
+  SPRING_APPLICATION_JSON = '''{
+    "server.port" : 8080,
+    "gedcom-storage-local-path" : "/tmp/genea-azul-full-gedcom.ged",
+    "temp-dir" : "/tmp",
+    "clients-with-special-threshold" : "181.92.181.58, 186.136.48.25",
+    "disable-obfuscate-living" : true
+  }'''
+  SPRING_PROFILES_ACTIVE = 'prod,flyio'
+
+[[mounts]]
+  source = 'tmp'
+  destination = '/tmp'
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'suspend'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[vm]]
+  memory = '1.5gb'
+  cpu_kind = 'shared'
+  cpus = 1

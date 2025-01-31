@@ -6188,7 +6188,7 @@
         <article class="col text-justify px-sm-5">
           <p>Cuando comenc&eacute; a armar mi &aacute;rbol geneal&oacute;gico online a <span class="fw-semibold">principios de 2014</span>, no imaginaba lo que vendr&iacute;a despu&eacute;s. Gracias a la memoria de mi <span class="fw-semibold">t&iacute;a Beba</span>, logr&eacute; elaborar un peque&ntilde;o &aacute;rbol que llegaba hasta mis <span class="fw-semibold">bisabuelos paternos</span>, inmigrantes italianos.</p>
 
-          <p>Varios a&ntilde;os despu&eacute;s, durante un <span class="fw-semibold">viaje a Italia</span>, tuve la posibilidad de visitar el pueblo de mis bisabuelos, <span class="fw-semibold">San Severino Lucano</span> en Potenza. A pesar de estar cerca, opt&eacute; por no ir, ya que no contaba con la informaci&oacute;n familiar necesaria. Al regresar a mi pa&iacute;s, decid&iacute; ampliar el &aacute;rbol. Ingres&eacute; a mi cuenta y, para mi sorpresa, ten&iacute;a un mensaje de otro usuario que afirmaba que ten&iacute;amos antepasados en com&uacute;n. Se trataba de <span class="fw-semibold">Leonardo De Luca</span>, de Buenos Aires, con quien comparto un <span class="fw-semibold">trastatarabuelo</span> (ancestro directo de cinco generaciones). Pero eso no fue todo: Leonardo estaba investigando la <span class="fw-semibold">genealog&iacute;a de San Severino Lucano</span>, lo que abri&oacute; la puerta a conectar con cientos de personas y expandir enormemente mi &aacute;rbol.</p>
+          <p>Varios a&ntilde;os despu&eacute;s, durante un <span class="fw-semibold">viaje a Italia</span>, tuve la posibilidad de visitar el pueblo de mis bisabuelos, <span class="fw-semibold">San Severino Lucano</span> en Potenza. A pesar de estar cerca, opt&eacute; por no ir, ya que no contaba con la informaci&oacute;n familiar necesaria. Al regresar a mi pa&iacute;s, decid&iacute; ampliar el &aacute;rbol. En <span class="fw-semibold">mayo de 2017</span> ingres&eacute; a mi cuenta y, para mi sorpresa, ten&iacute;a un mensaje de otro usuario que afirmaba que ten&iacute;amos antepasados en com&uacute;n. Se trataba de <span class="fw-semibold">Leonardo De Luca</span>, de Buenos Aires, con quien comparto un <span class="fw-semibold">trastatarabuelo</span> (ancestro directo de cinco generaciones). Pero eso no fue todo: Leonardo estaba investigando la <span class="fw-semibold">genealog&iacute;a de San Severino Lucano</span>, lo que abri&oacute; la puerta a conectar con cientos de personas y expandir enormemente mi &aacute;rbol.</p>
 
           <p>A medida que iba agregando distintas familias al &aacute;rbol, comenz&eacute; a obtener <span class="fw-semibold">coincidencias</span> con otros usuarios de la plataforma, lo cual facilit&oacute; mucho mi investigaci&oacute;n. Finalmente, logr&eacute; completar la <span class="fw-semibold">rama materna</span> de mi ascendencia, que incluye inmigrantes de origen espa&ntilde;ol, franc&eacute;s, italiano e incluso una <span class="fw-semibold">trastatarabuela inglesa</span>.</p>
 
@@ -6235,7 +6235,8 @@
   </div>
 
 <script>
-  var siteUrl = "https://geneaazul-{url-version}.ddns.net";
+  // var siteUrl = "https://geneaazul-{url-version}.ddns.net";
+  var siteUrl = "https://gedcom-analyzer-app.fly.dev";
   var onVacations = false;
   var obfuscateLiving = true;
 </script>
@@ -6244,7 +6245,7 @@
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.0/dist/jquery.min.js" integrity="sha384-NXgwF8Kv9SSAr+jemKKcbvQsz+teULH/a5UNJvZc6kP47hZgl62M1vGnw6gHQhb1" crossorigin="anonymous"></script>
 
 <script>
-  const FAMILY_TREE_PROCESS_PERSONS_BY_SEC = 250;
+  const FAMILY_TREE_PROCESS_PERSONS_BY_SEC = 225;
   const FAMILY_TREE_PROCESS_FIXED_DELAY_MILLIS = 3250;
   const MIN_MILLIS_TO_DISPLAY_WAIT_COUNT_DOWN = 7500;
   const URL_VERSION = "3";
@@ -6337,21 +6338,6 @@
 
       $("input[type=number]").on("input", function() {
           maxLengthCheck(this);
-      });
-  });
-
-  $(document).ready(function() {
-      $.ajax({
-          type: "GET",
-          url: replaceUrlVersion(siteUrl) + "/api/gedcom-analyzer/metadata",
-          contentType: "application/json",
-          success: function(data) {
-              $("#persons-count-container")
-                  .html(data.personsCount.toLocaleString("es-AR"));
-          },
-          error: function(xhr) {
-              console.log(xhr);
-          }
       });
   });
 
@@ -7616,6 +7602,19 @@
                   obfuscateLiving = false;
                   $("#obfuscated-info").addClass("d-none");
               }
+              // Finally get the meta-data
+              $.ajax({
+                  type: "GET",
+                  url: replaceUrlVersion(siteUrl) + "/api/gedcom-analyzer/metadata",
+                  contentType: "application/json",
+                  success: function(data) {
+                      $("#persons-count-container")
+                          .html(data.personsCount.toLocaleString("es-AR"));
+                  },
+                  error: function(xhr) {
+                      console.log(xhr);
+                  }
+              });
           },
           error: function(xmlHttpRequest, textStatus, errorThrown) {
               $("#loading-container img").addClass("d-none");

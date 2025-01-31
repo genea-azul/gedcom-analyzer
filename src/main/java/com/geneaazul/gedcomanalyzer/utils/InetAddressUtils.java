@@ -23,6 +23,8 @@ public class InetAddressUtils {
                 .or(() -> Optional.ofNullable(StringUtils.trimToNull(request.getHeader("X-CLIENT-IP"))))
                 .or(() -> Optional.ofNullable(StringUtils.trimToNull(request.getHeader("X-FORWARDED-FOR"))))
                 .or(() -> Optional.ofNullable(StringUtils.trimToNull(request.getRemoteAddr())))
+                .map(remoteAddress -> StringUtils.substringBefore(remoteAddress, ","))
+                .map(StringUtils::trimToNull)
                 .filter(remoteAddress -> !LOCALHOST_ADDRESSES.contains(remoteAddress));
     }
 
