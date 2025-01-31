@@ -49,6 +49,7 @@ public class GedcomAnalyzerProperties {
 
     private boolean deleteUploadedGedcom = false;
     private boolean storeFamilySearch = true;
+    private boolean storeConnectionSearch = true;
     private boolean keepReferenceToLegacyGedcom = false;
     private boolean disableObfuscateLiving = false;
 
@@ -74,6 +75,7 @@ public class GedcomAnalyzerProperties {
 
     private Map<NameAndSex, String> normalizedGivenNamesMap;
     private Map<String, String> normalizedSurnamesMap;
+    private Map<String, String> namePrefixesMap;
 
     @Getter(AccessLevel.NONE)
     private Map<String, List<String>> nameNormalizedM;
@@ -81,6 +83,8 @@ public class GedcomAnalyzerProperties {
     private Map<String, List<String>> nameNormalizedF;
     @Getter(AccessLevel.NONE)
     private Map<String, List<String>> surnameNormalized;
+    @Getter(AccessLevel.NONE)
+    private Map<String, String> namePrefix;
 
     @PostConstruct
     public void postConstruct() {
@@ -104,6 +108,7 @@ public class GedcomAnalyzerProperties {
 
         this.normalizedGivenNamesMap = NameUtils.invertGivenNamesMap(nameNormalizedM, nameNormalizedF);
         this.normalizedSurnamesMap = NameUtils.invertSurnamesMap(surnameNormalized);
+        this.namePrefixesMap = NameUtils.buildNamePrefixesMap(namePrefix);
     }
 
 }

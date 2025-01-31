@@ -5,6 +5,7 @@ import com.geneaazul.gedcomanalyzer.domain.SearchFamily;
 import com.geneaazul.gedcomanalyzer.mapper.ObfuscationType;
 import com.geneaazul.gedcomanalyzer.mapper.PersonMapper;
 import com.geneaazul.gedcomanalyzer.mapper.SearchFamilyMapper;
+import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
@@ -12,6 +13,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDetailsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyResultDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchPersonDto;
+import com.geneaazul.gedcomanalyzer.repository.SearchConnectionRepository;
 import com.geneaazul.gedcomanalyzer.repository.SearchFamilyRepository;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.StreamUtils;
@@ -46,12 +48,13 @@ public class FamilyService {
     private final PersonService personService;
     private final SearchService searchService;
     private final SearchFamilyRepository searchFamilyRepository;
+    private final SearchConnectionRepository searchConnectionRepository;
     private final SearchFamilyMapper searchFamilyMapper;
     private final PersonMapper personMapper;
     private final GedcomAnalyzerProperties properties;
 
     @Transactional
-    public Optional<Long> persistSearch(
+    public Optional<Long> persistFamilySearch(
             SearchFamilyDto searchFamilyDto,
             boolean isObfuscated,
             @Nullable String clientIpAddress) {
@@ -61,7 +64,7 @@ public class FamilyService {
     }
 
     @Transactional
-    public void updateSearchResult(
+    public void updateFamilySearchResult(
             Long searchFamilyId,
             boolean isMatch,
             @Nullable Integer potentialResults,
@@ -76,7 +79,7 @@ public class FamilyService {
     }
 
     @Transactional
-    public SearchFamilyDetailsDto updateSearchIsReviewed(Long searchFamilyId, Boolean isReviewed) {
+    public SearchFamilyDetailsDto updateFamilySearchIsReviewed(Long searchFamilyId, Boolean isReviewed) {
         return searchFamilyRepository
                 .findById(searchFamilyId)
                 .map(searchFamily -> {
@@ -88,7 +91,7 @@ public class FamilyService {
     }
 
     @Transactional
-    public SearchFamilyDetailsDto updateSearchIsIgnored(Long searchFamilyId, Boolean isIgnored) {
+    public SearchFamilyDetailsDto updateFamilySearchIsIgnored(Long searchFamilyId, Boolean isIgnored) {
         return searchFamilyRepository
                 .findById(searchFamilyId)
                 .map(searchFamily -> {
@@ -166,11 +169,12 @@ public class FamilyService {
         OffsetDateTime createDateTo = OffsetDateTime.now();
         OffsetDateTime createDateFrom = createDateTo.minusHours(properties.getMaxClientRequestsHoursThreshold());
 
-        long clientRequests = searchFamilyRepository.countByClientIpAddressAndCreateDateBetween(clientIpAddress, createDateFrom, createDateTo);
+        long familyClientRequests = searchFamilyRepository.countByClientIpAddressAndCreateDateBetween(clientIpAddress, createDateFrom, createDateTo);
+        long connectionClientRequests = searchConnectionRepository.countByClientIpAddressAndCreateDateBetween(clientIpAddress, createDateFrom, createDateTo);
 
         boolean isSpecialThresholdClient = properties.getClientsWithSpecialThreshold().contains(clientIpAddress);
         int offset = 1; // Since search is persisted before setting the result we need to skip last persisted one
-        return (clientRequests - offset) < (isSpecialThresholdClient
+        return (familyClientRequests + connectionClientRequests - offset) < (isSpecialThresholdClient
                 ? properties.getMaxClientRequestsCountSpecialThreshold()
                 : properties.getMaxClientRequestsCountThreshold());
     }
@@ -356,8 +360,19 @@ public class FamilyService {
         Integer potentialResultsCount = null;
 
         if (result.isEmpty()) {
+           @Nullable Boolean hasAnyParentGivenName = Optional
+                    .ofNullable(searchFamilyDto.getFather())
+                    .map(SearchPersonDto::getGivenName)
+                    .filter(StringUtils::isNotBlank)
+                    .or(() -> Optional
+                            .ofNullable(searchFamilyDto.getMother())
+                            .map(SearchPersonDto::getGivenName)
+                            .filter(StringUtils::isNotBlank))
+                    .map(_ -> Boolean.TRUE)
+                    .orElse(Boolean.FALSE);
+
             List<EnrichedPerson> potentialResults = new ArrayList<>();
-            potentialResults.addAll(getPotentialResults(searchFamilyDto.getIndividual(), individualSurname, gedcom));
+            potentialResults.addAll(getPotentialResults(searchFamilyDto.getIndividual(), individualSurname, hasAnyParentGivenName, gedcom));
             potentialResults.addAll(getPotentialResults(searchFamilyDto.getSpouse(), spouseSurname, gedcom));
             potentialResults.addAll(getPotentialResults(searchFamilyDto.getFather(), fatherSurname, gedcom));
             potentialResults.addAll(getPotentialResults(searchFamilyDto.getMother(), motherSurname, gedcom));
@@ -382,11 +397,39 @@ public class FamilyService {
             @Nullable SearchPersonDto searchPerson,
             @Nullable String personSurname,
             EnrichedGedcom gedcom) {
+        return getPotentialResults(
+                searchPerson,
+                personSurname,
+                null,
+                gedcom);
+    }
+
+    private List<EnrichedPerson> getPotentialResults(
+            @Nullable SearchPersonDto searchPerson,
+            @Nullable String personSurname,
+            @Nullable Boolean hasAnyParentGivenName,
+            EnrichedGedcom gedcom) {
         if (hasSurnameButMissingDates(searchPerson, personSurname)) {
             return searchPersonByNameOrSurname(searchPerson, personSurname, gedcom);
         }
         if (hasAnyDateAndSurnameButMissingGivenName(searchPerson, personSurname)) {
             return searchPersonBySurnameAndYear(searchPerson, personSurname, gedcom);
+        }
+        if (Boolean.FALSE.equals(hasAnyParentGivenName) && hasGivenNameAndSurnameAndAnyDate(searchPerson, personSurname)) {
+            return searchPersonByNameOrSurname(searchPerson, personSurname, gedcom)
+                    .stream()
+                    .filter(person
+                            -> searchPerson.getYearOfBirth() != null
+                                    && (person.getDateOfBirth().isEmpty() || person.getDateOfBirth()
+                                            .map(Date::getYear)
+                                            .map(year -> Math.abs(year.getValue() - searchPerson.getYearOfBirth()) <= 3)
+                                            .orElse(false))
+                            || searchPerson.getYearOfDeath() != null
+                                    && (person.getDateOfDeath().isEmpty() || person.getDateOfDeath()
+                                            .map(Date::getYear)
+                                            .map(year -> Math.abs(year.getValue() - searchPerson.getYearOfDeath()) <= 3)
+                                            .orElse(false)))
+                    .toList();
         }
         return List.of();
     }
@@ -406,6 +449,15 @@ public class FamilyService {
         return searchPerson != null
                 && personSurname != null
                 && StringUtils.isBlank(searchPerson.getGivenName())
+                && (searchPerson.getYearOfBirth() != null || searchPerson.getYearOfDeath() != null);
+    }
+
+    private boolean hasGivenNameAndSurnameAndAnyDate(
+            @Nullable SearchPersonDto searchPerson,
+            @Nullable String personSurname) {
+        return searchPerson != null
+                && StringUtils.isNotBlank(searchPerson.getGivenName())
+                && personSurname != null
                 && (searchPerson.getYearOfBirth() != null || searchPerson.getYearOfDeath() != null);
     }
 

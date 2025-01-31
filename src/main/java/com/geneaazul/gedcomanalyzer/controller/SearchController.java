@@ -4,12 +4,16 @@ import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.FamilyTree;
 import com.geneaazul.gedcomanalyzer.model.FamilyTreeType;
+import com.geneaazul.gedcomanalyzer.model.dto.SearchConnectionDetailsDto;
+import com.geneaazul.gedcomanalyzer.model.dto.SearchConnectionDto;
+import com.geneaazul.gedcomanalyzer.model.dto.SearchConnectionResultDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDetailsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyResultDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnameResultDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesResultDto;
+import com.geneaazul.gedcomanalyzer.service.ConnectionService;
 import com.geneaazul.gedcomanalyzer.service.FamilyService;
 import com.geneaazul.gedcomanalyzer.service.SurnameService;
 import com.geneaazul.gedcomanalyzer.service.familytree.FamilyTreeManager;
@@ -54,6 +58,7 @@ public class SearchController {
 
     private final FamilyService familyService;
     private final SurnameService surnameService;
+    private final ConnectionService connectionService;
     private final GedcomAnalyzerProperties properties;
     private final FamilyTreeManager familyTreeManager;
     private final PlainFamilyTreePdfService plainFamilyTreePdfService;
@@ -77,7 +82,7 @@ public class SearchController {
         Optional<Long> searchId = Optional.empty();
 
         if (properties.isStoreFamilySearch()) {
-            searchId = familyService.persistSearch(searchFamilyDto, obfuscateLiving, clientIpAddress.orElse(null));
+            searchId = familyService.persistFamilySearch(searchFamilyDto, obfuscateLiving, clientIpAddress.orElse(null));
         }
 
         if (!clientIpAddress
@@ -121,7 +126,7 @@ public class SearchController {
     private void updateSearchResult(Optional<Long> searchId, SearchFamilyResultDto searchFamilyResult) {
         searchId
                 .filter(_ -> properties.isStoreFamilySearch())
-                .ifPresent(id -> familyService.updateSearchResult(
+                .ifPresent(id -> familyService.updateFamilySearchResult(
                         id,
                         !searchFamilyResult.getPeople().isEmpty(),
                         searchFamilyResult.getPotentialResults(),
@@ -133,7 +138,7 @@ public class SearchController {
             @PathVariable Long searchId,
             @RequestParam(defaultValue = BooleanUtils.TRUE) Boolean isReviewed) {
         log.info("Mark family reviewed [ searchId={}, isReviewed={} ]", searchId, isReviewed);
-        return familyService.updateSearchIsReviewed(searchId, isReviewed);
+        return familyService.updateFamilySearchIsReviewed(searchId, isReviewed);
     }
 
     @GetMapping("/family/{searchId}/ignored")
@@ -141,7 +146,7 @@ public class SearchController {
             @PathVariable Long searchId,
             @RequestParam(defaultValue = BooleanUtils.TRUE) Boolean isIgnored) {
         log.info("Mark family ignored [ searchId={}, isIgnored={} ]", searchId, isIgnored);
-        return familyService.updateSearchIsIgnored(searchId, isIgnored);
+        return familyService.updateFamilySearchIsIgnored(searchId, isIgnored);
     }
 
     @GetMapping("/family/latest")
@@ -186,7 +191,7 @@ public class SearchController {
     }
 
     @GetMapping("/family-tree/{personUuid}/plainPdf")
-    @CrossOrigin(originPatterns = { "http://localhost:[*]", "https://localhost:[*]", "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
+    @CrossOrigin(originPatterns = { "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
     public ResponseEntity<Resource> getPlainFamilyTreePdf(
             @PathVariable UUID personUuid,
             @RequestParam @Nullable Boolean obfuscateLiving,
@@ -241,6 +246,84 @@ public class SearchController {
                 .contentLength(resource.contentLength())
                 .contentType(familyTree.mediaType())
                 .body(resource);
+    }
+
+    @PostMapping("/connection")
+    @CrossOrigin(originPatterns = { "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
+    public SearchConnectionResultDto searchConnection(
+            @Valid @RequestBody SearchConnectionDto searchConnectionDto,
+            HttpServletRequest request) {
+
+        Optional<String> clientIpAddress = InetAddressUtils.getRemoteAddress(request);
+
+        Optional<Long> searchId = Optional.empty();
+
+        if (properties.isStoreConnectionSearch()) {
+            searchId = connectionService.persistConnectionSearch(searchConnectionDto, clientIpAddress.orElse(null));
+        }
+
+        if (!clientIpAddress
+                .map(familyService::isAllowedSearch)
+                .orElse(true)) {
+            SearchConnectionResultDto searchConnectionResult =  SearchConnectionResultDto.builder()
+                    .errors(List.of("TOO-MANY-REQUESTS"))
+                    .build();
+
+            updateSearchResult(searchId, searchConnectionResult);
+
+            return searchConnectionResult;
+        }
+
+        SearchConnectionResultDto searchConnectionResult = connectionService.search(searchConnectionDto);
+
+        log.info("Search connection [ searchId={}, connectionsInResult={}, errors={}, httpRequestId={} ]",
+                searchId.orElse(null),
+                searchConnectionResult.getConnections().size(),
+                searchConnectionResult.getErrors().size(),
+                request.getRequestId());
+
+        updateSearchResult(searchId, searchConnectionResult);
+
+        return searchConnectionResult;
+    }
+
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+    private void updateSearchResult(Optional<Long> searchId, SearchConnectionResultDto searchConnectionResult) {
+        searchId
+                .filter(_ -> properties.isStoreConnectionSearch())
+                .ifPresent(id -> {
+                    boolean isMatch = !searchConnectionResult.getConnections().isEmpty();
+                    @Nullable Integer distance = isMatch
+                            ? searchConnectionResult.getConnections().size() - 1
+                            : null;
+                    connectionService.updateConnectionSearchResult(
+                            id,
+                            isMatch,
+                            distance,
+                            StringUtils.join(searchConnectionResult.getErrors(), " | "));
+                });
+    }
+
+    @GetMapping("/connection/{searchId}/reviewed")
+    public SearchConnectionDetailsDto markConnectionReviewed(
+            @PathVariable Long searchId,
+            @RequestParam(defaultValue = BooleanUtils.TRUE) Boolean isReviewed) {
+        log.info("Mark connection reviewed [ searchId={}, isReviewed={} ]", searchId, isReviewed);
+        return connectionService.updateConnectionSearchIsReviewed(searchId, isReviewed);
+    }
+
+    @GetMapping("/connection/latest")
+    public List<SearchConnectionDetailsDto> getLatestConnections(
+            @RequestParam @Nullable Boolean isMatch,
+            @RequestParam @Nullable Boolean isReviewed,
+            @RequestParam @Nullable Boolean hasContact,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request) {
+        log.info("Search connection latest [ isMatch={}, isReviewed={}, hasContact={}, page={}, size={} ]",
+                isMatch, isReviewed, hasContact, page, size);
+        String context = StringUtils.substringBefore(request.getRequestURL().toString(), "/api");
+        return connectionService.getLatest(isMatch, isReviewed, hasContact, page, size, context);
     }
 
 }

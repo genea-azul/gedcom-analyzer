@@ -99,7 +99,7 @@ public class BalkanFamilyTreeService implements FamilyTreeService {
                 relationshipsWithNotInLawPriority);
 
         long totalTime = System.currentTimeMillis() - startTime;
-        log.info("Generating Balkan family tree HTML [ personId={}, personUuid={}, ms={} ]", person.getId(), person.getUuid(), totalTime);
+        log.info("Completed Balkan family tree HTML [ personId={}, personUuid={}, ms={} ]", person.getId(), person.getUuid(), totalTime);
     }
 
     @Override

@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 @SpringBootTest
 @EnableConfigurationProperties
 @ActiveProfiles("test")
-public class GedcomAnalyzerApplicationTests {
+public class ApplicationTests {
 
     @Test
     public void contextLoads() {

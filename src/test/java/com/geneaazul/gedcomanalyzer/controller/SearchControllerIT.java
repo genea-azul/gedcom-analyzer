@@ -1,6 +1,8 @@
 package com.geneaazul.gedcomanalyzer.controller;
 
+import com.geneaazul.gedcomanalyzer.domain.SearchConnection;
 import com.geneaazul.gedcomanalyzer.domain.SearchFamily;
+import com.geneaazul.gedcomanalyzer.model.dto.SearchConnectionDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyResultDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchPersonDto;
@@ -109,7 +111,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                 .andExpect(jsonPath("$.people", hasSize(2)))
                 .andReturn();
 
-        log.info(url + " response:\n{}", result.getResponse().getContentAsString(StandardCharsets.UTF_8));
+        log.info("{} response:\n{}", url, result.getResponse().getContentAsString(StandardCharsets.UTF_8));
     }
 
     @Test
@@ -158,7 +160,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                 .andExpect(jsonPath("$.isReviewed", is(true)))
                 .andReturn();
 
-        log.info(url + " response:\n{}", result.getResponse().getContentAsString(StandardCharsets.UTF_8));
+        log.info("{} response:\n{}", url, result.getResponse().getContentAsString(StandardCharsets.UTF_8));
     }
 
     @Test
@@ -182,7 +184,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                 .andExpect(jsonPath("$.surnames", hasSize(3)))
                 .andReturn();
 
-        log.info(url + " response:\n{}", result.getResponse().getContentAsString(StandardCharsets.UTF_8));
+        log.info("{} response:\n{}", url, result.getResponse().getContentAsString(StandardCharsets.UTF_8));
     }
 
     @Test
@@ -255,7 +257,42 @@ public class SearchControllerIT extends AbstractControllerIT {
                 .andExpect(content().contentType(MediaType.TEXT_HTML))
                 .andReturn();
 
-        log.info(url + " response:\n{}", result.getResponse().getContentAsString(StandardCharsets.ISO_8859_1).substring(0, 50));
+        log.info("{} response:\n{}", url, result.getResponse().getContentAsString(StandardCharsets.ISO_8859_1).substring(0, 50));
+    }
+
+    @Test
+    public void testSearchConnection() throws Exception {
+        ObjectMapper objectMapper = mapperBuilder.build();
+
+        SearchConnectionDto searchConnectionDto = SearchConnectionDto.builder()
+                .person1(SearchPersonDto.builder()
+                        .givenName("Grandson")
+                        .surname("Family1")
+                        .yearOfBirth(2022)
+                        .build())
+                .person2(SearchPersonDto.builder()
+                        .givenName("Father")
+                        .surname("Family1")
+                        .yearOfBirth(1980)
+                        .build())
+                .build();
+
+        doReturn(SearchConnection.builder()
+                .id(1L)
+                .build())
+                .when(searchConnectionRepository)
+                .save(any());
+
+        String url = "/api/search/connection";
+        MvcResult result = mvc.perform(post(url)
+                        .content(objectMapper.writeValueAsBytes(searchConnectionDto))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.connections", hasSize(3)))
+                .andReturn();
+
+        log.info("{} response:\n{}", url, result.getResponse().getContentAsString(StandardCharsets.UTF_8));
     }
 
 }

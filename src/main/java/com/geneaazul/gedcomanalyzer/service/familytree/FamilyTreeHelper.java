@@ -53,6 +53,8 @@ public class FamilyTreeHelper {
                 })
                 // Order internal elements of each relationship group: first not-in-law, then in-law
                 .map(relationships -> {
+                    // When using CLOSEST_KEEPING_CLOSER_IN_LAW_WHEN_EXISTS_ANY_NOT_IN_LAW strategy,
+                    //   the only case of getting an in-law relationship (size 2) is when it has lower distance than the not-in-law
                     if (relationships.size() == 2 && relationships.findFirst().isInLaw()) {
                         return List.of(relationships.findLast(), relationships.findFirst());
                     }

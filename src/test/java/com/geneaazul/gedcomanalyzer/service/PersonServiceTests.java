@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.TreeSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -41,8 +40,7 @@ public class PersonServiceTests {
 
         List<FormattedRelationship> formattedRelationships = relationshipsList
                 .stream()
-                .map(Relationships::getOrderedRelationships)
-                .map(TreeSet::first)
+                .map(Relationships::findFirst) // for the sake of this test it doesn't actually matter the order
                 .sorted()
                 .map(relationship -> relationshipMapper.toRelationshipDto(relationship, false))
                 .map(relationshipDto -> relationshipMapper.formatInSpanish(relationshipDto, false))

@@ -17,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.rng.UniformRandomProvider;
 import org.apache.commons.rng.simple.RandomSource;
+import org.apache.commons.text.StringEscapeUtils;
 import org.folg.gedcom.model.EventFact;
 import org.folg.gedcom.model.ExtensionContainer;
 import org.folg.gedcom.model.Family;
@@ -198,6 +199,78 @@ public class PersonUtils {
             displayName = trimAndAppend(displayName, name.getSuffix(), ", ");
         }
         return displayName;
+    }
+
+    public static String getDistinguishedPersonNameForSite(
+            Person person,
+            Map<String, String> namePrefixes) {
+        return person.getNames()
+                .stream()
+                .map(name -> {
+                    String displayName = "";
+                    if (StringUtils.isNotBlank(name.getPrefix())) {
+                        @Nullable String simplified = NameUtils.simplifyName(name.getPrefix());
+                        @Nullable String abbreviation = namePrefixes.get(simplified);
+                        if (abbreviation != null) {
+                            displayName = trimAndAppend(displayName, "<span class=\"text-secondary\"><abbr title=\"" + StringEscapeUtils.escapeHtml4(abbreviation) + "\" tabindex=\"0\">" + StringEscapeUtils.escapeHtml4(name.getPrefix()) + "</abbr></span>");
+                        } else {
+                            displayName = trimAndAppend(displayName, "<span class=\"text-secondary\">" + StringEscapeUtils.escapeHtml4(name.getPrefix()) + "</span>");
+                        }
+                    }
+
+                    boolean isGivenNameMissing = StringUtils.isBlank(name.getGiven())
+                            || "?".equals(StringUtils.trim(name.getGiven()));
+                    String givenName = isGivenNameMissing ? NO_NAME : name.getGiven();
+                    displayName = trimAndAppend(displayName, StringEscapeUtils.escapeHtml4(givenName));
+
+                    if (StringUtils.isNotBlank(name.getNickname())) {
+                        displayName = trimAndAppend(displayName, "<span class=\"fst-italic\">\"" + StringEscapeUtils.escapeHtml4(name.getNickname()) + "\"</span>");
+                    }
+                    if (StringUtils.isNotBlank(name.getSurnamePrefix())) {
+                        displayName = trimAndAppend(displayName, "<span class=\"fw-semibold\">" + StringEscapeUtils.escapeHtml4(name.getSurnamePrefix()) + "</span>");
+                    }
+                    if (StringUtils.isNotBlank(name.getSurname())) {
+                        displayName = trimAndAppend(displayName, "<span class=\"fw-semibold\">" + StringEscapeUtils.escapeHtml4(name.getSurname()) + "</span>");
+                    }
+                    if (StringUtils.isNotBlank(name.getSuffix())) {
+                        displayName = trimAndAppend(displayName, StringEscapeUtils.escapeHtml4(name.getSuffix()) + "</span>", "<span class=\"text-secondary\">, ");
+                    }
+
+                    Optional<String> yob = PersonUtils.getDateOfBirth(person)
+                            .flatMap(Date::parse)
+                            .map(date -> ((date.getOperator() == Date.Operator.EST || date.getOperator() == Date.Operator.ABT)
+                                    ? "aprox. " + date.getYear()
+                                    : String.valueOf(date.getYear())));
+                    boolean isAlive = PersonUtils.isAlive(person);
+                    Optional<String> yod = PersonUtils.getDateOfDeath(person)
+                            .flatMap(Date::parse)
+                            .map(date -> ((date.getOperator() == Date.Operator.EST || date.getOperator() == Date.Operator.ABT)
+                                    ? "aprox. " + date.getYear()
+                                    : String.valueOf(date.getYear())));
+                    if (yob.isPresent() || yod.isPresent()) {
+                        String birthTag = yob.orElse("?");
+                        String deathTag = isAlive ? "vive" : yod.orElse("?");
+                        if (yob.isPresent()) {
+                            Optional<String> pob = PersonUtils.getPlaceOfBirth(person);
+                            if (pob.isPresent()) {
+                                birthTag = "<span title=\"" + StringEscapeUtils.escapeHtml4(pob.get()) + "\">" + birthTag + "</span>";
+                            }
+                        }
+                        if (yod.isPresent()) {
+                            Optional<String> pod = PersonUtils.getPlaceOfDeath(person);
+                            if (pod.isPresent()) {
+                                deathTag = "<span title=\"" + StringEscapeUtils.escapeHtml4(pod.get()) + "\">" + deathTag + "</span>";
+                            }
+                        }
+                        displayName = trimAndAppend(displayName, "<span class=\"small text-secondary ps-1\">(" + birthTag + "&ndash;" + deathTag + ")</span>");
+                    }
+
+                    return displayName;
+                })
+                .map(StringUtils::trimToNull)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(NO_NAME);
     }
 
     private static String trimAndAppend(String str, String append) {

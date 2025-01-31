@@ -46,7 +46,7 @@ public class NameUtils {
     private static final String[] SURNAME_REPLACEMENT_CHARS = new String[]{ "v", "c", "se", "si", "ge", "gi", "c", "c", "i", "s" }; // replacement of k and q must be done after replacement of ce and ci
 
     /**
-     * Usually sued for givenName and surname simplification.
+     * Usually used for givenName and surname simplification.
      */
     @CheckForNull
     public static String simplifyName(@Nullable String name) {
@@ -59,7 +59,7 @@ public class NameUtils {
     }
 
     /**
-     * Usually sued for a.k.a. simplification.
+     * Usually used for a.k.a. simplification.
      */
     @CheckForNull
     public static String simplifyNameWithAlphabetConversion(@Nullable String name) {
@@ -142,6 +142,18 @@ public class NameUtils {
         Map<String, String> inverted = invertNamesMap(normalizedSurnames, Function.identity());
 
         return Map.copyOf(inverted);
+    }
+
+    public static Map<String, String> buildNamePrefixesMap(
+            Map<String, String> namePrefixes) {
+
+        Map<String, String> processedKeys = namePrefixes
+                .entrySet()
+                .stream()
+                .map(EntryStreamUtils.entryKeyMapper(name -> RegExUtils.replaceAll(name, NORMALIZED_NAME_SEPARATOR_PATTERN, " ")))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        return Map.copyOf(processedKeys);
     }
 
     private static <T> Map<T, String> invertNamesMap(

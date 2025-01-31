@@ -24,8 +24,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 
-import lombok.RequiredArgsConstructor;
+import jakarta.servlet.http.HttpServletRequest;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RestController
 @RequestMapping("/api/gedcom-analyzer")
 @RequiredArgsConstructor
@@ -43,8 +47,9 @@ public class GedcomAnalyzerController {
     private String projectVersion;
 
     @GetMapping
-    @CrossOrigin(originPatterns = { "http://localhost:[*]", "https://localhost:[*]", "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
-    public Map<String, Object> analyzeGedcom() {
+    @CrossOrigin(originPatterns = { "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
+    public Map<String, Object> analyzeGedcom(HttpServletRequest request) {
+        log.info("Accessing the API [ httpRequestId={} ]", request.getRequestId());
         // Used for health check
         return Map.of(
                 "env", activeProfiles,
@@ -53,7 +58,7 @@ public class GedcomAnalyzerController {
     }
 
     @GetMapping("/metadata")
-    @CrossOrigin(originPatterns = { "http://localhost:[*]", "https://localhost:[*]", "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
+    @CrossOrigin(originPatterns = { "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
     public GedcomMetadataDto getGedcomMetadata() {
         return gedcomAnalyzerService.getGedcomMetadata(gedcomHolder.getGedcom());
     }

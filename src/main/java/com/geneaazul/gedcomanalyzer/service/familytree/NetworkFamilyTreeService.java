@@ -106,7 +106,7 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                 relationshipsWithNotInLawPriority);
 
         long totalTime = System.currentTimeMillis() - startTime;
-        log.info("Generating network family tree HTML [ personId={}, personUuid={}, ms={} ]", person.getId(), person.getUuid(), totalTime);
+        log.info("Completed network family tree HTML [ personId={}, personUuid={}, ms={} ]", person.getId(), person.getUuid(), totalTime);
     }
 
     @Override
