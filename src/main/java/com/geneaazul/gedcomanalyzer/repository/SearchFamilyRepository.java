@@ -1,13 +1,16 @@
 package com.geneaazul.gedcomanalyzer.repository;
 
 import com.geneaazul.gedcomanalyzer.domain.SearchFamily;
+import com.geneaazul.gedcomanalyzer.repository.projection.SearchFamilyProjection;
 
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import jakarta.annotation.Nullable;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -53,5 +56,15 @@ public interface SearchFamilyRepository extends JpaRepository<SearchFamily, Long
                 // matches false and null values
                 : cb.or(cb.isNull(root.get(field)), cb.isFalse(root.get(field)));
     }
+
+    @Query("""
+      SELECT
+          s.clientIpAddress AS clientIpAddress,
+          COUNT(*) AS count,
+          ARRAY_AGG(s.individual.surname) AS individualSurnames
+      FROM SearchFamily s
+      GROUP BY s.clientIpAddress
+    """)
+    List<SearchFamilyProjection> groupByClientIpAddress();
 
 }

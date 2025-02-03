@@ -14,11 +14,17 @@ import com.geneaazul.gedcomanalyzer.model.Reference;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.Relationships;
 import com.geneaazul.gedcomanalyzer.model.Surname;
+import com.geneaazul.gedcomanalyzer.model.dto.ClientStatsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.GedcomAnalysisDto;
 import com.geneaazul.gedcomanalyzer.model.dto.GedcomMetadataDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateDto;
 import com.geneaazul.gedcomanalyzer.model.dto.ReferenceType;
+import com.geneaazul.gedcomanalyzer.model.dto.UsageStatsDto;
+import com.geneaazul.gedcomanalyzer.repository.SearchConnectionRepository;
+import com.geneaazul.gedcomanalyzer.repository.SearchFamilyRepository;
+import com.geneaazul.gedcomanalyzer.repository.projection.SearchConnectionProjection;
+import com.geneaazul.gedcomanalyzer.repository.projection.SearchFamilyProjection;
 import com.geneaazul.gedcomanalyzer.utils.DateUtils;
 import com.geneaazul.gedcomanalyzer.utils.EnumCollectionUtils;
 import com.geneaazul.gedcomanalyzer.utils.FamilyUtils;
@@ -30,8 +36,10 @@ import com.geneaazul.gedcomanalyzer.utils.RelationshipUtils;
 import com.geneaazul.gedcomanalyzer.utils.StreamUtils;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
@@ -76,6 +84,8 @@ public class GedcomAnalyzerService {
 
     private final SearchService searchService;
     private final PersonService personService;
+    private final SearchFamilyRepository searchFamilyRepository;
+    private final SearchConnectionRepository searchConnectionRepository;
     private final PersonMapper personMapper;
     private final GedcomMapper gedcomMapper;
 
@@ -911,6 +921,63 @@ public class GedcomAnalyzerService {
         }
 
         return List.copyOf(results);
+    }
+
+    @Transactional(readOnly = true)
+    public UsageStatsDto getUsageStats() {
+        List<SearchFamilyProjection> searchFamilyProjections = searchFamilyRepository.groupByClientIpAddress();
+        List<SearchConnectionProjection> searchConnectionProjections = searchConnectionRepository.groupByClientIpAddress();
+
+        List<ClientStatsDto> clientStats = Stream
+                .concat(
+                        searchFamilyProjections
+                                .stream()
+                                .map(proj -> ClientStatsDto.builder()
+                                        .ipAddress(proj.getClientIpAddress())
+                                        .searchesCount(Math.toIntExact(proj.getCount()))
+                                        .topSurnames(proj.getIndividualSurnames())
+                                        .build()),
+                        searchConnectionProjections
+                                .stream()
+                                .map(proj -> ClientStatsDto.builder()
+                                        .ipAddress(proj.getClientIpAddress())
+                                        .searchesCount(Math.toIntExact(proj.getCount()))
+                                        .topSurnames(ListUtils.union(proj.getPerson1Surnames(), proj.getPerson2Surnames()))
+                                        .build()))
+                .filter(cs -> cs.getIpAddress() != null)
+                .collect(Collectors.toUnmodifiableMap(
+                        ClientStatsDto::getIpAddress,
+                        Function.identity(),
+                        (cs1, cs2) -> ClientStatsDto.builder()
+                                .ipAddress(cs1.getIpAddress())
+                                .searchesCount(cs1.getSearchesCount() + cs2.getSearchesCount())
+                                .topSurnames(ListUtils.union(cs1.getTopSurnames(), cs2.getTopSurnames()))
+                                .build()))
+                .values()
+                .stream()
+                .sorted(Comparator.comparing(ClientStatsDto::getSearchesCount).reversed())
+                .peek(cs -> {
+                    List<String> topSurnames = MapUtils.orderHierarchically(
+                            cs.getTopSurnames(),
+                            Function.identity(),
+                            null)
+                            .stream()
+                            .map(Triple::getLeft)
+                            .toList();
+                    cs.setTopSurnames(topSurnames);
+                })
+                .toList();
+
+        Integer searchesCount = clientStats
+                .stream()
+                .mapToInt(ClientStatsDto::getSearchesCount)
+                .sum();
+
+        return UsageStatsDto.builder()
+                .clientsCount(clientStats.size())
+                .searchesCount(searchesCount)
+                .clientStats(clientStats)
+                .build();
     }
 
 }

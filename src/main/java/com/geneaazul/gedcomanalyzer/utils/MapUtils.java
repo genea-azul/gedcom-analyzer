@@ -52,31 +52,36 @@ public class MapUtils {
                                 pair -> pair.getRight().get(),
                                 Collectors.collectingAndThen(
                                         Collectors.toList(),
-                                        values -> {
-                                            List<C> subElementKeys = values
-                                                    .stream()
-                                                    .map(subElementsKeyExtractor)
-                                                    .toList();
-                                            Map<C, Integer> cardinality = CollectionUtils.getCardinalityMap(subElementKeys);
-                                            Map<C, List<D>> groupedSubElements = (groupedSubElementsMapper == null)
-                                                    ? Map.of()
-                                                    : values
-                                                            .stream()
-                                                            .collect(Collectors.groupingBy(subElementsKeyExtractor, Collectors.mapping(groupedSubElementsMapper, Collectors.toList())));
+                                        values -> orderHierarchically(values, subElementsKeyExtractor, groupedSubElementsMapper)))));
+    }
 
-                                            return cardinality
-                                                    .entrySet()
-                                                    .stream()
-                                                    .sorted(Comparator
-                                                            .<Map.Entry<C, Integer>>comparingInt(Map.Entry::getValue)
-                                                            .reversed()
-                                                            .thenComparing(Map.Entry::getKey))
-                                                    .map(entry -> Triple.of(
-                                                            entry.getKey(),
-                                                            entry.getValue(),
-                                                            groupedSubElements.get(entry.getKey())))
-                                                    .toList();
-                                        }))));
+    public static <T, C extends Comparable<C>, D> List<Triple<C, Integer, List<D>>> orderHierarchically(
+            List<T> values,
+            Function<T, C> subElementsKeyExtractor,
+            @Nullable Function<T, D> groupedSubElementsMapper) {
+        List<C> subElementKeys = values
+                .stream()
+                .map(subElementsKeyExtractor)
+                .toList();
+        Map<C, Integer> cardinality = CollectionUtils.getCardinalityMap(subElementKeys);
+        Map<C, List<D>> groupedSubElements = (groupedSubElementsMapper == null)
+                ? Map.of()
+                : values
+                        .stream()
+                        .collect(Collectors.groupingBy(subElementsKeyExtractor, Collectors.mapping(groupedSubElementsMapper, Collectors.toList())));
+
+        return cardinality
+                .entrySet()
+                .stream()
+                .sorted(Comparator
+                        .<Map.Entry<C, Integer>>comparingInt(Map.Entry::getValue)
+                        .reversed()
+                        .thenComparing(Map.Entry::getKey))
+                .map(entry -> Triple.of(
+                        entry.getKey(),
+                        entry.getValue(),
+                        groupedSubElements.get(entry.getKey())))
+                .toList();
     }
 
     public static <T, M extends Map<String, Set<T>>> M merge(M m1, M m2) {
