@@ -4,6 +4,7 @@ import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.dto.GedcomAnalysisDto;
 import com.geneaazul.gedcomanalyzer.model.dto.GedcomMetadataDto;
+import com.geneaazul.gedcomanalyzer.model.dto.UsageStatsDto;
 import com.geneaazul.gedcomanalyzer.service.GedcomAnalyzerService;
 import com.geneaazul.gedcomanalyzer.service.GedcomParsingService;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
@@ -61,6 +62,12 @@ public class GedcomAnalyzerController {
     @CrossOrigin(originPatterns = { "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
     public GedcomMetadataDto getGedcomMetadata() {
         return gedcomAnalyzerService.getGedcomMetadata(gedcomHolder.getGedcom());
+    }
+
+    @GetMapping("/usageStats")
+    @CrossOrigin(originPatterns = { "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
+    public UsageStatsDto getUsageStats() {
+        return gedcomAnalyzerService.getUsageStats();
     }
 
     @GetMapping("/reload")
