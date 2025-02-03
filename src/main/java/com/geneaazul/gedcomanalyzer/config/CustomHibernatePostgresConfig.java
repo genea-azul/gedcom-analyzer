@@ -1,5 +1,7 @@
 package com.geneaazul.gedcomanalyzer.config;
 
+import com.geneaazul.gedcomanalyzer.repository.extend.CustomPostgresDialect;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernatePropertiesCustomizer;
 import org.springframework.context.annotation.Configuration;
@@ -12,7 +14,7 @@ public class CustomHibernatePostgresConfig implements HibernatePropertiesCustomi
 
     @Override
     public void customize(Map<String, Object> hibernateProperties) {
-        hibernateProperties.put("hibernate.dialect", "com.geneaazul.gedcomanalyzer.repository.extend.CustomPostgresDialect");
+        hibernateProperties.put("hibernate.dialect", CustomPostgresDialect.class.getName());
     }
 
 }
