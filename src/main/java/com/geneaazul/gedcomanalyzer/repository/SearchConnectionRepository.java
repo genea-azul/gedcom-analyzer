@@ -57,6 +57,8 @@ public interface SearchConnectionRepository extends JpaRepository<SearchConnecti
       SELECT
           s.clientIpAddress AS clientIpAddress,
           COUNT(*) AS count,
+          MIN(s.createDate) AS minCreateDate,
+          MAX(s.createDate) AS maxCreateDate,
           ARRAY_AGG(s.person1.surname) AS person1Surnames,
           ARRAY_AGG(s.person2.surname) AS person2Surnames
       FROM SearchConnection s

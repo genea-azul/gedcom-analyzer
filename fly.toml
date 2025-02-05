@@ -15,7 +15,8 @@ primary_region = 'iad'
     "server.port" : 8080,
     "gedcom-storage-local-path" : "/tmp/genea-azul-full-gedcom.ged",
     "temp-dir" : "/tmp",
-    "clients-with-special-threshold" : "181.92.181.58, 186.136.48.25, 181.92.180.105, 181.29.128.249, 190.18.216.24",
+    "max-client-requests-count-threshold" : 8,
+    "clients-with-special-threshold" : "181.92.181.58, 186.136.48.25, 181.92.180.105, 181.29.128.249, 190.18.216.24, 45.176.88.52",
     "disable-obfuscate-living" : true
   }'''
   SPRING_PROFILES_ACTIVE = 'prod,flyio'
