@@ -1,5 +1,6 @@
 package com.geneaazul.gedcomanalyzer.service;
 
+import com.geneaazul.gedcomanalyzer.mapper.DateTimeMapper;
 import com.geneaazul.gedcomanalyzer.mapper.GedcomMapper;
 import com.geneaazul.gedcomanalyzer.mapper.ObfuscationType;
 import com.geneaazul.gedcomanalyzer.mapper.PersonMapper;
@@ -40,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
@@ -88,6 +90,7 @@ public class GedcomAnalyzerService {
     private final SearchConnectionRepository searchConnectionRepository;
     private final PersonMapper personMapper;
     private final GedcomMapper gedcomMapper;
+    private final DateTimeMapper dateTimeMapper;
 
     public GedcomMetadataDto getGedcomMetadata(EnrichedGedcom gedcom) {
         return getGedcomMetadata(gedcom, null);
@@ -935,6 +938,8 @@ public class GedcomAnalyzerService {
                                 .map(proj -> ClientStatsDto.builder()
                                         .ipAddress(proj.getClientIpAddress())
                                         .searchesCount(Math.toIntExact(proj.getCount()))
+                                        .firstSearch(dateTimeMapper.toLocalDate(proj.getMinCreateDate()))
+                                        .lastSearch(dateTimeMapper.toLocalDate(proj.getMaxCreateDate()))
                                         .topSurnames(proj.getIndividualSurnames())
                                         .build()),
                         searchConnectionProjections
@@ -942,6 +947,8 @@ public class GedcomAnalyzerService {
                                 .map(proj -> ClientStatsDto.builder()
                                         .ipAddress(proj.getClientIpAddress())
                                         .searchesCount(Math.toIntExact(proj.getCount()))
+                                        .firstSearch(dateTimeMapper.toLocalDate(proj.getMinCreateDate()))
+                                        .lastSearch(dateTimeMapper.toLocalDate(proj.getMaxCreateDate()))
                                         .topSurnames(ListUtils.union(proj.getPerson1Surnames(), proj.getPerson2Surnames()))
                                         .build()))
                 .filter(cs -> cs.getIpAddress() != null)
@@ -951,6 +958,8 @@ public class GedcomAnalyzerService {
                         (cs1, cs2) -> ClientStatsDto.builder()
                                 .ipAddress(cs1.getIpAddress())
                                 .searchesCount(cs1.getSearchesCount() + cs2.getSearchesCount())
+                                .firstSearch(ObjectUtils.min(cs1.getFirstSearch(), cs2.getFirstSearch()))
+                                .lastSearch(ObjectUtils.max(cs1.getLastSearch(), cs2.getLastSearch()))
                                 .topSurnames(ListUtils.union(cs1.getTopSurnames(), cs2.getTopSurnames()))
                                 .build()))
                 .values()

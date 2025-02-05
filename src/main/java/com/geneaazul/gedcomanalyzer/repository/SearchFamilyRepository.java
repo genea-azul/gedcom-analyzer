@@ -61,6 +61,8 @@ public interface SearchFamilyRepository extends JpaRepository<SearchFamily, Long
       SELECT
           s.clientIpAddress AS clientIpAddress,
           COUNT(*) AS count,
+          MIN(s.createDate) AS minCreateDate,
+          MAX(s.createDate) AS maxCreateDate,
           ARRAY_AGG(s.individual.surname) AS individualSurnames
       FROM SearchFamily s
       GROUP BY s.clientIpAddress

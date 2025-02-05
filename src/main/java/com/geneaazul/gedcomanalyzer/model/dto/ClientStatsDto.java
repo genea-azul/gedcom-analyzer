@@ -1,5 +1,6 @@
 package com.geneaazul.gedcomanalyzer.model.dto;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import lombok.AccessLevel;
@@ -23,6 +24,12 @@ public class ClientStatsDto {
 
     @ToString.Include
     private Integer searchesCount;
+
+    @ToString.Include
+    private LocalDate firstSearch;
+
+    @ToString.Include
+    private LocalDate lastSearch;
 
     @ToString.Include
     private List<String> topSurnames;
