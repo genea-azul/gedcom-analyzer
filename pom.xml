@@ -7,34 +7,34 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.3.1</version>
+    <version>3.4.2</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
   <groupId>com.geneaazul</groupId>
   <artifactId>gedcom-analyzer</artifactId>
-  <version>1.14.4-SNAPSHOT</version>
+  <version>1.14.4</version>
   <name>Gedcom Analyzer</name>
   <description>Gedcom Analyzer by Genea Azul</description>
   <url>https://github.com/genea-azul/gedcom-analyzer</url>
 
   <properties>
     <java.version>22</java.version>
-    <google-guava.version>33.2.1-jre</google-guava.version>
-    <google-api-drive.version>v3-rev20240628-2.0.0</google-api-drive.version>
+    <google-guava.version>33.4.0-jre</google-guava.version>
+    <google-api-drive.version>v3-rev20250122-2.0.0</google-api-drive.version>
     <gedcom-java.version>1.14.0</gedcom-java.version>
-    <icu4j.version>75.1</icu4j.version>
-    <pdfbox.version>3.0.2</pdfbox.version>
-    <commons-codec.version>1.17.0</commons-codec.version>
-    <commons-collections4.version>4.5.0-M2</commons-collections4.version>
-    <commons-compress.version>1.26.2</commons-compress.version>
-    <commons-csv.version>1.11.0</commons-csv.version>
+    <icu4j.version>76.1</icu4j.version>
+    <pdfbox.version>3.0.4</pdfbox.version>
+    <commons-codec.version>1.18.0</commons-codec.version>
+    <commons-collections4.version>4.5.0-M3</commons-collections4.version>
+    <commons-compress.version>1.27.1</commons-compress.version>
+    <commons-csv.version>1.13.0</commons-csv.version>
     <commons-exec.version>1.4.0</commons-exec.version>
-    <commons-io.version>2.16.1</commons-io.version>
-    <commons-lang3.version>3.14.0</commons-lang3.version>
+    <commons-io.version>2.18.0</commons-io.version>
+    <commons-lang3.version>3.17.0</commons-lang3.version>
     <commons-math4.version>4.0-beta1</commons-math4.version>
     <commons-rng.version>1.6</commons-rng.version>
-    <commons-text.version>1.12.0</commons-text.version>
+    <commons-text.version>1.13.0</commons-text.version>
   </properties>
 
   <licenses>
