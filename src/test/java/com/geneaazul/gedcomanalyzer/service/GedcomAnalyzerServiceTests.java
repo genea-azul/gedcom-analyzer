@@ -191,6 +191,24 @@ public class GedcomAnalyzerServiceTests {
     }
 
     @Test
+    public void findPersonsByDateOfBirthBetween() {
+        System.out.println("findPersonsByDateOfBirthBetween:");
+        List<EnrichedPerson> people = searchService.findPersonsByPlaceOfAnyEvent(
+                "Azul, Buenos Aires, Argentina",
+                true,
+                null,
+                false,
+                false,
+                false,
+                gedcom.getPeople());
+        Date dateFrom = Date.parse("01 JUL 1987").orElseThrow();
+        Date dateTo = Date.parse("30 JUN 1988").orElseThrow();
+        searchService
+                .findPersonsByDateOfBirthBetween(dateFrom, dateTo, people)
+                .forEach(System.out::println);
+    }
+
+    @Test
     public void findPersonsByMonthAndDayOfDeath() {
         System.out.println("findPersonsByMonthAndDayOfDeath:");
         searchService
