@@ -12,13 +12,12 @@
           <option name="goals">
             <list>
               <option value="clean" />
-              <option value="package" />
               <option value="spring-boot:run" />
-              <option value="-DskipTests" />
-              <option value="-Dspring-boot.run.profiles=local" />
-              <option value="-Dspring-boot.run.jvmArguments=-Xms512m -Xmx2048m -XX:+UseZGC -XX:+ZGenerational" />
+              <option value="&quot;-Dspring-boot.run.profiles=local&quot;" />
+              <option value="&quot;-Dspring-boot.run.jvmArguments=-Xms512m -Xmx1024m -XX:+UseZGC -XX:+ZGenerational -XX:+HeapDumpOnOutOfMemoryError&quot;" />
             </list>
           </option>
+          <option name="multimoduleDir" />
           <option name="pomFileName" value="pom.xml" />
           <option name="profilesMap">
             <map />
