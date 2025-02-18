@@ -171,6 +171,23 @@ public class SearchService {
     }
 
     /**
+     *
+     */
+    public List<EnrichedPerson> findPersonsByDateOfBirthBetween(
+            Date dateFrom,
+            Date dateTo,
+            List<EnrichedPerson> people) {
+        Date dateToExclusive = Date.from(dateTo.toLocalDate().plusDays(1));
+        return people
+                .stream()
+                .filter(person -> person.getDateOfBirth()
+                        .filter(Date::isFullDate)
+                        .map(dob -> !dob.isBefore(dateFrom) && dob.isBefore(dateToExclusive))
+                        .orElse(false))
+                .toList();
+    }
+
+    /**
      * .
      */
     public List<EnrichedPerson> findPersonsByPlaceOfBirth(

@@ -940,7 +940,7 @@ public class GedcomAnalyzerService {
                                         .searchesCount(Math.toIntExact(proj.getCount()))
                                         .firstSearch(dateTimeMapper.toLocalDate(proj.getMinCreateDate()))
                                         .lastSearch(dateTimeMapper.toLocalDate(proj.getMaxCreateDate()))
-                                        .topSurnames(proj.getIndividualSurnames())
+                                        .topSurnames(ListUtils.emptyIfNull(proj.getIndividualSurnames()).stream().filter(StringUtils::isNotEmpty).toList())
                                         .build()),
                         searchConnectionProjections
                                 .stream()
@@ -949,7 +949,9 @@ public class GedcomAnalyzerService {
                                         .searchesCount(Math.toIntExact(proj.getCount()))
                                         .firstSearch(dateTimeMapper.toLocalDate(proj.getMinCreateDate()))
                                         .lastSearch(dateTimeMapper.toLocalDate(proj.getMaxCreateDate()))
-                                        .topSurnames(ListUtils.union(proj.getPerson1Surnames(), proj.getPerson2Surnames()))
+                                        .topSurnames(ListUtils.union(
+                                                ListUtils.emptyIfNull(proj.getPerson1Surnames()).stream().filter(StringUtils::isNotEmpty).toList(),
+                                                ListUtils.emptyIfNull(proj.getPerson2Surnames()).stream().filter(StringUtils::isNotEmpty).toList()))
                                         .build()))
                 .filter(cs -> cs.getIpAddress() != null)
                 .collect(Collectors.toUnmodifiableMap(
@@ -966,10 +968,9 @@ public class GedcomAnalyzerService {
                 .stream()
                 .sorted(Comparator.comparing(ClientStatsDto::getSearchesCount).reversed())
                 .peek(cs -> {
-                    List<String> topSurnames = MapUtils.orderHierarchically(
-                            cs.getTopSurnames(),
-                            Function.identity(),
-                            null)
+                    log.debug("Top surnames: {}", cs.getTopSurnames());
+                    List<String> topSurnames = MapUtils
+                            .orderHierarchically(cs.getTopSurnames(), Function.identity(), null)
                             .stream()
                             .map(Triple::getLeft)
                             .toList();

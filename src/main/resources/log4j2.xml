@@ -29,7 +29,7 @@
     </Appenders>
 
     <Loggers>
-        <Logger name="ar.com.azul" level="debug" />
+        <Logger name="com.geneaazul" level="debug" />
         <Logger name="org.apache.catalina.startup.DigesterFactory" level="error" />
         <Logger name="org.apache.catalina.util.LifecycleBase" level="error" />
         <Logger name="org.apache.coyote.http11.Http11NioProtocol" level="warn" />
