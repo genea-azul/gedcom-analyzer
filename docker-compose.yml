@@ -26,7 +26,7 @@ services:
     ports:
       - '$SPRING_LOCAL_PORT:$SPRING_DOCKER_PORT'
     environment:
-      JAVA_OPTS: '-Xms512m -Xmx1024m -XX:+UseZGC -XX:+ZGenerational'
+      JAVA_OPTS: '-Xms1024m -Xmx1152m -XX:+UseG1GC -XX:+UseStringDeduplication'
       SPRING_PROFILES_ACTIVE: 'prod'
       SPRING_APPLICATION_JSON: '{
         "spring.datasource.url" : "jdbc:mariadb://mariadb:$MYSQLDB_DOCKER_PORT/$MYSQLDB_DATABASE",

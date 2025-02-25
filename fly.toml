@@ -9,7 +9,7 @@ primary_region = 'iad'
 [build]
 
 [env]
-  JAVA_OPTS = '-Xms512m -Xmx1024m -XX:+UseZGC -XX:+ZGenerational'
+  JAVA_OPTS = '-Xms1024m -Xmx1152m -XX:+UseG1GC -XX:+UseStringDeduplication'
   LOG_PATH = '/tmp/logs'
   SPRING_APPLICATION_JSON = '''{
     "server.port" : 8080,
@@ -34,6 +34,6 @@ primary_region = 'iad'
   processes = ['app']
 
 [[vm]]
-  memory = '1.5gb'
+  memory = '1.75gb'
   cpu_kind = 'shared'
   cpus = 1
