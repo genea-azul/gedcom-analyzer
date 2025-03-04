@@ -48,11 +48,12 @@ public class AppController {
 
     @GetMapping("/")
     public ModelAndView index(@RequestParam @Nullable String f) {
-        boolean obfuscateLiving = !properties.isDisableObfuscateLiving() && !"0".equals(f);
-        Map<String, ?> params = Map.of(
-                "projectVersion", projectVersion,
-                "obfuscateLiving", obfuscateLiving);
-        return new ModelAndView("index", params);
+        return new ModelAndView("index");
+    }
+
+    @GetMapping("/no-redirect")
+    public ModelAndView noRedirect(@RequestParam @Nullable String f) {
+        return new ModelAndView("site-v2/index");
     }
 
     @GetMapping("/family-tree/{personUuid}")

@@ -6235,7 +6235,6 @@
   </div>
 
 <script>
-  // var siteUrl = "https://geneaazul-{url-version}.ddns.net";
   var siteUrl = "https://gedcom-analyzer-app.fly.dev";
   var onVacations = false;
   var obfuscateLiving = true;
