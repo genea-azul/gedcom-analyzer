@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.4.2</version>
+    <version>3.5.0</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
@@ -26,7 +26,7 @@
     <icu4j.version>76.1</icu4j.version>
     <pdfbox.version>3.0.4</pdfbox.version>
     <commons-codec.version>1.18.0</commons-codec.version>
-    <commons-collections4.version>4.5.0-M3</commons-collections4.version>
+    <commons-collections4.version>4.5.0</commons-collections4.version>
     <commons-compress.version>1.27.1</commons-compress.version>
     <commons-csv.version>1.13.0</commons-csv.version>
     <commons-exec.version>1.4.0</commons-exec.version>
@@ -292,15 +292,6 @@
         </configuration>
       </plugin>
     </plugins>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-wrapper-plugin</artifactId>
-          <version>3.3.2</version>
-        </plugin>
-      </plugins>
-    </pluginManagement>
   </build>
 
   <repositories>

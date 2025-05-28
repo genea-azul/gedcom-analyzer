@@ -184,6 +184,7 @@ public class SearchService {
                         .filter(Date::isFullDate)
                         .map(dob -> !dob.isBefore(dateFrom) && dob.isBefore(dateToExclusive))
                         .orElse(false))
+                .sorted(Comparator.comparing(p -> p.getDateOfBirth().get()))
                 .toList();
     }
 
