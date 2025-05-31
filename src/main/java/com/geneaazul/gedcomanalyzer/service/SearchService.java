@@ -551,9 +551,14 @@ public class SearchService {
                 .anyMatch(personToMatch -> personToMatch.matchesGivenNameAndSurname(givenNameAndSurnameSearch));
 
         Predicate<List<EnrichedPerson>> relativesMatcher = isAllRelativesGivenNameAndSurnamesToCompareMatch
-                ? relativesToMatch -> validRelativesGivenNameAndSurnamesToCompare
-                        .stream()
-                        .allMatch(givenNameAndSurnameSearch -> givenNameAndSurnameMatcher.test(givenNameAndSurnameSearch, relativesToMatch))
+                ? relativesToMatch -> {
+                    int minMatches = Math.min(relativesToMatch.size(), validRelativesGivenNameAndSurnamesToCompare.size());
+                    int matchesCount = validRelativesGivenNameAndSurnamesToCompare
+                            .stream()
+                            .mapToInt(givenNameAndSurnameSearch -> givenNameAndSurnameMatcher.test(givenNameAndSurnameSearch, relativesToMatch) ? 1 : 0)
+                            .sum();
+                    return matchesCount >= minMatches;
+                }
                 : relativesToMatch -> validRelativesGivenNameAndSurnamesToCompare
                         .stream()
                         .anyMatch(givenNameAndSurnameSearch -> givenNameAndSurnameMatcher.test(givenNameAndSurnameSearch, relativesToMatch));
