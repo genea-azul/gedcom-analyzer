@@ -23,17 +23,17 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class NameUtils {
 
-    private static final String[] NAME_SEARCH_SPECIAL_CHARS      = new String[]{ "?", "(", ")", "'", ".", "-" };
-    private static final String[] NAME_REPLACEMENT_SPECIAL_CHARS = new String[]{  "",  "",  "",  "",  "", " " };
+    private static final String[] NAME_SEARCH_SPECIAL_CHARS      = { "?", "(", ")", "'", ".", "-" };
+    private static final String[] NAME_REPLACEMENT_SPECIAL_CHARS = {  "",  "",  "",  "",  "", " " };
     private static final Pattern NAME_MULTIPLE_SPACES_PATTERN = Pattern.compile("  +");
 
     private static final Pattern NORMALIZED_NAME_SEPARATOR_PATTERN = Pattern.compile("-");
 
-    private static final String[] GIVEN_NAME_COMMON_EXTRAS             = new String[]{ " cadette", " cadete", " cadet", " detto ", " dita ", " dite ", " dit " };
-    private static final String[] GIVEN_NAME_COMMON_EXTRAS_REPLACEMENT = new String[]{         "",        "",       "",       " ",      " ",      " ",     " " };
+    private static final String[] GIVEN_NAME_COMMON_EXTRAS             = { " cadette", " cadete", " cadet", " detto ", " dita ", " dite ", " dit " };
+    private static final String[] GIVEN_NAME_COMMON_EXTRAS_REPLACEMENT = {         "",        "",       "",       " ",      " ",      " ",     " " };
 
-    private static final String[] SURNAME_SPECIAL_CASES             = new String[]{ "fernandes vilegas", "lopes osornio" };
-    private static final String[] SURNAME_SPECIAL_CASES_REPLACEMENT = new String[]{ "fernandesvilegas", "lopesosornio" };
+    private static final String[] SURNAME_SPECIAL_CASES             = { "fernandes vilegas", "lopes osornio" };
+    private static final String[] SURNAME_SPECIAL_CASES_REPLACEMENT = { "fernandesvilegas", "lopesosornio" };
 
     private static final Pattern SURNAME_COMMON_CONNECTOR_PATTERN =
              Pattern.compile("^([^ ]+)(?: (da|de|di|do|du|del|der|della|delle|dall|das|dos|la|le|lo|las|los|san))+ (.+)$");
@@ -42,8 +42,8 @@ public class NameUtils {
     private static final Pattern SURNAME_DOUBLE_LETTERS_PATTERN = Pattern.compile("([a-z])\\1+");
     private static final Pattern SURNAME_VOWELS_ENDING_PATTERN = Pattern.compile("[aeiou]+$");
     private static final String SURNAME_VOWELS_ENDING_REPLACEMENT = "_";
-    private static final String[] SURNAME_SEARCH_CHARS      = new String[]{ "b", "ç", "ce", "ci", "je", "ji", "k", "q", "y", "z" };
-    private static final String[] SURNAME_REPLACEMENT_CHARS = new String[]{ "v", "c", "se", "si", "ge", "gi", "c", "c", "i", "s" }; // replacement of k and q must be done after replacement of ce and ci
+    private static final String[] SURNAME_SEARCH_CHARS      = { "b", "ç", "ce", "ci", "je", "ji", "k", "q", "y", "z" };
+    private static final String[] SURNAME_REPLACEMENT_CHARS = { "v", "c", "se", "si", "ge", "gi", "c", "c", "i", "s" }; // replacement of k and q must be done after replacement of ce and ci
 
     /**
      * Usually used for givenName and surname simplification.

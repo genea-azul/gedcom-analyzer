@@ -138,7 +138,7 @@ public class HighLoadCalculationsTests {
                 .sum();
         System.out.println("getAncestryCountriesCardinalityByPlaceOfAnyEvent: " + places.size() + " places and " + totalSurnames + " surnames");
         List<EnrichedPerson> people = searchService
-                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", isAlive, null, true, false, false, gedcom.getPeople());
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", isAlive, null, true, true, false, gedcom.getPeople());
         places
                 .forEach(cardinality -> System.out.println(
                         StringUtils.rightPad(cardinality.country(), 20)
@@ -149,7 +149,6 @@ public class HighLoadCalculationsTests {
     }
 
     @Test
-    @Disabled
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     public void getImmigrantsCitiesCardinalityByPlaceOfAnyEvent() throws IOException {
         List<GedcomAnalyzerService.SurnamesByCityCardinality> places = gedcomAnalyzerService
@@ -157,12 +156,12 @@ public class HighLoadCalculationsTests {
                         gedcom.getPeople(),
                         "Azul, Buenos Aires, Argentina",
                         null,
-                        new String[]{ "Uruguay", "Brasil", "Chile", "Perú", "Paraguay", "Bolívia", "Océano Atlántico" },
+                        new String[] { "Uruguay", "Brasil", "Chile", "Perú", "Paraguay", "Bolívia", "Océano Atlántico" },
                         null,
                         // includeSpousePlaces: relates to placeOfAnyEvent, set true for wider range of immigrants
                         true,
                         // includeAllChildrenPlaces: relates to placeOfAnyEvent, set true for wider range of immigrants
-                        false,
+                        true,
                         // isExactPlace: relates to placeOfAnyEvent, set true to match exactly instead of "ends with" matching
                         false,
                         false,
@@ -172,6 +171,8 @@ public class HighLoadCalculationsTests {
                 .mapToInt(GedcomAnalyzerService.SurnamesByCityCardinality::cardinality)
                 .sum();
         System.out.println("getImmigrantsCitiesCardinalityByPlaceOfAnyEvent: " + places.size() + " places and " + totalImmigrants + " immigrants");
+
+        /* Default printing */
         places
                 .forEach(cardinality -> System.out.println(
                         StringUtils.leftPad(cardinality.country(), 80)
@@ -181,6 +182,9 @@ public class HighLoadCalculationsTests {
                                         .stream()
                                         .map(triple -> triple.getLeft() + " (" + triple.getMiddle() + ")")
                                         .toList()));
+
+        /* Generate HTMl <li> list */
+        /* TODO */
 
         if (!places.isEmpty()) {
             System.out.println("people by city: " + places.getFirst().country() + " (" + places.getFirst().persons().size() + ")");
@@ -470,7 +474,6 @@ public class HighLoadCalculationsTests {
     }
 
     @Test
-    @Disabled
     public void getOlderAndLongestLivingPersons() {
         System.out.println("getOlderAndLongestLivingPersons:");
         List<EnrichedPerson> personsByPlace = searchService
