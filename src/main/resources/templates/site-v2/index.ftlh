@@ -6345,7 +6345,7 @@
   </div>
 
 <script>
-  var siteUrl = "http://localhost:8080";
+  var siteUrl = "https://gedcom-analyzer-app.fly.dev";
   var onVacations = false;
   var obfuscateLiving = true;
 </script>
