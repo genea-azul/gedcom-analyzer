@@ -23,8 +23,8 @@ public class AlphabetUtils {
     /*
      * і (U+0456) -> i
      */
-    private static final String[] SPECIAL_CHARS_SEARCH = new String[]{ "і" };
-    private static final String[] SPECIAL_CHARS_REPLACEMENT = new String[]{ "i" };
+    private static final String[] SPECIAL_CHARS_SEARCH = { "і" };
+    private static final String[] SPECIAL_CHARS_REPLACEMENT = { "i" };
 
     public static String convertAnyToLatin(@Nullable String str) {
         if (StringUtils.isBlank(str)) {

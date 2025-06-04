@@ -788,7 +788,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
 
             String text6 = "• ";
 
-            String[] text7 = new String[] { relationship.adoption(), relationship.relationshipDesc() };
+            String[] text7 = { relationship.adoption(), relationship.relationshipDesc() };
 
             try {
                 writeText(stream, mono, size1, space1, 30f, lineYPos1, text1);
