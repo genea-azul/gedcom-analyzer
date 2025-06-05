@@ -528,7 +528,6 @@ public class SearchService {
         }
 
         Optional<List<GivenNameAndSurname>> relativesGivenNameAndSurnamesToCompare = relativesGivenNameAndSurnamesToCompareSupplier.get();
-
         if (relativesGivenNameAndSurnamesToCompare.isEmpty()) {
             return persons
                     .stream()
@@ -541,7 +540,6 @@ public class SearchService {
                 .stream()
                 .filter(GivenNameAndSurname::areAllValuesNotEmpty)
                 .toList();
-
         if (validRelativesGivenNameAndSurnamesToCompare.isEmpty()) {
             return List.of();
         }
@@ -552,6 +550,9 @@ public class SearchService {
 
         Predicate<List<EnrichedPerson>> relativesMatcher = isAllRelativesGivenNameAndSurnamesToCompareMatch
                 ? relativesToMatch -> {
+                    if (relativesToMatch.isEmpty()) {
+                        return false;
+                    }
                     int minMatches = Math.min(relativesToMatch.size(), validRelativesGivenNameAndSurnamesToCompare.size());
                     int matchesCount = validRelativesGivenNameAndSurnamesToCompare
                             .stream()
