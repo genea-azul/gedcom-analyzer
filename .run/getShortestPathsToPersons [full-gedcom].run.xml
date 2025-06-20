@@ -8,7 +8,7 @@
       </pattern>
     </extension>
     <option name="PACKAGE_NAME" value="com.geneaazul.gedcomanalyzer.service" />
-    <option name="MAIN_CLASS_NAME" value="com.geneaazul.gedcomanalyzer.service.GedcomAnalyzerServiceTests" />
+    <option name="MAIN_CLASS_NAME" value="com.geneaazul.gedcomanalyzer.service.HighLoadCalculationsTests" />
     <option name="METHOD_NAME" value="getShortestPathsToPersons" />
     <option name="TEST_OBJECT" value="method" />
     <option name="VM_PARAMETERS" value="-ea -Dgedcom-storage-local-path=../gedcoms/genea-azul-full-gedcom.ged" />
