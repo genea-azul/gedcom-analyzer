@@ -201,9 +201,10 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
         Map<String, String[]> countryColorsMap = Map.ofEntries(
                 Map.entry("Alemania", new String[] {"#FFF40F", "#FFCC00"}),
                 Map.entry("Argentina", new String[] {"#8BCEFF", "#74ACDF"}),
+                Map.entry("Australia", new String[] {"#12AE54", "#0F9146"}),
                 Map.entry("Austria", new String[] {"", ""}),
-                Map.entry("Bolivia", new String[] {"#923D", "#F4E400"}),
-                Map.entry("Brasil", new String[] {"#2E8D", "#FFDF00"}),
+                Map.entry("Bolivia", new String[] {"#0F923D", "#F4E400"}),
+                Map.entry("Brasil", new String[] {"#0F2E8D", "#FFDF00"}),
                 Map.entry("Bulgaria", new String[] {"", ""}),
                 Map.entry("Bélgica", new String[] {"#FFFF2B", "#FDDA24"}),
                 Map.entry("Checoslovaquia", new String[] {"#145297", "#11457E"}),
