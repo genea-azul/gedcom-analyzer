@@ -232,7 +232,7 @@ public class GedcomAnalyzerServiceTests {
                 "Azul, Buenos Aires, Argentina",
                 null,
                 null,
-                false,
+                true,
                 false,
                 false,
                 gedcom.getPeople());
