@@ -645,7 +645,7 @@
           Estad&iacute;sticas del &aacute;rbol de Azul
         </div>
         <div class="small">
-          actualizadas al 04/06/2025
+          actualizadas al 01/07/2025
         </div>
       </div>
 
