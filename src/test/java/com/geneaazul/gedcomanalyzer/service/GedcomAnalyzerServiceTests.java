@@ -23,6 +23,7 @@ import java.time.Month;
 import java.time.Year;
 import java.time.ZonedDateTime;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -222,6 +223,80 @@ public class GedcomAnalyzerServiceTests {
         searchService
                 .findPersonsByYearOfDeathAndNoParents(Year.of(2020), null, gedcom.getPeople())
                 .forEach(System.out::println);
+    }
+
+    @Test
+    public void findDatesWithHigherAmountOfEvents() {
+        System.out.println("findDatesWithHigherAmountOfEvents:");
+        List<EnrichedPerson> people = searchService.findPersonsByPlaceOfAnyEvent(
+                "Azul, Buenos Aires, Argentina",
+                null,
+                null,
+                true,
+                false,
+                false,
+                gedcom.getPeople());
+
+        Map<Pair<Month, Integer>, Integer> eventsCountByDate = new HashMap<>(366);
+        people
+                .forEach(person -> {
+                    if (person.getDateOfBirth().filter(Date::isFullDate).isPresent() && person.isAlive()) {
+                        eventsCountByDate.merge(Pair.of(person.getDateOfBirth().get().getMonth(), person.getDateOfBirth().get().getDay()), 1, Integer::sum);
+                    }
+                    if (person.getDateOfDeath().filter(Date::isFullDate).isPresent()) {
+                        eventsCountByDate.merge(Pair.of(person.getDateOfDeath().get().getMonth(), person.getDateOfDeath().get().getDay()), 1, Integer::sum);
+                    }
+                    person.getSpousesWithChildren()
+                            .stream()
+                            .filter(spw -> !spw.isSeparated() && (person.isAlive() || spw.getSpouse().map(EnrichedPerson::isAlive).orElse(Boolean.TRUE)))
+                            .filter(spw -> spw.getDateOfPartners().filter(Date::isFullDate).isPresent())
+                            .filter(spw -> person.getId() > spw.getSpouse().map(EnrichedPerson::getId).orElse(0))
+                            .forEach(spw -> eventsCountByDate.merge(Pair.of(spw.getDateOfPartners().get().getMonth(), spw.getDateOfPartners().get().getDay()), 1, Integer::sum));
+                });
+
+        List<Pair<Month, Integer>> maxDates = eventsCountByDate
+                .entrySet()
+                .stream()
+                .sorted(Comparator.<Map.Entry<Pair<Month, Integer>, Integer>, Integer>comparing(Map.Entry::getValue)
+                        .reversed()
+                        .thenComparing(Map.Entry::getKey))
+                .limit(5)
+                .peek(e -> System.out.println(StringUtils.leftPad(e.getKey().getRight().toString(), 2) + "-" + e.getKey().getLeft().name().substring(0, 3) + ": " + e.getValue()))
+                .map(Map.Entry::getKey)
+                .toList();
+
+        maxDates
+                .stream()
+                .limit(1)
+                .forEach(maxDate -> {
+                    System.out.println("\n## Date: " + StringUtils.leftPad(maxDate.getRight().toString(), 2) + "-" + maxDate.getLeft().name().substring(0, 3));
+                    people
+                            .forEach(person -> {
+                                if (person.getDateOfBirth().filter(Date::isFullDate).isPresent() && person.isAlive()) {
+                                    Pair<Month, Integer> date = Pair.of(person.getDateOfBirth().get().getMonth(), person.getDateOfBirth().get().getDay());
+                                    if (date.equals(maxDate)) {
+                                        System.out.println("Birth of: " + person.getDisplayName());
+                                    }
+                                }
+                                if (person.getDateOfDeath().filter(Date::isFullDate).isPresent()) {
+                                    Pair<Month, Integer> date = Pair.of(person.getDateOfDeath().get().getMonth(), person.getDateOfDeath().get().getDay());
+                                    if (date.equals(maxDate)) {
+                                        System.out.println("Death of: " + person.getDisplayName());
+                                    }
+                                }
+                                person.getSpousesWithChildren()
+                                        .stream()
+                                        .filter(spw -> !spw.isSeparated() && (person.isAlive() || spw.getSpouse().map(EnrichedPerson::isAlive).orElse(Boolean.TRUE)))
+                                        .filter(spw -> spw.getDateOfPartners().filter(Date::isFullDate).isPresent())
+                                        .filter(spw -> person.getId() > spw.getSpouse().map(EnrichedPerson::getId).orElse(0))
+                                        .forEach(spw -> {
+                                            Pair<Month, Integer> date = Pair.of(spw.getDateOfPartners().get().getMonth(), spw.getDateOfPartners().get().getDay());
+                                            if (date.equals(maxDate)) {
+                                                System.out.println("Marri of: " + person.getDisplayName() + " and " + spw.getSpouse().map(EnrichedPerson::getDisplayName).orElse(""));
+                                            }
+                                        });
+                            });
+                });
     }
 
     @Test
