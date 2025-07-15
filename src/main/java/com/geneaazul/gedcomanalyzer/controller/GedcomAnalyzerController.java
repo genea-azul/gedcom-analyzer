@@ -48,7 +48,12 @@ public class GedcomAnalyzerController {
     private String projectVersion;
 
     @GetMapping
-    @CrossOrigin(originPatterns = { "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
+    @CrossOrigin(originPatterns = {
+            "http://geneaazul.com.ar:[*]",
+            "https://geneaazul.com.ar:[*]",
+            "http://*.geneaazul.com.ar:[*]",
+            "https://*.geneaazul.com.ar:[*]",
+    })
     public Map<String, Object> analyzeGedcom(HttpServletRequest request) {
         log.info("Accessing the API [ httpRequestId={} ]", request.getRequestId());
         // Used for health check
@@ -59,13 +64,23 @@ public class GedcomAnalyzerController {
     }
 
     @GetMapping("/metadata")
-    @CrossOrigin(originPatterns = { "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
+    @CrossOrigin(originPatterns = {
+            "http://geneaazul.com.ar:[*]",
+            "https://geneaazul.com.ar:[*]",
+            "http://*.geneaazul.com.ar:[*]",
+            "https://*.geneaazul.com.ar:[*]",
+    })
     public GedcomMetadataDto getGedcomMetadata() {
         return gedcomAnalyzerService.getGedcomMetadata(gedcomHolder.getGedcom());
     }
 
     @GetMapping("/usageStats")
-    @CrossOrigin(originPatterns = { "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
+    @CrossOrigin(originPatterns = {
+            "http://geneaazul.com.ar:[*]",
+            "https://geneaazul.com.ar:[*]",
+            "http://*.geneaazul.com.ar:[*]",
+            "https://*.geneaazul.com.ar:[*]",
+    })
     public UsageStatsDto getUsageStats() {
         return gedcomAnalyzerService.getUsageStats();
     }
