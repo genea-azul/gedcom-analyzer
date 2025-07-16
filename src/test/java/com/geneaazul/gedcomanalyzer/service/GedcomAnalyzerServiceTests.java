@@ -230,6 +230,7 @@ public class GedcomAnalyzerServiceTests {
     }
 
     @Test
+    @SuppressWarnings({"ConstantValue", "OptionalGetWithoutIsPresent"})
     public void findDatesWithHigherAmountOfEvents() {
         System.out.println("findDatesWithHigherAmountOfEvents:");
         List<EnrichedPerson> people = searchService.findPersonsByPlaceOfAnyEvent(
@@ -241,10 +242,11 @@ public class GedcomAnalyzerServiceTests {
                 false,
                 gedcom.getPeople());
 
+        boolean allowNotAlive = false;
         Map<Pair<Month, Integer>, Integer> eventsCountByDate = new HashMap<>(366);
         people
                 .forEach(person -> {
-                    if (person.getDateOfBirth().filter(Date::isFullDate).isPresent() && person.isAlive()) {
+                    if (person.getDateOfBirth().filter(Date::isFullDate).isPresent() && (allowNotAlive || person.isAlive())) {
                         eventsCountByDate.merge(Pair.of(person.getDateOfBirth().get().getMonth(), person.getDateOfBirth().get().getDay()), 1, Integer::sum);
                     }
                     if (person.getDateOfDeath().filter(Date::isFullDate).isPresent()) {
@@ -252,7 +254,8 @@ public class GedcomAnalyzerServiceTests {
                     }
                     dateOfPartnerIterator(
                             person,
-                            spw -> eventsCountByDate.merge(Pair.of(spw.getDateOfPartners().get().getMonth(), spw.getDateOfPartners().get().getDay()), 1, Integer::sum));
+                            spw -> eventsCountByDate.merge(Pair.of(spw.getDateOfPartners().get().getMonth(), spw.getDateOfPartners().get().getDay()), 1, Integer::sum),
+                            allowNotAlive);
                 });
 
         List<Pair<Month, Integer>> maxDates = eventsCountByDate
@@ -276,11 +279,11 @@ public class GedcomAnalyzerServiceTests {
                     Optional<Date> maxDateFullDate = Optional.of(Date.from(LocalDate.of(2025, maxDate.getLeft(), maxDate.getRight())));
                     people
                             .forEach(person -> {
-                                if (person.getDateOfBirth().filter(Date::isFullDate).isPresent() && person.isAlive()) {
+                                if (person.getDateOfBirth().filter(Date::isFullDate).isPresent() && (allowNotAlive || person.isAlive())) {
                                     Pair<Month, Integer> date = Pair.of(person.getDateOfBirth().get().getMonth(), person.getDateOfBirth().get().getDay());
                                     if (date.equals(maxDate)) {
                                         String period = getYearsStr(person.getDateOfBirth(), maxDateFullDate);
-                                        System.out.println("Birth of: " + period + "° " + person.getDisplayName());
+                                        System.out.println("Birth of: " + period + "° " + person.getDisplayName() + (person.isAlive() ? "" : " (X)"));
                                     }
                                 }
                                 if (person.getDateOfDeath().filter(Date::isFullDate).isPresent()) {
@@ -296,9 +299,10 @@ public class GedcomAnalyzerServiceTests {
                                             Pair<Month, Integer> date = Pair.of(spw.getDateOfPartners().get().getMonth(), spw.getDateOfPartners().get().getDay());
                                             if (date.equals(maxDate)) {
                                                 String period = getYearsStr(spw.getDateOfPartners(), maxDateFullDate);
-                                                System.out.println("Marri of: " + period + "° " + person.getDisplayName() + " and " + spw.getSpouse().map(EnrichedPerson::getDisplayName).orElse(""));
+                                                System.out.println("Marri of: " + period + "° " + person.getDisplayName() + (person.isAlive() ? "" : " (X)") + " and " + spw.getSpouse().map(EnrichedPerson::getDisplayName).orElse("") + (spw.getSpouse().map(EnrichedPerson::isAlive).orElse(Boolean.TRUE) ? "" : " (X)"));
                                             }
-                                        });
+                                        },
+                                        allowNotAlive);
                             });
                 });
     }
@@ -312,10 +316,13 @@ public class GedcomAnalyzerServiceTests {
                 .orElse(null);
     }
 
-    private void dateOfPartnerIterator(EnrichedPerson person, Consumer<EnrichedSpouseWithChildren> spouseWithChildrenConsumer) {
+    private void dateOfPartnerIterator(
+            EnrichedPerson person,
+            Consumer<EnrichedSpouseWithChildren> spouseWithChildrenConsumer,
+            boolean allowNotAlive) {
         person.getSpousesWithChildren()
                 .stream()
-                .filter(spw -> !spw.isSeparated() && (person.isAlive() || spw.getSpouse().map(EnrichedPerson::isAlive).orElse(Boolean.TRUE)))
+                .filter(spw -> !spw.isSeparated() && (allowNotAlive || person.isAlive() || spw.getSpouse().map(EnrichedPerson::isAlive).orElse(Boolean.TRUE)))
                 .filter(spw -> spw.getDateOfPartners().filter(Date::isFullDate).isPresent())
                 .filter(spw -> person.getId() > spw.getSpouse().map(EnrichedPerson::getId).orElse(0))
                 .forEach(spouseWithChildrenConsumer);
