@@ -200,6 +200,7 @@ public class HighLoadCalculationsTests {
              *   -> Revisar: <b>.*[^\s,]+ \S
              *   -> Revisar: <b>.*([^\s,]+ )+\(
              *   -> De La Torre y Della Torre (Esp / Ita)
+             *   -> Vera y Berra
              *   -> Vassallo y Basalo (Ita / Esp)
              *   -> Martines (Por)
              *   -> Rodrigues (Por)
@@ -295,7 +296,8 @@ public class HighLoadCalculationsTests {
                     .flatMap(result -> Stream
                             .of(
                                     Stream.of(Optional.ofNullable(result.minImmigrationYear)
-                                            .map(year -> "<span style=\"font-size:9.5pt;\"><b>" + result.surname + "</b></span>  •  " + year + "<br>")
+                                            .map(year -> "<span style=\"font-size:9.5pt;\"><b>" + result.surname + "</b></span>"
+                                                    + "<span style=\"font-size:9.5pt;\">  •  " + year + "</span><br>")
                                             .orElseGet(() -> "<span style=\"font-size:9.5pt;\"><b>" + result.surname + "</b></span><br>")),
                                     result.places
                                             .stream()
