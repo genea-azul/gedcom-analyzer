@@ -32,9 +32,12 @@ public class PlaceUtils {
             "Hospital",
             "Iglesia",
             "Instituto",
+            "Monasterio",
             "Parrocchia",
             "Parroquia",
             "Santuario",
+            "Seminario",
+            "Tribunales",
             "Universidad"
     };
 

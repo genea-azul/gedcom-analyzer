@@ -7,13 +7,13 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.5.0</version>
+    <version>3.5.3</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
   <groupId>com.geneaazul</groupId>
   <artifactId>gedcom-analyzer</artifactId>
-  <version>1.14.20</version>
+  <version>1.14.21</version>
   <name>Gedcom Analyzer</name>
   <description>Gedcom Analyzer by Genea Azul</description>
   <url>https://github.com/genea-azul/gedcom-analyzer</url>
@@ -99,6 +99,12 @@
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-drive</artifactId>
       <version>${google-api-drive.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- GEDCOM dependencies -->
@@ -129,6 +135,10 @@
         <exclusion>
           <groupId>org.junit.jupiter</groupId>
           <artifactId>junit-jupiter</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
