@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # stage 1 - define base JDK for builds
-FROM eclipse-temurin:22.0.2_9-jdk-alpine AS base
+FROM eclipse-temurin:24.0.2_12-jdk-alpine AS base
 
 # stage 2 - download dependencies
 FROM base AS deps
@@ -27,7 +27,7 @@ COPY --from=build /workspace/target/*.jar build/libs/app.jar
 RUN cd build/libs/dependency; jar -xf ../app.jar
 
 # stage 5 - based on JRE, install Python
-FROM eclipse-temurin:22.0.2_9-jre-alpine AS jre-py
+FROM eclipse-temurin:24.0.2_12-jre-alpine AS jre-py
 ENV PYTHONUNBUFFERED=1
 RUN apk add --update --no-cache python3 && ln -sf python3 /usr/bin/python
 RUN rm /usr/lib/python*/EXTERNALLY-MANAGED && \

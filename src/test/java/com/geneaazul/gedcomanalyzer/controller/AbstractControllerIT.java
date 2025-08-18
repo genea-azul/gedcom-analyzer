@@ -5,18 +5,18 @@ import com.geneaazul.gedcomanalyzer.repository.SearchConnectionRepository;
 import com.geneaazul.gedcomanalyzer.repository.SearchFamilyRepository;
 
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @WebMvcTest({SearchController.class, GedcomAnalyzerController.class})
 @ComponentScan(basePackageClasses = Application.class)
 @ActiveProfiles("test")
 public abstract class AbstractControllerIT {
 
-    @MockBean
+    @MockitoBean
     protected SearchFamilyRepository searchFamilyRepository;
-    @MockBean
+    @MockitoBean
     protected SearchConnectionRepository searchConnectionRepository;
 
 }

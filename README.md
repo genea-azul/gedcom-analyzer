@@ -57,5 +57,5 @@ gcloud app logs tail -s default
 
 ```shell
 # Update Maven wrapper
-./mvnw -N wrapper:wrapper -Dtype=only-script -Dmaven="4.0.0-rc-2"
+./mvnw -N wrapper:wrapper -Dtype=only-script -Dmaven="4.0.0-rc-4"
 ```

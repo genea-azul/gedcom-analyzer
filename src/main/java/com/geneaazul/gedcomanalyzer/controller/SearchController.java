@@ -20,7 +20,7 @@ import com.geneaazul.gedcomanalyzer.service.familytree.FamilyTreeManager;
 import com.geneaazul.gedcomanalyzer.service.familytree.PlainFamilyTreePdfService;
 import com.geneaazul.gedcomanalyzer.utils.InetAddressUtils;
 
-import org.springframework.core.io.PathResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -239,7 +239,7 @@ public class SearchController {
         headers.add(HttpHeaders.CONTENT_LANGUAGE, familyTree.locale().toString());
         headers.add("File-Name", familyTree.filename());
 
-        PathResource resource = new PathResource(familyTree.path());
+        FileSystemResource resource = new FileSystemResource(familyTree.path());
 
         return ResponseEntity.ok()
                 .headers(headers)

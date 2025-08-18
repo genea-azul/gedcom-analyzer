@@ -9,7 +9,7 @@ primary_region = 'iad'
 [build]
 
 [env]
-  JAVA_OPTS = '-Xms1024m -Xmx1152m -XX:+UseG1GC -XX:+UseStringDeduplication'
+  JAVA_OPTS = '-Xms1024m -Xmx1280m -XX:+UseG1GC -XX:+UseStringDeduplication'
   LOG_PATH = '/tmp/logs'
   SPRING_APPLICATION_JSON = '''{
     "server.port" : 8080,
