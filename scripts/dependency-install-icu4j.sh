@@ -3,12 +3,12 @@
 # Install ICU4J Transliterator in local Maven repo
 # https://github.com/unicode-org/icu
 #
-#   git clone --depth 1 -b maint/maint-76 https://github.com/unicode-org/icu
+#   git clone --depth 1 -b maint/maint-77 https://github.com/unicode-org/icu
 
 artifactProjDir=../icu/icu4j
 artifactGitMain=main
-artifactGitBranch=maint/maint-76
-artifactVersion=76.1
+artifactGitBranch=maint/maint-77
+artifactVersion=77.1
 
 # Update branch (enable if not cloning previously)
 # git -C ${artifactProjDir} pull
