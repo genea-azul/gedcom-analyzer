@@ -15,7 +15,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -48,7 +47,7 @@ public class SearchControllerIT extends AbstractControllerIT {
     private MockMvc mvc;
 
     @Autowired
-    private Jackson2ObjectMapperBuilder mapperBuilder;
+    private ObjectMapper objectMapper;
 
     @Value("${test.individual.givenName:Son}")
     private String individualGivenName;
@@ -65,8 +64,6 @@ public class SearchControllerIT extends AbstractControllerIT {
 
     @Test
     public void testSearchFamily() throws Exception {
-        ObjectMapper objectMapper = mapperBuilder.build();
-
         SearchFamilyDto searchFamilyDto = SearchFamilyDto.builder()
                 .individual(SearchPersonDto.builder()
                         .givenName("Some")
@@ -165,8 +162,6 @@ public class SearchControllerIT extends AbstractControllerIT {
 
     @Test
     public void testSearchSurnames() throws Exception {
-        ObjectMapper objectMapper = mapperBuilder.build();
-
         SearchSurnamesDto searchSurnamesDto = SearchSurnamesDto.builder()
                 .surnames(List.of(
                         "Family1",
@@ -189,8 +184,6 @@ public class SearchControllerIT extends AbstractControllerIT {
 
     @Test
     public void testSearchFamilyTree() throws Exception {
-        ObjectMapper objectMapper = mapperBuilder.build();
-
         SearchFamilyDto searchFamilyDto = SearchFamilyDto.builder()
                 .individual(SearchPersonDto.builder()
                         .givenName(individualGivenName)
@@ -262,8 +255,6 @@ public class SearchControllerIT extends AbstractControllerIT {
 
     @Test
     public void testSearchConnection() throws Exception {
-        ObjectMapper objectMapper = mapperBuilder.build();
-
         SearchConnectionDto searchConnectionDto = SearchConnectionDto.builder()
                 .person1(SearchPersonDto.builder()
                         .givenName("Grandson")

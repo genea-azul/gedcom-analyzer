@@ -434,6 +434,18 @@ public class NameUtilsTests {
                     Surname matching = PersonUtils.getShortenedSurnameMainWord("Scabucci", properties.getNormalizedSurnamesMap()).orElse(null);
                     assertThat(surname.matches(matching)).isTrue();
                 });
+
+        name.setSurname("Cacciatori");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("Cacciatori");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("casiatori");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("casiator_");
+
+                    Surname matching = PersonUtils.getShortenedSurnameMainWord("Caciatore", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(matching)).isTrue();
+                });
     }
 
 }

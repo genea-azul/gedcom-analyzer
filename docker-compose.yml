@@ -26,7 +26,7 @@ services:
     ports:
       - '$SPRING_LOCAL_PORT:$SPRING_DOCKER_PORT'
     environment:
-      JAVA_OPTS: '-Xms1024m -Xmx1152m -XX:+UseG1GC -XX:+UseStringDeduplication'
+      JAVA_OPTS: '-Xms1024m -Xmx1280m -XX:+UseG1GC -XX:+UseStringDeduplication'
       SPRING_PROFILES_ACTIVE: 'prod'
       SPRING_APPLICATION_JSON: '{
         "spring.datasource.url" : "jdbc:mariadb://mariadb:$MYSQLDB_DOCKER_PORT/$MYSQLDB_DATABASE",
@@ -51,13 +51,6 @@ services:
       LOG_PATH: '/tmp/logs'
     volumes:
       - app:/tmp
-
-  #adminer:
-  #  container_name: gedcom-analyzer-adminer
-  #  image: adminer:4.8.1
-  #  restart: always
-  #  ports:
-  #    - 8086:8080
 
 volumes:
   db:

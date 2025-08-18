@@ -8,7 +8,6 @@ import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -37,12 +36,10 @@ public class AppControllerIT extends AbstractControllerIT {
     private MockMvc mvc;
 
     @Autowired
-    private Jackson2ObjectMapperBuilder mapperBuilder;
+    private ObjectMapper objectMapper;
 
     @Test
     public void testDisplayFamilyTreeNetwork() throws Exception {
-        ObjectMapper objectMapper = mapperBuilder.build();
-
         SearchFamilyDto searchFamilyDto = SearchFamilyDto.builder()
                 .individual(SearchPersonDto.builder()
                         .givenName("Some")

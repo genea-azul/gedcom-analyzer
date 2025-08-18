@@ -3,7 +3,7 @@ package com.geneaazul.gedcomanalyzer.config;
 import com.geneaazul.gedcomanalyzer.repository.extend.CustomH2Dialect;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernatePropertiesCustomizer;
+import org.springframework.boot.hibernate.autoconfigure.HibernatePropertiesCustomizer;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.Map;
