@@ -7,21 +7,21 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.0-M1</version>
+		<version>4.0.0-M3</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
 	<groupId>com.geneaazul</groupId>
 	<artifactId>gedcom-analyzer</artifactId>
-	<version>1.14.22</version>
+	<version>1.15.0</version>
 	<name>Gedcom Analyzer</name>
 	<description>Gedcom Analyzer by Genea Azul</description>
 	<url>https://github.com/genea-azul/gedcom-analyzer</url>
 
 	<properties>
 		<java.version>24</java.version>
-		<google-guava.version>33.4.8-jre</google-guava.version>
-		<google-api-drive.version>v3-rev20250723-2.0.0</google-api-drive.version>
+		<google-guava.version>33.5.0-jre</google-guava.version>
+		<google-api-drive.version>v3-rev20250910-2.0.0</google-api-drive.version>
 		<gedcom-java.version>1.14.0</gedcom-java.version>
 		<icu4j.version>77.1</icu4j.version>
 		<pdfbox.version>3.0.5</pdfbox.version>
@@ -301,11 +301,27 @@
 				<configuration>
 					<annotationProcessorPaths>
 						<path>
+							<groupId>org.springframework.boot</groupId>
+							<artifactId>spring-boot-configuration-processor</artifactId>
+						</path>
+						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
 						</path>
 					</annotationProcessorPaths>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
@@ -318,6 +334,13 @@
 						</exclude>
 					</excludes>
 				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>build-info</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
