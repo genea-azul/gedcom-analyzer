@@ -26,7 +26,7 @@ public class FamilyUtils {
     public static final Set<String> OTHER_MARRIAGE_TAGS = Set.of("MARB", "MARS");
     public static final Set<String> DIVORCE_TAGS = Set.of("DIV", "DIVF", "DIVORCE", "_DIV");
     public static final Set<String> EVENT_TAGS = Set.of("EVEN", "EVENT");
-    public static final Set<String> PARTNERS_EVENT_TYPES = Set.of("Partners", "PARTNERS", "MYHERITAGE:REL_PARTNERS", "MYHERITAGE:REL_UNKNOWN");
+    public static final Set<String> PARTNERS_EVENT_TYPES = Set.of("Partners", "PARTNERS", "MYHERITAGE:REL_OTHER", "MYHERITAGE:REL_PARTNERS", "MYHERITAGE:REL_UNKNOWN");
     public static final Set<String> SEPARATION_EVENT_TYPES = Set.of("Separation", "SEPARATION");
     public static final Set<String> ADOPTED_CHILD_RELATIONSHIP_TYPES = Set.of("Adopted", "ADOPTED");
     public static final Set<String> FOSTER_CHILD_RELATIONSHIP_TYPES = Set.of("Foster", "FOSTER");
