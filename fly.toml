@@ -9,7 +9,7 @@ primary_region = 'iad'
 [build]
 
 [env]
-  JAVA_OPTS = '-Xms1024m -Xmx1280m -XX:+UseG1GC -XX:+UseStringDeduplication'
+  JAVA_OPTS = '-XX:+UseG1GC -XX:InitialRAMPercentage=20.0 -XX:MaxRAMPercentage=60.0 -XX:MaxDirectMemorySize=96m -XX:ReservedCodeCacheSize=64m -Xss256k -XX:+UseStringDeduplication -XX:+ExitOnOutOfMemoryError'
   LOG_PATH = '/tmp/logs'
   SPRING_APPLICATION_JSON = '''{
     "server.port" : 8080,
