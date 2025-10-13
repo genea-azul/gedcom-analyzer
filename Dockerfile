@@ -27,21 +27,27 @@ COPY --from=build /workspace/target/*.jar build/libs/app.jar
 RUN cd build/libs/dependency; jar -xf ../app.jar
 
 # stage 5 - based on JRE, install Python
-FROM eclipse-temurin:24.0.2_12-jdk AS jre-py
+FROM eclipse-temurin:24.0.2_12-jre AS jre-py
 ENV PYTHONUNBUFFERED=1
-RUN apk add --update --no-cache python3 && ln -sf python3 /usr/bin/python
-RUN rm /usr/lib/python*/EXTERNALLY-MANAGED && \
-    python3 -m ensurepip && \
-    pip3 install --no-cache --upgrade --break-system-packages pip setuptools pyvis==0.3.2 pandas==2.2.3
-
-## Create a group and user
-RUN addgroup -S gedcomanalyzerapp && adduser -S -D gedcomanalyzeruser -G gedcomanalyzerapp
+# Install Python runtime and pip
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends python3 python3-venv python3-pip ca-certificates && \
+    ln -sf /usr/bin/python3 /usr/bin/python && \
+    rm -rf /var/lib/apt/lists/*
+# Create isolated venv and install deps
+ENV VIRTUAL_ENV=/opt/py
+ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
+RUN python3 -m venv "${VIRTUAL_ENV}" && \
+    pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir pyvis==0.3.2 pandas==2.2.3
+# Create a group and user
+RUN groupadd --system --gid 1001 gedcomanalyzerapp && \
+    useradd  --system --uid 1001 --no-create-home --gid 1001 --shell /usr/sbin/nologin gedcomanalyzeruser
 
 # stage 6 - make runnable based on jre-py and the built code
 FROM jre-py AS jre-py-app
-COPY --from=unpack /workspace/build/libs/dependency/BOOT-INF/lib /app/lib
-COPY --from=unpack /workspace/build/libs/dependency/META-INF /app/META-INF
-COPY --from=unpack /workspace/build/libs/dependency/BOOT-INF/classes /app
+COPY --from=unpack --chown=gedcomanalyzeruser:gedcomanalyzerapp /workspace/build/libs/dependency/BOOT-INF/lib /app/lib
+COPY --from=unpack --chown=gedcomanalyzeruser:gedcomanalyzerapp /workspace/build/libs/dependency/META-INF /app/META-INF
+COPY --from=unpack --chown=gedcomanalyzeruser:gedcomanalyzerapp /workspace/build/libs/dependency/BOOT-INF/classes /app
 VOLUME /tmp
-USER gedcomanalyzeruser
 ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -cp app:app/lib/* com.geneaazul.gedcomanalyzer.Application"]
