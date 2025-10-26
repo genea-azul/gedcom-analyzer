@@ -490,11 +490,13 @@ public class GedcomAnalyzerServiceTests {
 
     @Test
     public void findDisappearedPersons() {
-        System.out.println("findDisappearedPersons:");
-        gedcom
+        List<EnrichedPerson> disappearedPeople = gedcom
                 .getPeople()
                 .stream()
                 .filter(EnrichedPerson::isDisappearedPerson)
+                .toList();
+        System.out.println("findDisappearedPersons (" + disappearedPeople.size() + "):");
+        disappearedPeople
                 .forEach(System.out::println);
     }
 
