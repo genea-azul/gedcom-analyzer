@@ -165,7 +165,7 @@ public class HighLoadCalculationsTests {
                         // isExactPlace: relates to placeOfAnyEvent, set true to match exactly instead of "ends with" matching
                         false,
                         false,
-                        false);
+                        false); // set true when generating statistics per country
         int totalImmigrants = places
                 .stream()
                 .mapToInt(GedcomAnalyzerService.SurnamesByCityCardinality::cardinality)
