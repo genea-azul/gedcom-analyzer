@@ -29,6 +29,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.text.StringEscapeUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -37,6 +38,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -129,7 +131,7 @@ public class HighLoadCalculationsTests {
 
     @Test
     public void getAncestryCountriesCardinalityByPlaceOfAnyEvent() {
-        Boolean isAlive = null;
+        Boolean isAlive = Boolean.TRUE;
         List<GedcomAnalyzerService.SurnamesByCountryCardinality> places = gedcomAnalyzerService
                 .getAncestryCountriesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", isAlive, true, false);
         int totalSurnames = places
@@ -165,7 +167,7 @@ public class HighLoadCalculationsTests {
                         // isExactPlace: relates to placeOfAnyEvent, set true to match exactly instead of "ends with" matching
                         false,
                         false,
-                        false); // set true when generating statistics per country
+                        GedcomAnalyzerService.PlacePart.FULL); // set COUNTRY when generating statistics per country
         int totalImmigrants = places
                 .stream()
                 .mapToInt(GedcomAnalyzerService.SurnamesByCityCardinality::cardinality)
@@ -189,9 +191,8 @@ public class HighLoadCalculationsTests {
         if (!places.isEmpty()) {
             System.out.println("people by city: " + places.getFirst().country() + " (" + places.getFirst().persons().size() + ")");
             places
-                    .getFirst()
-                    .persons()
                     .stream()
+                    .flatMap(p -> p.persons().stream())
                     .limit(200)
                     .forEach(System.out::println);
 
@@ -207,6 +208,8 @@ public class HighLoadCalculationsTests {
              *   -> Almeyda (Por)
              *   -> Limpiar provincias: Bordachar, Fittipaldi, Fortassin, Indo, Kollmann, Mocciaro, Saks, Sarasúa, Scavuzzo, Valicenti, Vitale
              *   -> Armentano (San Severino Lucano duplicado)
+             *   -> Duclos (agregar -> Escanecrabe, Alto Garona, Mediodía-Pirineos, Francia)
+             *   -> Alluvioni Cambiò / Piovera -> Alluvioni Cambiò
              */
 
             final int OUTPUT_FIXED_WIDTH_CHARS = 58;
@@ -289,16 +292,17 @@ public class HighLoadCalculationsTests {
                                                             : date.getYear().toString())
                                                     .orElse(null)))));
 
-            List<String> lines = immigrantSurnames.entrySet()
+            Set<String> titlesAppended = new HashSet<>();
+
+            List<String> lines = immigrantSurnames.values()
                     .stream()
-                    .sorted(Comparator.comparing(entry -> entry.getValue().surnameForSorting))
-                    .map(Map.Entry::getValue)
+                    .sorted(Comparator.comparing(result -> result.surnameForSorting))
                     .flatMap(result -> Stream
                             .of(
+                                    getOptionalTitle(result, titlesAppended),
                                     Stream.of(Optional.ofNullable(result.minImmigrationYear)
-                                            .map(year -> "<span style=\"font-size:9.5pt;\"><b>" + result.surname + "</b></span>"
-                                                    + "<span style=\"font-size:9.5pt;\">  •  " + year + "</span><br>")
-                                            .orElseGet(() -> "<span style=\"font-size:9.5pt;\"><b>" + result.surname + "</b></span><br>")),
+                                            .map(year -> "<div><b>" + StringEscapeUtils.escapeHtml4(result.surname) + "</b>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<i>" + year + "</i></div>")
+                                            .orElseGet(() -> "<div><b>" + StringEscapeUtils.escapeHtml4(result.surname) + "</b></div>")),
                                     result.places
                                             .stream()
                                             .map(place -> {
@@ -319,6 +323,12 @@ public class HighLoadCalculationsTests {
                                                         place = place.replace(", Auvernia-Ródano-Alpes", ", Auv.-Ród.-Alpes");
                                                     } else if (place.startsWith("Contrada Mezzana")) {
                                                         place = place.replace("Contrada Mezzana, ", "");
+                                                    } else if (place.contains(", Friuli Venezia Giulia")) {
+                                                        place = place.replace(", Friuli Venezia Giulia", ", Fri. Ven. Giu.");
+                                                    } else if (place.contains(", Castilla y León")) {
+                                                        place = place.replace(", Castilla y León", ", Cast. y León");
+                                                    } else if (place.contains(", County ")) {
+                                                        place = place.replace(", County ", ", Co. ");
                                                     } else if (place.contains(", Mecklenburg-Vorpommern")) {
                                                         place = place.replace(", Mecklenburg-Vorpommern", ", Meck.-Vorp.");
                                                     } else if (place.contains("(")) {
@@ -334,8 +344,8 @@ public class HighLoadCalculationsTests {
                                                         }
                                                     }
                                                     if (place.length() > OUTPUT_FIXED_WIDTH_CHARS) {
-                                                        if (place.endsWith(", Francia")) {
-                                                            place = place.replace(", Francia", ", Fran.");
+                                                        if (place.endsWith(", Italia")) {
+                                                            place = place.replace(", Italia", ", Ita");
                                                         }
                                                     }
                                                 }
@@ -351,16 +361,29 @@ public class HighLoadCalculationsTests {
                                             .map(place -> {
                                                 int padRepeat = Math.max(OUTPUT_FIXED_WIDTH_CHARS - place.length(), 0);
                                                 String padding = StringUtils.repeat("&nbsp;", padRepeat);
-                                                return "<span style=\"font-size:9.5pt;\">" + padding + place + "</span><br>";
+                                                return "<div>" + padding + StringEscapeUtils.escapeHtml4(place) + "</div>";
                                             }),
-                                    Stream.of("<span style=\"font-size:5pt;\">&nbsp;</span><br>"))
+                                    Stream.of("<div style=\"font-size:12pt;\">&nbsp;</div>"))
                             .flatMap(Function.identity()))
                     .collect(Collectors.toList());
 
             System.out.println();
-            System.out.println("Surnames in ./target/output.md: " + immigrantSurnames.size());
-            Files.write(Path.of("./target/output.md"), lines);
+            System.out.println("Surnames in ./target/output.html: " + immigrantSurnames.size());
+
+            lines.addFirst("<link href='https://fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet'>\n"
+                    + "<body style=\"font-family:'Roboto Mono',monospace;font-size:18pt;\">");
+            lines.addLast("</body>");
+            Files.write(Path.of("./target/output.html"), lines);
         }
+    }
+
+    private Stream<String> getOptionalTitle(ImmigrantsResult result, Set<String> titlesAppended) {
+        String title = StringUtils.stripAccents(result.surname.substring(0, 1)).toUpperCase();
+        if (!titlesAppended.contains(title)) {
+            titlesAppended.add(title);
+            return Stream.of("<h1 style=\"font-size:64pt;\"><b>" + title + "</b></h1>");
+        }
+        return Stream.of();
     }
 
     private static String getSurnameForSorting(String surname) {

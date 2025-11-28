@@ -71,6 +71,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -83,6 +85,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class GedcomAnalyzerService {
+
+    private static final Pattern REGION_PART_PATTERN = Pattern.compile(".+, ([^,]+, [^,]+)");
 
     private final SearchService searchService;
     private final PersonService personService;
@@ -573,13 +577,22 @@ public class GedcomAnalyzerService {
             boolean includeAllChildrenPlaces, // for placeOfAnyEvent
             boolean isExactPlace,          // for person's place for search compared with placeOfAnyEvent
             boolean onlyWithCity,          // for person's place for search
-            boolean onlyConsiderCountry) { // for person's returned place
+            PlacePart placePartToConsider) { // for person's returned place
 
         String countryOfAnyEvent = PlaceUtils.removeLastParenthesis(PlaceUtils.getCountry(placeOfAnyEvent));
 
-        Function<Place, String> placeMapper = onlyConsiderCountry
+        Function<Place, String> placeMapper = placePartToConsider == PlacePart.COUNTRY
                 ? Place::country
-                : place -> PlaceUtils.removeSubCityComponent(PlaceUtils.removeLastParenthesis(place.name()));
+                : place -> {
+                    @Nullable String p = PlaceUtils.removeSubCityComponent(PlaceUtils.removeLastParenthesis(place.name()));
+                    if (p != null && placePartToConsider == PlacePart.REGION) {
+                        Matcher matcher = REGION_PART_PATTERN.matcher(p);
+                        if (matcher.matches()) {
+                            return matcher.group(1);
+                        }
+                    }
+                    return p;
+                };
 
         BiPredicate<EnrichedPerson, Boolean> isImmigrantCondition = (person, disableNotForeignCountries) -> getForeignPlaceAndImmigrationDate(
                 person,
@@ -608,6 +621,7 @@ public class GedcomAnalyzerService {
                         .stream()
                         .map(Relationships::findFirst)
                         .map(Relationship::person)
+                        .filter(p -> isAlive == null || isAlive == p.isAlive())
                         .peek(relative -> visitedRelatives.add(relative.getId())))
                 .filter(person -> isImmigrantCondition.test(person, true))
                 .filter(StreamUtils.distinctByKey(EnrichedPerson::getId))
@@ -990,4 +1004,7 @@ public class GedcomAnalyzerService {
                 .build();
     }
 
+    public enum PlacePart {
+        FULL, REGION, COUNTRY
+    }
 }

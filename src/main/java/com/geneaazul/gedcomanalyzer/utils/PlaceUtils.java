@@ -17,23 +17,25 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class PlaceUtils {
 
-    private static final String[] SEARCH_PLACE = { "Pirineos-Atlánticos", ", Pau,", ", Oloron-Sainte-Marie," };
-    private static final String[] REPLACEMENT_PLACE = { "Pirineos Atlánticos", ",", "," };
+    private static final String[] SEARCH_PLACE      = {       "Haute-Garonne, Occitania", "Haute-Garonne", "Mediodía Pirineos", "Pirineos-Atlánticos", ", Pau,", ", Oloron-Sainte-Marie," };
+    private static final String[] REPLACEMENT_PLACE = { "Alto Garona, Mediodía-Pirineos",   "Alto Garona", "Mediodía-Pirineos", "Pirineos Atlánticos",      ",",                      "," };
 
     private static final String[] SUB_CITY_PLACE_PREFIXES = {
+            "Barrio",
             "Basílica",
             "Capilla",
             "Catedral",
             "Cementerio",
             "Colegio",
             "Convento",
+            "Contrada",    // Italian
             "Ermita",
             "Escuela",
             "Hospital",
             "Iglesia",
             "Instituto",
             "Monasterio",
-            "Parrocchia",
+            "Parrocchia",  // Italian
             "Parroquia",
             "Santuario",
             "Seminario",
@@ -42,8 +44,8 @@ public class PlaceUtils {
     };
 
     private static final String[] SUB_CITY_PLACE_SUFFIXES = {
-            "Hospital",
-            "Medical Center"
+            "Hospital",       // English
+            "Medical Center"  // English
     };
 
     private static final String[] SUB_CITY_PLACE_PREFIXES_EXCEPTIONS = {

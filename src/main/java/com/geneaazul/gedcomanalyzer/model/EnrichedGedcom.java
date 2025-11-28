@@ -6,6 +6,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folg.gedcom.model.Gedcom;
 
+import javax.annotation.CheckForNull;
 import java.time.Year;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
@@ -16,8 +17,6 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import javax.annotation.CheckForNull;
 
 import jakarta.annotation.Nullable;
 
