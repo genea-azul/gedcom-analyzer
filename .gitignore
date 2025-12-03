@@ -1,5 +1,6 @@
 # IntelliJ files
-.idea
+.idea/*
+!.idea/codeStyles
 *.iws
 *.iml
 *.ipr

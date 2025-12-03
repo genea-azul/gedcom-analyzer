@@ -15,6 +15,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.commons.rng.UniformRandomProvider;
 import org.apache.commons.rng.simple.RandomSource;
 import org.apache.commons.text.StringEscapeUtils;
@@ -68,7 +69,8 @@ public class PersonUtils {
     public static final Set<String> DEATH_TAGS = Set.of("DEAT", "DEATH");
     public static final Set<String> BURIAL_TAGS = Set.of("BURI", "BURIAL");
     public static final Set<String> SEX_TAGS = Set.of("SEX");
-    public static final Set<String> RESI_TAGS = Set.of("RESI");
+    public static final Set<String> IMMIGRATION_TAGS = Set.of("IMMI", "IMMIGRATION");
+    public static final Set<String> RESIDENCE_TAGS = Set.of("RESI", "RESIDENCE");
     public static final Set<String> EVENT_TAGS = Set.of("EVEN", "EVENT");
     public static final Set<String> ETHNICITY_EVENT_TYPES = Set.of("ETHN", "ETHNICITY", "Grupo étnico");
     public static final Set<String> DISAPPEARED_PERSON_EVENT_TYPES = Set.of("Enforced disappearance", "Desaparición forzada");
@@ -482,6 +484,42 @@ public class PersonUtils {
                 .map(StringUtils::trimToNull);
     }
 
+    public static List<Pair<Optional<String>, Optional<String>>> getResidenceEventFacts(Person person) {
+        return person.getEventsFacts()
+                .stream()
+                .filter(eventFact -> RESIDENCE_TAGS.contains(eventFact.getTag()))
+                .filter(eventFact -> eventFact.getAddress() != null)
+                .filter(eventFact -> eventFact.getAddress().getCountry() != null)
+                .map(eventFact -> Pair.of(
+                        Optional.of(
+                                Stream.of(
+                                        eventFact.getAddress().getCity(),
+                                        eventFact.getAddress().getState(),
+                                        eventFact.getAddress().getCountry())
+                                        .filter(StringUtils::isNotBlank)
+                                        .collect(Collectors.joining(", ")))
+                                .map(PlaceUtils::adjustPlace)
+                                .map(StringUtils::trimToNull),
+                        Optional.ofNullable(eventFact.getDate())
+                                .map(StringUtils::trimToNull)))
+                .toList();
+    }
+
+    public static List<Triple<Optional<String>, Optional<String>, Optional<String>>> getImmigrationEventFacts(Person person) {
+        return person.getEventsFacts()
+                .stream()
+                .filter(eventFact -> IMMIGRATION_TAGS.contains(eventFact.getTag()))
+                .map(eventFact -> Triple.of(
+                        Optional.ofNullable(eventFact.getPlace())
+                                .map(PlaceUtils::adjustPlace)
+                                .map(StringUtils::trimToNull),
+                        Optional.ofNullable(eventFact.getDate())
+                                .map(StringUtils::trimToNull),
+                        Optional.ofNullable(eventFact.getValue())
+                                .map(StringUtils::trimToNull)))
+                .toList();
+    }
+
     public static List<EventFact> getCustomEventFacts(Person person) {
         return person.getEventsFacts()
                 .stream()
@@ -685,7 +723,7 @@ public class PersonUtils {
     public static List<String> getEmails(Person person) {
         return person.getEventsFacts()
                 .stream()
-                .filter(eventFact -> RESI_TAGS.contains(eventFact.getTag()))
+                .filter(eventFact -> RESIDENCE_TAGS.contains(eventFact.getTag()))
                 .filter(eventFact -> EMAIL_TAG.equals(eventFact.getEmailTag()))
                 .map(EventFact::getEmail)
                 .toList();

@@ -6,6 +6,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.annotation.CheckForNull;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -13,8 +14,6 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import javax.annotation.CheckForNull;
 
 import jakarta.annotation.Nullable;
 
@@ -38,7 +37,7 @@ public class NameUtils {
     private static final Pattern SURNAME_COMMON_CONNECTOR_PATTERN =
              Pattern.compile("^([^ ]+)(?: (da|de|di|do|du|del|der|della|delle|dall|das|dos|la|le|lo|las|los|san))+ (.+)$");
     private static final Pattern SURNAME_COMMON_PREFIX_PATTERN =
-            Pattern.compile("^([a-z]|ahets|da|de|di|do|du|del|der|della|delle|dall|das|dos|la|le|lo|las|los|mc|mac|oro|san|sant|santa|santo|saint|sainte|st|van|vander|von) +((?!y +).*)$");
+            Pattern.compile("^([a-z]|ahets|da|de|di|do|du|del|der|della|delle|dall|das|dos|la|le|li|lo|las|los|mc|mac|oro|san|sant|santa|santo|saint|sainte|st|van|vander|von) +((?!y +).*)$");
     private static final Pattern SURNAME_DOUBLE_LETTERS_PATTERN = Pattern.compile("([a-z])\\1+");
     private static final Pattern SURNAME_VOWELS_ENDING_PATTERN = Pattern.compile("[aeiou]+$");
     private static final String SURNAME_VOWELS_ENDING_REPLACEMENT = "_";
