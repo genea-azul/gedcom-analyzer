@@ -54,6 +54,8 @@ public class EnrichedPerson {
     private final Optional<Place> placeOfDeath;
     private final boolean isAlive;
     private final Optional<Age> age;
+    private final List<PlaceAndDate> residences;
+    private final List<PlaceAndDate> immigrations;
     private final boolean isDistinguishedPerson;
     private final boolean isNativePerson;
     private final boolean isDisappearedPerson;
@@ -114,6 +116,29 @@ public class EnrichedPerson {
         isAlive = PersonUtils.isAlive(person);
         age = Age.of(dateOfBirth, dateOfDeath
                 .or(() -> isAlive ? Optional.of(Date.now(properties.getZoneId())) : Optional.empty()));
+
+        residences = PersonUtils.getResidenceEventFacts(person)
+                .stream()
+                .filter(pair -> pair.getLeft().isPresent())
+                .map(pair -> PlaceAndDate.ofPlaceOrEmpty(
+                        pair.getLeft()
+                                .map(place -> Place.of(place, gedcom.getPlaces())),
+                        pair.getRight()
+                                .flatMap(Date::parse)))
+                .flatMap(Optional::stream)
+                .toList();
+
+        immigrations = PersonUtils.getImmigrationEventFacts(person)
+                .stream()
+                .filter(pair -> pair.getLeft().isPresent())
+                .map(pair -> PlaceAndDate.ofPlaceOrEmpty(
+                        pair.getLeft()
+                                .map(place -> Place.of(place, gedcom.getPlaces())),
+                        pair.getMiddle()
+                                .flatMap(Date::parse)))
+                .flatMap(Optional::stream)
+                .toList();
+
         isDistinguishedPerson = PersonUtils.isDistinguishedPerson(person);
         isNativePerson = PersonUtils.isNativePerson(person);
         isDisappearedPerson = PersonUtils.isDisappearedPerson(person);
@@ -226,10 +251,19 @@ public class EnrichedPerson {
             boolean includeChildrenBirthPlaces,
             boolean includeAllChildrenPlaces) {
         return Stream.concat(
-                Stream
-                        .of(
+                Stream.concat(
+                        Stream.of(
                                 this.placeOfBirth,
                                 this.placeOfDeath),
+                        Stream.concat(
+                                this.residences
+                                        .stream()
+                                        .map(PlaceAndDate::place)
+                                        .map(Optional::of),
+                                this.immigrations
+                                        .stream()
+                                        .map(PlaceAndDate::place)
+                                        .map(Optional::of))),
                 this.spousesWithChildren
                         .stream()
                         .flatMap(spouseWithChildren -> Stream.concat(
@@ -273,9 +307,17 @@ public class EnrichedPerson {
             boolean includeChildrenBirthPlaces,
             boolean includeAllChildrenPlaces) {
         return Stream.concat(
-                Stream.of(
-                        PlaceAndDate.ofPlaceOrEmpty(this.placeOfBirth, this.dateOfBirth),
-                        PlaceAndDate.ofPlaceOrEmpty(this.placeOfDeath, this.dateOfDeath)),
+                Stream.concat(
+                        Stream.of(
+                                PlaceAndDate.ofPlaceOrEmpty(this.placeOfBirth, this.dateOfBirth),
+                                PlaceAndDate.ofPlaceOrEmpty(this.placeOfDeath, this.dateOfDeath)),
+                        Stream.concat(
+                                this.residences
+                                        .stream()
+                                        .map(Optional::of),
+                                this.immigrations
+                                        .stream()
+                                        .map(Optional::of))),
                 this.spousesWithChildren
                         .stream()
                         .flatMap(spouseWithChildren -> Stream.concat(

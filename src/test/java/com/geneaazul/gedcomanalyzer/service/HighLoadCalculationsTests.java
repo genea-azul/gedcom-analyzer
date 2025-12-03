@@ -26,7 +26,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.StringEscapeUtils;
@@ -200,20 +199,23 @@ public class HighLoadCalculationsTests {
              * TODO ajustes a output.txt "^[^\s,]+ [^\s•] y "^([^\s,]+ )+\("
              *   -> Revisar: <b>.*[^\s,]+ \S
              *   -> Revisar: <b>.*([^\s,]+ )+\(
+             *   -> Arrieta y Arieta (Esp / Ita)
              *   -> De La Torre y Della Torre (Esp / Ita)
-             *   -> Vera y Berra
+             *   -> Vera y Berra (Ita / Esp)
              *   -> Vassallo y Basalo (Ita / Esp)
-             *   -> Martines (Por)
-             *   -> Rodrigues (Por)
-             *   -> Almeyda (Por)
-             *   -> Limpiar provincias: Bordachar, Fittipaldi, Fortassin, Indo, Kollmann, Mocciaro, Saks, Sarasúa, Scavuzzo, Valicenti, Vitale
+             *   -> [agregar] Pereira de Lucena, Pereyra de Lucena (1732, Portugal) y [quitar] Portugal de González
+             *   -> Martines (~1855, Lisboa, Lisboa, Portugal)
+             *   -> Rodrigues (sin año, Castelo Branco, Horta, Faial, A&ccedil;ores, Portugal)
+             *   -> Limpiar provincias: Bordachar, Bosso, Dellepiane, Fittipaldi, Fortassin, Gargaglione, González, Goñi, Iacovino, Indo, Kollmann, Mocciaro, Motti, Reyero, Saks, Sarasúa, Scavuzzo, Tapia, Terrile, Vacca, Valicenti, Vitale
              *   -> Armentano (San Severino Lucano duplicado)
-             *   -> Duclos (agregar -> Escanecrabe, Alto Garona, Mediodía-Pirineos, Francia)
+             *   -> Duclos (agregar -> Escanecrabe, Alto Garona, Mediod&iacute;a-Pirineos, Francia)
              *   -> Alluvioni Cambiò / Piovera -> Alluvioni Cambiò
+             *   -> Almeida -> agregar Almeyda
+             *   -> Testavin, Testavin-Touron -> agregar Tur&oacute;n
              */
 
-            final int OUTPUT_FIXED_WIDTH_CHARS = 58;
-            final Pattern COMPOSITE_SURNAME_PATTERN = Pattern.compile("^(.+) (y|dit|dite|dita|detto) .+$");
+            final int OUTPUT_FIXED_WIDTH_CHARS = 100; // Use 58 for fixed with padding
+            final boolean IS_USE_PADDING = false;
 
             Map<String, ImmigrantsResult> immigrantSurnames = places
                     .stream()
@@ -225,7 +227,7 @@ public class HighLoadCalculationsTests {
                                         .flatMap(surnameWithFrequency -> surnameWithFrequency.getRight()
                                                 .stream()
                                                 .map(immigrationDate -> new ImmigrantsOutput(
-                                                        RegExUtils.replaceAll(StringUtils.remove(surnameWithFrequency.getLeft(), "?"), COMPOSITE_SURNAME_PATTERN, "$1"),
+                                                        surnameWithFrequency.getLeft(),
                                                         PersonUtils.getShortenedSurnameMainWord(surnameWithFrequency.getLeft(), properties.getNormalizedSurnamesMap()).get().normalizedMainWord(),
                                                         surnameWithFrequency.getMiddle(),
                                                         place.country(),
@@ -234,7 +236,7 @@ public class HighLoadCalculationsTests {
                                 place.surnamesVariations()
                                         .stream()
                                         .map(surname -> new ImmigrantsOutput(
-                                                RegExUtils.replaceAll(StringUtils.remove(surname, "?"), COMPOSITE_SURNAME_PATTERN, "$1"),
+                                                surname,
                                                 PersonUtils.getShortenedSurnameMainWord(surname, properties.getNormalizedSurnamesMap()).get().normalizedMainWord(),
                                                 0,
                                                 place.country(),
@@ -301,8 +303,8 @@ public class HighLoadCalculationsTests {
                             .of(
                                     getOptionalTitle(result, titlesAppended),
                                     Stream.of(Optional.ofNullable(result.minImmigrationYear)
-                                            .map(year -> "<div><b>" + StringEscapeUtils.escapeHtml4(result.surname) + "</b>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<i>" + year + "</i></div>")
-                                            .orElseGet(() -> "<div><b>" + StringEscapeUtils.escapeHtml4(result.surname) + "</b></div>")),
+                                            .map(year -> "  <div><span class=\"fw-bold\">" + StringEscapeUtils.escapeHtml4(result.surname) + "</span>&nbsp;&nbsp;&bull;&nbsp;&nbsp;<span class=\"fst-italic\">" + year + "</span></div>")
+                                            .orElseGet(() -> "  <div><span class=\"fw-bold\">" + StringEscapeUtils.escapeHtml4(result.surname) + "</span></div>")),
                                     result.places
                                             .stream()
                                             .map(place -> {
@@ -323,8 +325,8 @@ public class HighLoadCalculationsTests {
                                                         place = place.replace(", Auvernia-Ródano-Alpes", ", Auv.-Ród.-Alpes");
                                                     } else if (place.startsWith("Contrada Mezzana")) {
                                                         place = place.replace("Contrada Mezzana, ", "");
-                                                    } else if (place.contains(", Friuli Venezia Giulia")) {
-                                                        place = place.replace(", Friuli Venezia Giulia", ", Fri. Ven. Giu.");
+                                                    } else if (place.contains(", Friuli-Venezia Giulia")) {
+                                                        place = place.replace(", Friuli-Venezia Giulia", ", Fri.-Ven. Giu.");
                                                     } else if (place.contains(", Castilla y León")) {
                                                         place = place.replace(", Castilla y León", ", Cast. y León");
                                                     } else if (place.contains(", County ")) {
@@ -359,20 +361,48 @@ public class HighLoadCalculationsTests {
                                                 }
                                             })
                                             .map(place -> {
-                                                int padRepeat = Math.max(OUTPUT_FIXED_WIDTH_CHARS - place.length(), 0);
-                                                String padding = StringUtils.repeat("&nbsp;", padRepeat);
-                                                return "<div>" + padding + StringEscapeUtils.escapeHtml4(place) + "</div>";
+                                                if (IS_USE_PADDING) {
+                                                    int padRepeat = Math.max(OUTPUT_FIXED_WIDTH_CHARS - place.length(), 0);
+                                                    String padding = StringUtils.repeat("&nbsp;", padRepeat);
+                                                    return "  <div>" + padding + StringEscapeUtils.escapeHtml4(place) + "</div>";
+                                                } else {
+                                                    return "  <div class=\"text-end\">" + StringEscapeUtils.escapeHtml4(place) + "</div>";
+                                                }
                                             }),
-                                    Stream.of("<div style=\"font-size:12pt;\">&nbsp;</div>"))
+                                    Stream.of("  <div>&nbsp;</div>"))
                             .flatMap(Function.identity()))
                     .collect(Collectors.toList());
 
             System.out.println();
             System.out.println("Surnames in ./target/output.html: " + immigrantSurnames.size());
 
-            lines.addFirst("<link href='https://fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet'>\n"
-                    + "<body style=\"font-family:'Roboto Mono',monospace;font-size:18pt;\">");
-            lines.addLast("</body>");
+            lines.addFirst("""
+                    <html>
+                    <head>
+                      <title>Genea Azul - Origen de apellidos inmigrantes en Azul</title>
+                      <meta charset="utf-8">
+                      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto&family=Roboto+Mono">
+                      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" />
+                      <style type="text/css">
+                        body {
+                            font-family: 'Roboto', monospace;
+                            font-size: 12pt;
+                        }
+                        h1 {
+                            font-size: 64pt;
+                            text-align: center;
+                        }
+                        h3 {
+                            font-size: 32pt;
+                            font-weight: bold;
+                        }
+                        h4 {
+                            font-size: 26pt;
+                        }
+                      </style>
+                    </head>
+                    <body class="container-fluid">""");
+            lines.addLast("</body>\n</html>");
             Files.write(Path.of("./target/output.html"), lines);
         }
     }
@@ -381,7 +411,7 @@ public class HighLoadCalculationsTests {
         String title = StringUtils.stripAccents(result.surname.substring(0, 1)).toUpperCase();
         if (!titlesAppended.contains(title)) {
             titlesAppended.add(title);
-            return Stream.of("<h1 style=\"font-size:64pt;\"><b>" + title + "</b></h1>");
+            return Stream.of("  <h1 class=\"fw-bold\">" + title + "</h1>");
         }
         return Stream.of();
     }

@@ -2,6 +2,7 @@ package com.geneaazul.gedcomanalyzer.utils;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -17,8 +18,25 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class PlaceUtils {
 
-    private static final String[] SEARCH_PLACE      = {       "Haute-Garonne, Occitania", "Haute-Garonne", "Mediodía Pirineos", "Pirineos-Atlánticos", ", Pau,", ", Oloron-Sainte-Marie," };
-    private static final String[] REPLACEMENT_PLACE = { "Alto Garona, Mediodía-Pirineos",   "Alto Garona", "Mediodía-Pirineos", "Pirineos Atlánticos",      ",",                      "," };
+    private static final String[] SEARCH_PLACE = {
+            // France
+            "Haute-Garonne, Occitania",
+            "Haute-Garonne",
+            "Mediodía Pirineos",
+            "Pirineos-Atlánticos",
+            ", Pau,",
+            ", Oloron-Sainte-Marie,"
+    };
+
+    private static final String[] REPLACEMENT_PLACE = {
+            // France
+            "Alto Garona, Mediodía-Pirineos",
+            "Alto Garona",
+            "Mediodía-Pirineos",
+            "Pirineos Atlánticos",
+            ",",
+            ","
+    };
 
     private static final String[] SUB_CITY_PLACE_PREFIXES = {
             "Barrio",
@@ -77,9 +95,10 @@ public class PlaceUtils {
         }
         if (place.endsWith("Reino Unido")) {
             return StringUtils.substringBeforeLast(place, ",");
-        }
-        if (place.endsWith("Francia")) {
+        } else if (place.endsWith("Francia")) {
             return StringUtils.replaceEach(place, SEARCH_PLACE, REPLACEMENT_PLACE);
+        } else if (place.endsWith("Friuli Venezia Giulia, Italia")) {
+            return Strings.CS.replace(place, "Friuli Venezia Giulia,", "Friuli-Venezia Giulia,");
         }
         return place;
     }

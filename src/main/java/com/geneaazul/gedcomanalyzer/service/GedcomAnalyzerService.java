@@ -42,7 +42,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.folg.gedcom.model.ChildRef;
@@ -87,6 +89,7 @@ import lombok.extern.slf4j.Slf4j;
 public class GedcomAnalyzerService {
 
     private static final Pattern REGION_PART_PATTERN = Pattern.compile(".+, ([^,]+, [^,]+)");
+    private static final Pattern COMPOSITE_SURNAME_PATTERN = Pattern.compile("^(.+) (y|o|dit|dite|dita|detto) .+$");
 
     private final SearchService searchService;
     private final PersonService personService;
@@ -575,14 +578,31 @@ public class GedcomAnalyzerService {
             @Nullable Boolean isAlive,
             boolean includeSpousePlaces,      // for placeOfAnyEvent
             boolean includeAllChildrenPlaces, // for placeOfAnyEvent
-            boolean isExactPlace,          // for person's place for search compared with placeOfAnyEvent
-            boolean onlyWithCity,          // for person's place for search
-            PlacePart placePartToConsider) { // for person's returned place
+            boolean isExactPlace,             // for person's place for search compared with placeOfAnyEvent
+            boolean onlyWithCity,             // for person's place for search
+            PlacePart placePartToConsider) {  // for person's returned place
 
         String countryOfAnyEvent = PlaceUtils.removeLastParenthesis(PlaceUtils.getCountry(placeOfAnyEvent));
 
+        Function<Surname, String> surnameMapper = surname -> {
+            String parsedSurname = PlaceUtils.removeLastParenthesis(surname.value());
+            parsedSurname = Strings.CS.remove(parsedSurname, "?");
+            parsedSurname = RegExUtils.replaceAll(parsedSurname, COMPOSITE_SURNAME_PATTERN, "$1");
+            if (parsedSurname.contains(" ")) {
+                String mainSurname = StringUtils.substring(parsedSurname, 0, surname.normalizedMainWord().length() + 8);
+                mainSurname = StringUtils.substringBeforeLast(mainSurname, " ");
+                if (surname.normalizedMainWord().length() <= mainSurname.length()) {
+                    String lastWord = StringUtils.substringAfterLast(mainSurname, " ");
+                    if (lastWord.isEmpty() || !Character.isLowerCase(lastWord.charAt(0))) {
+                        return mainSurname;
+                    }
+                }
+            }
+            return parsedSurname;
+        };
+
         Function<Place, String> placeMapper = placePartToConsider == PlacePart.COUNTRY
-                ? Place::country
+                ? place -> PlaceUtils.removeLastParenthesis(place.country())
                 : place -> {
                     @Nullable String p = PlaceUtils.removeSubCityComponent(PlaceUtils.removeLastParenthesis(place.name()));
                     if (p != null && placePartToConsider == PlacePart.REGION) {
@@ -613,7 +633,7 @@ public class GedcomAnalyzerService {
         // Evaluated AFTER visiting person
         BiPredicate<EnrichedPerson, Integer> isImmigrantStopCondition = (person, _) -> isImmigrantCondition.test(person, false);
 
-        List<Pair<EnrichedPerson, PlaceStrAndDate>> cities = searchService
+        List<Pair<EnrichedPerson, PlaceStrAndDate>> personsAndCities = searchService
                 .findPersonsByPlaceOfAnyEvent(placeOfAnyEvent, isAlive, null, includeSpousePlaces, includeAllChildrenPlaces, isExactPlace, people)
                 .stream()
                 .flatMap(person -> personService
@@ -638,28 +658,28 @@ public class GedcomAnalyzerService {
                                 .get()))
                 .toList();
 
-        Map<String, Integer> cardinality = CollectionUtils.getCardinalityMap(
-                cities
+        Map<String, Integer> placesCardinality = CollectionUtils.getCardinalityMap(
+                personsAndCities
                         .stream()
                         .map(Pair::getRight)
                         .map(PlaceStrAndDate::place)
                         .toList());
 
-        Map<String, String> reversedPlacesByPlace = cardinality
+        Map<String, String> reversedPlacesByPlace = placesCardinality
                 .keySet()
                 .stream()
                 .distinct()
                 .collect(Collectors.toMap(
                         Function.identity(),
-                        place -> StringUtils.join(PlaceUtils.reversePlaceWords(PlaceUtils.removeLastParenthesis(place)), ", ")));
+                        place -> StringUtils.join(PlaceUtils.reversePlaceWords(place), ", ")));
 
-        List<Pair<String, Optional<SurnameAndDate>>> citiesAndSurnames = cities
+        List<Pair<String, Optional<SurnameAndDate>>> citiesAndSurnames = personsAndCities
                 .stream()
                 .map(pair -> Pair.of(
                         pair.getRight().place,
                         pair.getLeft()
                                 .getSurname()
-                                .map(Surname::value)
+                                .map(surnameMapper)
                                 .map(surname -> new SurnameAndDate(surname, pair.getRight().date()))))
                 .toList();
 
@@ -668,18 +688,21 @@ public class GedcomAnalyzerService {
                 SurnameAndDate::surname,
                 SurnameAndDate::date);
 
-        Map<String, List<String>> surnamesVariationsByCity = cities
+        Map<String, List<String>> surnamesVariationsByCity = personsAndCities
                 .stream()
                 .collect(Collectors.groupingBy(
                         pair -> pair.getRight().place,
                         Collectors.mapping(
-                                pair -> pair.getLeft().getChildren()
-                                        .stream()
-                                        .filter(child -> child.getSurname().isPresent())
-                                        .filter(child -> child.getSurname().get().normalizedMainWord().equals(pair.getLeft().getSurname().map(Surname::normalizedMainWord).get()))
-                                        .filter(child -> !child.getSurname().get().value().startsWith(pair.getLeft().getSurname().map(Surname::value).get()))
-                                        .map(child -> child.getSurname().get().value())
-                                        .toList(),
+                                pair -> {
+                                    String parsedSurname = pair.getLeft().getSurname().map(surnameMapper).get();
+                                    return pair.getLeft().getChildren()
+                                            .stream()
+                                            .filter(child -> child.getSurname().isPresent())
+                                            .filter(child -> child.getSurname().get().normalizedMainWord().equals(pair.getLeft().getSurname().map(Surname::normalizedMainWord).get()))
+                                            .map(child -> child.getSurname().map(surnameMapper).get())
+                                            .filter(childParsedSurname -> !childParsedSurname.startsWith(parsedSurname))
+                                            .toList();
+                                },
                                 Collectors.collectingAndThen(
                                         Collectors.toList(),
                                         listsList -> listsList
@@ -688,7 +711,7 @@ public class GedcomAnalyzerService {
                                                 .distinct()
                                                 .toList()))));
 
-        Map<String, List<EnrichedPerson>> peopleByCity = cities
+        Map<String, List<EnrichedPerson>> peopleByCity = personsAndCities
                 .stream()
                 .collect(Collectors.groupingBy(
                         pair -> pair.getRight().place,
@@ -698,7 +721,7 @@ public class GedcomAnalyzerService {
                                         Collectors.toList(),
                                         list -> list.stream().sorted(PersonUtils.NAME_COMPARATOR).toList()))));
 
-        return cardinality
+        return placesCardinality
                 .entrySet()
                 .stream()
                 .sorted(Comparator
@@ -709,7 +732,7 @@ public class GedcomAnalyzerService {
                 .map(entry -> new SurnamesByCityCardinality(
                         entry.getKey(),
                         entry.getValue(),
-                        ((float) Math.round((float) entry.getValue() / cities.size() * 1_000_000) / 10_000),
+                        ((float) Math.round((float) entry.getValue() / personsAndCities.size() * 1_000_000) / 10_000),
                         surnamesByCity.get(entry.getKey()),
                         surnamesVariationsByCity.get(entry.getKey()),
                         peopleByCity.get(entry.getKey())))
