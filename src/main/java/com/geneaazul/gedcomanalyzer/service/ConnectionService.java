@@ -10,7 +10,6 @@ import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
 import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.dto.ConnectionDto;
-import com.geneaazul.gedcomanalyzer.model.dto.RelationshipDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchConnectionDetailsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchConnectionDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchConnectionResultDto;
@@ -134,8 +133,11 @@ public class ConnectionService {
                 EnrichedPerson personA = gedcom.getPersonById(shortestPath.get(i));
                 EnrichedPerson personB = gedcom.getPersonById(shortestPath.get(i + 1));
                 Relationship relationship = personService.getRelationshipBetween(personB, personA);
-                RelationshipDto relationshipDto = relationshipMapper.toRelationshipDto(relationship, false);
-                FormattedRelationship formattedRelationship = relationshipMapper.formatInSpanish(relationshipDto, false);
+                String relationshipDesc = Optional.ofNullable(relationship)
+                        .map(r -> relationshipMapper.toRelationshipDto(r, false))
+                        .map(dto -> relationshipMapper.formatInSpanish(dto, false))
+                        .map(FormattedRelationship::relationshipDesc)
+                        .orElse("<relación desconocida>");
                 if (i == 0) {
                     Pair<String, String> personAInfo = displayPersonInfo(personA, false);
                     connections.add(
@@ -148,7 +150,7 @@ public class ConnectionService {
                 Pair<String, String> personBInfo = displayPersonInfo(personB, false);
                 connections.add(
                         ConnectionDto.builder()
-                                .relationship(formattedRelationship.relationshipDesc())
+                                .relationship(relationshipDesc)
                                 .personName(personBInfo.getLeft())
                                 .personData(personBInfo.getRight())
                                 .build());

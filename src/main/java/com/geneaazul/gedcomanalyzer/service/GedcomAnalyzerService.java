@@ -42,7 +42,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
@@ -587,15 +586,18 @@ public class GedcomAnalyzerService {
         Function<Surname, String> surnameMapper = surname -> {
             String parsedSurname = PlaceUtils.removeLastParenthesis(surname.value());
             parsedSurname = Strings.CS.remove(parsedSurname, "?");
-            parsedSurname = RegExUtils.replaceAll(parsedSurname, COMPOSITE_SURNAME_PATTERN, "$1");
-            if (parsedSurname.contains(" ")) {
-                String mainSurname = StringUtils.substring(parsedSurname, 0, surname.normalizedMainWord().length() + 8);
-                mainSurname = StringUtils.substringBeforeLast(mainSurname, " ");
-                if (surname.normalizedMainWord().length() <= mainSurname.length()) {
-                    String lastWord = StringUtils.substringAfterLast(mainSurname, " ");
-                    if (lastWord.isEmpty() || !Character.isLowerCase(lastWord.charAt(0))) {
-                        return mainSurname;
-                    }
+            parsedSurname = parsedSurname == null
+                    ? null
+                    : COMPOSITE_SURNAME_PATTERN.matcher(parsedSurname).replaceAll("$1");
+            if (parsedSurname == null || !parsedSurname.contains(" ")) {
+                return parsedSurname;
+            }
+            String mainSurname = StringUtils.substring(parsedSurname, 0, surname.normalizedMainWord().length() + 8);
+            mainSurname = StringUtils.substringBeforeLast(mainSurname, " ");
+            if (surname.normalizedMainWord().length() <= mainSurname.length()) {
+                String lastWord = StringUtils.substringAfterLast(mainSurname, " ");
+                if (lastWord.isEmpty() || !Character.isLowerCase(lastWord.charAt(0))) {
+                    return mainSurname;
                 }
             }
             return parsedSurname;
@@ -624,7 +626,9 @@ public class GedcomAnalyzerService {
                 false)
                 .filter(fplace
                         -> !fplace.place.endsWith(countryOfAnyEvent)
-                        && (disableNotForeignCountries || !StringUtils.endsWithAny(fplace.place, notForeignCountriesOnTreeTraversal)))
+                        && (disableNotForeignCountries
+                                || notForeignCountriesOnTreeTraversal == null
+                                || !java.util.Arrays.stream(notForeignCountriesOnTreeTraversal).anyMatch(fplace.place::endsWith)))
                 .isPresent();
 
         // Evaluated BEFORE visiting person
@@ -690,6 +694,7 @@ public class GedcomAnalyzerService {
 
         Map<String, List<String>> surnamesVariationsByCity = personsAndCities
                 .stream()
+                // TODO .filter(pair -> pair.getLeft().getSurname().isPresent())
                 .collect(Collectors.groupingBy(
                         pair -> pair.getRight().place,
                         Collectors.mapping(

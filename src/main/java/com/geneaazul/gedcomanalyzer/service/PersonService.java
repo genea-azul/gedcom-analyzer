@@ -37,9 +37,11 @@ import jakarta.annotation.Nullable;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PersonService {
 
     private final PersonMapper personMapper;
@@ -198,7 +200,8 @@ public class PersonService {
                 return;
             }
         } else if (onlyPropagateTreeSides) {
-            throw new UnsupportedOperationException();
+            // It should never enter this path
+            throw new UnsupportedOperationException("Unsupported onlyPropagateTreeSides: " + onlyPropagateTreeSides);
         }
 
         Relationships merged = visitedPersons.merge(
@@ -354,9 +357,10 @@ public class PersonService {
              *   - 1 element with empty spouse (this person, 1 parent family)
              *   - 1 element with spouse (the biological or adopted parent)
              *   - 2 elements (the biological and adopted parents)
+             * Traversal assumes at most 2 parents per child (e.g. biological + adoptive); GEDCOM with 3+ parents is unsupported.
              */
             if (previousPersonParents.isEmpty() || previousPersonParents.size() > 2) {
-                throw new UnsupportedOperationException();
+                throw new UnsupportedOperationException("Unsupported number of parents: " + previousPersonParents.size());
             }
 
             previousPersonAdoptionTypesByParentId = previousPersonParents
@@ -447,6 +451,9 @@ public class PersonService {
                 .filter(relative -> !relative.person.getId().equals(previousPersonId));
     }
 
+    /*
+     * Returns the direct relationship between two persons.
+     */
     public Relationship getRelationshipBetween(EnrichedPerson personA, EnrichedPerson personB) {
 
         Optional<EnrichedPersonWithReference> parentWithReference = personA
@@ -600,6 +607,7 @@ public class PersonService {
                             List.of(personA.getId()));
         }
 
+        log.warn("No direct relationship found between {} and {}", personA.getId(), personB.getId());
         return null;
     }
 

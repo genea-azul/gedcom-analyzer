@@ -117,6 +117,10 @@ public class Relationships {
         return orderedRelationships.size();
     }
 
+    public boolean isEmpty() {
+        return orderedRelationships.isEmpty();
+    }
+
     public void propagateTreeSidesToRelationships() {
         if (orderedRelationships
                 .stream()
@@ -160,7 +164,7 @@ public class Relationships {
                 relationships = relationships
                         .stream()
                         .filter(r -> !traversalStrategy.notInLawMatching.test(r, toMergeRelationship))
-                        .collect(Collectors.toList());
+                        .toList();
             }
         } else if (toMergeRelationship.isInLaw()
                 && !relationships.isEmpty()
@@ -171,7 +175,7 @@ public class Relationships {
                 relationships = relationships
                         .stream()
                         .filter(r -> !r.isInLaw())
-                        .collect(Collectors.toList());
+                        .toList();
             }
         }
 

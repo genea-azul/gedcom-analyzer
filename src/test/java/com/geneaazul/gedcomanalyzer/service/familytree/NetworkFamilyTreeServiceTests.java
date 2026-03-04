@@ -14,11 +14,16 @@ import org.springframework.test.context.ActiveProfiles;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
+
+import lombok.extern.slf4j.Slf4j;
 
 @SpringBootTest
 @EnableConfigurationProperties
 @ActiveProfiles("test")
+@Slf4j
 public class NetworkFamilyTreeServiceTests {
 
     @Autowired
@@ -36,6 +41,7 @@ public class NetworkFamilyTreeServiceTests {
     @Test
     public void testGenerateNetworkHTML() {
 
+        Instant start = Instant.now();
         EnrichedPerson person = gedcomHolder.getGedcom().getPersonById(4);
         assert person != null;
 
@@ -62,6 +68,8 @@ public class NetworkFamilyTreeServiceTests {
                 csvPyvisNetworkEdgesFilePath,
                 obfuscateLiving,
                 relationshipsList);
+
+        log.info("Generate Network HTML [ duration={} ]", Duration.between(start, Instant.now()));
     }
 
 }

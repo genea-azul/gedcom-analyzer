@@ -14,11 +14,16 @@ import org.springframework.test.context.ActiveProfiles;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
+
+import lombok.extern.slf4j.Slf4j;
 
 @SpringBootTest
 @EnableConfigurationProperties
 @ActiveProfiles("test")
+@Slf4j
 public class PlainFamilyTreePdfServiceTests {
 
     @Autowired
@@ -39,6 +44,7 @@ public class PlainFamilyTreePdfServiceTests {
     @Test
     public void testExportToPDF() {
 
+        Instant start = Instant.now();
         EnrichedPerson person = gedcomHolder.getGedcom().getPersonById(4);
         assert person != null;
 
@@ -55,6 +61,8 @@ public class PlainFamilyTreePdfServiceTests {
                 obfuscateLiving,
                 onlySecondaryDescription,
                 relationshipsList);
+
+        log.info("Export to PDF [ duration={} ]", Duration.between(start, Instant.now()));
     }
 
 }

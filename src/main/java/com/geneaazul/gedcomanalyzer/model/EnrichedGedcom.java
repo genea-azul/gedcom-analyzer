@@ -6,7 +6,6 @@ import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folg.gedcom.model.Gedcom;
 
-import javax.annotation.CheckForNull;
 import java.time.Year;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
@@ -119,12 +118,12 @@ public class EnrichedGedcom {
         return enrichedPeople;
     }
 
-    @CheckForNull
+    @Nullable
     public EnrichedPerson getPersonById(Integer id) {
         return peopleByIdIndex.get(id);
     }
 
-    @CheckForNull
+    @Nullable
     public EnrichedPerson getPersonByUuid(UUID uuid) {
         return peopleByUuidIndex.get(uuid);
     }

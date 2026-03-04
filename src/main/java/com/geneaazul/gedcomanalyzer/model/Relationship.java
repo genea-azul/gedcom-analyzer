@@ -6,8 +6,6 @@ import com.geneaazul.gedcomanalyzer.utils.CollectionComparator;
 
 import org.springframework.util.Assert;
 
-import org.apache.commons.lang3.ObjectUtils;
-
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -84,7 +82,7 @@ public record Relationship(
                     distanceToAncestorThisPerson,
                     false,
                     false,
-                    ObjectUtils.defaultIfNull(newAdoptionType, adoptionTypeAsc),
+                    newAdoptionType != null ? newAdoptionType : adoptionTypeAsc,
                     adoptionTypeDesc,
                     treeSides,
                     relatedPersonIds);
@@ -95,7 +93,7 @@ public record Relationship(
                     false,
                     isHalf || isSetHalf,
                     adoptionTypeAsc,
-                    ObjectUtils.defaultIfNull(newAdoptionType, adoptionTypeDesc),
+                    newAdoptionType != null ? newAdoptionType : adoptionTypeDesc,
                     treeSides,
                     relatedPersonIds);
             case SAME -> new Relationship(

@@ -3,10 +3,8 @@ package com.geneaazul.gedcomanalyzer.utils;
 import com.geneaazul.gedcomanalyzer.model.NameAndSex;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
-import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.annotation.CheckForNull;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -47,12 +45,15 @@ public class NameUtils {
     /**
      * Usually used for givenName and surname simplification.
      */
-    @CheckForNull
+    @Nullable
     public static String simplifyName(@Nullable String name) {
+        if (name == null) {
+            return null;
+        }
         name = StringUtils.stripAccents(name);
         name = StringUtils.lowerCase(name);
         name = StringUtils.replaceEach(name, NAME_SEARCH_SPECIAL_CHARS, NAME_REPLACEMENT_SPECIAL_CHARS);
-        name = RegExUtils.replaceAll(name, NAME_MULTIPLE_SPACES_PATTERN, " ");
+        name = NAME_MULTIPLE_SPACES_PATTERN.matcher(name).replaceAll(" ");
         name = StringUtils.trimToNull(name);
         return name;
     }
@@ -60,14 +61,14 @@ public class NameUtils {
     /**
      * Usually used for a.k.a. simplification.
      */
-    @CheckForNull
+    @Nullable
     public static String simplifyNameWithAlphabetConversion(@Nullable String name) {
         name = AlphabetUtils.convertAnyToLatin(name);
         name = simplifyName(name);
         return name;
     }
 
-    @CheckForNull
+    @Nullable
     public static String normalizeGivenName(
             @Nullable String givenName,
             @Nullable SexType sex,
@@ -75,9 +76,9 @@ public class NameUtils {
         if (givenName == null) {
             return null;
         }
-        if (StringUtils.containsAny(givenName, GIVEN_NAME_COMMON_EXTRAS)) {
+        if (Arrays.stream(GIVEN_NAME_COMMON_EXTRAS).anyMatch(givenName::contains)) {
             givenName = StringUtils.replaceEach(givenName, GIVEN_NAME_COMMON_EXTRAS, GIVEN_NAME_COMMON_EXTRAS_REPLACEMENT);
-            givenName = RegExUtils.replaceAll(givenName, NAME_MULTIPLE_SPACES_PATTERN, " ");
+            givenName = NAME_MULTIPLE_SPACES_PATTERN.matcher(givenName).replaceAll(" ");
             givenName = StringUtils.trimToNull(givenName);
         }
         if (sex == null) {
@@ -97,20 +98,20 @@ public class NameUtils {
      *       diiannivelli  ->  dianiveli             (remove repeated letters)
      *          dianiveli  ->  ciamiveli             (get optional replacement from NORMALIZED_SURNAMES_MAP)
      */
-    @CheckForNull
+    @Nullable
     public static String normalizeSurnameToMainWord(
             @Nullable String surname,
             Map<String, String> normalizedSurnamesMap) {
         if (surname == null) {
             return null;
         }
-        surname = RegExUtils.replaceAll(surname, SURNAME_COMMON_CONNECTOR_PATTERN, "$1$2$3");
-        surname = RegExUtils.replaceAll(surname, SURNAME_COMMON_PREFIX_PATTERN, "$1$2");
+        surname = SURNAME_COMMON_CONNECTOR_PATTERN.matcher(surname).replaceAll("$1$2$3");
+        surname = SURNAME_COMMON_PREFIX_PATTERN.matcher(surname).replaceAll("$1$2");
         surname = StringUtils.replaceEach(surname, SURNAME_SPECIAL_CASES, SURNAME_SPECIAL_CASES_REPLACEMENT);
         surname = StringUtils.substringBefore(surname, " ");
-        surname = RegExUtils.replaceAll(surname, SURNAME_DOUBLE_LETTERS_PATTERN, "$1");
+        surname = SURNAME_DOUBLE_LETTERS_PATTERN.matcher(surname).replaceAll("$1");
         surname = StringUtils.replaceEach(surname, SURNAME_SEARCH_CHARS, SURNAME_REPLACEMENT_CHARS);
-        surname = RegExUtils.replaceAll(surname, SURNAME_DOUBLE_LETTERS_PATTERN, "$1");
+        surname = SURNAME_DOUBLE_LETTERS_PATTERN.matcher(surname).replaceAll("$1");
         return Optional.ofNullable(surname)
                 .map(normalizedSurnamesMap::get)
                 .orElse(surname);
@@ -119,9 +120,11 @@ public class NameUtils {
     /**
      *          ciamiveli  ->  ciamivel_           (replace last vowels with a _)
      */
-    @CheckForNull
+    @Nullable
     public static String shortenSurnameMainWord(@Nullable String surnameMainWord) {
-        return RegExUtils.replaceAll(surnameMainWord, SURNAME_VOWELS_ENDING_PATTERN, SURNAME_VOWELS_ENDING_REPLACEMENT);
+        return surnameMainWord == null
+                ? null
+                : SURNAME_VOWELS_ENDING_PATTERN.matcher(surnameMainWord).replaceAll(SURNAME_VOWELS_ENDING_REPLACEMENT);
     }
 
     public static Map<NameAndSex, String> invertGivenNamesMap(
@@ -149,7 +152,7 @@ public class NameUtils {
         Map<String, String> processedKeys = namePrefixes
                 .entrySet()
                 .stream()
-                .map(EntryStreamUtils.entryKeyMapper(name -> RegExUtils.replaceAll(name, NORMALIZED_NAME_SEPARATOR_PATTERN, " ")))
+                .map(EntryStreamUtils.entryKeyMapper(name -> NORMALIZED_NAME_SEPARATOR_PATTERN.matcher(name).replaceAll(" ")))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         return Map.copyOf(processedKeys);
@@ -162,7 +165,7 @@ public class NameUtils {
         return names
                 .entrySet()
                 .stream()
-                .map(EntryStreamUtils.entryKeyMapper(name -> RegExUtils.replaceAll(name, NORMALIZED_NAME_SEPARATOR_PATTERN, " ")))
+                .map(EntryStreamUtils.entryKeyMapper(name -> NORMALIZED_NAME_SEPARATOR_PATTERN.matcher(name).replaceAll(" ")))
                 .flatMap(entry -> entry
                         .getValue()
                         .stream()

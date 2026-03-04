@@ -66,7 +66,7 @@ public class GoogleDriveStorageService implements StorageService {
         boolean isCompressed = GedcomParsingService.ZIP_FILE_CONTENT_TYPES.contains(mediaType);
 
         Path downloadFilePath = isCompressed
-                ? Paths.get(StringUtils.replaceOnce(
+                ? Paths.get(replaceFirst(
                         properties.getGedcomStorageLocalPath().toString(),
                         GedcomParsingService.GEDCOM_FILE_EXTENSION,
                         GedcomParsingService.ZIP_FILE_EXTENSION))
@@ -106,6 +106,11 @@ public class GoogleDriveStorageService implements StorageService {
     @Override
     public String getGedcomName() {
         return "Google Drive file " + properties.getGedcomStorageGoogleDriveFileId();
+    }
+
+    private static String replaceFirst(String str, String search, String replacement) {
+        int i = str.indexOf(search);
+        return i >= 0 ? str.substring(0, i) + replacement + str.substring(i + search.length()) : str;
     }
 
 }

@@ -805,7 +805,7 @@ public class SearchService {
                     .stream()
                     .filter(givenName
                             -> !Set.of("Cristián", "Álida", "Rosalía", "Yésica").contains(givenName)
-                            && (StringUtils.containsAny(givenName, "Á", "É", "Í", "Ó", "Ú", "Ü", "á", "é", "í", "ó", "ú", "ü")))
+                            && Stream.of("Á", "É", "Í", "Ó", "Ú", "Ü", "á", "é", "í", "ó", "ú", "ü").anyMatch(givenName::contains))
                     .distinct()
                     .sorted()
                     .toList();
@@ -813,7 +813,7 @@ public class SearchService {
             List<String> expectedMisspelledGivenNames = givenNames
                     .stream()
                     .filter(givenName
-                            -> StringUtils.containsAny(givenName, "À", "È", "Ì", "Ò", "Ù", "à", "è", "ì", "ò", "ù")
+                            -> Stream.of("À", "È", "Ì", "Ò", "Ù", "à", "è", "ì", "ò", "ù").anyMatch(givenName::contains)
                             || !Set.of("de", "del", "la", "las", "los", "o").contains(givenName) && Character.isLowerCase(givenName.charAt(0)))
                     .distinct()
                     .sorted()

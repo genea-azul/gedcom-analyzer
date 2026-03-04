@@ -47,7 +47,7 @@ public class FamilyTreeHelper {
                 .stream()
                 // Make sure each relationship group has 1 or 2 elements (usually an in-law and a not-in-law relationship)
                 .peek(relationships -> {
-                    if (relationships.size() == 0 || relationships.size() > 2) {
+                    if (relationships.isEmpty() || relationships.size() > 2) {
                         throw new UnsupportedOperationException("Something is wrong");
                     }
                 })

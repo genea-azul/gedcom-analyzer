@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Logback configuration for SIGeCi backend.
+    Uses logback-spring.xml (not logback.xml) to enable Spring Boot extensions: <springProfile>, <springProperty>.
+
+    Profile behavior:
+      - dev:       console (colored) + rolling file, ar.gob.azul at DEBUG
+      - !dev:      rolling file only, ar.gob.azul at INFO  (prod, preprod, and any other profile)
+      - test:      handled by src/test/resources/logback-test.xml (takes precedence on test classpath)
+
+    The LOG_PATH environment variable is injected via Docker Compose in production (default: /tmp/logs).
+    For local development it falls back to ./logs.
+-->
+<configuration>
+
+    <!-- Spring Boot defaults: registers %clr, %wEx conversion words and standard properties -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <!-- ========================== Properties ========================== -->
+
+    <property name="LOG_PATH" value="${LOG_PATH:-./logs}"/>
+    <property name="LOG_DATEFORMAT" value="yyyy-MM-dd HH:mm:ss.SSS Z"/>
+    <property name="LOG_TIMEZONE" value="America/Argentina/Buenos_Aires"/>
+
+    <property name="CM_CONSOLE_PATTERN"
+              value="%cyan(%d{${LOG_DATEFORMAT}, ${LOG_TIMEZONE}}) %highlight(%-5level) %magenta(${PID:- }) --- %blue([%17.17thread]) %boldYellow(%-40.40logger{40}) : %m%n%wEx"/>
+    <property name="CM_FILE_PATTERN"
+              value="%d{${LOG_DATEFORMAT}, ${LOG_TIMEZONE}} %-5level ${PID:- } --- [%17.17thread] %-40.40logger{40} : %m%n%wEx"/>
+
+    <!-- ========================== Appenders =========================== -->
+
+    <!-- Console appender (used in dev profile) -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CM_CONSOLE_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Rolling file appender: size + time based, hourly rollover, 10 MB max per segment, gzip compressed -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/cm-log.log</file>
+        <encoder>
+            <pattern>${CM_FILE_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- Monthly folders, hourly segments within each folder, size-indexed -->
+            <fileNamePattern>${LOG_PATH}/%d{yyyy-MM, ${LOG_TIMEZONE}, aux}/cm-log-%d{yyyy-MM-dd-HH, ${LOG_TIMEZONE}}-%i.log.gz</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>90</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- =================== Project-specific loggers =================== -->
+    <!-- NOTE: Standard framework noise suppressors (Catalina, Tomcat, Hibernate Validator, etc.)
+         are already configured by defaults.xml above — no need to repeat them here. -->
+
+    <logger name="org.springframework.security.config.annotation.authentication.configuration" level="ERROR"/>
+
+    <!-- Uncomment to show Hibernate SQL and parameter binding (Hibernate 7) -->
+    <!-- <logger name="org.hibernate.SQL" level="DEBUG"/> -->
+    <!-- <logger name="org.hibernate.orm.jdbc.bind" level="TRACE"/> -->
+
+    <!-- =================== Profile-specific configuration ============= -->
+
+    <!-- Dev profile: console + file, DEBUG level for application loggers -->
+    <springProfile name="dev">
+        <logger name="ar.gob.azul" level="DEBUG"/>
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+        </root>
+    </springProfile>
+
+    <!-- Production / pre-production (and any non-dev profile): file only, INFO level -->
+    <springProfile name="!dev">
+        <logger name="ar.gob.azul" level="INFO"/>
+        <root level="INFO">
+            <appender-ref ref="FILE"/>
+        </root>
+    </springProfile>
+
+</configuration>

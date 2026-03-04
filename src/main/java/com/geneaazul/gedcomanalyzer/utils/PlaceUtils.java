@@ -75,6 +75,9 @@ public class PlaceUtils {
      * i.e:  Trento, Trentino-Alto Adige, Italia (antes Austria) -> Italia (antes Austria)
      */
     public static String getCountry(String place) {
+        if (place == null) {
+            return null;
+        }
         int pos = place.lastIndexOf(",");
         return pos != -1 ? place.substring(pos + 1).trim() : place;
     }
@@ -83,6 +86,9 @@ public class PlaceUtils {
      * i.e:  Trento, Trentino-Alto Adige, Italia (antes Austria) ->  Trento, Trentino-Alto Adige, Italia
      */
     public static String removeLastParenthesis(String place) {
+        if (place == null) {
+            return null;
+        }
         return place.endsWith(")") ? StringUtils.substringBeforeLast(place, "(").trim() : place;
     }
 
@@ -166,15 +172,15 @@ public class PlaceUtils {
     }
 
     public static String removeSubCityComponent(String place) {
-        if (StringUtils.isEmpty(place) || !StringUtils.contains(place, ", ")) {
+        if (StringUtils.isEmpty(place) || !place.contains(", ")) {
             return place;
         }
-        if (StringUtils.startsWithAny(place, SUB_CITY_PLACE_PREFIXES)
-                && !StringUtils.startsWithAny(place, SUB_CITY_PLACE_PREFIXES_EXCEPTIONS)) {
+        if (Arrays.stream(SUB_CITY_PLACE_PREFIXES).anyMatch(place::startsWith)
+                && !Arrays.stream(SUB_CITY_PLACE_PREFIXES_EXCEPTIONS).anyMatch(place::startsWith)) {
             return StringUtils.substringAfter(place, ", ");
         } else {
             String firstComponent = StringUtils.substringBefore(place, ", ");
-            if (StringUtils.endsWithAny(firstComponent, SUB_CITY_PLACE_SUFFIXES)) {
+            if (Arrays.stream(SUB_CITY_PLACE_SUFFIXES).anyMatch(firstComponent::endsWith)) {
                 return StringUtils.substringAfter(place, ", ");
             }
         }

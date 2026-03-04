@@ -47,12 +47,12 @@ public abstract class PlainFamilyTreeService implements FamilyTreeService {
             String familyTreeFileIdPrefix,
             String familyTreeFileSuffix) {
 
-        Path pdfExportFilePath = getExportFilePath(
+        Path exportFilePath = getExportFilePath(
                 person,
                 familyTreeFileIdPrefix,
                 familyTreeFileSuffix);
 
-        return Files.notExists(pdfExportFilePath);
+        return Files.notExists(exportFilePath);
     }
 
     @Override
