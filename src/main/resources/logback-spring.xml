@@ -66,7 +66,7 @@
     <!-- =================== Profile-specific configuration ============= -->
 
     <!-- Dev or Fly.io profile: console + file, DEBUG level for application loggers -->
-    <springProfile name="dev | flyio">
+    <springProfile name="dev | local | flyio">
         <logger name="ar.gob.azul" level="DEBUG"/>
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
@@ -75,7 +75,7 @@
     </springProfile>
 
     <!-- Production / pre-production (no dev, no flyio): file only, INFO level -->
-    <springProfile name="!dev &amp; !flyio">
+    <springProfile name="!dev &amp; !local &amp; !flyio">
         <logger name="ar.gob.azul" level="INFO"/>
         <root level="INFO">
             <appender-ref ref="FILE"/>

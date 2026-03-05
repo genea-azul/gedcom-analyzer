@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1
+# Multi-stage build for Gedcom Analyzer (Java 25). Final image: Eclipse Temurin 25 JRE on Alpine + Python (pyvis).
 
 # stage 1 - define base JDK for builds
-FROM eclipse-temurin:25-jdk AS base
+FROM eclipse-temurin:25-jdk-alpine AS base
 
 # stage 2 - download dependencies
 FROM base AS deps
@@ -26,22 +27,21 @@ RUN mkdir -p build/libs/dependency
 COPY --from=build /workspace/target/*.jar build/libs/app.jar
 RUN cd build/libs/dependency; jar -xf ../app.jar
 
-# stage 5 - based on JRE, install Python
-FROM eclipse-temurin:25-jre AS jre-py
+# stage 5 - JRE on Alpine, install Python
+FROM eclipse-temurin:25-jre-alpine AS jre-py
 ENV PYTHONUNBUFFERED=1
-RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends python3 python3-venv python3-pip ca-certificates && \
-    ln -sf /usr/bin/python3 /usr/bin/python && \
-    rm -rf /var/lib/apt/lists/*
-# Create isolated venv and install deps
+RUN apk add --no-cache python3 py3-pip python3-dev && \
+    ln -sf /usr/bin/python3 /usr/bin/python
+# Create isolated venv and install deps (build-base needed if pandas builds from source)
+RUN apk add --no-cache --virtual .build-deps build-base && \
+    python3 -m venv /opt/py && \
+    /opt/py/bin/pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    /opt/py/bin/pip install --no-cache-dir pyvis==0.3.2 pandas==3.0.1 && \
+    apk del .build-deps
 ENV VIRTUAL_ENV=/opt/py
 ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
-RUN python3 -m venv "${VIRTUAL_ENV}" && \
-    pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir pyvis==0.3.2 pandas==2.2.3
-# Create a group and user
-RUN groupadd --system --gid 1001 gedcomanalyzerapp && \
-    useradd --system --uid 1001 --no-create-home --gid 1001 --shell /usr/sbin/nologin gedcomanalyzeruser
+RUN addgroup -S -g 1001 gedcomanalyzerapp && \
+    adduser -S -u 1001 -G gedcomanalyzerapp -s /sbin/nologin -h /nonexistent gedcomanalyzeruser
 
 # stage 6 - make runnable based on jre-py and the built code
 FROM jre-py AS jre-py-app

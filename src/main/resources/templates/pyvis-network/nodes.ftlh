@@ -8,24 +8,32 @@
     <style>
       body {
           height: 100vh;
+          margin: 0;
       }
       .container-fluid {
-          margin: 0px !important;
-          padding: 0px !important;
+          margin: 0 !important;
+          padding: 0 !important;
       }
-      embed {
+      .embed-wrapper {
+          position: relative;
+          flex: 1;
+          min-height: 0;
+          width: 100%;
+      }
+      .embed-wrapper embed {
           width: 100%;
           min-height: 100vh;
+          display: block;
       }
     </style>
   </head>
 
   <body class="container-fluid">
-    <div class="min-vh-100 d-flex flex-column">
+    <div class="min-vh-100 d-flex flex-column embed-wrapper">
       <#if obfuscateLiving == true>
-        <embed type="text/html" src="/family-tree/${personUuid}/network" />
+        <embed type="text/html" src="/family-tree/${personUuid}/network" title="&Aacute;rbol geneal&oacute;gico de ${personDisplayName}" aria-label="&Aacute;rbol geneal&oacute;gico" />
       <#else>
-        <embed type="text/html" src="/family-tree/${personUuid}/network?f=0" />
+        <embed type="text/html" src="/family-tree/${personUuid}/network?f=0" title="&Aacute;rbol geneal&oacute;gico de ${personDisplayName}" aria-label="&Aacute;rbol geneal&oacute;gico" />
       </#if>
     </div>
   </body>

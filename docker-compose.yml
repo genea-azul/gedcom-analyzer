@@ -28,8 +28,9 @@ services:
     environment:
       JAVA_OPTS: >
         -XX:+UseG1GC
+        -XX:+UseCompactObjectHeaders
         -XX:InitialRAMPercentage=20.0
-        -XX:MaxRAMPercentage=60.0
+        -XX:MaxRAMPercentage=65.0
         -XX:MaxDirectMemorySize=96m
         -XX:ReservedCodeCacheSize=64m
         -Xss256k

@@ -135,6 +135,9 @@ public class RelationshipMapper {
         String adoption = Optional.ofNullable(relationship.getAdoptionType())
                 .map(AdoptionType::name)
                 .orElse(null);
+        String adoptionBranch = Optional.ofNullable(relationship.getAdoptionType())
+                .map(at -> "rama" + getAdoptionSuffixInSpanish(at, "a"))
+                .orElse(null);
         String distinguishedPerson = relationship.getIsDistinguishedPerson() ? "★" : "";
         String relationshipDesc = displayRelationshipInSpanish(relationship, onlySecondaryDescription);
         return new FormattedRelationship(
@@ -145,6 +148,7 @@ public class RelationshipMapper {
                 personYearOfBirth,
                 personCountryOfBirth,
                 adoption,
+                adoptionBranch,
                 distinguishedPerson,
                 treeSide,
                 relationshipDesc,
