@@ -75,7 +75,7 @@
     </springProfile>
 
     <!-- Production / pre-production (no dev, no flyio): file only, INFO level -->
-    <springProfile name="!dev & !flyio">
+    <springProfile name="!dev &amp; !flyio">
         <logger name="ar.gob.azul" level="INFO"/>
         <root level="INFO">
             <appender-ref ref="FILE"/>
