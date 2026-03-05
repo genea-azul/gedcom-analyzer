@@ -27,6 +27,7 @@ import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
@@ -60,6 +61,38 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
     @SuppressWarnings("unused")
     private static final float A4_MAX_OFFSET_X = 590f;
     private static final float A4_MAX_OFFSET_Y = 830f;
+
+    // Layout: header and footer
+    private static final float MARGIN_LEFT = 30f;
+    private static final float HEADER_TITLE_Y = 40f;
+    private static final float HEADER_SUBTITLE_Y = 60f;
+    private static final float HEADER_TITLE_FONT_SIZE = 16f;
+    private static final float HEADER_SUBTITLE_FONT_SIZE_FIRST_PAGE = 10.5f;
+    private static final float HEADER_SUBTITLE_FONT_SIZE_OTHER_PAGES = 11.5f;
+    private static final float HEADER_LINE_HEIGHT = 1.2f;
+    private static final float LOGO_WIDTH = 120f;
+    private static final float LOGO_OFFSET_FROM_RIGHT = 160f;
+    private static final float LOGO_BOTTOM_OFFSET = 10f;
+    private static final float PAGE_NUMBER_Y = 780f;
+    private static final float PAGE_NUMBER_X = 500f;
+    private static final float PAGE_NUMBER_FONT_SIZE = 12f;
+    private static final float FOOTER_GENERATED_X = 30f;
+    private static final float FOOTER_GENERATED_FONT_SIZE = 11.5f;
+    private static final float FOOTER_GENERATED_Y_OFFSET = (PAGE_NUMBER_FONT_SIZE - 11.2f) * HEADER_LINE_HEIGHT;
+    private static final float FOOTER_MESSAGE_Y = 805f;
+    private static final float FOOTER_REVEAL_X = 80f;
+    private static final float FOOTER_COLLABORATE_X = 155f;
+    private static final float FOOTER_MESSAGE_FONT_SIZE = 10f;
+    private static final String HEADER_BRAND = "Genea Azul";
+    private static final String HEADER_SUBTITLE = "sitio web: geneaazul.com.ar  -  en redes sociales: @genea.azul";
+    private static final String FOOTER_PAGE_PREFIX = "Página ";
+    private static final String FOOTER_GENERATED_PREFIX = "Generado el ";
+    private static final String PDF_AUTHOR = "Genea Azul";
+
+    // Layout: first page and people list
+    private static final float CONTENT_TOP_Y = 95f;
+    private static final int MAX_PERSONS_FIRST_PAGE = 48;
+    private static final int MAX_PERSONS_NEXT_PAGES = 59;
 
     private static final int MAX_DISTANCE_TO_OBFUSCATE = 3;
     private static final int MAX_PERSON_NAME_LENGTH = 48;
@@ -147,8 +180,9 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             List<FormattedShortestPathDistance> distances,
             List<List<FormattedShortestPathRelationship>> relationshipsList) throws IOException {
 
-        // Create a document
         try (PDDocument document = new PDDocument()) {
+
+            setDocumentMetadata(document, "Árbol genealógico de " + person.getDisplayName());
 
             PDFont font = loadFont(document, EmbeddedFontsConfig.Font.ROBOTO);
             PDFont bold = loadFont(document, EmbeddedFontsConfig.Font.ROBOTO_BOLD);
@@ -156,8 +190,8 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             PDFont italic = loadFont(document, EmbeddedFontsConfig.Font.ROBOTO_LIGHT_ITALIC);
             PDFont mono = loadFont(document, EmbeddedFontsConfig.Font.EVERSON_MONO);
 
-            int maxPersonsInFirstPage = 48;
-            int maxPersonsInNextPages = 59;
+            int maxPersonsInFirstPage = MAX_PERSONS_FIRST_PAGE;
+            int maxPersonsInNextPages = MAX_PERSONS_NEXT_PAGES;
 
             boolean isAnyPersonObfuscated = peopleInTree
                     .stream()
@@ -187,7 +221,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                 PDPage page = new PDPage(PDRectangle.A4);
                 document.addPage(page);
                 try (PDPageContentStream stream = new PDPageContentStream(document, page)) {
-                    writeText(stream, bold, 12.5f, 1.2f, 30f, 40f, "Árbol genealógico de " + person.getDisplayName());
+                    writeText(stream, bold, 12.5f, 1.2f, MARGIN_LEFT, HEADER_TITLE_Y, "Árbol genealógico de " + person.getDisplayName());
 
                     writePeopleInPage(
                             stream,
@@ -270,15 +304,11 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
 
         try (PDPageContentStream stream = new PDPageContentStream(document, firstPage)) {
 
-            drawLogoImage(stream, logoImage, A4_MAX_OFFSET_X - 160f, 10f);
+            drawLogoImage(stream, logoImage, A4_MAX_OFFSET_X - LOGO_OFFSET_FROM_RIGHT, LOGO_BOTTOM_OFFSET);
+            writePageHeader(stream, font, bold, HEADER_SUBTITLE_FONT_SIZE_FIRST_PAGE);
 
-            writeText(stream, bold, 16f, 1.2f, 30f, 40f,
-                    "Genea Azul");
-            writeText(stream, font, 10.5f, 1.2f, 30f, 60f,
-                    "sitio web: geneaazul.com.ar  -  en redes sociales: @genea.azul");
-
-            float textPosX = 30f;
-            float textPosY = 95f;
+            float textPosX = MARGIN_LEFT;
+            float textPosY = CONTENT_TOP_Y;
 
             writeText(stream, bold, 12.5f, 1.2f, textPosX, textPosY,
                     "Árbol genealógico de " + person.getDisplayName());
@@ -328,15 +358,11 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
 
         try (PDPageContentStream stream = new PDPageContentStream(document, lastPage)) {
 
-            drawLogoImage(stream, logoImage, A4_MAX_OFFSET_X - 160f, 10f);
+            drawLogoImage(stream, logoImage, A4_MAX_OFFSET_X - LOGO_OFFSET_FROM_RIGHT, LOGO_BOTTOM_OFFSET);
+            writePageHeader(stream, font, bold, HEADER_SUBTITLE_FONT_SIZE_OTHER_PAGES);
 
-            writeText(stream, bold, 16f, 1.2f, 30f, 40f,
-                    "Genea Azul");
-            writeText(stream, font, 11.5f, 1.2f, 30f, 60f,
-                    "sitio web: geneaazul.com.ar  -  en redes sociales: @genea.azul");
-
-            float textPosX = 30f;
-            float textPosY = 95f;
+            float textPosX = MARGIN_LEFT;
+            float textPosY = CONTENT_TOP_Y;
 
             writeText(stream, bold, 12.5f, 1.2f, textPosX, textPosY,
                     "Distancia a personalidades destacadas:");
@@ -427,9 +453,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                         }
                     });
 
-            writePageNumber(stream, font, pageNum);
-            writeGeneratedOn(stream, font);
-            writeCollaborate(stream, light);
+            writePageFooter(stream, font, light, pageNum, true, false);
         }
 
         return true;
@@ -453,15 +477,11 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
 
         try (PDPageContentStream stream = new PDPageContentStream(document, lastPage)) {
 
-            drawLogoImage(stream, logoImage, A4_MAX_OFFSET_X - 160f, 10f);
+            drawLogoImage(stream, logoImage, A4_MAX_OFFSET_X - LOGO_OFFSET_FROM_RIGHT, LOGO_BOTTOM_OFFSET);
+            writePageHeader(stream, font, bold, HEADER_SUBTITLE_FONT_SIZE_OTHER_PAGES);
 
-            writeText(stream, bold, 16f, 1.2f, 30f, 40f,
-                    "Genea Azul");
-            writeText(stream, font, 11.5f, 1.2f, 30f, 60f,
-                    "sitio web: geneaazul.com.ar  -  en redes sociales: @genea.azul");
-
-            float textPosX = 30f;
-            float textPosY = 95f;
+            float textPosX = MARGIN_LEFT;
+            float textPosY = CONTENT_TOP_Y;
 
             writeText(stream, bold, 12.5f, 1.2f, textPosX, textPosY,
                     "Detalle de relaciones a:  " + relationships.getLast().displayName());
@@ -495,16 +515,8 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                         }
                     });
 
-            writePageNumber(stream, font, pageNum);
-            writeGeneratedOn(stream, font);
-
-            if (relationships
-                    .stream()
-                    .anyMatch(FormattedShortestPathRelationship::isObfuscated)) {
-                writeReveal(stream, light);
-            } else {
-                writeCollaborate(stream, light);
-            }
+            boolean showReveal = relationships.stream().anyMatch(FormattedShortestPathRelationship::isObfuscated);
+            writePageFooter(stream, font, light, pageNum, true, showReveal);
         }
 
         return true;
@@ -537,14 +549,10 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
 
         try (PDPageContentStream stream = new PDPageContentStream(document, lastPage)) {
 
-            drawLogoImage(stream, logoImage, A4_MAX_OFFSET_X - 160f, 10f);
+            drawLogoImage(stream, logoImage, A4_MAX_OFFSET_X - LOGO_OFFSET_FROM_RIGHT, LOGO_BOTTOM_OFFSET);
+            writePageHeader(stream, font, bold, HEADER_SUBTITLE_FONT_SIZE_OTHER_PAGES);
 
-            writeText(stream, bold, 16f, 1.2f, 30f, 40f,
-                    "Genea Azul");
-            writeText(stream, font, 11.5f, 1.2f, 30f, 60f,
-                    "sitio web: geneaazul.com.ar  -  en redes sociales: @genea.azul");
-
-            writeText(stream, bold, 12.5f, 1.2f, 30f, 95f,
+            writeText(stream, bold, 12.5f, 1.2f, MARGIN_LEFT, CONTENT_TOP_Y,
                     "Leyenda:");
 
             float monoSize = 11.5f;
@@ -629,9 +637,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             writeText(stream, bold, 12.5f, 1.2f, legendX, legendY,
                     "Nomenclatura de relaciones familiares:");
 
-            writePageNumber(stream, font, pageNum);
-            writeGeneratedOn(stream, font);
-            writeCollaborate(stream, light);
+            writePageFooter(stream, font, light, pageNum, true, false);
         }
     }
 
@@ -736,11 +742,54 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
     @SuppressWarnings("SameParameterValue")
     private void drawLogoImage(PDPageContentStream stream, PDImageXObject image, float x, float y) throws IOException {
         // Original image size: 502 x 264
-        float imageWidth = 120f;
-        float imageHeight = 264f * imageWidth / 502f;
+        float imageHeight = 264f * LOGO_WIDTH / 502f;
         float imagePosY = A4_MAX_OFFSET_Y - imageHeight - y;
 
-        stream.drawImage(image, x, imagePosY, imageWidth, imageHeight);
+        stream.drawImage(image, x, imagePosY, LOGO_WIDTH, imageHeight);
+    }
+
+    private static void setDocumentMetadata(PDDocument document, String title) {
+        PDDocumentInformation info = document.getDocumentInformation();
+        info.setTitle(title);
+        info.setAuthor(PDF_AUTHOR);
+        info.setSubject(title);
+    }
+
+    private void writePageHeader(
+            PDPageContentStream stream,
+            PDFont font,
+            PDFont bold,
+            float subtitleFontSize) throws IOException {
+        writeText(stream, bold, HEADER_TITLE_FONT_SIZE, HEADER_LINE_HEIGHT, MARGIN_LEFT, HEADER_TITLE_Y, HEADER_BRAND);
+        writeText(stream, font, subtitleFontSize, HEADER_LINE_HEIGHT, MARGIN_LEFT, HEADER_SUBTITLE_Y, HEADER_SUBTITLE);
+    }
+
+    private void writePageFooter(
+            PDPageContentStream stream,
+            PDFont font,
+            PDFont light,
+            int pageNum,
+            boolean includeGeneratedOn,
+            Boolean showRevealMessage) throws IOException {
+        writeText(stream, font, PAGE_NUMBER_FONT_SIZE, HEADER_LINE_HEIGHT, PAGE_NUMBER_X, PAGE_NUMBER_Y, FOOTER_PAGE_PREFIX + pageNum);
+        if (includeGeneratedOn) {
+            String dateTimeStr = ZonedDateTime
+                    .now(properties.getZoneId())
+                    .format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN, properties.getLocale()));
+            dateTimeStr = dateTimeStr.replace("\u202F", " ");
+            writeText(stream, font, FOOTER_GENERATED_FONT_SIZE, HEADER_LINE_HEIGHT,
+                    FOOTER_GENERATED_X, PAGE_NUMBER_Y + FOOTER_GENERATED_Y_OFFSET,
+                    FOOTER_GENERATED_PREFIX + dateTimeStr);
+        }
+        if (showRevealMessage != null) {
+            if (showRevealMessage) {
+                writeText(stream, light, FOOTER_MESSAGE_FONT_SIZE, HEADER_LINE_HEIGHT, FOOTER_REVEAL_X, FOOTER_MESSAGE_Y,
+                        "Para revelar las datos privados de las personas ponete en contacto con nosotros (no tiene costo).");
+            } else {
+                writeText(stream, light, FOOTER_MESSAGE_FONT_SIZE, HEADER_LINE_HEIGHT, FOOTER_COLLABORATE_X, FOOTER_MESSAGE_Y,
+                        "¡Colaborá con este proyecto! ¡Solicitá acceso al árbol y cargá info!");
+            }
+        }
     }
 
     private void writePeopleInPage(
@@ -808,16 +857,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             }
         });
 
-        writePageNumber(stream, font, pageNum);
-        if (isLastPageOfPeople) {
-            writeGeneratedOn(stream, font);
-        }
-
-        if (isAnyPersonObfuscated) {
-            writeReveal(stream, light);
-        } else {
-            writeCollaborate(stream, light);
-        }
+        writePageFooter(stream, font, light, pageNum, isLastPageOfPeople, isAnyPersonObfuscated);
     }
 
     private void writeText(
@@ -891,30 +931,6 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             stream.newLine();
         }
         stream.endText();
-    }
-
-    private void writePageNumber(PDPageContentStream stream, PDFont font, int pageNum) throws IOException {
-        writeText(stream, font, 12f, 1.2f, 500f, 780f, "Página " + pageNum);
-    }
-
-    private void writeGeneratedOn(PDPageContentStream stream, PDFont font) throws IOException {
-        String dateTimeStr = ZonedDateTime
-                .now(properties.getZoneId())
-                .format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN, properties.getLocale()));
-        dateTimeStr = dateTimeStr.replace("\u202F", " ");
-        float offset = (12f - 11.2f) * 1.2f;
-        writeText(stream, font, 11.5f, 1.2f, 30f, 780f + offset,
-                "Generado el " + dateTimeStr);
-    }
-
-    private void writeReveal(PDPageContentStream stream, PDFont font) throws IOException {
-        writeText(stream, font, 10.f, 1.2f, 80f, 805f,
-                "Para revelar las datos privados de las personas ponete en contacto con nosotros (no tiene costo).");
-    }
-
-    private void writeCollaborate(PDPageContentStream stream, PDFont font) throws IOException {
-        writeText(stream, font, 10f, 1.2f, 155f, 805f,
-                "¡Colaborá con este proyecto! ¡Solicitá acceso al árbol y cargá info!");
     }
 
     @SuppressWarnings("SameParameterValue")

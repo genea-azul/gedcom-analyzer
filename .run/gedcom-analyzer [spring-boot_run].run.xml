@@ -14,7 +14,7 @@
               <option value="clean" />
               <option value="spring-boot:run" />
               <option value="&quot;-Dspring-boot.run.profiles=local&quot;" />
-              <option value="&quot;-Dspring-boot.run.jvmArguments=-Xms512m -Xmx1024m -XX:+UseZGC -XX:+ZGenerational -XX:+HeapDumpOnOutOfMemoryError&quot;" />
+              <option value="&quot;-Dspring-boot.run.jvmArguments=-Xms512m -Xmx1024m -XX:+UseG1GC -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+HeapDumpOnOutOfMemoryError&quot;" />
             </list>
           </option>
           <option name="multimoduleDir" />

@@ -2,9 +2,12 @@ package com.geneaazul.gedcomanalyzer.service.familytree;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.mapper.PyvisNetworkMapper;
+import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.FamilyTree;
+import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
+import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.PythonUtils;
@@ -17,13 +20,15 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -46,6 +51,7 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
     private final GedcomHolder gedcomHolder;
     private final FamilyTreeHelper familyTreeHelper;
     private final PyvisNetworkMapper pyvisNetworkMapper;
+    private final RelationshipMapper relationshipMapper;
     private final GedcomAnalyzerProperties properties;
 
     public Path getNetworkHtmlFile(
@@ -161,11 +167,10 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
             boolean obfuscateLiving,
             List<List<Relationship>> peopleInTree) {
 
-        List<EnrichedPerson> peopleToExport = peopleInTree
+        List<Relationship> peopleToExport = peopleInTree
                 .stream()
                 .limit(properties.getMaxPyvisNetworkNodesToExport())
                 .map(List::getFirst)
-                .map(Relationship::person)
                 .toList();
 
         try {
@@ -185,22 +190,45 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
             Path csvPyvisNetworkNodesFilePath,
             Path csvPyvisNetworkEdgesFilePath,
             boolean obfuscateLiving,
-            List<EnrichedPerson> peopleInTree) throws IOException {
+            List<Relationship> relationships) throws IOException {
 
         // Make sure target directory exists
         Files.createDirectories(htmlPyvisNetworkFilePath.getParent());
 
+        List<EnrichedPerson> peopleInTree = relationships.stream()
+                .map(Relationship::person)
+                .toList();
+
+        Map<String, String[]> countryColorsMap = getCountryColorsMap();
+
+        List<Pair<String, String>> countryToColorForLegend = peopleInTree.stream()
+                .flatMap(p -> p.getPlaceOfBirth().stream())
+                .map(Place::country)
+                .distinct()
+                .sorted()
+                .map(c -> Pair.of(
+                        c,
+                        Optional.ofNullable(countryColorsMap.get(c))
+                                .map(colors -> colors[0])
+                                .filter(StringUtils::isNotEmpty)
+                                .orElse("#666666")))
+                .toList();
+
+        Map<Integer, FormattedRelationship> relationshipToRoot = relationships.stream()
+                .collect(Collectors.toMap(
+                        r -> r.person().getId(),
+                        r -> relationshipMapper.formatInSpanish(
+                                relationshipMapper.toRelationshipDto(r, false), false)));
+
         // Generate files
-        exportToPyvisNodesCSV(csvPyvisNetworkNodesFilePath, peopleInTree, obfuscateLiving);
+        EnrichedPerson rootPerson = relationships.getFirst().person();
+        exportToPyvisNodesCSV(csvPyvisNetworkNodesFilePath, peopleInTree, obfuscateLiving, rootPerson, countryColorsMap, relationshipToRoot);
         exportToPyvisEdgesCSV(csvPyvisNetworkEdgesFilePath, peopleInTree);
-        exportToPyvisNetworkHTML(htmlPyvisNetworkFilePath, csvPyvisNetworkNodesFilePath, csvPyvisNetworkEdgesFilePath);
+        exportToPyvisNetworkHTML(htmlPyvisNetworkFilePath, csvPyvisNetworkNodesFilePath, csvPyvisNetworkEdgesFilePath, rootPerson.getDisplayName(), countryToColorForLegend);
     }
 
-    public void exportToPyvisNodesCSV(Path path, List<EnrichedPerson> people, boolean obfuscateLiving) throws IOException {
-
-        String[] HEADERS = {"id", "label", "title", "shape", "borderWidth", "color", "size"};
-
-        Map<String, String[]> countryColorsMap = Map.ofEntries(
+    private static Map<String, String[]> getCountryColorsMap() {
+        return Map.ofEntries(
                 Map.entry("Alemania", new String[] {"#FFF40F", "#FFCC00"}),
                 Map.entry("Argentina", new String[] {"#8BCEFF", "#74ACDF"}),
                 Map.entry("Australia", new String[] {"#12AE54", "#0F9146"}),
@@ -243,6 +271,16 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                 Map.entry("Suiza", new String[] {"#FF3102", "#DA2902"}),
                 Map.entry("Uruguay", new String[] {"#8CCCFF", "#75AADB"}),
                 Map.entry("Yugoslavia", new String[] {"#0F43B0", "#003893"}));
+    }
+
+    public void exportToPyvisNodesCSV(
+            Path path, List<EnrichedPerson> people,
+            boolean obfuscateLiving,
+            EnrichedPerson rootPerson,
+            Map<String, String[]> countryColorsMap,
+            Map<Integer, FormattedRelationship> relationshipToRoot) throws IOException {
+
+        String[] HEADERS = {"id", "label", "title", "shape", "borderWidth", "color", "size"};
 
         String defaultLabel = "?";
         double defaultNodeBorderWidth = 2;
@@ -250,8 +288,8 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
         double defaultSize = 25;
 
         double coupleNodeBorderWidth = 1;
-        String coupleNodeColor = "#000000";
-        double coupleNodeSize = 7.5;
+        String coupleNodeColor = "#6b7280";
+        double coupleNodeSize = 6;
 
         CSVFormat csvFormat = CSVFormat.DEFAULT.builder()
                 .setHeader(HEADERS)
@@ -274,7 +312,9 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                             defaultLabel,
                             defaultNodeBorderWidth,
                             defaultColors,
-                            defaultSize);
+                            defaultSize,
+                            person.getId().equals(rootPerson.getId()),
+                            relationshipToRoot.get(person.getId()));
                     printer.printRecord((Object[]) scvRecord);
 
                     person
@@ -309,16 +349,21 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
 
     public void exportToPyvisEdgesCSV(Path path, List<EnrichedPerson> people) throws IOException {
 
-        String[] HEADERS = {"source", "target", "title", "weight", "width"};
+        String[] HEADERS = {"source", "target", "title", "weight", "width", "color", "dashes"};
 
         String defaultSpouseTitle = "pareja de";
         String separatedTitle = "ex-pareja";
         String defaultChildTitle = "hijo";
         String adoptedTitle = "adoptivo";
+        int adoptedDashes = 2;
         double coupleWeight = 2.5;
-        double coupleWidth = 5;
+        double coupleWidth = 2;
+        String coupleColor = "#b0b0b0";
+        int coupleDashes = 5;
         double defaultWeight = 1;
         double defaultWidth = 1.5;
+        String defaultColor = "#6b7280";
+        int defaultDashes = 0;
 
         CSVFormat csvFormat = CSVFormat.DEFAULT.builder()
                 .setHeader(HEADERS)
@@ -352,7 +397,9 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                                         defaultSpouseTitle,
                                         separatedTitle,
                                         coupleWeight,
-                                        coupleWidth);
+                                        coupleWidth,
+                                        coupleColor,
+                                        coupleDashes);
                                 printer.printRecord((Object[]) coupleCsvRecord);
                             } catch (IOException e) {
                                 throw new UncheckedIOException(e);
@@ -381,8 +428,11 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                                                     cwr.referenceType().isPresent(),
                                                     defaultChildTitle,
                                                     adoptedTitle,
+                                                    adoptedDashes,
                                                     defaultWeight,
-                                                    defaultWidth);
+                                                    defaultWidth,
+                                                    defaultColor,
+                                                    defaultDashes);
                                             printer.printRecord((Object[]) childCsvRecord);
                                             processedChildren.add(sourceId + "|" + cwr.person().getId());
                                         } catch (IOException e) {
@@ -422,7 +472,9 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
     private void exportToPyvisNetworkHTML(
             Path htmlPyvisNetworkFilePath,
             Path csvPyvisNetworkNodesFilePath,
-            Path csvPyvisNetworkEdgesFilePath) throws IOException {
+            Path csvPyvisNetworkEdgesFilePath,
+            String rootPersonDisplayName,
+            List<Pair<String, String>> countryToColorForLegend) throws IOException {
 
         ensurePyvisScriptPresent();
 
@@ -502,7 +554,29 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                 "height:44px;",
                 "height:54px;");
 
+        StringBuilder header = new StringBuilder();
+        header.append("<div class=\"root-label\" style=\"position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:1000;background:rgba(255,255,255,0.95);padding:6px 14px;border-radius:6px;font-size:14px;font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,0.15);font-family:sans-serif;\">Árbol de: ")
+                .append(escapeHtml(rootPersonDisplayName != null ? rootPersonDisplayName : "?"))
+                .append("</div>");
+
+        if (!countryToColorForLegend.isEmpty()) {
+            StringBuilder legend = new StringBuilder("<div class=\"country-legend\" style=\"position:absolute;top:8px;left:8px;z-index:1000;background:rgba(255,255,255,0.95);padding:8px 12px;border-radius:6px;font-size:12px;box-shadow:0 1px 4px rgba(0,0,0,0.15);font-family:sans-serif;\"><span style=\"font-weight:bold;display:block;margin-bottom:6px;\">Lugar de nacimiento</span>");
+            countryToColorForLegend.forEach(ccPair -> legend
+                    .append("<span style=\"display:inline-flex;align-items:center;margin-right:10px;margin-bottom:4px;\"><span style=\"display:inline-block;width:10px;height:10px;border-radius:2px;background:")
+                    .append(ccPair.getRight())
+                    .append(";margin-right:4px;\"></span>")
+                    .append(escapeHtml(ccPair.getLeft()))
+                    .append("</span>"));
+            legend.append("</div>");
+            header.append(legend);
+        }
+        content = content.replace("<body>", "<body>" + header);
+
         Files.writeString(htmlPyvisNetworkFilePath, content, charset);
+    }
+
+    private static String escapeHtml(String s) {
+        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
     }
 
 }

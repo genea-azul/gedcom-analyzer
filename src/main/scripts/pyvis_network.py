@@ -11,7 +11,8 @@ if __name__ == "__main__":
 
 os.chdir(workingDir)
 
-net = Network(directed=True) #, filter_menu=True
+# Full viewport height for embedding (avoids fixed 600px in output)
+net = Network(height="100%", width="100%", directed=True)
 
 nodes = pd.read_csv(nodesFile, na_filter=False)
 edges = pd.read_csv(edgesFile, na_filter=False)
@@ -21,7 +22,7 @@ node_labels = nodes['label']
 node_titles = nodes['title']
 node_shapes = nodes['shape']
 node_border_widths = nodes['borderWidth']
-node_colors = nodes['color']
+node_color = nodes['color']
 node_sizes = nodes['size']
 
 edge_sources = edges['source']
@@ -29,9 +30,11 @@ edge_targets = edges['target']
 edge_titles = edges['title']
 edge_weights = edges['weight']
 edge_widths = edges['width']
+edge_color = edges['color']
+edge_dashes = edges['dashes']
 
-node_data = zip(node_ids, node_labels, node_titles, node_shapes, node_border_widths, node_colors, node_sizes)
-edge_data = zip(edge_sources, edge_targets, edge_titles, edge_weights, edge_widths)
+node_data = zip(node_ids, node_labels, node_titles, node_shapes, node_border_widths, node_color, node_sizes)
+edge_data = zip(edge_sources, edge_targets, edge_titles, edge_weights, edge_widths, edge_color, edge_dashes)
 
 for node in node_data:
     id = node[0]
@@ -42,10 +45,13 @@ for node in node_data:
     color = node[5]
     size = node[6]
 
-    if not shape:
-        net.add_node(id, label=label, title=title, borderWidth=border_width, color=color, size=size)
-    else:
-        net.add_node(id, label=label, title=title, shape=shape, borderWidth=border_width, color=color, size=size)
+    node_opts = {'label': label, 'borderWidth': border_width, 'color': color, 'size': size}
+    if title:
+        node_opts['title'] = title
+    if shape:
+        node_opts['shape'] = shape
+
+    net.add_node(id, **node_opts)
 
 for edge in edge_data:
     source = edge[0]
@@ -53,11 +59,15 @@ for edge in edge_data:
     title = edge[2]
     weight = edge[3]
     width = edge[4]
+    color = edge[5]
+    dashes = int(edge[6])
 
-    if not title:
-        net.add_edge(source, target, weight=weight, width=width)
-    else:
-        net.add_edge(source, target, title=title, weight=weight, width=width)
+    edge_opts = {'weight': weight, 'width': width, 'color': color}
+    if title:
+        edge_opts['title'] = title
+    edge_opts['dashes'] = [dashes, dashes] if dashes > 0 else False
+
+    net.add_edge(source, target, **edge_opts)
 
 net.set_options('''
   var options = {
@@ -74,6 +84,15 @@ net.set_options('''
     "edges": {
       "arrowStrikethrough": false,
       "smooth": false
+    },
+    "interaction": {
+      "hover": true,
+      "tooltipDelay": 100,
+      "navigationButtons": true,
+      "keyboard": true,
+      "selectConnectedEdges": true,
+      "hideEdgesOnDrag": true,
+      "hideEdgesOnZoom": true
     },
     "physics": {
       "barnesHut": {

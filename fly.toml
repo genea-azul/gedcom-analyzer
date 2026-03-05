@@ -9,7 +9,8 @@ primary_region = 'iad'
 [build]
 
 [env]
-  JAVA_OPTS = '-XX:+UseG1GC -XX:InitialRAMPercentage=20.0 -XX:MaxRAMPercentage=60.0 -XX:MaxDirectMemorySize=96m -XX:ReservedCodeCacheSize=64m -Xss256k -XX:+UseStringDeduplication -XX:+ExitOnOutOfMemoryError'
+  # Java 25 on Alpine. MaxRAMPercentage=65 leaves ~35% for metaspace, threads, direct memory, code cache, GC, OS (sensible for 2GB VM).
+  JAVA_OPTS = '-XX:+UseG1GC -XX:+UseCompactObjectHeaders -XX:InitialRAMPercentage=20.0 -XX:MaxRAMPercentage=65.0 -XX:MaxDirectMemorySize=96m -XX:ReservedCodeCacheSize=64m -Xss256k -XX:+UseStringDeduplication -XX:+ExitOnOutOfMemoryError'
   LOG_PATH = '/tmp/logs'
   SPRING_APPLICATION_JSON = '''{
     "server.port" : 8080,
