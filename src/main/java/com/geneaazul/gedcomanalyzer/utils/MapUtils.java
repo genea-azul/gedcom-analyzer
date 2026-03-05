@@ -84,6 +84,7 @@ public class MapUtils {
                 .toList();
     }
 
+    @SuppressWarnings("unchecked")
     public static <T, M extends Map<String, Set<T>>> M merge(M m1, M m2) {
         if (m1 == m2) {
             return m1;
@@ -97,7 +98,6 @@ public class MapUtils {
         Map<String, Set<T>> result = new HashMap<>(m1);
         m2
                 .forEach((key, value) -> result.merge(key, value, SetUtils::merge));
-        //noinspection unchecked
         return (M) result;
     }
 

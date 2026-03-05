@@ -8,8 +8,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.CheckForNull;
-
 import jakarta.annotation.Nullable;
 
 import lombok.RequiredArgsConstructor;
@@ -20,7 +18,7 @@ public class SearchConnectionMapper {
 
     private final SearchPersonMapper searchPersonMapper;
 
-    @CheckForNull
+    @Nullable
     @Transactional(propagation = Propagation.MANDATORY)
     public SearchConnection toSearchConnectionEntity(
             SearchConnectionDto searchConnectionDto,
@@ -35,7 +33,7 @@ public class SearchConnectionMapper {
                 .build();
     }
 
-    @CheckForNull
+    @Nullable
     @Transactional(propagation = Propagation.MANDATORY)
     public SearchConnectionDetailsDto toSearchConnectionDetailsDto(SearchConnection searchConnection) {
         if (searchConnection == null) {

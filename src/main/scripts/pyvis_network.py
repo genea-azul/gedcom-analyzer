@@ -88,8 +88,5 @@ net.set_options('''
   }
 ''')
 
-# Somehow in MacOS the notebook param is not recognized
-if sys.platform == 'darwin':
-    net.show(exportFile)
-else:
-    net.show(exportFile, notebook=False)
+# Write to file without opening browser (works headlessly on macOS and in CI)
+net.write_html(exportFile, open_browser=False)

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Logback configuration for tests.
+
+    Logback auto-detects logback-test.xml before logback-spring.xml, so this file
+    takes precedence on the test classpath without needing a logging.config property.
+
+    NOTE: This is a standard logback.xml — Spring Boot extensions (<springProfile>, <springProperty>)
+    are NOT available here because it loads before the Spring context initializes.
+    Stack traces are limited to 10 lines for concise test output.
+-->
+<configuration>
+
+    <!-- Spring Boot defaults: registers %clr, %wEx, ${PID} and standard framework noise suppressors -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <!-- ========================== Properties ========================== -->
+
+    <property name="LOG_DATEFORMAT" value="yyyy-MM-dd HH:mm:ss.SSS Z"/>
+    <property name="LOG_TIMEZONE" value="America/Argentina/Buenos_Aires"/>
+
+    <!-- ========================== Appenders =========================== -->
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%cyan(%d{${LOG_DATEFORMAT}, ${LOG_TIMEZONE}}) %highlight(%-5level) %magenta(${PID:- }) --- %blue([%17.17thread]) %boldYellow(%-40.40logger{40}) : %m%n%ex{10}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- =================== Project-specific loggers =================== -->
+    <!-- NOTE: Standard framework noise suppressors are already configured by defaults.xml above. -->
+
+    <logger name="org.springframework.security.config.annotation.authentication.configuration" level="ERROR"/>
+
+    <!-- Uncomment to show Hibernate SQL and parameter binding (Hibernate 7) -->
+    <!-- <logger name="org.hibernate.SQL" level="DEBUG"/> -->
+    <!-- <logger name="org.hibernate.orm.jdbc.bind" level="TRACE"/> -->
+
+    <!-- ========================= Root logger ========================== -->
+
+    <logger name="ar.gob.azul" level="DEBUG"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>

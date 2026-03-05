@@ -7,34 +7,34 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.0-RC1</version>
+		<version>4.0.3</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
 	<groupId>com.geneaazul</groupId>
 	<artifactId>gedcom-analyzer</artifactId>
-	<version>1.15.3</version>
+	<version>1.16.0</version>
 	<name>Gedcom Analyzer</name>
 	<description>Gedcom Analyzer by Genea Azul</description>
 	<url>https://github.com/genea-azul/gedcom-analyzer</url>
 
 	<properties>
-		<java.version>24</java.version>
+		<java.version>25</java.version>
 		<google-guava.version>33.5.0-jre</google-guava.version>
-		<google-api-drive.version>v3-rev20250910-2.0.0</google-api-drive.version>
+		<google-api-drive.version>v3-rev20260220-2.0.0</google-api-drive.version>
 		<gedcom-java.version>1.14.0</gedcom-java.version>
 		<icu4j.version>77.1</icu4j.version>
-		<pdfbox.version>3.0.5</pdfbox.version>
-		<commons-codec.version>1.19.0</commons-codec.version>
+		<pdfbox.version>3.0.6</pdfbox.version>
+		<commons-codec.version>1.21.0</commons-codec.version>
 		<commons-collections4.version>4.5.0</commons-collections4.version>
 		<commons-compress.version>1.28.0</commons-compress.version>
 		<commons-csv.version>1.14.1</commons-csv.version>
-		<commons-exec.version>1.5.0</commons-exec.version>
-		<commons-io.version>2.20.0</commons-io.version>
-		<commons-lang3.version>3.18.0</commons-lang3.version>
+		<commons-exec.version>1.6.0</commons-exec.version>
+		<commons-io.version>2.21.0</commons-io.version>
+		<commons-lang3.version>3.20.0</commons-lang3.version>
 		<commons-math4.version>4.0-beta1</commons-math4.version>
 		<commons-rng.version>1.6</commons-rng.version>
-		<commons-text.version>1.14.0</commons-text.version>
+		<commons-text.version>1.15.0</commons-text.version>
 	</properties>
 
 	<licenses>
@@ -48,30 +48,6 @@
 		<!-- Spring Framework dependencies -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-starter-logging</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-starter-logging</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-validation</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 		<dependency>
@@ -80,7 +56,15 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-log4j2</artifactId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
 		<!-- DB dependencies -->
@@ -105,12 +89,6 @@
 			<groupId>com.google.apis</groupId>
 			<artifactId>google-api-services-drive</artifactId>
 			<version>${google-api-drive.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>commons-logging</groupId>
-					<artifactId>commons-logging</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 
 		<!-- GEDCOM dependencies -->
@@ -141,10 +119,6 @@
 				<exclusion>
 					<groupId>org.junit.jupiter</groupId>
 					<artifactId>junit-jupiter</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>commons-logging</groupId>
-					<artifactId>commons-logging</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -182,13 +156,13 @@
 		<!-- Dev dependencies -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-devtools</artifactId>
-			<scope>runtime</scope>
+			<artifactId>spring-boot-configuration-processor</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-configuration-processor</artifactId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -200,17 +174,22 @@
 		<!-- Test dependencies -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
+			<artifactId>spring-boot-starter-data-jpa-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -304,6 +283,10 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
+					<compilerArgs>
+						<arg>-Xlint:deprecation</arg>
+						<arg>-Xlint:unchecked</arg>
+					</compilerArgs>
 					<annotationProcessorPaths>
 						<path>
 							<groupId>org.springframework.boot</groupId>
@@ -318,7 +301,17 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
+				<configuration>
+					<argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
+				</configuration>
 				<executions>
 					<execution>
 						<goals>
@@ -332,6 +325,10 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
+					<additionalProperties>
+						<java.version>${java.version}</java.version>
+						<encoding.source>${project.build.sourceEncoding}</encoding.source>
+					</additionalProperties>
 					<excludes>
 						<exclude>
 							<groupId>org.projectlombok</groupId>
@@ -360,33 +357,6 @@
 			<id>local-maven-repo</id>
 			<url>file:///${project.basedir}/.mvn/repo</url>
 		</repository>
-		<repository>
-			<id>spring-milestones</id>
-			<name>Spring Milestones</name>
-			<url>https://repo.spring.io/milestone</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
 	</repositories>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>central</id>
-			<name>Maven Central Repository</name>
-			<url>https://repo.maven.apache.org/maven2</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</pluginRepository>
-		<pluginRepository>
-			<id>spring-milestones</id>
-			<name>Spring Milestones</name>
-			<url>https://repo.spring.io/milestone</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</pluginRepository>
-	</pluginRepositories>
 
 </project>

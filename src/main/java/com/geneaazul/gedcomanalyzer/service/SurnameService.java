@@ -113,7 +113,7 @@ public class SurnameService {
                 // Try to suppress compound surnames
                 .map(variant -> suppressCompoundSurname(variant, normalizedSurnamesMap))
                 // Skip same surname
-                .filter(variant -> !StringUtils.equalsIgnoreCase(variant, surname.value()))
+                .filter(variant -> !variant.equalsIgnoreCase(surname.value()))
                 .distinct()
                 .sorted()
                 .toList();
@@ -131,7 +131,7 @@ public class SurnameService {
                 // Try to suppress compound surnames
                 .map(variant -> suppressCompoundSurname(variant, normalizedSurnamesMap))
                 // Skip same surname
-                .filter(variant -> !StringUtils.equalsIgnoreCase(variant, surname.value()))
+                .filter(variant -> !variant.equalsIgnoreCase(surname.value()))
                 .distinct()
                 .sorted()
                 .toList();

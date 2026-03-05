@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -207,7 +208,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             if (writeDistancesPage(
                     document,
                     distances,
-                    pageNum.getValue(),
+                    pageNum.intValue(),
                     logoImage,
                     font,
                     bold,
@@ -222,7 +223,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                             if (writePathToPersonPage(
                                     document,
                                     relationships,
-                                    pageNum.getValue(),
+                                    pageNum.intValue(),
                                     logoImage,
                                     font,
                                     bold,
@@ -236,7 +237,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
 
             writeLastPage(
                     document,
-                    pageNum.getValue(),
+                    pageNum.intValue(),
                     logoImage,
                     font,
                     bold,
@@ -463,7 +464,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
             float textPosY = 95f;
 
             writeText(stream, bold, 12.5f, 1.2f, textPosX, textPosY,
-                    "Detalle de ralaciones a:  " + relationships.getLast().displayName());
+                    "Detalle de relaciones a:  " + relationships.getLast().displayName());
 
             float yPos = textPosY + 30f;
             float size = 9.5f;
@@ -483,7 +484,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                             writeText(stream, light, size, space, 40f, lineYPos, text);
 
                             if (relationship.relationshipDesc() != null
-                                    && !StringUtils.startsWithIgnoreCase(relationship.relationshipDesc(), "persona principal")) {
+                                    && !Strings.CI.startsWith(relationship.relationshipDesc(), "persona principal")) {
                                 lineIndex = index.getAndIncrement();
                                 lineYPos = yPos + (size * space) * lineIndex;
 
@@ -677,8 +678,12 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                     if (shortestPath.size() > 1) {
                         for (int i = 0; i < shortestPath.size(); i++) {
                             EnrichedPerson personA = Objects.requireNonNull(person.getGedcom().getPersonById(shortestPath.get(i)));
-                            EnrichedPerson personB = (i < shortestPath.size() - 1) ? Objects.requireNonNull(person.getGedcom().getPersonById(shortestPath.get(i + 1))) : null;
-                            Relationship relationship = (i < shortestPath.size() - 1) ? personService.getRelationshipBetween(personB, personA) : Relationship.empty(personA);
+                            EnrichedPerson personB = (i < shortestPath.size() - 1)
+                                    ? Objects.requireNonNull(person.getGedcom().getPersonById(shortestPath.get(i + 1)))
+                                    : null;
+                            Relationship relationship = (i < shortestPath.size() - 1)
+                                    ? personService.getRelationshipBetween(personB, personA)
+                                    : Relationship.empty(personA);
                             RelationshipDto relationshipDto = relationshipMapper.toRelationshipDto(
                                     relationship,
                                     getObfuscateCondition(obfuscateLiving, person, personA, i));
@@ -779,7 +784,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
 
             int padding = "----".equals(relationship.personYearOfBirth())
                     ? 9
-                    : (StringUtils.startsWith(relationship.personYearOfBirth(), "~") ? 5 : 7);
+                    : (Strings.CI.startsWith(relationship.personYearOfBirth(), "~") ? 5 : 7);
             String text3 = leftPadFixedWidth(relationship.personYearOfBirth(), padding);
 
             String text4 = StringUtils.substring(relationship.personName(), 0, MAX_PERSON_NAME_LENGTH);
@@ -896,7 +901,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
         String dateTimeStr = ZonedDateTime
                 .now(properties.getZoneId())
                 .format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN, properties.getLocale()));
-        dateTimeStr = StringUtils.replace(dateTimeStr, "\u202F", " ");
+        dateTimeStr = dateTimeStr.replace("\u202F", " ");
         float offset = (12f - 11.2f) * 1.2f;
         writeText(stream, font, 11.5f, 1.2f, 30f, 780f + offset,
                 "Generado el " + dateTimeStr);

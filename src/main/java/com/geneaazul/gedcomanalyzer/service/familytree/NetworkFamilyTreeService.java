@@ -23,8 +23,10 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -253,7 +255,7 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
 
         CSVFormat csvFormat = CSVFormat.DEFAULT.builder()
                 .setHeader(HEADERS)
-                .build();
+                .get();
 
         Set<Integer> idsToExport = people
                 .stream()
@@ -320,7 +322,7 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
 
         CSVFormat csvFormat = CSVFormat.DEFAULT.builder()
                 .setHeader(HEADERS)
-                .build();
+                .get();
 
         Set<Integer> idsToExport = people
                 .stream()
@@ -399,10 +401,30 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                 .anyMatch(child -> idsToExport.contains(child.getId()));
     }
 
+    private void ensurePyvisScriptPresent() throws IOException {
+        Path scriptPath = properties
+                .getTempDir()
+                .resolve(properties.getPyvisNetworkExportScriptFilename());
+        if (Files.exists(scriptPath)) {
+            return;
+        }
+        Path familyTreeDir = properties.getTempDir().resolve("family-trees");
+        Files.createDirectories(familyTreeDir);
+        String resourceName = properties.getPyvisNetworkExportScriptFilename();
+        try (InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(resourceName)) {
+            if (in == null) {
+                throw new IOException("Pyvis script not found on classpath: " + resourceName);
+            }
+            Files.copy(in, scriptPath, StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
     private void exportToPyvisNetworkHTML(
             Path htmlPyvisNetworkFilePath,
             Path csvPyvisNetworkNodesFilePath,
             Path csvPyvisNetworkEdgesFilePath) throws IOException {
+
+        ensurePyvisScriptPresent();
 
         String python3Command = PythonUtils.getPython3Command();
 
@@ -419,7 +441,7 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                 .addArgument(csvPyvisNetworkNodesFilePath.getFileName().toString(), true)
                 .addArgument(csvPyvisNetworkEdgesFilePath.getFileName().toString(), true);
 
-        DefaultExecutor executor = new DefaultExecutor();
+        DefaultExecutor executor = DefaultExecutor.builder().get();
         executor.execute(commandLine);
 
         if (Files.notExists(htmlPyvisNetworkFilePath)) {

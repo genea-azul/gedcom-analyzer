@@ -11,8 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.apache.commons.lang3.StringUtils;
 
-import javax.annotation.CheckForNull;
-
 import jakarta.annotation.Nullable;
 
 import lombok.RequiredArgsConstructor;
@@ -21,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SearchPersonMapper {
 
-    @CheckForNull
+    @Nullable
     @Transactional(propagation = Propagation.MANDATORY)
     public SearchPerson toSearchPersonEntity(SearchPersonDto searchPersonDto) {
         if (isEmpty(searchPersonDto)) {
@@ -37,7 +35,7 @@ public class SearchPersonMapper {
                 .build();
     }
 
-    @CheckForNull
+    @Nullable
     @Transactional(propagation = Propagation.MANDATORY)
     public SearchPersonSimple toSearchPersonSimpleEntity(SearchPersonDto searchPersonDto) {
         if (isEmpty(searchPersonDto)) {
@@ -50,7 +48,7 @@ public class SearchPersonMapper {
                 .build();
     }
 
-    @CheckForNull
+    @Nullable
     @Transactional(propagation = Propagation.MANDATORY)
     public SearchPersonDto toSearchPersonDto(@Nullable SearchPerson searchPerson, @Nullable SexType sex) {
         if (searchPerson == null) {
@@ -67,7 +65,7 @@ public class SearchPersonMapper {
                 .build();
     }
 
-    @CheckForNull
+    @Nullable
     @Transactional(propagation = Propagation.MANDATORY)
     public SearchPersonDto toSearchPersonDto(@Nullable SearchPersonSimple searchPersonSimple) {
         if (searchPersonSimple == null) {

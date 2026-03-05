@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # stage 1 - define base JDK for builds
-FROM eclipse-temurin:24.0.2_12-jdk AS base
+FROM eclipse-temurin:25-jdk AS base
 
 # stage 2 - download dependencies
 FROM base AS deps
@@ -27,9 +27,8 @@ COPY --from=build /workspace/target/*.jar build/libs/app.jar
 RUN cd build/libs/dependency; jar -xf ../app.jar
 
 # stage 5 - based on JRE, install Python
-FROM eclipse-temurin:24.0.2_12-jre AS jre-py
+FROM eclipse-temurin:25-jre AS jre-py
 ENV PYTHONUNBUFFERED=1
-# Install Python runtime and pip
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends python3 python3-venv python3-pip ca-certificates && \
     ln -sf /usr/bin/python3 /usr/bin/python && \
@@ -42,7 +41,7 @@ RUN python3 -m venv "${VIRTUAL_ENV}" && \
     pip install --no-cache-dir pyvis==0.3.2 pandas==2.2.3
 # Create a group and user
 RUN groupadd --system --gid 1001 gedcomanalyzerapp && \
-    useradd  --system --uid 1001 --no-create-home --gid 1001 --shell /usr/sbin/nologin gedcomanalyzeruser
+    useradd --system --uid 1001 --no-create-home --gid 1001 --shell /usr/sbin/nologin gedcomanalyzeruser
 
 # stage 6 - make runnable based on jre-py and the built code
 FROM jre-py AS jre-py-app

@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # stage 1
-FROM eclipse-temurin:24.0.2_12-jre AS jre-py
+FROM eclipse-temurin:25-jre AS jre-py
 
 ## Install python/pip
 ENV PYTHONUNBUFFERED=1
@@ -19,7 +19,7 @@ RUN python3 -m venv "${VIRTUAL_ENV}" && \
 
 # Create a group and user
 RUN groupadd --system --gid 1001 gedcomanalyzerapp && \
-    useradd  --system --uid 1001 --no-create-home --gid 1001 --shell /usr/sbin/nologin gedcomanalyzeruser
+    useradd --system --uid 1001 --no-create-home --gid 1001 --shell /usr/sbin/nologin gedcomanalyzeruser
 
 # stage 2
 FROM jre-py AS jre-py-app

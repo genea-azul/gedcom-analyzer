@@ -49,6 +49,7 @@ public class RelationshipUtils {
                 .stream()
                 .map(Relationship::person)
                 .filter(isImmigrantWithCityCondition)
+                // TODO .filter(p -> p.getPlaceOfBirth().isPresent())
                 .filter(StreamUtils.distinctByKey(EnrichedPerson::getId))
                 .map(person -> Pair.of(person, StringUtils.substringBeforeLast(person.getPlaceOfBirth().get().name(), ",").trim()))
                 .toList();

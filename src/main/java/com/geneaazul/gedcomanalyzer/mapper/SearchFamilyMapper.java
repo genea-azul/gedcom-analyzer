@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.apache.commons.lang3.StringUtils;
 
-import javax.annotation.CheckForNull;
 import java.util.Optional;
 
 import jakarta.annotation.Nullable;
@@ -25,7 +24,7 @@ public class SearchFamilyMapper {
 
     private final SearchPersonMapper searchPersonMapper;
 
-    @CheckForNull
+    @Nullable
     @Transactional(propagation = Propagation.MANDATORY)
     public SearchFamily toSearchFamilyEntity(
             SearchFamilyDto searchFamilyDto,
@@ -55,7 +54,7 @@ public class SearchFamilyMapper {
                 .build();
     }
 
-    @CheckForNull
+    @Nullable
     @Transactional(propagation = Propagation.MANDATORY)
     public SearchFamilyDetailsDto toSearchFamilyDetailsDto(SearchFamily searchFamily) {
         if (searchFamily == null) {
