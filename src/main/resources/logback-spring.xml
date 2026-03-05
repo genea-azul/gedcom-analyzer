@@ -4,8 +4,8 @@
     Uses logback-spring.xml (not logback.xml) to enable Spring Boot extensions: <springProfile>, <springProperty>.
 
     Profile behavior:
-      - dev:       console (colored) + rolling file, ar.gob.azul at DEBUG
-      - !dev:      rolling file only, ar.gob.azul at INFO  (prod, preprod, and any other profile)
+      - dev | flyio:  console (colored) + rolling file, ar.gob.azul at DEBUG
+      - !dev & !flyio: rolling file only, ar.gob.azul at INFO  (prod, preprod, and any other profile)
       - test:      handled by src/test/resources/logback-test.xml (takes precedence on test classpath)
 
     The LOG_PATH environment variable is injected via Docker Compose in production (default: /tmp/logs).
@@ -22,9 +22,9 @@
     <property name="LOG_DATEFORMAT" value="yyyy-MM-dd HH:mm:ss.SSS Z"/>
     <property name="LOG_TIMEZONE" value="America/Argentina/Buenos_Aires"/>
 
-    <property name="CM_CONSOLE_PATTERN"
+    <property name="GEDCOM_ANALYZER_CONSOLE_PATTERN"
               value="%cyan(%d{${LOG_DATEFORMAT}, ${LOG_TIMEZONE}}) %highlight(%-5level) %magenta(${PID:- }) --- %blue([%17.17thread]) %boldYellow(%-40.40logger{40}) : %m%n%wEx"/>
-    <property name="CM_FILE_PATTERN"
+    <property name="GEDCOM_ANALYZER_FILE_PATTERN"
               value="%d{${LOG_DATEFORMAT}, ${LOG_TIMEZONE}} %-5level ${PID:- } --- [%17.17thread] %-40.40logger{40} : %m%n%wEx"/>
 
     <!-- ========================== Appenders =========================== -->
@@ -32,21 +32,21 @@
     <!-- Console appender (used in dev profile) -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>${CM_CONSOLE_PATTERN}</pattern>
+            <pattern>${GEDCOM_ANALYZER_CONSOLE_PATTERN}</pattern>
             <charset>UTF-8</charset>
         </encoder>
     </appender>
 
     <!-- Rolling file appender: size + time based, hourly rollover, 10 MB max per segment, gzip compressed -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_PATH}/cm-log.log</file>
+        <file>${LOG_PATH}/gedcom-analyzer-log.log</file>
         <encoder>
-            <pattern>${CM_FILE_PATTERN}</pattern>
+            <pattern>${GEDCOM_ANALYZER_FILE_PATTERN}</pattern>
             <charset>UTF-8</charset>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!-- Monthly folders, hourly segments within each folder, size-indexed -->
-            <fileNamePattern>${LOG_PATH}/%d{yyyy-MM, ${LOG_TIMEZONE}, aux}/cm-log-%d{yyyy-MM-dd-HH, ${LOG_TIMEZONE}}-%i.log.gz</fileNamePattern>
+            <fileNamePattern>${LOG_PATH}/%d{yyyy-MM, ${LOG_TIMEZONE}, aux}/gedcom-analyzer-log-%d{yyyy-MM-dd-HH, ${LOG_TIMEZONE}}-%i.log.gz</fileNamePattern>
             <maxFileSize>10MB</maxFileSize>
             <maxHistory>90</maxHistory>
             <totalSizeCap>1GB</totalSizeCap>
@@ -65,8 +65,8 @@
 
     <!-- =================== Profile-specific configuration ============= -->
 
-    <!-- Dev profile: console + file, DEBUG level for application loggers -->
-    <springProfile name="dev">
+    <!-- Dev or Fly.io profile: console + file, DEBUG level for application loggers -->
+    <springProfile name="dev | flyio">
         <logger name="ar.gob.azul" level="DEBUG"/>
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
@@ -74,8 +74,8 @@
         </root>
     </springProfile>
 
-    <!-- Production / pre-production (and any non-dev profile): file only, INFO level -->
-    <springProfile name="!dev">
+    <!-- Production / pre-production (no dev, no flyio): file only, INFO level -->
+    <springProfile name="!dev & !flyio">
         <logger name="ar.gob.azul" level="INFO"/>
         <root level="INFO">
             <appender-ref ref="FILE"/>
