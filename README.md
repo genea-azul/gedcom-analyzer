@@ -105,6 +105,35 @@ java -jar -Dspring.profiles.active=prod target/gedcom-analyzer-*.jar
 
 ---
 
+## Deployment architecture (Genea Azul)
+
+The production setup splits the **main site** (static HTML + front-end) from the **backend API** (this Spring Boot app).
+
+| Component | Role |
+|-----------|------|
+| **geneaazul.com.ar** | Main site. Hosted on InfinityFree, behind Cloudflare, domain from Nic.ar. Serves static HTML (from `site-v2/index.ftlh`). |
+| **gedcom-analyzer-app.fly.dev** | This app on Fly.io. Runs Spring Boot (Java 25, Alpine Docker image). Handles GEDCOM storage, search, family trees, PDF/TXT/network export. |
+
+**Flow**
+
+- Users open **geneaazul.com.ar**. The page loads static HTML/JS.
+- The page sets `siteUrl` in JavaScript: on **localhost** it uses the current origin (for local testing); otherwise it uses **https://gedcom-analyzer-app.fly.dev**.
+- All GEDCOM/search/family-tree actions are **AJAX calls** from the main site to `siteUrl` (the Fly.io app).
+- Visiting **https://gedcom-analyzer-app.fly.dev/** directly redirects to geneaazul.com.ar (see `templates/index.ftlh`).
+
+**Local testing without redirect**
+
+- Run the app locally and open **http://localhost:8080/no-redirect**.
+- The same static page is served by Spring Boot; `siteUrl` is set to `http://localhost:8080` automatically so API calls go to your local instance.
+
+**Fly.io**
+
+- Build: Dockerfile (multi-stage, Eclipse Temurin 25 JRE on Alpine + Python/pyvis).
+- Config: `fly.toml` (env, HTTP service, health checks, mounts, VM size). `flyio` profile for app settings.
+- The app listens on `0.0.0.0:8080` and uses a health check grace period for JVM startup.
+
+---
+
 ## Tests
 
 ```bash

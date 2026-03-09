@@ -63,6 +63,12 @@ public class GedcomAnalyzerController {
                 "disableObfuscateLiving", properties.isDisableObfuscateLiving());
     }
 
+    @GetMapping("/health")
+    public Map<String, Object> healthCheck(HttpServletRequest request) {
+        log.debug("Health check [ httpRequestId={} ]", request.getRequestId());
+        return Map.of("status", "ok");
+    }
+
     @GetMapping("/metadata")
     @CrossOrigin(originPatterns = {
             "http://geneaazul.com.ar:[*]",

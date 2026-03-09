@@ -4,6 +4,7 @@ import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.FamilyTree;
+import com.geneaazul.gedcomanalyzer.model.FamilyTreeType;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 
@@ -93,6 +94,7 @@ public abstract class PlainFamilyTreeService implements FamilyTreeService {
         EnrichedGedcom gedcom = gedcomHolder.getGedcom();
         EnrichedPerson person = gedcom.getPersonByUuid(personUuid);
         if (person == null) {
+            log.warn("Person not found [ personUuid={}, modifiedDateTime={} ]", personUuid, gedcom.getModifiedDateTime());
             return Optional.empty();
         }
 
@@ -118,6 +120,7 @@ public abstract class PlainFamilyTreeService implements FamilyTreeService {
         }
 
         return Optional.of(new FamilyTree(
+                FamilyTreeType.PLAIN_PDF,
                 person,
                 "genea_azul_arbol_" + familyTreeFileIdPrefix + "." + exportFileExtension,
                 exportFilePath,

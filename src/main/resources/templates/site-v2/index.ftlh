@@ -6471,8 +6471,10 @@
   </div>
 
 <script>
-  var siteUrl = "https://gedcom-analyzer-app.fly.dev";
-  // var siteUrl = "http://localhost:8080";
+  (function() {
+    var o = window.location.origin;
+    window.siteUrl = (o.indexOf("//localhost:") !== -1) ? o : "https://gedcom-analyzer-app.fly.dev";
+  })();
   var onVacations = false;
   var obfuscateLiving = true;
 </script>

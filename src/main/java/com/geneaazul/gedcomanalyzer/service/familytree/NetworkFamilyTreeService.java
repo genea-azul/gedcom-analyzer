@@ -6,6 +6,7 @@ import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.FamilyTree;
+import com.geneaazul.gedcomanalyzer.model.FamilyTreeType;
 import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
 import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
@@ -127,6 +128,7 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
         EnrichedGedcom gedcom = gedcomHolder.getGedcom();
         EnrichedPerson person = gedcom.getPersonByUuid(personUuid);
         if (person == null) {
+            log.warn("Person not found [ personUuid={}, modifiedDateTime={} ]", personUuid, gedcom.getModifiedDateTime());
             return Optional.empty();
         }
 
@@ -152,6 +154,7 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
         }
 
         return Optional.of(new FamilyTree(
+                FamilyTreeType.NETWORK,
                 person,
                 "genea_azul_arbol_" + familyTreeFileIdPrefix + ".html",
                 htmlPyvisNetworkFilePath,
@@ -554,23 +557,44 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                 "height:44px;",
                 "height:54px;");
 
-        StringBuilder header = new StringBuilder();
-        header.append("<div class=\"root-label\" style=\"position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:1000;background:rgba(255,255,255,0.95);padding:6px 14px;border-radius:6px;font-size:14px;font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,0.15);font-family:sans-serif;\">Árbol de: ")
+        String bootstrapCss = "\n    <link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css\" integrity=\"sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65\" crossorigin=\"anonymous\" />";
+        String bootstrapJS = "\n    <script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js\" integrity=\"sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4\" crossorigin=\"anonymous\"></script>";
+        String customCss = "\n    <style>.root-label, .country-legend { z-index:1000; } @media(max-width:767px) { .country-legend{top:42px !important;} }</style>";
+
+        content = content.replace("</head>", bootstrapCss + customCss + "\n</head>");
+
+        StringBuilder header = new StringBuilder()
+                .append("\n    ")
+                .append("<div class=\"root-label w-100 position-absolute top-0 mt-2\">")
+                .append("<div class=\"text-center bg-white bg-opacity-95 mx-4 px-3 py-2 rounded shadow-sm small fw-semibold\">Árbol de: ")
                 .append(escapeHtml(rootPersonDisplayName != null ? rootPersonDisplayName : "?"))
+                .append("</div>")
                 .append("</div>");
 
         if (!countryToColorForLegend.isEmpty()) {
-            StringBuilder legend = new StringBuilder("<div class=\"country-legend\" style=\"position:absolute;top:8px;left:8px;z-index:1000;background:rgba(255,255,255,0.95);padding:8px 12px;border-radius:6px;font-size:12px;box-shadow:0 1px 4px rgba(0,0,0,0.15);font-family:sans-serif;\"><span style=\"font-weight:bold;display:block;margin-bottom:6px;\">Lugar de nacimiento</span>");
+            StringBuilder legend = new StringBuilder("<div class=\"country-legend position-absolute top-0 start-0 mt-2 ms-2 bg-white bg-opacity-95 p-2 rounded shadow-sm small\"><span class=\"d-block fw-bold mb-1\">Lugar de nacimiento</span>");
             countryToColorForLegend.forEach(ccPair -> legend
-                    .append("<span style=\"display:inline-flex;align-items:center;margin-right:10px;margin-bottom:4px;\"><span style=\"display:inline-block;width:10px;height:10px;border-radius:2px;background:")
+                    .append("<span class=\"d-inline-flex align-items-center me-2 mb-1\"><span class=\"d-inline-block rounded\" style=\"width:10px;height:10px;margin-right:4px;background:")
                     .append(ccPair.getRight())
-                    .append(";margin-right:4px;\"></span>")
+                    .append(";\"></span>")
                     .append(escapeHtml(ccPair.getLeft()))
                     .append("</span>"));
             legend.append("</div>");
             header.append(legend);
         }
         content = content.replace("<body>", "<body>" + header);
+
+        String mobileOnlyNavScript = "<script>(function(){"
+                + "function applyNavOptions(){"
+                + "if(typeof network==='undefined')return;"
+                + "var mobile=window.matchMedia('(max-width:767px)').matches;"
+                + "network.setOptions({interaction:{navigationButtons:!mobile,keyboard:!mobile}});"
+                + "}"
+                + "function run(){applyNavOptions();window.addEventListener('resize',applyNavOptions);}"
+                + "if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(run,100);});"
+                + "else setTimeout(run,100);"
+                + "})();</script>";
+        content = content.replace("</body>", mobileOnlyNavScript + bootstrapJS + "\n</body>");
 
         Files.writeString(htmlPyvisNetworkFilePath, content, charset);
     }
