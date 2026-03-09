@@ -14,13 +14,7 @@
           margin: 0 !important;
           padding: 0 !important;
       }
-      .embed-wrapper {
-          position: relative;
-          flex: 1;
-          min-height: 0;
-          width: 100%;
-      }
-      .embed-wrapper embed {
+      embed {
           width: 100%;
           min-height: 100vh;
           display: block;
@@ -29,7 +23,7 @@
   </head>
 
   <body class="container-fluid">
-    <div class="min-vh-100 d-flex flex-column embed-wrapper">
+    <div class="min-vh-100 d-flex flex-column">
       <#if obfuscateLiving == true>
         <embed type="text/html" src="/family-tree/${personUuid}/network" title="&Aacute;rbol geneal&oacute;gico de ${personDisplayName}" aria-label="&Aacute;rbol geneal&oacute;gico" />
       <#else>
