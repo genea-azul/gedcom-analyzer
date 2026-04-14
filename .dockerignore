@@ -1,0 +1,65 @@
+# flyctl launch added from .gitignore
+# IntelliJ files
+**/.idea/*
+!**/.idea/codeStyles
+**/*.iws
+**/*.iml
+**/*.ipr
+
+# Maven files
+**/target
+
+# Python files
+**/venv
+
+# Compiled class file
+**/*.class
+
+# Log file
+**/logs
+**/*.log
+**/*.log.gz
+
+# Package files
+**/*.jar
+**/*.war
+**/*.nar
+**/*.ear
+**/*.tar.gz
+**/*.rar
+
+# Docker files
+**/.env
+
+# Script files
+**/bin
+
+# Library files
+**/lib
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+**/hs_err_pid*
+
+# MacOS files
+**/.DS_Store
+
+# To keep
+!**/.mvn/repo/**/*
+!**/.mvn/wrapper/maven-wrapper.jar
+!**/**/src/main/**/target
+!**/**/src/test/**/target
+
+# flyctl launch added from .idea/.gitignore
+# Default ignored files
+.idea/shelf
+.idea/workspace.xml
+# Environment-dependent path to Maven home directory
+.idea/mavenHomeManager.xml
+
+# flyctl launch added from src/main/scripts/.gitignore
+# Pyvis generated files
+src/main/scripts/**/*.html
+# Library files
+src/main/scripts/**/lib
+
+fly.toml
