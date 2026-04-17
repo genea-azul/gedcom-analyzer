@@ -16,7 +16,21 @@ public class GedcomMapper {
             EnrichedGedcom gedcom,
             @Nullable Duration reloadDuration) {
         return GedcomMetadataDto.builder()
+                /* General */
                 .personsCount(gedcom.getPeople().size())
+                .familiesCount(gedcom.getFamiliesCount())
+                .maleCount(gedcom.getMaleCount())
+                .femaleCount(gedcom.getFemaleCount())
+                .aliveCount(gedcom.getAliveCount())
+                .deceasedCount(gedcom.getDeceasedCount())
+                .distinguishedCount(gedcom.getDistinguishedCount())
+                .nativeCount(gedcom.getNativeCount())
+                /* Azul specific */
+                .azulPersonsCount(gedcom.getAzulPersonsCount())
+                .azulAliveCount(gedcom.getAzulAliveCount())
+                .azulMayorsCount(gedcom.getAzulMayorsCount())
+                .azulDisappearedCount(gedcom.getAzulDisappearedCount())
+                /* Timing */
                 .modifiedDateTime(gedcom.getModifiedDateTime())
                 .reloadDuration(reloadDuration)
                 .build();

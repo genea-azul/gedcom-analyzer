@@ -767,6 +767,47 @@ public class PersonUtils {
                 : person.getDisplayName();
     }
 
+    /**
+     * Abbreviates a surname to initials, preserving lowercase particles (e.g. "de", "von", "di") as-is.
+     * Words starting with an uppercase letter (including diacritics like Á, É, Ó) are abbreviated to
+     * their first character followed by a period. Hyphens are treated as word separators and preserved.
+     * <p>Examples:
+     * <ul>
+     *   <li>"Pérez" → "P."</li>
+     *   <li>"Gómez Romero" → "G. R."</li>
+     *   <li>"Záenz de Buruaga" → "Z. de B."</li>
+     *   <li>"von Gebhardt" → "von G."</li>
+     *   <li>"Saint-André" → "S.-A."</li>
+     *   <li>"Dell'Aquila" → "D."</li>
+     * </ul>
+     */
+    public static String abbreviateSurname(String surname) {
+        if (StringUtils.isEmpty(surname)) {
+            return surname;
+        }
+        StringBuilder result = new StringBuilder();
+        int i = 0;
+        while (i < surname.length()) {
+            char c = surname.charAt(i);
+            if (c == ' ' || c == '-') {
+                result.append(c);
+                i++;
+            } else {
+                int wordStart = i;
+                while (i < surname.length() && surname.charAt(i) != ' ' && surname.charAt(i) != '-') {
+                    i++;
+                }
+                String word = surname.substring(wordStart, i);
+                if (Character.isUpperCase(word.charAt(0))) {
+                    result.append(word.charAt(0)).append('.');
+                } else {
+                    result.append(word);
+                }
+            }
+        }
+        return result.toString();
+    }
+
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     public static String obfuscateSpouseName(
             Optional<EnrichedPerson> maybeSpouse,

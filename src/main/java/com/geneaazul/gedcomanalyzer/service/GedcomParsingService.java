@@ -59,19 +59,20 @@ public class GedcomParsingService {
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd MMM yyyy");
 
     private final GedcomAnalyzerProperties properties;
+    private final SearchService searchService;
 
     public EnrichedGedcom parse(Path gedcomPath) throws IOException, SAXParseException {
         Gedcom gedcom = parseGedcom(gedcomPath);
         ZonedDateTime gedcomModifiedTime = Files.getLastModifiedTime(gedcomPath)
                 .toInstant()
                 .atZone(properties.getZoneId());
-        return EnrichedGedcom.of(gedcom, gedcomPath.toString(), gedcomModifiedTime, properties);
+        return EnrichedGedcom.of(gedcom, gedcomPath.toString(), gedcomModifiedTime, properties, searchService);
     }
 
     public EnrichedGedcom parse(byte[] gedcomBytes, String gedcomName) throws SAXParseException, IOException {
         ByteArrayInputStream inputStream = new ByteArrayInputStream(gedcomBytes);
         Gedcom gedcom = parseGedcom(inputStream);
-        return EnrichedGedcom.of(gedcom, gedcomName, properties);
+        return EnrichedGedcom.of(gedcom, gedcomName, properties, searchService);
     }
 
     public EnrichedGedcom parse(MultipartFile gedcomFile) throws IOException, SAXParseException {
@@ -86,7 +87,7 @@ public class GedcomParsingService {
 
             Path gedcomPath = uploadAndDecompress(gedcomDirPath, gedcomFile);
             Gedcom gedcom = parseGedcom(gedcomPath);
-            return EnrichedGedcom.of(gedcom, gedcomFile.getOriginalFilename(), properties);
+            return EnrichedGedcom.of(gedcom, gedcomFile.getOriginalFilename(), properties, searchService);
 
         } finally {
             if (properties.isDeleteUploadedGedcom() && gedcomDirPath != null) {

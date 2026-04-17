@@ -2,16 +2,20 @@ package com.geneaazul.gedcomanalyzer.model;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
+import com.geneaazul.gedcomanalyzer.service.SearchService;
 
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folg.gedcom.model.Gedcom;
 
+import java.time.MonthDay;
 import java.time.Year;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -32,12 +36,28 @@ public class EnrichedGedcom {
 
     private final List<EnrichedPerson> people;
 
+    // General stats
+    private final Integer familiesCount;
+    private final Integer maleCount;
+    private final Integer femaleCount;
+    private final Integer aliveCount;
+    private final Integer deceasedCount;
+    private final Integer distinguishedCount;
+    private final Integer nativeCount;
+
+    // Azul specific stats
+    private final Integer azulPersonsCount;
+    private final Integer azulAliveCount;
+    private final Integer azulMayorsCount;
+    private final Integer azulDisappearedCount;
+
     // Indexes
     private final Map<Integer, EnrichedPerson> peopleByIdIndex;
     private final Map<UUID, EnrichedPerson> peopleByUuidIndex;
     private final Map<NameAndSex, List<EnrichedPerson>> peopleByNormalizedSurnameMainWordAndSexIndex;
     private final Map<NameSexYear, List<EnrichedPerson>> peopleByNormalizedSurnameMainWordAndSexAndYearOfBirthIndex;
     private final Map<NameSexYear, List<EnrichedPerson>> peopleByNormalizedSurnameMainWordAndSexAndYearOfDeathIndex;
+    private final Map<MonthDay, List<EnrichedPerson>> azulAlivePersonsByBirthdayIndex;
 
     private final Map<String, Place> places = new HashMap<>(256);
 
@@ -45,7 +65,8 @@ public class EnrichedGedcom {
             Gedcom legacyGedcom,
             String gedcomName,
             @Nullable ZonedDateTime modifiedDateTime,
-            GedcomAnalyzerProperties properties) {
+            GedcomAnalyzerProperties properties,
+            SearchService searchService) {
 
         this.legacyGedcom = properties.isKeepReferenceToLegacyGedcom() ? legacyGedcom : null;
         this.gedcomName = gedcomName;
@@ -53,6 +74,39 @@ public class EnrichedGedcom {
         this.properties = properties;
 
         this.people = getEnrichedPeople(legacyGedcom);
+
+        // General stats
+        this.familiesCount = legacyGedcom.getFamilies().size();
+        this.maleCount = Math.toIntExact(this.people.stream().filter(person -> person.getSex() == SexType.M).count());
+        this.femaleCount = this.people.size() - this.maleCount;
+        this.aliveCount = Math.toIntExact(this.people.stream().filter(EnrichedPerson::isAlive).count());
+        this.deceasedCount = this.people.size() - this.aliveCount;
+        this.distinguishedCount = Math.toIntExact(this.people.stream().filter(EnrichedPerson::isDistinguishedPerson).count());
+        this.nativeCount = Math.toIntExact(this.people.stream().filter(EnrichedPerson::isNativePerson).count());
+
+        // Azul specific stats
+        List<EnrichedPerson> azulAllPersons = searchService
+                .findPersonsByPlaceOfAnyEvent("Azul, Buenos Aires, Argentina", null, null, true, false, false, this.people);
+        this.azulPersonsCount = azulAllPersons.size();
+        List<EnrichedPerson> azulAlivePersons = azulAllPersons.stream().filter(EnrichedPerson::isAlive).toList();
+        this.azulAliveCount = azulAlivePersons.size();
+        this.azulMayorsCount = Math.toIntExact(this.people
+                .stream()
+                .filter(EnrichedPerson::isDistinguishedPerson)
+                .filter(person -> !Set.of(504379, 545429, 552956).contains(person.getId()))
+                .filter(person -> Strings.CS.startsWithAny(person.getDisplayName(), "Jz. Pz.", "Int. Mun.", "Pte. Mun.", "Com. Mun.", "Del. Mun."))
+                .count());
+        // TODO: azulDisappearedCount counts disappeared persons across all places, not just those
+        //       linked to Azul. Consider filtering by Azul place in a future improvement.
+        this.azulDisappearedCount = Math.toIntExact(this.people.stream().filter(EnrichedPerson::isDisappearedPerson).count());
+
+        this.azulAlivePersonsByBirthdayIndex = azulAlivePersons
+                .stream()
+                .filter(person -> person.getDateOfBirth().filter(Date::isFullDate).isPresent())
+                .collect(Collectors.groupingBy(person -> {
+                    Date dob = person.getDateOfBirth().get();
+                    return MonthDay.of(dob.getMonth(), dob.getDay());
+                }));
 
         this.peopleByIdIndex = this.people
                 .stream()
@@ -87,15 +141,17 @@ public class EnrichedGedcom {
             Gedcom legacyGedcom,
             String gedcomName,
             ZonedDateTime modifiedDateTime,
-            GedcomAnalyzerProperties properties) {
-        return new EnrichedGedcom(legacyGedcom, gedcomName, modifiedDateTime, properties);
+            GedcomAnalyzerProperties properties,
+            SearchService searchService) {
+        return new EnrichedGedcom(legacyGedcom, gedcomName, modifiedDateTime, properties, searchService);
     }
 
     public static EnrichedGedcom of(
             Gedcom legacyGedcom,
             String gedcomName,
-            GedcomAnalyzerProperties properties) {
-        return new EnrichedGedcom(legacyGedcom, gedcomName, null, properties);
+            GedcomAnalyzerProperties properties,
+            SearchService searchService) {
+        return new EnrichedGedcom(legacyGedcom, gedcomName, null, properties, searchService);
     }
 
     public Optional<Gedcom> getLegacyGedcom() {

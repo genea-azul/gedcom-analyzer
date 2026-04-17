@@ -5,15 +5,18 @@ import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPersonWithReference;
 import com.geneaazul.gedcomanalyzer.model.EnrichedSpouseWithChildren;
+import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResult;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResults;
 import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.ProfilePicture;
+import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.model.dto.NameAndPictureDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateCompareDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonWithReferenceDto;
+import com.geneaazul.gedcomanalyzer.model.dto.SimplePersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SpouseWithChildrenDto;
 import com.geneaazul.gedcomanalyzer.utils.DateUtils;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
@@ -103,6 +106,48 @@ public class PersonMapper {
                                 obfuscateLiving && (person.isAlive() || maxDistantRelationship.person().isAlive())))
                         .orElse(null))
                 .distinguishedPersonsInTree(distinguishedPersonsInTree)
+                .build();
+    }
+
+    public List<SimplePersonDto> toSimplePersonDto(Collection<EnrichedPerson> persons, boolean obfuscateLiving) {
+        return persons
+                .stream()
+                .map(person -> toSimplePersonDto(person, obfuscateLiving))
+                .toList();
+    }
+
+    public SimplePersonDto toSimplePersonDto(EnrichedPerson person, boolean obfuscateLiving) {
+        String name;
+        if (obfuscateLiving && person.isAlive()) {
+            String givenName = person.getGivenName()
+                    .map(GivenName::value)
+                    .orElse(PersonUtils.NO_NAME);
+            String abbreviatedSurname = person.getSurname()
+                    .map(Surname::value)
+                    .map(PersonUtils::abbreviateSurname)
+                    .orElse(null);
+            name = abbreviatedSurname != null ? givenName + " " + abbreviatedSurname : givenName;
+        } else {
+            name = person.getDisplayName();
+        }
+        return SimplePersonDto.builder()
+                .uuid(person.getUuid())
+                .sex(person.getSex())
+                .isAlive(person.isAlive())
+                .name(name)
+                .aka(person.getAka()
+                        .map(Aka::value)
+                        .orElse(null))
+                .profilePicture(person.getProfilePicture()
+                        .map(ProfilePicture::file)
+                        .orElse(null))
+                .dateOfBirth(person.getDateOfBirth()
+                        .map(Date::format)
+                        .orElse(null))
+                .placeOfBirth(person.getPlaceOfBirth()
+                        .map(Place::name)
+                        .orElse(null))
+                .dateOfDeath(null)
                 .build();
     }
 
