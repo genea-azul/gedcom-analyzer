@@ -329,67 +329,101 @@ public class GeneaAzulWebResources {
         return "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
     }
 
+    private record TimelineEntry(
+            int year,
+            Integer month,
+            Integer day,
+            String type,
+            String title,
+            String body,
+            String source,
+            @Nullable String sourceUrl,
+            @Nullable String storySlug,
+            @Nullable String imageUrl) {}
+
+    /**
+     * Parse a timeline Markdown file. Format:
+     * <pre>
+     * ---
+     * year: 1832
+     * month: 12       # or null
+     * day: 16         # or null
+     * type: historia
+     * title: ...
+     * source: ...
+     * sourceUrl: ...  # or null
+     * imageUrl: ...   # or null
+     * storySlug: ...  # optional
+     * ---
+     *
+     * Body (1-3 sentences).
+     * </pre>
+     */
+    private static TimelineEntry parseTimelineMarkdown(Path file) {
+        try {
+            String content = Files.readString(file);
+            if (!content.startsWith("---")) {
+                throw new IllegalStateException("Missing frontmatter in " + file);
+            }
+            int end = content.indexOf("\n---", 3);
+            if (end < 0) {
+                throw new IllegalStateException("Unterminated frontmatter in " + file);
+            }
+            String frontmatter = content.substring(3, end).trim();
+            String body = content.substring(end + 4).trim();
+
+            Map<String, String> fields = new LinkedHashMap<>();
+            for (String line : frontmatter.split("\n")) {
+                int colon = line.indexOf(':');
+                if (colon < 0) continue;
+                String key = line.substring(0, colon).trim();
+                String value = line.substring(colon + 1).trim();
+                fields.put(key, value);
+            }
+
+            return new TimelineEntry(
+                    Integer.parseInt(fields.get("year")),
+                    parseNullableInt(fields.get("month")),
+                    parseNullableInt(fields.get("day")),
+                    fields.getOrDefault("type", "historia"),
+                    fields.get("title"),
+                    body,
+                    fields.get("source"),
+                    parseNullableString(fields.get("sourceUrl")),
+                    parseNullableString(fields.get("storySlug")),
+                    parseNullableString(fields.get("imageUrl")));
+        } catch (IOException ex) {
+            throw new RuntimeException("Failed to read " + file, ex);
+        }
+    }
+
+    @Nullable
+    private static Integer parseNullableInt(@Nullable String value) {
+        if (value == null || value.isEmpty() || "null".equals(value)) return null;
+        return Integer.parseInt(value);
+    }
+
+    @Nullable
+    private static String parseNullableString(@Nullable String value) {
+        if (value == null || value.isEmpty() || "null".equals(value)) return null;
+        return value;
+    }
+
     @Test
     public void generateTimelineJson() throws IOException {
 
-        record TimelineEntry(
-                int year,
-                Integer month,
-                Integer day,
-                String type,
-                String title,
-                String body,
-                String source,
-                @Nullable String sourceUrl,
-                @Nullable String storySlug,
-                @Nullable String imageUrl) {}
-
         List<TimelineEntry> entries = new ArrayList<>();
 
-        // ── Historia entries (hardcoded) ──────────────────────────────
-        entries.add(new TimelineEntry(1828, null, null, "historia",
-                "Primeras expediciones al arroyo Azul",
-                "Expediciones militares al arroyo Azul sientan las bases para la instalación permanente en la región. El arroyo le da nombre al futuro partido.",
-                "Wikipedia", "https://es.wikipedia.org/wiki/Partido_de_Azul", null, null));
-        entries.add(new TimelineEntry(1832, 10, null, "historia",
-                "Fundación del Fuerte de Azul",
-                "El coronel Pedro Burgos establece el Fuerte San Serapio Mártir del Arroyo Azul como avanzada de la frontera sur bonaerense, dando origen al actual partido de Azul.",
-                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null, null));
-        entries.add(new TimelineEntry(1839, null, null, "historia",
-                "Creación del Partido de Azul",
-                "Se establece formalmente el Partido de Azul como unidad administrativa de la provincia de Buenos Aires.",
-                "Wikipedia", "https://es.wikipedia.org/wiki/Partido_de_Azul", null, null));
-        entries.add(new TimelineEntry(1856, null, null, "historia",
-                "Primera iglesia estable",
-                "Se construye la primera iglesia estable de Azul, consolidando la vida religiosa y comunitaria del pueblo.",
-                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null, null));
-        entries.add(new TimelineEntry(1862, null, null, "historia",
-                "Azul declarada Villa",
-                "Azul obtiene el rango de Villa, reconociendo su crecimiento poblacional y su importancia como centro de la región.",
-                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null, null));
-        entries.add(new TimelineEntry(1865, null, null, "historia",
-                "Primer periódico de Azul",
-                "Aparece el primer periódico local de Azul, marcando el inicio de la prensa escrita en el partido.",
-                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null, null));
-        entries.add(new TimelineEntry(1876, null, null, "historia",
-                "Llegada del ferrocarril",
-                "El Gran Ferrocarril del Sud llega a Azul, conectando la ciudad con Buenos Aires y transformando la economía regional. El ferrocarril impulsó la llegada masiva de inmigrantes europeos.",
-                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null, null));
-        entries.add(new TimelineEntry(1895, null, null, "historia",
-                "Azul declarada Ciudad",
-                "Por decreto provincial, Azul es elevada al rango de ciudad, consolidando su posición como centro urbano del centro de la provincia de Buenos Aires.",
-                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null, null));
-        entries.add(new TimelineEntry(1906, null, null, "historia",
-                "Inauguración del Teatro Español",
-                "Se inaugura el Teatro Español de Azul, símbolo de la presencia de la comunidad inmigrante española y del desarrollo cultural de la ciudad.",
-                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null, null));
-        entries.add(new TimelineEntry(1935, null, null, "historia",
-                "Consolidación como ciudad intermedia",
-                "Azul se consolida como una de las ciudades intermedias más importantes de la provincia de Buenos Aires, con una economía diversificada basada en la ganadería, el comercio y los servicios.",
-                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null, null));
-
-        // ── Descubrimiento entries (hardcoded, from Genea Azul Instagram) ──
-        // (add entries here as they are published on Instagram)
+        // ── Historia and descubrimiento entries (from Markdown resources) ──
+        // Each file under src/test/resources/timeline/ is one entry.
+        // Format: YAML-ish frontmatter (year, month, day, type, title, source, sourceUrl, imageUrl, storySlug)
+        // followed by the body as free text.
+        Path timelineDir = Path.of("src/test/resources/timeline");
+        try (var paths = Files.walk(timelineDir)) {
+            paths.filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().endsWith(".md"))
+                    .forEach(p -> entries.add(parseTimelineMarkdown(p)));
+        }
 
         // ── Genealogia entries (derived from GEDCOM) ──────────────────
         String azulPlace = "Azul, Buenos Aires, Argentina";
