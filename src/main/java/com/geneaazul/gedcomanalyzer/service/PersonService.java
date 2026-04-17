@@ -110,7 +110,7 @@ public class PersonService {
             boolean mergeTreeSides,
             @NonNull BiPredicate<EnrichedPerson, Integer> stopTraversingPreCondition,
             @NonNull BiPredicate<EnrichedPerson, Integer> stopTraversingPostCondition) {
-        Map<Integer, Relationships> visitedPersons = new LinkedHashMap<>(128);
+        Map<Integer, Relationships> visitedPersons = new LinkedHashMap<>(1024);
         traversePeopleInTree(
                 Relationship.empty(person),
                 null,

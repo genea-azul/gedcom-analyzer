@@ -1,6 +1,7 @@
 package com.geneaazul.gedcomanalyzer.controller;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
+import com.geneaazul.gedcomanalyzer.model.dto.EphemeridesDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SimplePersonDto;
 import com.geneaazul.gedcomanalyzer.service.BirthdayService;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
@@ -39,6 +40,19 @@ public class BirthdayController {
         LocalDate today = LocalDate.now(properties.getZoneId());
         log.debug("Fetching Azul birthdays for today [ date={}, httpRequestId={} ]", today, request.getRequestId());
         return birthdayService.getBirthdaysInAzulToday(gedcomHolder.getGedcom(), today);
+    }
+
+    @GetMapping("/ephemerides-this-month")
+    @CrossOrigin(originPatterns = {
+            "http://geneaazul.com.ar:[*]",
+            "https://geneaazul.com.ar:[*]",
+            "http://*.geneaazul.com.ar:[*]",
+            "https://*.geneaazul.com.ar:[*]",
+    })
+    public EphemeridesDto getEphemeridesThisMonth(HttpServletRequest request) {
+        LocalDate today = LocalDate.now(properties.getZoneId());
+        log.debug("Fetching efemérides for this month [ date={}, httpRequestId={} ]", today, request.getRequestId());
+        return birthdayService.getEphemeridesThisMonth(gedcomHolder.getGedcom(), today);
     }
 
 }

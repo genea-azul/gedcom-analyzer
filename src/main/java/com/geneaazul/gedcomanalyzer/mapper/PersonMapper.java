@@ -147,7 +147,9 @@ public class PersonMapper {
                 .placeOfBirth(person.getPlaceOfBirth()
                         .map(Place::name)
                         .orElse(null))
-                .dateOfDeath(null)
+                .dateOfDeath(obfuscateLiving ? null : person.getDateOfDeath()
+                        .map(Date::format)
+                        .orElse(null))
                 .build();
     }
 

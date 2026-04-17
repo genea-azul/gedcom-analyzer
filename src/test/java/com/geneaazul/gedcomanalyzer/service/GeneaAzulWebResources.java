@@ -348,7 +348,7 @@ public class GeneaAzulWebResources {
      * year: 1832
      * month: 12       # or null
      * day: 16         # or null
-     * type: historia
+     * type: ...
      * title: ...
      * source: ...
      * sourceUrl: ...  # or null
@@ -385,7 +385,7 @@ public class GeneaAzulWebResources {
                     Integer.parseInt(fields.get("year")),
                     parseNullableInt(fields.get("month")),
                     parseNullableInt(fields.get("day")),
-                    fields.getOrDefault("type", "historia"),
+                    fields.get("type"),
                     fields.get("title"),
                     body,
                     fields.get("source"),
@@ -414,8 +414,8 @@ public class GeneaAzulWebResources {
 
         List<TimelineEntry> entries = new ArrayList<>();
 
-        // ── Historia and descubrimiento entries (from Markdown resources) ──
-        // Each file under src/test/resources/timeline/ is one entry.
+        // ── Historia, genealogia and descubrimiento entries (from Markdown resources) ──
+        // Each file under src/test/resources/timeline/{history|genealogy|discovery} is one entry.
         // Format: YAML-ish frontmatter (year, month, day, type, title, source, sourceUrl, imageUrl, storySlug)
         // followed by the body as free text.
         Path timelineDir = Path.of("src/test/resources/timeline");
