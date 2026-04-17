@@ -1,7 +1,7 @@
 ---
 year: 2007
-month: null
-day: null
+month: 1
+day: 23
 type: historia
 title: Azul declarada Ciudad Cervantina de Argentina
 source: Wikipedia

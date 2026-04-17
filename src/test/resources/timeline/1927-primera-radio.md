@@ -1,7 +1,7 @@
 ---
 year: 1927
-month: null
-day: null
+month: 7
+day: 26
 type: historia
 title: Primera emisora de radio de Azul
 source: Salidores.com

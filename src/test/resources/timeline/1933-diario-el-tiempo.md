@@ -1,7 +1,7 @@
 ---
 year: 1933
-month: null
-day: null
+month: 7
+day: 9
 type: historia
 title: Fundación del diario El Tiempo de Azul
 source: Salidores.com

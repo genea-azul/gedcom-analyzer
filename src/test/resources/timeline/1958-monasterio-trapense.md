@@ -1,7 +1,7 @@
 ---
 year: 1958
-month: null
-day: null
+month: 10
+day: 28
 type: historia
 title: Inauguración del Monasterio Trapense de Azul
 source: Wikipedia
