@@ -341,7 +341,8 @@ public class GeneaAzulWebResources {
                 String body,
                 String source,
                 @Nullable String sourceUrl,
-                @Nullable String storySlug) {}
+                @Nullable String storySlug,
+                @Nullable String imageUrl) {}
 
         List<TimelineEntry> entries = new ArrayList<>();
 
@@ -349,43 +350,43 @@ public class GeneaAzulWebResources {
         entries.add(new TimelineEntry(1828, null, null, "historia",
                 "Primeras expediciones al arroyo Azul",
                 "Expediciones militares al arroyo Azul sientan las bases para la instalación permanente en la región. El arroyo le da nombre al futuro partido.",
-                "Wikipedia", "https://es.wikipedia.org/wiki/Partido_de_Azul", null));
+                "Wikipedia", "https://es.wikipedia.org/wiki/Partido_de_Azul", null, null));
         entries.add(new TimelineEntry(1832, 10, null, "historia",
                 "Fundación del Fuerte de Azul",
                 "El coronel Pedro Burgos establece el Fuerte San Serapio Mártir del Arroyo Azul como avanzada de la frontera sur bonaerense, dando origen al actual partido de Azul.",
-                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null));
+                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null, null));
         entries.add(new TimelineEntry(1839, null, null, "historia",
                 "Creación del Partido de Azul",
                 "Se establece formalmente el Partido de Azul como unidad administrativa de la provincia de Buenos Aires.",
-                "Wikipedia", "https://es.wikipedia.org/wiki/Partido_de_Azul", null));
+                "Wikipedia", "https://es.wikipedia.org/wiki/Partido_de_Azul", null, null));
         entries.add(new TimelineEntry(1856, null, null, "historia",
                 "Primera iglesia estable",
                 "Se construye la primera iglesia estable de Azul, consolidando la vida religiosa y comunitaria del pueblo.",
-                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null));
+                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null, null));
         entries.add(new TimelineEntry(1862, null, null, "historia",
                 "Azul declarada Villa",
                 "Azul obtiene el rango de Villa, reconociendo su crecimiento poblacional y su importancia como centro de la región.",
-                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null));
+                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null, null));
         entries.add(new TimelineEntry(1865, null, null, "historia",
                 "Primer periódico de Azul",
                 "Aparece el primer periódico local de Azul, marcando el inicio de la prensa escrita en el partido.",
-                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null));
+                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null, null));
         entries.add(new TimelineEntry(1876, null, null, "historia",
                 "Llegada del ferrocarril",
                 "El Gran Ferrocarril del Sud llega a Azul, conectando la ciudad con Buenos Aires y transformando la economía regional. El ferrocarril impulsó la llegada masiva de inmigrantes europeos.",
-                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null));
+                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null, null));
         entries.add(new TimelineEntry(1895, null, null, "historia",
                 "Azul declarada Ciudad",
                 "Por decreto provincial, Azul es elevada al rango de ciudad, consolidando su posición como centro urbano del centro de la provincia de Buenos Aires.",
-                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null));
+                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null, null));
         entries.add(new TimelineEntry(1906, null, null, "historia",
                 "Inauguración del Teatro Español",
                 "Se inaugura el Teatro Español de Azul, símbolo de la presencia de la comunidad inmigrante española y del desarrollo cultural de la ciudad.",
-                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null));
+                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null, null));
         entries.add(new TimelineEntry(1935, null, null, "historia",
                 "Consolidación como ciudad intermedia",
                 "Azul se consolida como una de las ciudades intermedias más importantes de la provincia de Buenos Aires, con una economía diversificada basada en la ganadería, el comercio y los servicios.",
-                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null));
+                "Wikipedia", "https://es.wikipedia.org/wiki/Azul_(Argentina)", null, null));
 
         // ── Descubrimiento entries (hardcoded, from Genea Azul Instagram) ──
         // (add entries here as they are published on Instagram)
@@ -404,7 +405,7 @@ public class GeneaAzulWebResources {
                     entries.add(new TimelineEntry(year, null, null, "genealogia",
                             "Nacimiento más antiguo en el árbol de Azul",
                             "El árbol genealógico de Genea Azul registra personas vinculadas a Azul con nacimientos desde " + year + ".",
-                            "GEDCOM — Genea Azul", null, null));
+                            "GEDCOM — Genea Azul", null, null, null));
                 });
 
         // First Italian immigrant (earliest birth year) with any event in Azul
@@ -419,7 +420,7 @@ public class GeneaAzulWebResources {
                     entries.add(new TimelineEntry(year, null, null, "genealogia",
                             "Primera inmigración italiana registrada en Azul",
                             "El árbol genealógico registra el primer inmigrante de origen italiano con eventos en Azul nacido hacia " + year + ". Italia es la comunidad inmigrante más representada en el partido.",
-                            "GEDCOM — Genea Azul", null, null));
+                            "GEDCOM — Genea Azul", null, null, "img/timeline/flag-it.svg"));
                 });
 
         // Most common surname in Azul: year of earliest appearance
@@ -439,7 +440,7 @@ public class GeneaAzulWebResources {
                     "El apellido más frecuente en Azul: " + top.mainSurname().value(),
                     top.value() + " personas con el apellido " + top.mainSurname().value()
                             + " tienen eventos registrados en Azul, convirtiéndolo en el más frecuente del árbol genealógico de Genea Azul.",
-                    "GEDCOM — Genea Azul", null, null));
+                    "GEDCOM — Genea Azul", null, null, null));
         }
 
         // ── Sort: year asc, month asc (nulls last), day asc (nulls last) ──
@@ -453,7 +454,7 @@ public class GeneaAzulWebResources {
         for (int i = 0; i < entries.size(); i++) {
             TimelineEntry e = entries.get(i);
             sb.append(String.format(
-                    "  {\"year\": %d, \"month\": %s, \"day\": %s, \"type\": %s, \"title\": %s, \"body\": %s, \"source\": %s, \"sourceUrl\": %s, \"storySlug\": %s}%s\n",
+                    "  {\"year\": %d, \"month\": %s, \"day\": %s, \"type\": %s, \"title\": %s, \"body\": %s, \"source\": %s, \"sourceUrl\": %s, \"storySlug\": %s, \"imageUrl\": %s}%s\n",
                     e.year(),
                     e.month() != null ? e.month() : "null",
                     e.day() != null ? e.day() : "null",
@@ -463,6 +464,7 @@ public class GeneaAzulWebResources {
                     jsonStr(e.source()),
                     jsonStr(e.sourceUrl()),
                     jsonStr(e.storySlug()),
+                    jsonStr(e.imageUrl()),
                     i < entries.size() - 1 ? "," : ""));
         }
         sb.append("]");
