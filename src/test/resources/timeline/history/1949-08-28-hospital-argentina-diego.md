@@ -4,7 +4,7 @@ month: 8
 day: 28
 type: historia
 title: Inauguración del Hospital Argentina Diego
-source: Hospital Argentina Diego (sitio oficial)
+source: Hospital Argentina Diego
 sourceUrl: https://www.ms.gba.gov.ar/sitios/hargentinadiego/historia/
 imageUrl: null
 ---

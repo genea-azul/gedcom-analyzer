@@ -54,6 +54,9 @@ public class GedcomMetadataDto {
     private Integer azulAliveCount;
 
     @ToString.Include
+    private Integer azulSurnamesCount;
+
+    @ToString.Include
     private Integer azulMayorsCount;
 
     @ToString.Include

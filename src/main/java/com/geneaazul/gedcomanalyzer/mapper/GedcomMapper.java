@@ -28,6 +28,7 @@ public class GedcomMapper {
                 /* Azul specific */
                 .azulPersonsCount(gedcom.getAzulPersonsCount())
                 .azulAliveCount(gedcom.getAzulAliveCount())
+                .azulSurnamesCount(gedcom.getAzulSurnamesCount())
                 .azulMayorsCount(gedcom.getAzulMayorsCount())
                 .azulDisappearedCount(gedcom.getAzulDisappearedCount())
                 /* Timing */

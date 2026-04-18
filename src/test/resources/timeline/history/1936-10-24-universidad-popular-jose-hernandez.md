@@ -3,7 +3,7 @@ year: 1936
 month: 10
 day: 24
 type: historia
-title: Fundación de la Universidad Popular "José Hernández"
+title: Fundación de la Universidad Popular «José Hernández»
 source: Biblioteca Ronco
 sourceUrl: https://www.bibliotecaronco.com.ar/index/articulo/id/331
 imageUrl: null

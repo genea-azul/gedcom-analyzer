@@ -4,7 +4,7 @@ month: 4
 day: null
 type: historia
 title: Fundación del Sanatorio Azul
-source: Sanatorio Azul (sitio oficial)
+source: Sanatorio Azul
 sourceUrl: https://sanatorioazul.com.ar/
 imageUrl: null
 ---

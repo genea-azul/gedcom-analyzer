@@ -9,4 +9,4 @@ sourceUrl: https://isfd157-bue.infd.edu.ar/sitio/historia/
 imageUrl: null
 ---
 
-El **10 de noviembre de 1886**, el Congreso Nacional aprobó la ley que autorizaba la creación de la **Escuela Normal Mixta de Azul**. La institución abrió sus puertas el 26 de junio de 1887 bajo la denominación que llevaría definitivamente el nombre Bernardino Rivadavia, convirtiéndose en pilar de la formación docente en el centro bonaerense.
+El **10 de noviembre de 1886**, el Congreso Nacional aprobó la Ley N.° 1897 que autorizaba la creación de la **Escuela Normal Mixta de Azul**; la institución abrió sus puertas el **26 de junio de 1887**. En su **25.º aniversario** —el 26 de junio de 1912— le impusieron el nombre **«Bernardino Rivadavia»**.

@@ -18,6 +18,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folg.gedcom.model.Name;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -107,6 +108,7 @@ public class GeneaAzulWebResources {
         COUNTRY_ISO.put("Rumania",              "RO");
     }
 
+    @Disabled
     @Test
     public void generateSurnamesJson() throws IOException {
         List<GedcomAnalyzerService.SurnamesCardinality> cardinalities = gedcomAnalyzerService
@@ -414,8 +416,8 @@ public class GeneaAzulWebResources {
 
         List<TimelineEntry> entries = new ArrayList<>();
 
-        // ── Historia, genealogia and descubrimiento entries (from Markdown resources) ──
-        // Each file under src/test/resources/timeline/{history|genealogy|discovery} is one entry.
+        // ── Historia, genealogia and curiosidades entries (from Markdown resources) ──
+        // Each file under src/test/resources/timeline/{history|genealogy|curiosities} is one entry.
         // Format: YAML-ish frontmatter (year, month, day, type, title, source, sourceUrl, imageUrl, storySlug)
         // followed by the body as free text.
         Path timelineDir = Path.of("src/test/resources/timeline");

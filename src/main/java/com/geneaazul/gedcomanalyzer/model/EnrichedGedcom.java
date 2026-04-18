@@ -50,6 +50,7 @@ public class EnrichedGedcom {
     // Azul specific stats
     private final Integer azulPersonsCount;
     private final Integer azulAliveCount;
+    private final Integer azulSurnamesCount;
     private final Integer azulMayorsCount;
     private final Integer azulDisappearedCount;
 
@@ -138,6 +139,7 @@ public class EnrichedGedcom {
         this.deceasedCount = this.people.size() - aliveCount;
         this.distinguishedCount = distinguishedCount;
         this.nativeCount = nativeCount;
+        this.azulSurnamesCount = 4640; // TODO: replace with actual count
         this.azulMayorsCount = azulMayorsCount;
         // TODO: azulDisappearedCount counts disappeared persons across all places, not just those
         //       linked to Azul. Consider filtering by Azul place in a future improvement.

@@ -4,7 +4,7 @@ month: null
 day: null
 type: historia
 title: Estancia San Ramón adquirida por familia Anchorena
-source: Diario El Tiempo de Azul
+source: Diario El Tiempo
 sourceUrl: https://www.diarioeltiempo.com.ar/nota--dona-mercedes-y-el-buen-pastor-172585
 imageUrl: null
 ---

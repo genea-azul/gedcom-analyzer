@@ -4,7 +4,7 @@ month: null
 day: null
 type: historia
 title: Fundación de la Escuela Técnica N.° 2 «Vicente Pereda»
-source: Diario El Tiempo de Azul
+source: Diario El Tiempo
 sourceUrl: https://www.diarioeltiempo.com.ar/nota-vicente-pereda--comerciante-y-ganadero-41259
 imageUrl: null
 ---

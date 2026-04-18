@@ -3,7 +3,7 @@ year: 1996
 month: 11
 day: 11
 type: historia
-title: Fundación de la banda Facón en Azul
+title: Formación de la banda Facón en Azul
 source: Todo Provincial
 sourceUrl: https://www.todoprovincial.com/estamos-muy-ilusionados-vuelve-facon-la-banda-de-azul-que-la-rompia-en-el-interior-y-se-disolvio-rozando-el-estrellato/
 imageUrl: null

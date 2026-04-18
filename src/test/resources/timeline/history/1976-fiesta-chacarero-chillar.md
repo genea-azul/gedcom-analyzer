@@ -9,4 +9,4 @@ sourceUrl: https://www.diarioeltiempo.com.ar/nota-esta-fiesta-jerarquiza-la-regi
 imageUrl: null
 ---
 
-En **1976**, el Club Atlético Huracán de Chillar organizó la primera edición de la **Fiesta del Chacarero**, celebración rural que honra al hombre de campo del partido de Azul. El festival se realizó hasta 1979 y fue revivido en 2007 por dirigentes del mismo club, consolidándose como uno de los encuentros agropecuarios más importantes de la región bonaerense.
+En **1976**, el Club Atlético Huracán de Chillar organizó la primera edición de la **«Fiesta del Chacarero»**, celebración rural que honra al hombre de campo del partido de Azul. El festival se realizó hasta 1979 y fue revivido en 2007 por dirigentes del mismo club, consolidándose como uno de los encuentros agropecuarios más importantes de la región bonaerense.

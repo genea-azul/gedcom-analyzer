@@ -4,7 +4,7 @@ month: null
 day: null
 type: historia
 title: Fundación del Hospital de Caridad de Azul
-source: Salidores.com / Diario El Tiempo
+source: Salidores.com
 sourceUrl: https://salidores.com/azul/azul-la-historia
 imageUrl: null
 ---
