@@ -267,7 +267,7 @@ public class ConnectionService {
                 .peek(details -> {
                     //noinspection DataFlowIssue
                     if (context != null && !Boolean.TRUE.equals(details.getIsReviewed())) {
-                        details.setMarkReviewedLink(context + "/api/search/connection/" + details.getId() + "/reviewed");
+                        details.setMarkReviewedLink(context + "/api/admin/search/connection/" + details.getId() + "/reviewed");
                     }
                 })
                 .toList();

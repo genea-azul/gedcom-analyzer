@@ -1,9 +1,15 @@
 package com.geneaazul.gedcomanalyzer.service;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
+import com.geneaazul.gedcomanalyzer.model.Aka;
+import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.ProfilePicture;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
+import com.geneaazul.gedcomanalyzer.model.dto.FamilyTreeGraphDto;
+import com.geneaazul.gedcomanalyzer.model.dto.FamilyTreeGraphDto.FamilyNodeDto;
+import com.geneaazul.gedcomanalyzer.model.dto.FamilyTreeGraphDto.PersonNodeDto;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,6 +31,8 @@ import org.folg.gedcom.parser.ModelParser;
 import org.folg.gedcom.visitors.GedcomWriter;
 import org.xml.sax.SAXParseException;
 
+import jakarta.annotation.Nullable;
+
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -37,6 +45,7 @@ import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -148,15 +157,14 @@ public class GedcomParsingService {
         return gedcom;
     }
 
-    public void format(
+    public Gedcom format(
             Gedcom gedcom,
             List<List<Relationship>> relationshipsList,
-            Path gedcomPath,
             int maxPeopleInGedcomThreshold,
             int maxAscDistanceThreshold,
-            int maxDescDistanceThreshold) throws IOException {
-        log.info("Format gedcom: {}, people in tree: {}, max people threshold: {}",
-                gedcomPath, relationshipsList.size(), maxPeopleInGedcomThreshold);
+            int maxDescDistanceThreshold) {
+        log.info("Format gedcom: people in tree: {}, max people threshold: {}",
+                relationshipsList.size(), maxPeopleInGedcomThreshold);
 
         boolean trimGedcom = maxPeopleInGedcomThreshold > 0 && relationshipsList.size() > maxPeopleInGedcomThreshold;
         boolean includeSpousesOfDescendantsA = true;
@@ -183,24 +191,11 @@ public class GedcomParsingService {
 
         List<Family> families = gedcom.getFamilies()
                 .stream()
-                .peek(family -> {
-                    List<SpouseRef> husbandRefs = family.getHusbandRefs()
-                            .stream()
-                            .filter(ref -> personIds.contains(ref.getRef()))
-                            .toList();
-                    List<SpouseRef> wifeRefs = family.getWifeRefs()
-                            .stream()
-                            .filter(ref -> personIds.contains(ref.getRef()))
-                            .toList();
-                    List<ChildRef> childRefs = family.getChildRefs()
-                            .stream()
-                            .filter(ref -> personIds.contains(ref.getRef()))
-                            .toList();
-
-                    family.setHusbandRefs(husbandRefs);
-                    family.setWifeRefs(wifeRefs);
-                    family.setChildRefs(childRefs);
-                })
+                .map(family -> copyFamily(
+                        family,
+                        family.getHusbandRefs().stream().filter(ref -> personIds.contains(ref.getRef())).toList(),
+                        family.getWifeRefs().stream().filter(ref -> personIds.contains(ref.getRef())).toList(),
+                        family.getChildRefs().stream().filter(ref -> personIds.contains(ref.getRef())).toList()))
                 .filter(family -> {
                     if (family.getHusbandRefs().isEmpty() && family.getWifeRefs().isEmpty()) {
                         return false;
@@ -220,19 +215,10 @@ public class GedcomParsingService {
         List<Person> people = gedcom.getPeople()
                 .stream()
                 .filter(person -> personIds.contains(person.getId()))
-                .peek(person -> {
-                    List<ParentFamilyRef> famc = person.getParentFamilyRefs()
-                            .stream()
-                            .filter(ref -> familyIds.contains(ref.getRef()))
-                            .toList();
-                    List<SpouseFamilyRef> fams = person.getSpouseFamilyRefs()
-                            .stream()
-                            .filter(ref -> familyIds.contains(ref.getRef()))
-                            .toList();
-
-                    person.setParentFamilyRefs(famc);
-                    person.setSpouseFamilyRefs(fams);
-                })
+                .map(person -> copyPerson(
+                        person,
+                        person.getParentFamilyRefs().stream().filter(ref -> familyIds.contains(ref.getRef())).toList(),
+                        person.getSpouseFamilyRefs().stream().filter(ref -> familyIds.contains(ref.getRef())).toList()))
                 .toList();
 
         Header header = new Header();
@@ -259,15 +245,114 @@ public class GedcomParsingService {
         newGedcom.createIndexes();
         newGedcom.updateReferences();
 
-        try (OutputStream out = new FileOutputStream(gedcomPath.toFile())) {
-            GedcomWriter writer = new GedcomWriter();
-            writer.write(newGedcom, out);
-        }
-
         if (trimGedcom) {
             log.warn("Gedcom was trimmed! people in tree: {}, max people threshold: {}, final people in tree: {}",
                     relationshipsList.size(), maxPeopleInGedcomThreshold, personIds.size());
         }
+
+        return newGedcom;
+    }
+
+    public static PersonNodeDto toPersonNodeDto(EnrichedPerson ep, @Nullable String relationship, @Nullable Integer generation) {
+        Integer yearOfBirth = null;
+        Boolean circaBirth = null;
+        if (ep.getDateOfBirth().isPresent()) {
+            Date dob = ep.getDateOfBirth().get();
+            yearOfBirth = dob.getYear().getValue();
+            circaBirth = dob.getOperator() == Date.Operator.ABT || dob.getOperator() == Date.Operator.EST;
+        }
+
+        Integer yearOfDeath = null;
+        Boolean circaDeath = null;
+        if (ep.getDateOfDeath().isPresent()) {
+            Date dod = ep.getDateOfDeath().get();
+            yearOfDeath = dod.getYear().getValue();
+            circaDeath = dod.getOperator() == Date.Operator.ABT || dod.getOperator() == Date.Operator.EST;
+        }
+
+        return PersonNodeDto.builder()
+                .id(ep.getId())
+                .displayName(ep.getDisplayName())
+                .sex(ep.getSex())
+                .aka(ep.getAka().map(Aka::value).orElse(null))
+                .profilePicture(ep.getProfilePicture().map(ProfilePicture::file).orElse(null))
+                .yearOfBirth(yearOfBirth)
+                .circaBirth(circaBirth)
+                .yearOfDeath(yearOfDeath)
+                .circaDeath(circaDeath)
+                .isAlive(ep.isAlive())
+                .generation(generation)
+                .relationship(relationship)
+                .build();
+    }
+
+    public void write(Gedcom gedcom, Path gedcomPath) throws IOException {
+        log.info("Write gedcom: {}", gedcomPath);
+        try (OutputStream out = new FileOutputStream(gedcomPath.toFile())) {
+            GedcomWriter writer = new GedcomWriter();
+            writer.write(gedcom, out);
+        }
+    }
+
+    private static Family copyFamily(Family src, List<SpouseRef> husbandRefs, List<SpouseRef> wifeRefs, List<ChildRef> childRefs) {
+        Family copy = new Family();
+        copy.setId(src.getId());
+        copy.setHusbandRefs(husbandRefs);
+        copy.setWifeRefs(wifeRefs);
+        copy.setChildRefs(childRefs);
+        copy.setEventsFacts(src.getEventsFacts());
+        copy.setLdsOrdinances(src.getLdsOrdinances());
+        copy.setReferenceNumbers(src.getReferenceNumbers());
+        copy.setRin(src.getRin());
+        copy.setChange(src.getChange());
+        copy.setUid(src.getUid());
+        copy.setUidTag(src.getUidTag());
+        copy.setSourceCitations(src.getSourceCitations());
+        copy.setMediaRefs(src.getMediaRefs());
+        copy.setMedia(src.getMedia());
+        copy.setNoteRefs(src.getNoteRefs());
+        copy.setNotes(src.getNotes());
+        Map<String, Object> extensions = src.getExtensions();
+        if (extensions != null) {
+            copy.setExtensions(extensions);
+        }
+        return copy;
+    }
+
+    private static Person copyPerson(Person src, List<ParentFamilyRef> parentFamilyRefs, List<SpouseFamilyRef> spouseFamilyRefs) {
+        Person copy = new Person();
+        copy.setId(src.getId());
+        copy.setNames(src.getNames());
+        copy.setParentFamilyRefs(parentFamilyRefs);
+        copy.setSpouseFamilyRefs(spouseFamilyRefs);
+        copy.setAssociations(src.getAssociations());
+        copy.setAncestorInterestSubmitterRef(src.getAncestorInterestSubmitterRef());
+        copy.setDescendantInterestSubmitterRef(src.getDescendantInterestSubmitterRef());
+        copy.setRecordFileNumber(src.getRecordFileNumber());
+        copy.setAddress(src.getAddress());
+        copy.setPhone(src.getPhone());
+        copy.setFax(src.getFax());
+        copy.setEmail(src.getEmail());
+        copy.setEmailTag(src.getEmailTag());
+        copy.setWww(src.getWww());
+        copy.setWwwTag(src.getWwwTag());
+        copy.setEventsFacts(src.getEventsFacts());
+        copy.setLdsOrdinances(src.getLdsOrdinances());
+        copy.setReferenceNumbers(src.getReferenceNumbers());
+        copy.setRin(src.getRin());
+        copy.setChange(src.getChange());
+        copy.setUid(src.getUid());
+        copy.setUidTag(src.getUidTag());
+        copy.setSourceCitations(src.getSourceCitations());
+        copy.setMediaRefs(src.getMediaRefs());
+        copy.setMedia(src.getMedia());
+        copy.setNoteRefs(src.getNoteRefs());
+        copy.setNotes(src.getNotes());
+        Map<String, Object> extensions = src.getExtensions();
+        if (extensions != null) {
+            copy.setExtensions(extensions);
+        }
+        return copy;
     }
 
 }

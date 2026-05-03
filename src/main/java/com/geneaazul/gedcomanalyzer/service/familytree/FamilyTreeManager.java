@@ -82,15 +82,26 @@ public class FamilyTreeManager {
                     List<List<Relationship>> relationshipsWithNotInLawPriority = familyTreeHelper
                             .getRelationshipsWithNotInLawPriority(person);
 
-                    familyTreeServices
-                            .forEach(familyTreeService -> familyTreeService
-                                    .generateFamilyTree(
+                    List<Thread> threads = familyTreeServices
+                            .stream()
+                            .map(familyTreeService -> Thread.ofVirtual().start(() ->
+                                    familyTreeService.generateFamilyTree(
                                             person,
                                             familyTreeFileIdPrefix,
                                             familyTreeFileSuffix,
                                             obfuscateLiving,
                                             onlySecondaryDescription,
-                                            relationshipsWithNotInLawPriority));
+                                            relationshipsWithNotInLawPriority)))
+                            .toList();
+
+                    for (Thread thread : threads) {
+                        try {
+                            thread.join();
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                            break;
+                        }
+                    }
                 });
     }
 

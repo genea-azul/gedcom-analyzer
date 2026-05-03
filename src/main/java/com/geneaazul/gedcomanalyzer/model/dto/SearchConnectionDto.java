@@ -1,6 +1,7 @@
 package com.geneaazul.gedcomanalyzer.model.dto;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -18,9 +19,11 @@ import lombok.ToString;
 @ToString(onlyExplicitlyIncluded = true)
 public class SearchConnectionDto {
 
+    @NotNull
     @Valid
     @ToString.Include
     private SearchPersonDto person1;
+    @NotNull
     @Valid
     @ToString.Include
     private SearchPersonDto person2;

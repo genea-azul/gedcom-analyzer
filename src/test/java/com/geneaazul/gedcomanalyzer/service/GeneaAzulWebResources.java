@@ -279,7 +279,7 @@ public class GeneaAzulWebResources {
             EnrichedPerson ep = personalities.get(i);
 
             // ── Name parts from legacy Person ──────────────────────────
-            String title = null, titleFull = null, givenName = null, surname = null, nickname = null;
+            String title = null, titleFull = null, givenName = null, surname = null, nickname = null, nameSuffix = null;
             Name name = ep.getLegacyPerson()
                     .filter(lp -> !lp.getNames().isEmpty())
                     .map(lp -> lp.getNames().get(0))
@@ -289,11 +289,12 @@ public class GeneaAzulWebResources {
                 if (title != null) {
                     titleFull = namePrefixesMap.getOrDefault(NameUtils.simplifyName(title), title);
                 }
-                givenName = StringUtils.trimToNull(name.getGiven());
-                nickname  = StringUtils.trimToNull(name.getNickname());
-                String sp = StringUtils.trimToNull(name.getSurnamePrefix());
-                String s  = StringUtils.trimToNull(name.getSurname());
-                surname   = sp != null && s != null ? sp + " " + s : (s != null ? s : sp);
+                givenName  = StringUtils.trimToNull(name.getGiven());
+                nickname   = StringUtils.trimToNull(name.getNickname());
+                String sp  = StringUtils.trimToNull(name.getSurnamePrefix());
+                String s   = StringUtils.trimToNull(name.getSurname());
+                surname    = sp != null && s != null ? sp + " " + s : (s != null ? s : sp);
+                nameSuffix = StringUtils.trimToNull(name.getSuffix());
             }
 
             // ── Dates ───────────────────────────────────────────────────
@@ -314,8 +315,9 @@ public class GeneaAzulWebResources {
             String deathPlace = ep.getPlaceOfDeath().map(Place::name).orElse(null);
 
             sb.append(String.format(
-                    "  {\"title\": %s, \"titleFull\": %s, \"givenName\": %s, \"surname\": %s, \"nickname\": %s, \"birthYear\": %s, \"deathYear\": %s, \"birthPlace\": %s, \"deathPlace\": %s}%s\n",
-                    jsonStr(title), jsonStr(titleFull), jsonStr(givenName), jsonStr(surname), jsonStr(nickname),
+                    "  {\"title\": %s, \"titleFull\": %s, \"givenName\": %s, \"surname\": %s, \"nickname\": %s, \"nameSuffix\": %s, \"isAlive\": %s, \"birthYear\": %s, \"deathYear\": %s, \"birthPlace\": %s, \"deathPlace\": %s}%s\n",
+                    jsonStr(title), jsonStr(titleFull), jsonStr(givenName), jsonStr(surname), jsonStr(nickname), jsonStr(nameSuffix),
+                    ep.isAlive(),
                     jsonStr(birthYear), jsonStr(deathYear), jsonStr(birthPlace), jsonStr(deathPlace),
                     i < personalities.size() - 1 ? "," : ""));
         }
@@ -332,7 +334,7 @@ public class GeneaAzulWebResources {
     }
 
     private record TimelineEntry(
-            int year,
+            Integer year,
             Integer month,
             Integer day,
             String type,
@@ -384,7 +386,7 @@ public class GeneaAzulWebResources {
             }
 
             return new TimelineEntry(
-                    Integer.parseInt(fields.get("year")),
+                    parseNullableInt(fields.get("year")),
                     parseNullableInt(fields.get("month")),
                     parseNullableInt(fields.get("day")),
                     fields.get("type"),
@@ -426,6 +428,8 @@ public class GeneaAzulWebResources {
                     .filter(p -> p.getFileName().toString().endsWith(".md"))
                     .forEach(p -> entries.add(parseTimelineMarkdown(p)));
         }
+
+        /*
 
         // ── Genealogia entries (derived from GEDCOM) ──────────────────
         String azulPlace = "Azul, Buenos Aires, Argentina";
@@ -479,19 +483,21 @@ public class GeneaAzulWebResources {
                     "GEDCOM — Genea Azul", null, null, null));
         }
 
-        // ── Sort: year asc, month asc (nulls last), day asc (nulls last) ──
+        */
+
+        // ── Sort: year asc (nulls last), month asc (nulls first), day asc (nulls first) ──
         entries.sort(Comparator
-                .comparingInt(TimelineEntry::year)
-                .thenComparingInt(e -> e.month() != null ? e.month() : 99)
-                .thenComparingInt(e -> e.day() != null ? e.day() : 99));
+                .comparing(TimelineEntry::year, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(TimelineEntry::month, Comparator.nullsFirst(Comparator.naturalOrder()))
+                .thenComparing(TimelineEntry::day, Comparator.nullsFirst(Comparator.naturalOrder())));
 
         // ── Emit JSON ─────────────────────────────────────────────────
         StringBuilder sb = new StringBuilder("[\n");
         for (int i = 0; i < entries.size(); i++) {
             TimelineEntry e = entries.get(i);
             sb.append(String.format(
-                    "  {\"year\": %d, \"month\": %s, \"day\": %s, \"type\": %s, \"title\": %s, \"body\": %s, \"source\": %s, \"sourceUrl\": %s, \"storySlug\": %s, \"imageUrl\": %s}%s\n",
-                    e.year(),
+                    "  {\"year\": %s, \"month\": %s, \"day\": %s, \"type\": %s, \"title\": %s, \"body\": %s, \"source\": %s, \"sourceUrl\": %s, \"storySlug\": %s, \"imageUrl\": %s}%s\n",
+                    e.year() != null ? e.year() : "null",
                     e.month() != null ? e.month() : "null",
                     e.day() != null ? e.day() : "null",
                     jsonStr(e.type()),

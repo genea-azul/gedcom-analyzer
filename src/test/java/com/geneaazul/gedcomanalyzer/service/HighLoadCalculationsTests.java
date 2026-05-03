@@ -712,13 +712,14 @@ public class HighLoadCalculationsTests {
         EnrichedPerson person = Objects.requireNonNull(gedcom.getPersonById(9));
         List<List<Relationship>> relationshipsList = familyTreeHelper.getRelationshipsWithNotInLawPriority(person);
         System.out.println("generateSubGedcom: " + person.getDisplayName() + " - People count: " + relationshipsList.size());
-        gedcomParsingService.format(
+        Path subGedcomPath = properties.getTempDir().resolve("sub-gedcom-test.ged");
+        org.folg.gedcom.model.Gedcom subGedcom = gedcomParsingService.format(
                 gedcom.getLegacyGedcom().get(),
                 relationshipsList,
-                properties.getTempDir().resolve("sub-gedcom-test.ged"),
                 250,
                 4,
                 3);
+        gedcomParsingService.write(subGedcom, subGedcomPath);
     }
 
     @Test

@@ -25,6 +25,7 @@ public class SearchSurnamesDto {
 
     @Valid
     @NotNull
+    @Size(max = 20)
     @ToString.Include
     private List<@Size(max = 60) @NotBlank String> surnames;
 

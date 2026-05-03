@@ -52,5 +52,7 @@ public class SearchFamilyDto {
     private Boolean onlySecondaryDescription = true;
     @Builder.Default
     private Boolean isForceRewrite = false;
+    @Builder.Default
+    private Boolean persist = true;
 
 }

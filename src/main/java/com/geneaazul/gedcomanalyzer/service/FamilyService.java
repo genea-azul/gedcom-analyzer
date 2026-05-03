@@ -131,10 +131,10 @@ public class FamilyService {
                 .peek(details -> {
                     //noinspection DataFlowIssue
                     if (context != null && !Boolean.TRUE.equals(details.getIsReviewed())) {
-                        details.setMarkReviewedLink(context + "/api/search/family/" + details.getId() + "/reviewed");
+                        details.setMarkReviewedLink(context + "/api/admin/search/family/" + details.getId() + "/reviewed");
                     }
                     if (context != null && !Boolean.TRUE.equals(details.getIsIgnored())) {
-                        details.setMarkIgnoredLink(context + "/api/search/family/" + details.getId() + "/ignored");
+                        details.setMarkIgnoredLink(context + "/api/admin/search/family/" + details.getId() + "/ignored");
                     }
                 })
                 .toList();

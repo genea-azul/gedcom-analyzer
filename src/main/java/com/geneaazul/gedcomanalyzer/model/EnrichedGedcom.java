@@ -28,7 +28,7 @@ import lombok.Getter;
 public class EnrichedGedcom {
 
     private static final Set<Integer> AZUL_MAYOR_EXCLUDED_IDS = Set.of(504379, 545429, 552956);
-    private static final String[] AZUL_MAYOR_TITLE_PREFIXES = {"Jz. Pz.", "Int. Mun.", "Pte. Mun.", "Com. Mun.", "Del. Mun."};
+    private static final String[] AZUL_MAYOR_TITLE_PREFIXES = {"Jz. Pz.", "Int. Mun.", "Pte. Mun.", "Com. Mun."};
 
     private final Gedcom legacyGedcom;
     private final String gedcomName;
