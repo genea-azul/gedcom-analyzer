@@ -42,6 +42,13 @@ public class GedcomHolder {
     public void reloadFromStorage(boolean refreshCachedGedcom) {
         try {
             Instant start = Instant.now();
+            // Clear before loading to free the old GEDCOM's memory first.
+            // This causes a brief window (~seconds) where getGedcom() will block,
+            // but reload is a manual admin operation that runs at most once per week,
+            // so the trade-off is acceptable.
+            // NOTE: if storageService.getGedcom() throws, the queue stays empty and
+            // the server will reject all requests until restarted. The admin triggering
+            // the reload is expected to notice the error response and act accordingly.
             gedcomQueue.clear();
             EnrichedGedcom gedcom = storageService.getGedcom(refreshCachedGedcom);
             gedcomQueue.offer(gedcom);

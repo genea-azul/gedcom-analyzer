@@ -2,6 +2,7 @@ package com.geneaazul.gedcomanalyzer.config;
 
 import com.geneaazul.gedcomanalyzer.model.FamilyTreeType;
 import com.geneaazul.gedcomanalyzer.service.familytree.FamilyTreeService;
+import com.geneaazul.gedcomanalyzer.service.familytree.GraphJsonFamilyTreeService;
 import com.geneaazul.gedcomanalyzer.service.familytree.NetworkFamilyTreeService;
 import com.geneaazul.gedcomanalyzer.service.familytree.PlainFamilyTreePdfService;
 import com.geneaazul.gedcomanalyzer.service.familytree.PlainFamilyTreeTxtService;
@@ -34,11 +35,13 @@ public class FamilyTreeConfig {
     public Map<FamilyTreeType, FamilyTreeService> familyTreeServiceByType(
             PlainFamilyTreePdfService plainFamilyTreePdfService,
             PlainFamilyTreeTxtService plainFamilyTreeTxtService,
-            NetworkFamilyTreeService networkFamilyTreeService) {
+            NetworkFamilyTreeService networkFamilyTreeService,
+            GraphJsonFamilyTreeService graphJsonFamilyTreeService) {
         return Map.of(
                 FamilyTreeType.PLAIN_PDF, plainFamilyTreePdfService,
                 FamilyTreeType.PLAIN_TXT, plainFamilyTreeTxtService,
-                FamilyTreeType.NETWORK, networkFamilyTreeService);
+                FamilyTreeType.NETWORK, networkFamilyTreeService,
+                FamilyTreeType.GRAPH_JSON, graphJsonFamilyTreeService);
     }
 
     @PostConstruct

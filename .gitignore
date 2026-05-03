@@ -1,9 +1,11 @@
-# IntelliJ files
+# IDE
 .idea/*
 !.idea/codeStyles
 *.iws
 *.iml
 *.ipr
+.vscode/
+.cursor/
 
 # Maven files
 target/
@@ -47,3 +49,16 @@ hs_err_pid*
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+
+# MCPs and agents
+.playwright-mcp/
+.superpowers/
+
+# Git worktrees
+.worktrees/
+
+# Claude Code — local settings and runtime state (agents/ and skills/ are committed)
+.claude/worktrees/
+.claude/settings.local.json
+.claude/scheduled_tasks.json
+.claude/scheduled_tasks.lock

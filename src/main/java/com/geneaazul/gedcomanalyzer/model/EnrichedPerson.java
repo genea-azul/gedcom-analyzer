@@ -75,6 +75,12 @@ public class EnrichedPerson {
     private List<EnrichedPerson> spouses;
     private List<EnrichedPerson> children;
 
+    // Computed lazily on first call; safe because the family graph is frozen after enrichFamily().
+    // Two variants are cached: the default (no spouse places) hit by SurnameService, and the
+    // with-spouse-places variant hit by EnrichedGedcom constructor and user place searches.
+    private List<Place> placesOfAnyEventCache;
+    private List<Place> placesOfAnyEventWithSpousesCache;
+
     // Transient properties
     @Setter
     private Integer personsCountInTree;
@@ -243,10 +249,32 @@ public class EnrichedPerson {
     }
 
     public List<Place> getPlacesOfAnyEvent() {
-        return getPlacesOfAnyEvent(false, true, false);
+        if (placesOfAnyEventCache == null) {
+            placesOfAnyEventCache = computePlacesOfAnyEvent(false, true, false);
+        }
+        return placesOfAnyEventCache;
     }
 
     public List<Place> getPlacesOfAnyEvent(
+            boolean includeSpousePlaces,
+            boolean includeChildrenBirthPlaces,
+            boolean includeAllChildrenPlaces) {
+        // Hot path: (true, true, false) — used by EnrichedGedcom constructor scan and user place searches with spouse places
+        if (includeSpousePlaces && includeChildrenBirthPlaces && !includeAllChildrenPlaces) {
+            if (placesOfAnyEventWithSpousesCache == null) {
+                placesOfAnyEventWithSpousesCache = computePlacesOfAnyEvent(true, true, false);
+            }
+            return placesOfAnyEventWithSpousesCache;
+        }
+        // Hot path: (false, true, false) — used by SurnameService; delegates to the zero-arg cached method
+        if (!includeSpousePlaces && includeChildrenBirthPlaces && !includeAllChildrenPlaces) {
+            return getPlacesOfAnyEvent();
+        }
+        // Uncommon path: (false/true, true/false, true) — used only in admin/analysis operations; not cached
+        return computePlacesOfAnyEvent(includeSpousePlaces, includeChildrenBirthPlaces, includeAllChildrenPlaces);
+    }
+
+    private List<Place> computePlacesOfAnyEvent(
             boolean includeSpousePlaces,
             boolean includeChildrenBirthPlaces,
             boolean includeAllChildrenPlaces) {

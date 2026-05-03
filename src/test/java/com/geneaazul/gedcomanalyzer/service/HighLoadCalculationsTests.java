@@ -211,6 +211,7 @@ public class HighLoadCalculationsTests {
              *   -> Alluvioni Cambiò / Piovera -> Alluvioni Cambiò
              *   -> Almeida -> agregar Almeyda
              *   -> Testavin, Testavin-Touron -> agregar Tur&oacute;n
+             *   -> Ricci -> Rizzi (des-combinar)
              */
 
             final int OUTPUT_FIXED_WIDTH_CHARS = 100; // Use 58 for fixed with padding
@@ -711,13 +712,14 @@ public class HighLoadCalculationsTests {
         EnrichedPerson person = Objects.requireNonNull(gedcom.getPersonById(9));
         List<List<Relationship>> relationshipsList = familyTreeHelper.getRelationshipsWithNotInLawPriority(person);
         System.out.println("generateSubGedcom: " + person.getDisplayName() + " - People count: " + relationshipsList.size());
-        gedcomParsingService.format(
+        Path subGedcomPath = properties.getTempDir().resolve("sub-gedcom-test.ged");
+        org.folg.gedcom.model.Gedcom subGedcom = gedcomParsingService.format(
                 gedcom.getLegacyGedcom().get(),
                 relationshipsList,
-                properties.getTempDir().resolve("sub-gedcom-test.ged"),
                 250,
                 4,
                 3);
+        gedcomParsingService.write(subGedcom, subGedcomPath);
     }
 
     @Test

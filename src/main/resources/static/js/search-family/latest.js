@@ -3,7 +3,7 @@ $(document).ready(function() {
 
     $.ajax({
         type: "GET",
-        url: "/api/search/family/latest",
+        url: "/api/admin/search/family/latest",
         contentType: "application/json",
         data: {
             page: searchParams.get("page") || undefined,

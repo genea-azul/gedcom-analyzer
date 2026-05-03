@@ -41,6 +41,7 @@ public class GedcomAnalyzerProperties {
 
     private String pyvisNetworkExportScriptFilename = "pyvis_network.py";
     private Integer maxPyvisNetworkNodesToExport = 500;
+    private Integer maxGraphJsonNodesToExport = 250;
 
     private int maxClientRequestsCountThreshold = 12;
     private int maxClientRequestsCountSpecialThreshold = 3;
