@@ -144,4 +144,11 @@ public class AppController {
         return new ModelAndView("search-connection/latest", params);
     }
 
+    @GetMapping("/tree-builder/latest")
+    public ModelAndView treeBuilderLatest() {
+        Map<String, ?> params = Map.of(
+                "projectVersion", projectVersion);
+        return new ModelAndView("tree-builder/latest", params);
+    }
+
 }

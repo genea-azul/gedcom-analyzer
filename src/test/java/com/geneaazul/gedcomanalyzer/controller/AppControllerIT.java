@@ -111,4 +111,15 @@ public class AppControllerIT extends AbstractControllerIT {
         log.info(url + " response:\n{}", result.getResponse().getContentAsString(StandardCharsets.ISO_8859_1).substring(0, 50));
     }
 
+    @Test
+    public void testTreeBuilderLatestPage() throws Exception {
+        String url = "/tree-builder/latest";
+        MvcResult result = mvc.perform(get(url).with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andReturn();
+
+        log.info("{} response:\n{}", url, result.getResponse().getContentAsString(StandardCharsets.ISO_8859_1).substring(0, 50));
+    }
+
 }

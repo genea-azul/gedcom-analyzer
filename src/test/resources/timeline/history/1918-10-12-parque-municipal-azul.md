@@ -4,8 +4,8 @@ month: 10
 day: 12
 type: historia
 title: Inauguración del Parque Municipal de Azul
-source: Diario El Tiempo
-sourceUrl: https://www.diarioeltiempo.com.ar/nota-el-origen-del-parque-municipal-de-azul-189682
+source: Historias y Personajes del Azul
+sourceUrl: https://historiasypersonajesdelazul.blogspot.com/2021/06/la-mano-verde-de-angel-sala.html
 imageUrl: null
 ---
 

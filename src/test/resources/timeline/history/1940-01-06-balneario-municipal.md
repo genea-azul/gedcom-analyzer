@@ -5,7 +5,7 @@ day: 6
 type: historia
 title: Inauguración del Balneario Municipal de Azul
 source: Historias y Personajes del Azul
-sourceUrl: https://historiasypersonajesdelazul.blogspot.com
+sourceUrl: https://historiasypersonajesdelazul.blogspot.com/2020/12/la-batalla-que-gano-el-balneario.html
 imageUrl: null
 ---
 

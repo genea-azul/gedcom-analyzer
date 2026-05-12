@@ -5,11 +5,13 @@ import com.geneaazul.gedcomanalyzer.model.dto.GedcomAnalysisDto;
 import com.geneaazul.gedcomanalyzer.model.dto.GedcomMetadataDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchConnectionDetailsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDetailsDto;
+import com.geneaazul.gedcomanalyzer.model.dto.TreeBuilderSubmissionDetailsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.UsageStatsDto;
 import com.geneaazul.gedcomanalyzer.service.ConnectionService;
 import com.geneaazul.gedcomanalyzer.service.FamilyService;
 import com.geneaazul.gedcomanalyzer.service.GedcomAnalyzerService;
 import com.geneaazul.gedcomanalyzer.service.GedcomParsingService;
+import com.geneaazul.gedcomanalyzer.service.TreeBuilderService;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -52,6 +54,7 @@ public class AdminController {
     private final GedcomAnalyzerService gedcomAnalyzerService;
     private final FamilyService familyService;
     private final ConnectionService connectionService;
+    private final TreeBuilderService treeBuilderService;
 
     // ── Gedcom ──────────────────────────────────────────────────────────────
 
@@ -135,6 +138,16 @@ public class AdminController {
             @RequestParam(defaultValue = BooleanUtils.TRUE) Boolean isReviewed) {
         log.info("Mark connection reviewed [ searchId={}, isReviewed={} ]", searchId, isReviewed);
         return connectionService.updateConnectionSearchIsReviewed(searchId, isReviewed);
+    }
+
+    // ── Tree builder ────────────────────────────────────────────────────────
+
+    @GetMapping("/tree-builder/latest")
+    public List<TreeBuilderSubmissionDetailsDto> getLatestTreeBuilderSubmissions(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        log.info("Tree builder submissions latest [ page={}, size={} ]", page, size);
+        return treeBuilderService.getLatest(page, size);
     }
 
 }

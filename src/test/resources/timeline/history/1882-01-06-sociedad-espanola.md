@@ -4,8 +4,8 @@ month: 1
 day: 6
 type: historia
 title: Fundación de la Sociedad Española de Socorros Mutuos
-source: Cementerio con Historia
-sourceUrl: https://cementerioconhistoria.blogspot.com
+source: Historias y Personajes del Azul
+sourceUrl: https://historiasypersonajesdelazul.blogspot.com/2020/10/octubre-sobre-tablas.html
 imageUrl: null
 ---
 
