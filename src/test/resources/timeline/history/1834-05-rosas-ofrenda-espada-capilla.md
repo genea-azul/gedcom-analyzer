@@ -1,6 +1,6 @@
 ---
 year: 1834
-month: null
+month: 5
 day: null
 type: historia
 title: Rosas ofrendó su espada a la capilla del fuerte

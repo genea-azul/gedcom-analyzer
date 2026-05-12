@@ -4,8 +4,8 @@ month: 6
 day: null
 type: historia
 title: Carlos Thays diseña la Plaza Colón
-source: Noticias de Azul
-sourceUrl: https://noticiasdeazul.com/contenido/10515/ellas-y-ellos-estuvieron-carlos-thays
+source: Historias y Personajes del Azul
+sourceUrl: https://historiasypersonajesdelazul.blogspot.com/2020/04/carlos-thays-en-el-azul.html
 imageUrl: null
 ---
 

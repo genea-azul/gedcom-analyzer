@@ -4,8 +4,8 @@ month: 1
 day: 10
 type: historia
 title: Primer gran incendio en el poblado de Azul
-source: Hemeroteca de Azul
-sourceUrl: https://www.bibliotecaronco.com.ar/index/articulo/id/60
+source: Historias y Personajes del Azul
+sourceUrl: https://historiasypersonajesdelazul.blogspot.com/2025/02/la-esquina-del-fuego.html
 imageUrl: null
 ---
 

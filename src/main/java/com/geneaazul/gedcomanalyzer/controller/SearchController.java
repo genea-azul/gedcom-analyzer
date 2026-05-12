@@ -39,7 +39,6 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -83,11 +82,13 @@ public class SearchController {
 
         Optional<Long> searchId = Optional.empty();
 
-        if (properties.isStoreFamilySearch() && BooleanUtils.isNotFalse(searchFamilyDto.getPersist())) {
+        boolean shouldPersist = properties.isStoreFamilySearch() && BooleanUtils.isNotFalse(searchFamilyDto.getPersist());
+
+        if (shouldPersist) {
             searchId = familyService.persistFamilySearch(searchFamilyDto, obfuscateLiving, clientIpAddress.orElse(null));
         }
 
-        if (!clientIpAddress
+        if (shouldPersist && !clientIpAddress
                 .map(familyService::isAllowedSearch)
                 .orElse(true)) {
             SearchFamilyResultDto searchFamilyResult =  SearchFamilyResultDto.builder()
@@ -208,7 +209,7 @@ public class SearchController {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION,
                 ContentDisposition.attachment()
-                        .filename(familyTree.filename(), StandardCharsets.UTF_8)
+                        .filename(familyTree.filename())
                         .build()
                         .toString());
         headers.add(HttpHeaders.CONTENT_LANGUAGE, familyTree.locale().toString());
@@ -270,7 +271,7 @@ public class SearchController {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION,
                 ContentDisposition.attachment()
-                        .filename(familyTree.filename(), StandardCharsets.UTF_8)
+                        .filename(familyTree.filename())
                         .build()
                         .toString());
         headers.add(HttpHeaders.CONTENT_LANGUAGE, familyTree.locale().toString());
