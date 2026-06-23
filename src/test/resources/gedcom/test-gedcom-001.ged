@@ -180,7 +180,7 @@
 1 CHR
 2 DATE 15 MAR 1950
 2 PLAC Azul, Buenos Aires, Argentina
-2 NOTE This note should be stripped by displayOnlyBasic.
+2 NOTE Baptism record reference.
 1 DEAT Y
 2 DATE 10 FEB 2020
 2 PLAC Buenos Aires, Argentina
@@ -234,4 +234,5 @@
 1 WIFE @I16@
 1 CHIL @I21@
 1 CHIL @I22@
+0 @N1@ NOTE Test top-level note.
 0 TRLR
