@@ -116,13 +116,23 @@ public class GeneaAzulWebResources {
         COUNTRY_ISO.put("Rumania",              "RO");
     }
 
-    record SubGedcomConfig(Integer personId, boolean onlyDirectLineage, int maxPeopleInGedcomThreshold, int maxAscDistanceThreshold, int maxDescDistanceThreshold) {}
+    record SubGedcomConfig(
+            Integer personId,
+            boolean onlyDirectLineage,
+            @Nullable Integer maxPeopleInGedcomThreshold,
+            int maxAscDistanceThreshold,
+            int maxDescDistanceThreshold,
+            @Nullable Integer maxDescDistanceThresholdForAncestors,
+            boolean includeSpousesOfDescendantsA,
+            boolean includeSpousesOfDescendantsB) {}
 
     @Test
     public void generateWebSubGedcoms() throws IOException {
         // Add sub-gedcom configs here (person IDs to be provided):
         List<SubGedcomConfig> configs = List.of(
-                new SubGedcomConfig(512563, true, 250, 0, 4)
+                new SubGedcomConfig(512563, true, 0, 1, 4, null, true, true),
+                new SubGedcomConfig(572, true, 0, 1, 4, null, true, true),
+                new SubGedcomConfig(511661, true, 0, 1, 4, null, false, false)
         );
 
         Path outputDir = Path.of("../geneaazul-web/data/gedcom");
@@ -146,7 +156,10 @@ public class GeneaAzulWebResources {
                     config.personId(),
                     config.maxPeopleInGedcomThreshold(),
                     config.maxAscDistanceThreshold(),
-                    config.maxDescDistanceThreshold());
+                    config.maxDescDistanceThreshold(),
+                    config.maxDescDistanceThresholdForAncestors(),
+                    config.includeSpousesOfDescendantsA(),
+                    config.includeSpousesOfDescendantsB());
 
             String personLastname = gedcom.getPersonById(config.personId())
                     .getSurname()
