@@ -122,7 +122,7 @@ public class GeneaAzulWebResources {
     public void generateWebSubGedcoms() throws IOException {
         // Add sub-gedcom configs here (person IDs to be provided):
         List<SubGedcomConfig> configs = List.of(
-                new SubGedcomConfig(512563, false, 250, 0, 3)
+                new SubGedcomConfig(512563, true, 250, 0, 4)
         );
 
         Path outputDir = Path.of("../geneaazul-web/data/gedcom");
