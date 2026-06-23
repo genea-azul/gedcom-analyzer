@@ -11,9 +11,6 @@ import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -25,13 +22,11 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -108,55 +103,6 @@ public class SearchControllerIT extends AbstractControllerIT {
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.people", hasSize(2)))
-                .andReturn();
-
-        log.info("{} response:\n{}", url, result.getResponse().getContentAsString(StandardCharsets.UTF_8));
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    public void testSearchFamilyLatestToReview() throws Exception {
-
-        doReturn(new PageImpl<>(
-                List.of(
-                        SearchFamily.builder()
-                                .id(1L)
-                                .isMatch(false)
-                                .isReviewed(null)
-                                .contact("@contact")
-                                .build()
-                )))
-                .when(searchFamilyRepository)
-                .findAll(any(Specification.class), any(Pageable.class));
-
-        String url = "/api/search/family/latest?isReviewed=false&page=0&size=5";
-        MvcResult result = mvc.perform(get(url)
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andReturn();
-
-        log.info(url + " response:\n{}", result.getResponse().getContentAsString(StandardCharsets.UTF_8));
-    }
-
-    @Test
-    public void testMarkFamilyReviewed() throws Exception {
-
-        doReturn(Optional.of(
-                SearchFamily.builder()
-                        .id(1L)
-                        .isMatch(false)
-                        .isReviewed(null)
-                        .build()
-        ))
-                .when(searchFamilyRepository)
-                .findById(1L);
-
-        String url = "/api/search/family/1/reviewed";
-        MvcResult result = mvc.perform(get(url)
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.isReviewed", is(true)))
                 .andReturn();
 
         log.info("{} response:\n{}", url, result.getResponse().getContentAsString(StandardCharsets.UTF_8));

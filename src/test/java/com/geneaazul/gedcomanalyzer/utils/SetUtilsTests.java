@@ -64,6 +64,14 @@ class SetUtilsTests {
     }
 
     @Test
+    void merge_resultIsSorted() {
+        Set<String> s1 = Set.of("c", "d");
+        Set<String> s2 = Set.of("a", "b");
+        Set<String> merged = SetUtils.merge(s1, s2);
+        assertThat(merged).containsExactly("a", "b", "c", "d");
+    }
+
+    @Test
     void merge_combinesOverlappingSets() {
         Set<String> s1 = Set.of("a", "b");
         Set<String> s2 = Set.of("b", "c");

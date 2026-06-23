@@ -5,7 +5,10 @@ import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.Place;
+import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.Surname;
+import com.geneaazul.gedcomanalyzer.model.dto.AlivePersonFilter;
+import com.geneaazul.gedcomanalyzer.service.familytree.FamilyTreeHelper;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.NameUtils;
 
@@ -29,6 +32,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import jakarta.annotation.Nullable;
@@ -48,6 +52,10 @@ public class GeneaAzulWebResources {
     private SearchService searchService;
     @Autowired
     private SurnameService surnameService;
+    @Autowired
+    private FamilyTreeHelper familyTreeHelper;
+    @Autowired
+    private GedcomParsingService gedcomParsingService;
 
     private EnrichedGedcom gedcom;
 
@@ -106,6 +114,48 @@ public class GeneaAzulWebResources {
         COUNTRY_ISO.put("Nicaragua",            "NI");
         COUNTRY_ISO.put("República Dominicana", "DO");
         COUNTRY_ISO.put("Rumania",              "RO");
+    }
+
+    record SubGedcomConfig(Integer personId, boolean onlyDirectLineage, int maxPeopleInGedcomThreshold, int maxAscDistanceThreshold, int maxDescDistanceThreshold) {}
+
+    @Test
+    public void generateWebSubGedcoms() throws IOException {
+        // Add sub-gedcom configs here (person IDs to be provided):
+        List<SubGedcomConfig> configs = List.of(
+                new SubGedcomConfig(512563, false, 250, 0, 3)
+        );
+
+        Path outputDir = Path.of("../geneaazul-web/data/gedcom");
+        Files.createDirectories(outputDir);
+
+        for (SubGedcomConfig config : configs) {
+            EnrichedPerson person = Objects.requireNonNull(gedcom.getPersonById(config.personId()),
+                    "Person not found: I" + config.personId());
+
+            List<List<Relationship>> relationshipsList = familyTreeHelper.getRelationshipsWithNotInLawPriority(person);
+
+            System.out.printf("generateWebSubGedcoms: I%d %s — people in tree: %d%n",
+                    config.personId(), person.getDisplayName(), relationshipsList.size());
+
+            org.folg.gedcom.model.Gedcom subGedcom = gedcomParsingService.format(
+                    gedcom.getLegacyGedcom().get(),
+                    relationshipsList,
+                    AlivePersonFilter.SHOW_SURNAME_ONLY,
+                    true,
+                    config.onlyDirectLineage(),
+                    config.personId(),
+                    config.maxPeopleInGedcomThreshold(),
+                    config.maxAscDistanceThreshold(),
+                    config.maxDescDistanceThreshold());
+
+            String personLastname = gedcom.getPersonById(config.personId())
+                    .getSurname()
+                    .map(Surname::simplified)
+                    .orElseGet(() -> config.personId().toString());
+            Path output = outputDir.resolve("sub-gedcom-" + personLastname + ".ged");
+            gedcomParsingService.write(subGedcom, output);
+            System.out.println("Written: " + output.toAbsolutePath());
+        }
     }
 
     @Disabled

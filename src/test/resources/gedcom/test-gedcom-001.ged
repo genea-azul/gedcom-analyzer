@@ -172,6 +172,21 @@
 2 SURN Father A - Couple
 1 SEX M
 1 FAMC @F8@
+0 @I23@ INDI
+1 NAME Test Deceased /Family3/
+2 GIVN Test Deceased
+2 SURN Family3
+1 SEX M
+1 CHR
+2 DATE 15 MAR 1950
+2 PLAC Azul, Buenos Aires, Argentina
+2 NOTE This note should be stripped by displayOnlyBasic.
+1 DEAT Y
+2 DATE 10 FEB 2020
+2 PLAC Buenos Aires, Argentina
+1 BURI
+2 DATE 12 FEB 2020
+2 PLAC Buenos Aires, Argentina
 0 @F1@ FAM
 1 HUSB @I1@
 1 WIFE @I2@
@@ -179,12 +194,19 @@
 1 MARR
 2 DATE 15 JUL 2005
 2 PLAC Catedral Nuestra Señora del Rosario, Azul, Buenos Aires, Argentina
+1 DIV Y
+2 DATE 20 DEC 2010
+2 PLAC Azul, Buenos Aires, Argentina
 0 @F2@ FAM
 1 HUSB @I1@
 1 CHIL @I4@
 0 @F3@ FAM
 1 WIFE @I3@
 1 CHIL @I5@
+1 EVEN
+2 TYPE Separation
+2 DATE 20 MAR 2015
+2 PLAC Azul, Buenos Aires, Argentina
 0 @F4@ FAM
 1 HUSB @I7@
 1 WIFE @I6@

@@ -7,9 +7,10 @@ import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.ProfilePicture;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
-import com.geneaazul.gedcomanalyzer.model.dto.FamilyTreeGraphDto;
-import com.geneaazul.gedcomanalyzer.model.dto.FamilyTreeGraphDto.FamilyNodeDto;
+import com.geneaazul.gedcomanalyzer.model.dto.AlivePersonFilter;
 import com.geneaazul.gedcomanalyzer.model.dto.FamilyTreeGraphDto.PersonNodeDto;
+import com.geneaazul.gedcomanalyzer.utils.FamilyUtils;
+import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,10 +20,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.folg.gedcom.model.CharacterSet;
 import org.folg.gedcom.model.ChildRef;
 import org.folg.gedcom.model.DateTime;
+import org.folg.gedcom.model.EventFact;
 import org.folg.gedcom.model.Family;
 import org.folg.gedcom.model.Gedcom;
+import org.folg.gedcom.model.GedcomTag;
 import org.folg.gedcom.model.GedcomVersion;
 import org.folg.gedcom.model.Header;
+import org.folg.gedcom.model.Name;
 import org.folg.gedcom.model.ParentFamilyRef;
 import org.folg.gedcom.model.Person;
 import org.folg.gedcom.model.SpouseFamilyRef;
@@ -44,6 +48,7 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -55,6 +60,7 @@ import java.util.zip.ZipInputStream;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 
 @Slf4j
 @Service
@@ -160,6 +166,10 @@ public class GedcomParsingService {
     public Gedcom format(
             Gedcom gedcom,
             List<List<Relationship>> relationshipsList,
+            AlivePersonFilter alivePersonFilter,
+            boolean displayOnlyBasic,
+            boolean onlyDirectLineage,
+            @Nullable Integer rootPersonId,
             int maxPeopleInGedcomThreshold,
             int maxAscDistanceThreshold,
             int maxDescDistanceThreshold) {
@@ -170,9 +180,10 @@ public class GedcomParsingService {
         boolean includeSpousesOfDescendantsA = true;
         boolean includeSpousesOfDescendantsB = true;
 
-        //noinspection ConstantValue
         Set<String> personIds = relationshipsList
                 .stream()
+                .filter(l -> alivePersonFilter != AlivePersonFilter.SKIP || !l.getFirst().person().isAlive())
+                .filter(l -> !onlyDirectLineage || l.getFirst().isDirect())
                 .filter(l -> !trimGedcom
                         || l.getFirst().distanceToAncestorRootPerson() < maxAscDistanceThreshold
                         || l.getFirst().distanceToAncestorRootPerson() == maxAscDistanceThreshold
@@ -189,13 +200,24 @@ public class GedcomParsingService {
                 .map(id -> "I" + id)
                 .collect(Collectors.toUnmodifiableSet());
 
+        Set<String> alivePersonIds = alivePersonFilter == AlivePersonFilter.SHOW_SURNAME_ONLY
+                ? relationshipsList.stream()
+                        .map(List::getFirst)
+                        .map(Relationship::person)
+                        .filter(EnrichedPerson::isAlive)
+                        .map(ep -> "I" + ep.getId())
+                        .filter(personIds::contains)
+                        .collect(Collectors.toUnmodifiableSet())
+                : Set.of();
+
         List<Family> families = gedcom.getFamilies()
                 .stream()
                 .map(family -> copyFamily(
                         family,
                         family.getHusbandRefs().stream().filter(ref -> personIds.contains(ref.getRef())).toList(),
                         family.getWifeRefs().stream().filter(ref -> personIds.contains(ref.getRef())).toList(),
-                        family.getChildRefs().stream().filter(ref -> personIds.contains(ref.getRef())).toList()))
+                        family.getChildRefs().stream().filter(ref -> personIds.contains(ref.getRef())).toList(),
+                        displayOnlyBasic))
                 .filter(family -> {
                     if (family.getHusbandRefs().isEmpty() && family.getWifeRefs().isEmpty()) {
                         return false;
@@ -218,7 +240,9 @@ public class GedcomParsingService {
                 .map(person -> copyPerson(
                         person,
                         person.getParentFamilyRefs().stream().filter(ref -> familyIds.contains(ref.getRef())).toList(),
-                        person.getSpouseFamilyRefs().stream().filter(ref -> familyIds.contains(ref.getRef())).toList()))
+                        person.getSpouseFamilyRefs().stream().filter(ref -> familyIds.contains(ref.getRef())).toList(),
+                        alivePersonIds.contains(person.getId()),
+                        displayOnlyBasic))
                 .toList();
 
         Header header = new Header();
@@ -244,6 +268,10 @@ public class GedcomParsingService {
         newGedcom.setFamilies(families);
         newGedcom.createIndexes();
         newGedcom.updateReferences();
+
+        if (rootPersonId != null) {
+            setRootPerson(newGedcom, rootPersonId);
+        }
 
         if (trimGedcom) {
             log.warn("Gedcom was trimmed! people in tree: {}, max people threshold: {}, final people in tree: {}",
@@ -294,65 +322,161 @@ public class GedcomParsingService {
         }
     }
 
-    private static Family copyFamily(Family src, List<SpouseRef> husbandRefs, List<SpouseRef> wifeRefs, List<ChildRef> childRefs) {
+    private void setRootPerson(Gedcom gedcom, int personId) {
+        GedcomTag rootTag = new GedcomTag(null, "_ROOT", "I" + personId);
+        @SuppressWarnings("unchecked")
+        List<GedcomTag> existing = (List<GedcomTag>) gedcom.getHeader().getExtension(ModelParser.MORE_TAGS_EXTENSION_KEY);
+        List<GedcomTag> moreTags = existing != null ? new ArrayList<>(existing) : new ArrayList<>();
+        moreTags.add(rootTag);
+        gedcom.getHeader().putExtension(ModelParser.MORE_TAGS_EXTENSION_KEY, moreTags);
+    }
+
+    private static Family copyFamily(
+            Family src,
+            List<SpouseRef> husbandRefs,
+            List<SpouseRef> wifeRefs,
+            List<ChildRef> childRefs,
+            boolean displayOnlyBasic) {
         Family copy = new Family();
         copy.setId(src.getId());
         copy.setHusbandRefs(husbandRefs);
         copy.setWifeRefs(wifeRefs);
         copy.setChildRefs(childRefs);
-        copy.setEventsFacts(src.getEventsFacts());
-        copy.setLdsOrdinances(src.getLdsOrdinances());
-        copy.setReferenceNumbers(src.getReferenceNumbers());
-        copy.setRin(src.getRin());
-        copy.setChange(src.getChange());
-        copy.setUid(src.getUid());
-        copy.setUidTag(src.getUidTag());
-        copy.setSourceCitations(src.getSourceCitations());
-        copy.setMediaRefs(src.getMediaRefs());
-        copy.setMedia(src.getMedia());
-        copy.setNoteRefs(src.getNoteRefs());
-        copy.setNotes(src.getNotes());
-        Map<String, Object> extensions = src.getExtensions();
-        if (extensions != null) {
-            copy.setExtensions(extensions);
+        if (displayOnlyBasic) {
+            copy.setEventsFacts(basicFamilyEventFacts(src.getEventsFacts()));
+        } else {
+            copy.setEventsFacts(src.getEventsFacts());
+            copy.setLdsOrdinances(src.getLdsOrdinances());
+            copy.setReferenceNumbers(src.getReferenceNumbers());
+            copy.setRin(src.getRin());
+            copy.setChange(src.getChange());
+            copy.setUid(src.getUid());
+            copy.setUidTag(src.getUidTag());
+            copy.setSourceCitations(src.getSourceCitations());
+            copy.setMediaRefs(src.getMediaRefs());
+            copy.setMedia(src.getMedia());
+            copy.setNoteRefs(src.getNoteRefs());
+            copy.setNotes(src.getNotes());
+            Map<String, Object> extensions = src.getExtensions();
+            if (extensions != null) {
+                copy.setExtensions(extensions);
+            }
         }
         return copy;
     }
 
-    private static Person copyPerson(Person src, List<ParentFamilyRef> parentFamilyRefs, List<SpouseFamilyRef> spouseFamilyRefs) {
+    private static Person copyPerson(
+            Person src,
+            List<ParentFamilyRef> parentFamilyRefs,
+            List<SpouseFamilyRef> spouseFamilyRefs,
+            boolean showSurnameOnly,
+            boolean displayOnlyBasic) {
         Person copy = new Person();
         copy.setId(src.getId());
-        copy.setNames(src.getNames());
         copy.setParentFamilyRefs(parentFamilyRefs);
         copy.setSpouseFamilyRefs(spouseFamilyRefs);
-        copy.setAssociations(src.getAssociations());
-        copy.setAncestorInterestSubmitterRef(src.getAncestorInterestSubmitterRef());
-        copy.setDescendantInterestSubmitterRef(src.getDescendantInterestSubmitterRef());
-        copy.setRecordFileNumber(src.getRecordFileNumber());
-        copy.setAddress(src.getAddress());
-        copy.setPhone(src.getPhone());
-        copy.setFax(src.getFax());
-        copy.setEmail(src.getEmail());
-        copy.setEmailTag(src.getEmailTag());
-        copy.setWww(src.getWww());
-        copy.setWwwTag(src.getWwwTag());
-        copy.setEventsFacts(src.getEventsFacts());
-        copy.setLdsOrdinances(src.getLdsOrdinances());
-        copy.setReferenceNumbers(src.getReferenceNumbers());
-        copy.setRin(src.getRin());
-        copy.setChange(src.getChange());
-        copy.setUid(src.getUid());
-        copy.setUidTag(src.getUidTag());
-        copy.setSourceCitations(src.getSourceCitations());
-        copy.setMediaRefs(src.getMediaRefs());
-        copy.setMedia(src.getMedia());
-        copy.setNoteRefs(src.getNoteRefs());
-        copy.setNotes(src.getNotes());
-        Map<String, Object> extensions = src.getExtensions();
-        if (extensions != null) {
-            copy.setExtensions(extensions);
+        if (showSurnameOnly) {
+            copy.setNames(surnameOnlyNames(src.getNames()));
+        } else if (displayOnlyBasic) {
+            copy.setNames(basicNames(src.getNames()));
+            copy.setEventsFacts(basicPersonEventFacts(src.getEventsFacts()));
+            copy.setUid(src.getUid());
+            copy.setUidTag(src.getUidTag());
+        } else {
+            copy.setNames(src.getNames());
+            copy.setAssociations(src.getAssociations());
+            copy.setAncestorInterestSubmitterRef(src.getAncestorInterestSubmitterRef());
+            copy.setDescendantInterestSubmitterRef(src.getDescendantInterestSubmitterRef());
+            copy.setRecordFileNumber(src.getRecordFileNumber());
+            copy.setAddress(src.getAddress());
+            copy.setPhone(src.getPhone());
+            copy.setFax(src.getFax());
+            copy.setEmail(src.getEmail());
+            copy.setEmailTag(src.getEmailTag());
+            copy.setWww(src.getWww());
+            copy.setWwwTag(src.getWwwTag());
+            copy.setEventsFacts(src.getEventsFacts());
+            copy.setLdsOrdinances(src.getLdsOrdinances());
+            copy.setReferenceNumbers(src.getReferenceNumbers());
+            copy.setRin(src.getRin());
+            copy.setChange(src.getChange());
+            copy.setUid(src.getUid());
+            copy.setUidTag(src.getUidTag());
+            copy.setSourceCitations(src.getSourceCitations());
+            copy.setMediaRefs(src.getMediaRefs());
+            copy.setMedia(src.getMedia());
+            copy.setNoteRefs(src.getNoteRefs());
+            copy.setNotes(src.getNotes());
+            Map<String, Object> extensions = src.getExtensions();
+            if (extensions != null) {
+                copy.setExtensions(extensions);
+            }
         }
+        return copy;
+    }
+
+    private static List<Name> surnameOnlyNames(List<Name> names) {
+        return names.stream()
+                .map(n -> {
+                    Name copy = new Name();
+                    copy.setValue("<privado>");
+                    copy.setSurnamePrefix(n.getSurnamePrefix());
+                    copy.setSurname(n.getSurname());
+                    return copy;
+                })
+                .toList();
+    }
+
+    private static List<Name> basicNames(List<Name> names) {
+        return names.stream()
+                .map(n -> {
+                    Name copy = new Name();
+                    copy.setValue(n.getValue());
+                    copy.setPrefix(n.getPrefix());
+                    copy.setGiven(n.getGiven());
+                    copy.setNickname(n.getNickname());
+                    copy.setSurnamePrefix(n.getSurnamePrefix());
+                    copy.setSurname(n.getSurname());
+                    copy.setSuffix(n.getSuffix());
+                    return copy;
+                })
+                .toList();
+    }
+
+    private static List<EventFact> basicPersonEventFacts(List<EventFact> eventFacts) {
+        return eventFacts.stream()
+                .filter(ef -> PersonUtils.SEX_TAGS.contains(ef.getTag())
+                        || PersonUtils.BIRTH_TAGS.contains(ef.getTag())
+                        || PersonUtils.BAPTISM_TAGS.contains(ef.getTag())
+                        || PersonUtils.CHRISTENING_TAGS.contains(ef.getTag())
+                        || PersonUtils.DEATH_TAGS.contains(ef.getTag())
+                        || PersonUtils.BURIAL_TAGS.contains(ef.getTag()))
+                .map(GedcomParsingService::basicEventFact)
+                .toList();
+    }
+
+    private static List<EventFact> basicFamilyEventFacts(List<EventFact> eventFacts) {
+        return eventFacts.stream()
+                .filter(ef -> FamilyUtils.MARRIAGE_TAGS.contains(ef.getTag())
+                        || FamilyUtils.CIVIL_MARRIAGE_TAGS.contains(ef.getTag())
+                        || FamilyUtils.OTHER_MARRIAGE_TAGS.contains(ef.getTag())
+                        || FamilyUtils.DIVORCE_TAGS.contains(ef.getTag())
+                        || FamilyUtils.EVENT_TAGS.contains(ef.getTag())
+                                && (FamilyUtils.PARTNERS_EVENT_TYPES.contains(ef.getType())
+                                        || FamilyUtils.SEPARATION_EVENT_TYPES.contains(ef.getType())))
+                .map(GedcomParsingService::basicEventFact)
+                .toList();
+    }
+
+    private static EventFact basicEventFact(EventFact src) {
+        EventFact copy = new EventFact();
+        copy.setTag(src.getTag());
+        copy.setType(src.getType());
+        copy.setValue(src.getValue());
+        copy.setDate(src.getDate());
+        copy.setPlace(src.getPlace());
         return copy;
     }
 
 }
+

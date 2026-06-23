@@ -4,6 +4,7 @@ import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
+import com.geneaazul.gedcomanalyzer.model.dto.AlivePersonFilter;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,8 +13,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import org.folg.gedcom.model.ChildRef;
+import org.folg.gedcom.model.EventFact;
 import org.folg.gedcom.model.Family;
 import org.folg.gedcom.model.Gedcom;
+import org.folg.gedcom.model.Name;
 import org.folg.gedcom.model.ParentFamilyRef;
 import org.folg.gedcom.model.Person;
 import org.folg.gedcom.model.SpouseFamilyRef;
@@ -115,7 +118,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(1))),
                 List.of(Relationship.empty(person(2))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, 0, 10, 10);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 0, 10, 10);
 
         // Input object unchanged
         assertThat(childIds(originalF1)).isEqualTo(snapshotChildRefs);
@@ -137,7 +140,7 @@ class GedcomParsingServiceFormatTests {
 
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(3))));
 
-        gedcomParsingService.format(original, rels, 0, 10, 10);
+        gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 0, 10, 10);
 
         assertThat(husbandIds(originalF1)).isEqualTo(snapshotHusbands);
         assertThat(wifeIds(originalF1)).isEqualTo(snapshotWives);
@@ -157,7 +160,7 @@ class GedcomParsingServiceFormatTests {
 
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(3))));
 
-        gedcomParsingService.format(original, rels, 0, 10, 10);
+        gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 0, 10, 10);
 
         assertThat(parentFamilyIds(originalI3)).isEqualTo(snapshotFamc);
         assertThat(spouseFamilyIds(originalI3)).isEqualTo(snapshotFams);
@@ -173,7 +176,7 @@ class GedcomParsingServiceFormatTests {
                 .map(List::of)
                 .toList();
 
-        Gedcom result = gedcomParsingService.format(original, allPeople, 0, 10, 10);
+        Gedcom result = gedcomParsingService.format(original, allPeople, AlivePersonFilter.ALLOW, false, false, null, 0, 10, 10);
 
         assertThat(result.getPeople()).hasSameSizeAs(original.getPeople());
         assertThat(result.getFamilies()).hasSameSizeAs(original.getFamilies());
@@ -191,7 +194,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(3))),
                 List.of(Relationship.empty(person(4))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, 0, 10, 10);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 0, 10, 10);
 
         assertThat(result.getPeople()).hasSize(3);
         assertThat(result.getFamilies()).hasSize(1);
@@ -211,7 +214,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(2))),
                 List.of(Relationship.empty(person(3))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, 0, 10, 10);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 0, 10, 10);
 
         Family f1 = result.getFamily("F1");
         assertThat(f1).isNotNull();
@@ -228,7 +231,7 @@ class GedcomParsingServiceFormatTests {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(3))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, 0, 10, 10);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 0, 10, 10);
 
         assertThat(result.getPeople()).hasSize(1);
         assertThat(result.getFamilies()).isEmpty();
@@ -241,7 +244,7 @@ class GedcomParsingServiceFormatTests {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(2))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, 0, 10, 10);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 0, 10, 10);
 
         assertThat(result.getPeople()).hasSize(1);
         assertThat(result.getFamilies()).isEmpty();
@@ -257,7 +260,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(1))),
                 List.of(Relationship.empty(person(2))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, 0, 10, 10);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 0, 10, 10);
 
         assertThat(result.getFamilies()).hasSize(1);
         Family f1 = result.getFamily("F1");
@@ -279,7 +282,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(2))),
                 List.of(Relationship.empty(person(3))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, 0, 10, 10);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 0, 10, 10);
 
         assertThat(spouseFamilyIds(result.getPerson("I2"))).containsExactly("F1");
         assertThat(spouseFamilyIds(result.getPerson("I3"))).isEmpty();
@@ -295,7 +298,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(2))),
                 List.of(Relationship.empty(person(3))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, 0, 10, 10);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 0, 10, 10);
 
         assertThat(parentFamilyIds(result.getPerson("I3"))).containsExactly("F1");
         assertThat(parentFamilyIds(result.getPerson("I2"))).isEmpty();
@@ -308,7 +311,7 @@ class GedcomParsingServiceFormatTests {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(4))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, 0, 10, 10);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 0, 10, 10);
 
         assertThat(result.getPeople()).hasSize(1);
         assertThat(result.getFamilies()).isEmpty();
@@ -330,7 +333,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(rel(person(6), 10, 10)),
                 List.of(rel(person(7), 10, 10)));
 
-        Gedcom result = gedcomParsingService.format(original, rels, 4, 2, 2);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 4, 2, 2);
 
         Set<String> resultIds = result.getPeople().stream()
                 .map(Person::getId)
@@ -347,7 +350,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(rel(person(3), 0, 0)),
                 List.of(rel(person(4), 0, 0)));
 
-        Gedcom result = gedcomParsingService.format(original, rels, 5, 0, 0);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 5, 0, 0);
 
         assertThat(result.getPeople()).hasSize(3);
     }
@@ -361,7 +364,7 @@ class GedcomParsingServiceFormatTests {
                 .map(List::of)
                 .toList();
 
-        Gedcom result = gedcomParsingService.format(original, allPeople, 0, 1, 1);
+        Gedcom result = gedcomParsingService.format(original, allPeople, AlivePersonFilter.ALLOW, false, false, null, 0, 1, 1);
 
         assertThat(result.getPeople()).hasSameSizeAs(original.getPeople());
     }
@@ -373,11 +376,37 @@ class GedcomParsingServiceFormatTests {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(2))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, 0, 10, 10);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 0, 10, 10);
 
         assertThat(result.getHeader().getCharacterSet().getValue()).isEqualTo("UTF-8");
         assertThat(result.getHeader().getGedcomVersion().getVersion()).isEqualTo("5.5.1");
         assertThat(result.getHeader().getLanguage()).isEqualTo("Spanish");
+    }
+
+    @Test
+    void format_rootPersonId_writesRootExtensionToHeader() throws Exception {
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(2))));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, 2, 0, 10, 10);
+
+        @SuppressWarnings("unchecked")
+        List<org.folg.gedcom.model.GedcomTag> moreTags =
+                (List<org.folg.gedcom.model.GedcomTag>) result.getHeader()
+                        .getExtension(org.folg.gedcom.parser.ModelParser.MORE_TAGS_EXTENSION_KEY);
+        assertThat(moreTags).isNotNull().hasSize(1);
+        assertThat(moreTags.getFirst().getTag()).isEqualTo("_ROOT");
+        assertThat(moreTags.getFirst().getRef()).isEqualTo("I2");
+    }
+
+    @Test
+    void format_rootPersonId_null_doesNotWriteRootExtension() throws Exception {
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(2))));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 0, 10, 10);
+
+        assertThat(result.getHeader().getExtension(org.folg.gedcom.parser.ModelParser.MORE_TAGS_EXTENSION_KEY)).isNull();
     }
 
     @Test
@@ -388,7 +417,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(2))),
                 List.of(Relationship.empty(person(3))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, 0, 10, 10);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 0, 10, 10);
 
         assertThat(result.getFamily("F1")).isNotNull();
         assertThat(result.getPerson("I2")).isNotNull();
@@ -406,7 +435,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(3))));
 
         Path outputPath = tempDir.resolve("output.ged");
-        Gedcom result = gedcomParsingService.format(original, rels, 0, 10, 10);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 0, 10, 10);
         gedcomParsingService.write(result, outputPath);
 
         assertThat(outputPath).exists();
@@ -422,7 +451,7 @@ class GedcomParsingServiceFormatTests {
         Path outputPath = tempDir.resolve("output.ged");
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(2))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, 0, 10, 10);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 0, 10, 10);
         gedcomParsingService.write(result, outputPath);
 
         Gedcom reparsed = gedcomParsingService.parseGedcom(outputPath);
@@ -430,5 +459,387 @@ class GedcomParsingServiceFormatTests {
         assertThat(i2).isNotNull();
         assertThat(i2.getNames()).isNotEmpty();
         assertThat(i2.getNames().getFirst().getValue()).contains("Test Mother");
+    }
+
+    // ── onlyDirectLineage ─────────────────────────────────────────────────────
+    //
+    // isDirect() = distanceToAncestorRootPerson==0 (descendant) OR distanceToAncestorThisPerson==0 (direct ancestor).
+    // Collateral relatives (siblings, uncles, cousins) have both distances > 0 → excluded.
+
+    @Test
+    void format_onlyDirectLineage_excludesCollateralRelatives() throws Exception {
+        // I2 as "parent" (asc=1, desc=0) → isDirect → kept
+        // I3 as "sibling" (asc=1, desc=1) → not direct → excluded
+        // I4 as "uncle"   (asc=2, desc=1) → not direct → excluded
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(
+                List.of(rel(person(2), 1, 0)),
+                List.of(rel(person(3), 1, 1)),
+                List.of(rel(person(4), 2, 1)));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, true, null, 0, 10, 10);
+
+        assertThat(result.getPerson("I2")).isNotNull();
+        assertThat(result.getPerson("I3")).isNull();
+        assertThat(result.getPerson("I4")).isNull();
+    }
+
+    @Test
+    void format_onlyDirectLineage_includesDirectAncestorsAndDescendants() throws Exception {
+        // I2 as "parent" (asc=1, desc=0)      → isDirect → kept
+        // I3 as "grandparent" (asc=2, desc=0) → isDirect → kept
+        // I4 as "child" (asc=0, desc=1)       → isDirect → kept
+        // I5 as "grandchild" (asc=0, desc=2)  → isDirect → kept
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(
+                List.of(rel(person(2), 1, 0)),
+                List.of(rel(person(3), 2, 0)),
+                List.of(rel(person(4), 0, 1)),
+                List.of(rel(person(5), 0, 2)));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, true, null, 0, 10, 10);
+
+        assertThat(result.getPerson("I2")).isNotNull();
+        assertThat(result.getPerson("I3")).isNotNull();
+        assertThat(result.getPerson("I4")).isNotNull();
+        assertThat(result.getPerson("I5")).isNotNull();
+    }
+
+    @Test
+    void format_onlyDirectLineage_includesSpousesOfDirectAncestors() throws Exception {
+        // A spouse of an ancestor has distanceToAncestorThisPerson==0 and isInLaw==true → isDirect → kept.
+        Gedcom original = freshGedcom();
+        Relationship spouseOfParent = new Relationship(person(2), 1, 0, true, false, null, null, null, null);
+        List<List<Relationship>> rels = List.of(List.of(spouseOfParent));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, true, null, 0, 10, 10);
+
+        assertThat(result.getPerson("I2")).isNotNull();
+    }
+
+    @Test
+    void format_onlyDirectLineage_false_includesCollateralRelatives() throws Exception {
+        // With onlyDirectLineage=false (default), collateral relatives are not filtered out.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(
+                List.of(rel(person(3), 1, 1)),
+                List.of(rel(person(4), 2, 1)));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 0, 10, 10);
+
+        assertThat(result.getPerson("I3")).isNotNull();
+        assertThat(result.getPerson("I4")).isNotNull();
+    }
+
+    // ── AlivePersonFilter.SKIP ────────────────────────────────────────────────
+    //
+    // I1–I22 are alive; I23 (Test Deceased) has DEAT+BURI and is not alive.
+
+    @Test
+    void format_skip_excludesAllAlivePersonsAndTheirFamilies() throws Exception {
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(
+                List.of(Relationship.empty(person(1))),
+                List.of(Relationship.empty(person(2))),
+                List.of(Relationship.empty(person(3))));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SKIP, false, false, null, 0, 10, 10);
+
+        assertThat(result.getPeople()).isEmpty();
+        assertThat(result.getFamilies()).isEmpty();
+    }
+
+    // ── AlivePersonFilter.SHOW_SURNAME_ONLY ──────────────────────────────────
+
+    @Test
+    void format_showSurnameOnly_includesAlivePersonsInResult() throws Exception {
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(
+                List.of(Relationship.empty(person(1))),
+                List.of(Relationship.empty(person(2))),
+                List.of(Relationship.empty(person(3))));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SHOW_SURNAME_ONLY, false, false, null, 0, 10, 10);
+
+        // All 3 alive persons are still included.
+        assertThat(result.getPeople()).hasSize(3);
+    }
+
+    @Test
+    void format_showSurnameOnly_personNameContainsOnlySurname() throws Exception {
+        // I1: NAME "Test Father /Family1/", GIVN "Test Father", SURN "Family1"
+        // → after SHOW_SURNAME_ONLY: value is "<privado>", surname retained, given/prefix/suffix stripped.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SHOW_SURNAME_ONLY, false, false, null, 0, 10, 10);
+
+        Person i1 = result.getPerson("I1");
+        assertThat(i1.getNames()).isNotEmpty();
+        Name name = i1.getNames().getFirst();
+        assertThat(name.getValue()).isEqualTo("<privado>");
+        assertThat(name.getSurname()).isEqualTo("Family1");
+        assertThat(name.getGiven()).isNull();
+        assertThat(name.getNickname()).isNull();
+        assertThat(name.getPrefix()).isNull();
+        assertThat(name.getSuffix()).isNull();
+    }
+
+    @Test
+    void format_showSurnameOnly_noEventsOnAlivePersons() throws Exception {
+        // I2 has SEX, BIRT, RESI, EVEN — all stripped because person is alive.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(2))));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SHOW_SURNAME_ONLY, false, false, null, 0, 10, 10);
+
+        assertThat(result.getPerson("I2").getEventsFacts()).isEmpty();
+    }
+
+    @Test
+    void format_showSurnameOnly_familyStructurePreserved() throws Exception {
+        // Include I1+I2+I3 → F1 (husb=I1, wife=I2, chil=I3) must survive intact.
+        // F2 (husb=I1, chil=I4 excluded) and F3 (wife=I3, chil=I5 excluded) are dropped.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(
+                List.of(Relationship.empty(person(1))),
+                List.of(Relationship.empty(person(2))),
+                List.of(Relationship.empty(person(3))));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SHOW_SURNAME_ONLY, false, false, null, 0, 10, 10);
+
+        assertThat(result.getFamilies()).hasSize(1);
+        Family f1 = result.getFamily("F1");
+        assertThat(husbandIds(f1)).containsExactly("I1");
+        assertThat(wifeIds(f1)).containsExactly("I2");
+        assertThat(childIds(f1)).containsExactly("I3");
+    }
+
+    // ── displayOnlyBasic ─────────────────────────────────────────────────────
+
+    @Test
+    void format_displayOnlyBasic_stripsNonEssentialPersonEvents() throws Exception {
+        // I2 has: SEX, BIRT, RESI (with email sub-tag), EVEN (Personalidad destacada/Comment)
+        // Basic mode keeps only SEX + BIRT.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(2))));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, 0, 10, 10);
+
+        List<String> tags = result.getPerson("I2").getEventsFacts().stream().map(EventFact::getTag).toList();
+        assertThat(tags).containsExactlyInAnyOrder("SEX", "BIRT");
+    }
+
+    @Test
+    void format_displayOnlyBasic_keepsBaptismEvent() throws Exception {
+        // I3 has: SEX, BIRT, RESI, BAPM — basic mode keeps SEX + BIRT + BAPM, strips RESI.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(3))));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, 0, 10, 10);
+
+        List<String> tags = result.getPerson("I3").getEventsFacts().stream().map(EventFact::getTag).toList();
+        assertThat(tags).containsExactlyInAnyOrder("SEX", "BIRT", "BAPM");
+    }
+
+    @Test
+    void format_displayOnlyBasic_stripsNotesFromPersonBirthEvent() throws Exception {
+        // I1's BIRT has: DATE, PLAC, NOTE "Missing spouse references on purpose."
+        // Basic mode strips the note; date and place are preserved.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
+
+        // Confirm the original BIRT event actually has a note.
+        EventFact origBirt = original.getPerson("I1").getEventsFacts().stream()
+                .filter(e -> "BIRT".equals(e.getTag())).findFirst().orElseThrow();
+        assertThat(origBirt.getNotes()).isNotEmpty();
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, 0, 10, 10);
+
+        EventFact birt = result.getPerson("I1").getEventsFacts().stream()
+                .filter(e -> "BIRT".equals(e.getTag())).findFirst().orElseThrow();
+        assertThat(birt.getDate()).isEqualTo("01 JAN 1980");
+        assertThat(birt.getPlace()).isEqualTo("Azul, Buenos Aires, Argentina");
+        assertThat(birt.getNotes()).isEmpty();
+    }
+
+    @Test
+    void format_displayOnlyBasic_preservesPersonNameFields() throws Exception {
+        // I2's name: given="Test Mother", surname="Family2" — both must survive basic mode.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(2))));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, 0, 10, 10);
+
+        Name name = result.getPerson("I2").getNames().getFirst();
+        assertThat(name.getGiven()).isEqualTo("Test Mother");
+        assertThat(name.getSurname()).isEqualTo("Family2");
+        assertThat(name.getValue()).contains("Test Mother");
+    }
+
+    @Test
+    void format_displayOnlyBasic_keepsMarriageEventWithDateAndPlace() throws Exception {
+        // F1 has: MARR DATE "15 JUL 2005" + DIV DATE "20 DEC 2010"
+        // Basic mode keeps both events with date and place; notes/sources are stripped.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(
+                List.of(Relationship.empty(person(1))),
+                List.of(Relationship.empty(person(2))),
+                List.of(Relationship.empty(person(3))));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, 0, 10, 10);
+
+        Family f1 = result.getFamily("F1");
+        assertThat(f1).isNotNull();
+        assertThat(f1.getEventsFacts()).hasSize(2);
+        EventFact marr = f1.getEventsFacts().getFirst();
+        assertThat(marr.getTag()).isEqualTo("MARR");
+        assertThat(marr.getDate()).isEqualTo("15 JUL 2005");
+        assertThat(marr.getPlace()).startsWith("Catedral Nuestra Señora");
+        assertThat(marr.getNotes()).isEmpty();
+        assertThat(marr.getSourceCitations()).isEmpty();
+    }
+
+    @Test
+    void format_displayOnlyBasic_keepsDivorceEventWithDateAndPlace() throws Exception {
+        // F1 has: DIV Y DATE "20 DEC 2010", PLAC "Azul, Buenos Aires, Argentina"
+        // Basic mode must keep it; notes/sources are stripped.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(
+                List.of(Relationship.empty(person(1))),
+                List.of(Relationship.empty(person(2))),
+                List.of(Relationship.empty(person(3))));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, 0, 10, 10);
+
+        Family f1 = result.getFamily("F1");
+        assertThat(f1).isNotNull();
+        EventFact div = f1.getEventsFacts().stream()
+                .filter(e -> "DIV".equals(e.getTag())).findFirst().orElseThrow();
+        assertThat(div.getValue()).isEqualTo("Y");
+        assertThat(div.getDate()).isEqualTo("20 DEC 2010");
+        assertThat(div.getPlace()).isEqualTo("Azul, Buenos Aires, Argentina");
+        assertThat(div.getNotes()).isEmpty();
+    }
+
+    @Test
+    void format_displayOnlyBasic_keepsSeparationEventOnFamily() throws Exception {
+        // F3 has: EVEN TYPE="Separation" DATE "20 MAR 2015" — must survive the basic filter.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(
+                List.of(Relationship.empty(person(3))),
+                List.of(Relationship.empty(person(5))));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, 0, 10, 10);
+
+        Family f3 = result.getFamily("F3");
+        assertThat(f3).isNotNull();
+        assertThat(f3.getEventsFacts()).hasSize(1);
+        EventFact sep = f3.getEventsFacts().getFirst();
+        assertThat(sep.getTag()).isEqualTo("EVEN");
+        assertThat(sep.getType()).isEqualTo("Separation");
+        assertThat(sep.getDate()).isEqualTo("20 MAR 2015");
+        assertThat(sep.getNotes()).isEmpty();
+    }
+
+    @Test
+    void format_displayOnlyBasic_keepsChristeningEventAndStripsItsNote() throws Exception {
+        // I23 has CHR DATE "15 MAR 1950" with an inline NOTE — basic mode keeps CHR, strips NOTE.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(23))));
+
+        EventFact origChr = original.getPerson("I23").getEventsFacts().stream()
+                .filter(e -> "CHR".equals(e.getTag())).findFirst().orElseThrow();
+        assertThat(origChr.getNotes()).isNotEmpty();
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, 0, 10, 10);
+
+        EventFact chr = result.getPerson("I23").getEventsFacts().stream()
+                .filter(e -> "CHR".equals(e.getTag())).findFirst().orElseThrow();
+        assertThat(chr.getDate()).isEqualTo("15 MAR 1950");
+        assertThat(chr.getPlace()).isEqualTo("Azul, Buenos Aires, Argentina");
+        assertThat(chr.getNotes()).isEmpty();
+    }
+
+    @Test
+    void format_displayOnlyBasic_keepsDeathAndBurialEvents() throws Exception {
+        // I23 has DEAT Y DATE "10 FEB 2020" and BURI DATE "12 FEB 2020" — both must survive.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(23))));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, 0, 10, 10);
+
+        List<String> tags = result.getPerson("I23").getEventsFacts().stream().map(EventFact::getTag).toList();
+        assertThat(tags).containsExactlyInAnyOrder("SEX", "CHR", "DEAT", "BURI");
+
+        EventFact deat = result.getPerson("I23").getEventsFacts().stream()
+                .filter(e -> "DEAT".equals(e.getTag())).findFirst().orElseThrow();
+        assertThat(deat.getValue()).isEqualTo("Y");
+        assertThat(deat.getDate()).isEqualTo("10 FEB 2020");
+
+        EventFact buri = result.getPerson("I23").getEventsFacts().stream()
+                .filter(e -> "BURI".equals(e.getTag())).findFirst().orElseThrow();
+        assertThat(buri.getDate()).isEqualTo("12 FEB 2020");
+    }
+
+    @Test
+    void format_skip_excludesAlivePersonButIncludesDeceased() throws Exception {
+        // I1 is alive → SKIP excludes; I23 has DEAT → not alive → SKIP keeps.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(
+                List.of(Relationship.empty(person(1))),
+                List.of(Relationship.empty(person(23))));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SKIP, false, false, null, 0, 10, 10);
+
+        assertThat(result.getPerson("I1")).isNull();
+        assertThat(result.getPerson("I23")).isNotNull();
+    }
+
+    @Test
+    void format_displayOnlyBasic_familyWithNoMarriageEventHasEmptyEvents() throws Exception {
+        // F2 has no MARR/MARL/MARB event → after basic filter, family events are empty.
+        // F2: HUSB I1, CHIL I4 → kept (spouse + child present).
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(
+                List.of(Relationship.empty(person(1))),
+                List.of(Relationship.empty(person(4))));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, 0, 10, 10);
+
+        assertThat(result.getFamily("F2")).isNotNull();
+        assertThat(result.getFamily("F2").getEventsFacts()).isEmpty();
+    }
+
+    @Test
+    void format_displayOnlyBasic_and_skip_combined_emptyResultWhenAllAlive() throws Exception {
+        // The typical web sub-gedcom combination: SKIP + basic.
+        // I1, I2, I3 are alive → SKIP excludes them → result is empty.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(
+                List.of(Relationship.empty(person(1))),
+                List.of(Relationship.empty(person(2))),
+                List.of(Relationship.empty(person(3))));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SKIP, true, false, null, 0, 10, 10);
+
+        assertThat(result.getPeople()).isEmpty();
+        assertThat(result.getFamilies()).isEmpty();
+    }
+
+    @Test
+    void format_displayOnlyBasic_showSurnameOnly_combinedStripsEventsAndGivenName() throws Exception {
+        // SHOW_SURNAME_ONLY + displayOnlyBasic: alive persons get surname-only names AND no events.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(2))));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SHOW_SURNAME_ONLY, true, false, null, 0, 10, 10);
+
+        Person i2 = result.getPerson("I2");
+        assertThat(i2.getNames()).isNotEmpty();
+        assertThat(i2.getNames().getFirst().getValue()).isEqualTo("<privado>");
+        assertThat(i2.getNames().getFirst().getSurname()).isEqualTo("Family2");
+        assertThat(i2.getNames().getFirst().getGiven()).isNull();
+        assertThat(i2.getEventsFacts()).isEmpty();
     }
 }
