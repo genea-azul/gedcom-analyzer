@@ -212,12 +212,17 @@ public class GedcomParsingService {
 
         List<Family> families = gedcom.getFamilies()
                 .stream()
-                .map(family -> copyFamily(
-                        family,
-                        family.getHusbandRefs().stream().filter(ref -> personIds.contains(ref.getRef())).toList(),
-                        family.getWifeRefs().stream().filter(ref -> personIds.contains(ref.getRef())).toList(),
-                        family.getChildRefs().stream().filter(ref -> personIds.contains(ref.getRef())).toList(),
-                        displayOnlyBasic))
+                .map(family -> {
+                    List<SpouseRef> husbandRefs = family.getHusbandRefs().stream().filter(ref -> personIds.contains(ref.getRef())).toList();
+                    List<SpouseRef> wifeRefs = family.getWifeRefs().stream().filter(ref -> personIds.contains(ref.getRef())).toList();
+                    List<ChildRef> childRefs = family.getChildRefs().stream().filter(ref -> personIds.contains(ref.getRef())).toList();
+                    boolean stripFamilyEvents = alivePersonFilter == AlivePersonFilter.SHOW_SURNAME_ONLY
+                            && !husbandRefs.isEmpty()
+                            && !wifeRefs.isEmpty()
+                            && husbandRefs.stream().allMatch(ref -> alivePersonIds.contains(ref.getRef()))
+                            && wifeRefs.stream().allMatch(ref -> alivePersonIds.contains(ref.getRef()));
+                    return copyFamily(family, husbandRefs, wifeRefs, childRefs, displayOnlyBasic, stripFamilyEvents);
+                })
                 .filter(family -> {
                     if (family.getHusbandRefs().isEmpty() && family.getWifeRefs().isEmpty()) {
                         return false;
@@ -336,13 +341,16 @@ public class GedcomParsingService {
             List<SpouseRef> husbandRefs,
             List<SpouseRef> wifeRefs,
             List<ChildRef> childRefs,
-            boolean displayOnlyBasic) {
+            boolean displayOnlyBasic,
+            boolean stripFamilyEvents) {
         Family copy = new Family();
         copy.setId(src.getId());
         copy.setHusbandRefs(husbandRefs);
         copy.setWifeRefs(wifeRefs);
         copy.setChildRefs(childRefs);
-        if (displayOnlyBasic) {
+        if (stripFamilyEvents) {
+            // no events
+        } else if (displayOnlyBasic) {
             copy.setEventsFacts(basicFamilyEventFacts(src.getEventsFacts()));
         } else {
             copy.setEventsFacts(src.getEventsFacts());
@@ -419,7 +427,13 @@ public class GedcomParsingService {
         return names.stream()
                 .map(n -> {
                     Name copy = new Name();
-                    copy.setValue("<privado>");
+                    String surname = n.getSurname();
+                    if (StringUtils.isNotBlank(surname)) {
+                        copy.setValue("<privado> /" + surname + "/");
+                    } else {
+                        copy.setValue("<privado>");
+                    }
+                    copy.setGiven("<privado>");
                     copy.setSurnamePrefix(n.getSurnamePrefix());
                     copy.setSurname(n.getSurname());
                     return copy;

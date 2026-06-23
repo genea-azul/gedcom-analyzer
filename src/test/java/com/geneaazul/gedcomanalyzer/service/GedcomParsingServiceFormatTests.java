@@ -568,7 +568,7 @@ class GedcomParsingServiceFormatTests {
     @Test
     void format_showSurnameOnly_personNameContainsOnlySurname() throws Exception {
         // I1: NAME "Test Father /Family1/", GIVN "Test Father", SURN "Family1"
-        // → after SHOW_SURNAME_ONLY: value is "<privado>", surname retained, given/prefix/suffix stripped.
+        // → after SHOW_SURNAME_ONLY: value is "<privado> /Family1/", given is "<privado>", surname retained, prefix/suffix stripped.
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
 
@@ -577,9 +577,9 @@ class GedcomParsingServiceFormatTests {
         Person i1 = result.getPerson("I1");
         assertThat(i1.getNames()).isNotEmpty();
         Name name = i1.getNames().getFirst();
-        assertThat(name.getValue()).isEqualTo("<privado>");
+        assertThat(name.getValue()).isEqualTo("<privado> /Family1/");
         assertThat(name.getSurname()).isEqualTo("Family1");
-        assertThat(name.getGiven()).isNull();
+        assertThat(name.getGiven()).isEqualTo("<privado>");
         assertThat(name.getNickname()).isNull();
         assertThat(name.getPrefix()).isNull();
         assertThat(name.getSuffix()).isNull();
@@ -598,7 +598,7 @@ class GedcomParsingServiceFormatTests {
 
     @Test
     void format_showSurnameOnly_familyStructurePreserved() throws Exception {
-        // Include I1+I2+I3 → F1 (husb=I1, wife=I2, chil=I3) must survive intact.
+        // Include I1+I2+I3 → F1 (husb=I1, wife=I2, chil=I3) survives.
         // F2 (husb=I1, chil=I4 excluded) and F3 (wife=I3, chil=I5 excluded) are dropped.
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(
@@ -613,6 +613,21 @@ class GedcomParsingServiceFormatTests {
         assertThat(husbandIds(f1)).containsExactly("I1");
         assertThat(wifeIds(f1)).containsExactly("I2");
         assertThat(childIds(f1)).containsExactly("I3");
+    }
+
+    @Test
+    void format_showSurnameOnly_familyEventsStrippedWhenBothSpousesAlive() throws Exception {
+        // F1 has husb=I1 (alive) and wife=I2 (alive) → events must be stripped.
+        // Original F1 has MARR and DIV events.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(
+                List.of(Relationship.empty(person(1))),
+                List.of(Relationship.empty(person(2))),
+                List.of(Relationship.empty(person(3))));
+
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SHOW_SURNAME_ONLY, false, false, null, 0, 10, 10);
+
+        assertThat(result.getFamily("F1").getEventsFacts()).isEmpty();
     }
 
     // ── displayOnlyBasic ─────────────────────────────────────────────────────
@@ -837,9 +852,9 @@ class GedcomParsingServiceFormatTests {
 
         Person i2 = result.getPerson("I2");
         assertThat(i2.getNames()).isNotEmpty();
-        assertThat(i2.getNames().getFirst().getValue()).isEqualTo("<privado>");
+        assertThat(i2.getNames().getFirst().getValue()).isEqualTo("<privado> /Family2/");
         assertThat(i2.getNames().getFirst().getSurname()).isEqualTo("Family2");
-        assertThat(i2.getNames().getFirst().getGiven()).isNull();
+        assertThat(i2.getNames().getFirst().getGiven()).isEqualTo("<privado>");
         assertThat(i2.getEventsFacts()).isEmpty();
     }
 }
