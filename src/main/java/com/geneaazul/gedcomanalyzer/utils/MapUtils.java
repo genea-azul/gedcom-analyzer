@@ -85,7 +85,7 @@ public class MapUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T, M extends Map<String, Set<T>>> M merge(M m1, M m2) {
+    public static <T extends Comparable<? super T>, M extends Map<String, Set<T>>> M merge(M m1, M m2) {
         if (m1 == m2) {
             return m1;
         }

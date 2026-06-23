@@ -11,6 +11,7 @@ import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.Surname;
+import com.geneaazul.gedcomanalyzer.model.dto.AlivePersonFilter;
 import com.geneaazul.gedcomanalyzer.model.dto.RelationshipDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.service.familytree.FamilyTreeHelper;
@@ -716,6 +717,10 @@ public class HighLoadCalculationsTests {
         org.folg.gedcom.model.Gedcom subGedcom = gedcomParsingService.format(
                 gedcom.getLegacyGedcom().get(),
                 relationshipsList,
+                AlivePersonFilter.ALLOW,
+                false,
+                false,
+                null,
                 250,
                 4,
                 3);

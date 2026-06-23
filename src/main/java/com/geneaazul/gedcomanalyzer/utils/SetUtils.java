@@ -1,6 +1,8 @@
 package com.geneaazul.gedcomanalyzer.utils;
 
+import java.util.Collections;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -10,7 +12,7 @@ import lombok.experimental.UtilityClass;
 public class SetUtils {
 
     @SuppressWarnings("unchecked")
-    public static <T, S extends Set<T>> S merge(S s1, S s2) {
+    public static <T extends Comparable<? super T>, S extends Set<T>> S merge(S s1, S s2) {
         if (s1 == s2) {
             return s1;
         }
@@ -26,9 +28,9 @@ public class SetUtils {
         if (s2.size() > s1.size() && s2.containsAll(s1)) {
             return s2;
         }
-        return (S) Stream
-                .concat(s1.stream(), s2.stream())
-                .collect(Collectors.toUnmodifiableSet());
+        TreeSet<T> sorted = Stream.concat(s1.stream(), s2.stream())
+                .collect(Collectors.toCollection(TreeSet::new));
+        return (S) Collections.unmodifiableSet(sorted);
     }
 
     public static <T> boolean containsAll(Set<T> s1, Set<T> s2) {
