@@ -1,6 +1,5 @@
 package com.geneaazul.gedcomanalyzer.service;
 
-import tools.jackson.databind.ObjectMapper;
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.domain.TreeBuilderSubmission;
 import com.geneaazul.gedcomanalyzer.model.dto.TreeBuilderPersonDto;
@@ -16,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.OffsetDateTime;
 import java.util.List;
