@@ -194,6 +194,9 @@ public class GedcomParsingService {
      * @param distantAncestorDescLimit desc cap for ancestors beyond the main asc range (null = disabled, i.e. no ancestor overflow)
      * @param includeInLawsAtMaxDescDepth if false, in-law relatives at exactly {@code desc == maxDescDepth} are excluded
      * @param includeInLawsAtMaxAscDepth if false, in-law relatives at exactly {@code asc == maxAscDepth} are excluded
+     * @param maxCollateralDescDepth null = no restriction on collateral relatives; N &gt;= 0 = exclude all
+     *                               non-direct in-law entries and restrict non-direct blood entries to
+     *                               {@code desc &le; N}; has no effect when {@code directLineageOnly} is true
      * @return filtered sub-GEDCOM ready to be written
      */
     public Gedcom format(
