@@ -124,7 +124,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(1))),
                 List.of(Relationship.empty(person(2))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true, null);
 
         // Input object unchanged
         assertThat(childIds(originalF1)).isEqualTo(snapshotChildRefs);
@@ -146,7 +146,7 @@ class GedcomParsingServiceFormatTests {
 
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(3))));
 
-        gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true);
+        gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true, null);
 
         assertThat(husbandIds(originalF1)).isEqualTo(snapshotHusbands);
         assertThat(wifeIds(originalF1)).isEqualTo(snapshotWives);
@@ -166,7 +166,7 @@ class GedcomParsingServiceFormatTests {
 
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(3))));
 
-        gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true);
+        gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true, null);
 
         assertThat(parentFamilyIds(originalI3)).isEqualTo(snapshotFamc);
         assertThat(spouseFamilyIds(originalI3)).isEqualTo(snapshotFams);
@@ -182,7 +182,7 @@ class GedcomParsingServiceFormatTests {
                 .map(List::of)
                 .toList();
 
-        Gedcom result = gedcomParsingService.format(original, allPeople, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, allPeople, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true, null);
 
         assertThat(result.getPeople()).hasSameSizeAs(original.getPeople());
         assertThat(result.getFamilies()).hasSameSizeAs(original.getFamilies());
@@ -200,7 +200,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(3))),
                 List.of(Relationship.empty(person(4))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true, null);
 
         assertThat(result.getPeople()).hasSize(3);
         assertThat(result.getFamilies()).hasSize(1);
@@ -220,7 +220,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(2))),
                 List.of(Relationship.empty(person(3))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true, null);
 
         Family f1 = result.getFamily("F1");
         assertThat(f1).isNotNull();
@@ -237,7 +237,7 @@ class GedcomParsingServiceFormatTests {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(3))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true, null);
 
         assertThat(result.getPeople()).hasSize(1);
         assertThat(result.getFamilies()).isEmpty();
@@ -250,7 +250,7 @@ class GedcomParsingServiceFormatTests {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(2))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true, null);
 
         assertThat(result.getPeople()).hasSize(1);
         assertThat(result.getFamilies()).isEmpty();
@@ -266,7 +266,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(1))),
                 List.of(Relationship.empty(person(2))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true, null);
 
         assertThat(result.getFamilies()).hasSize(1);
         Family f1 = result.getFamily("F1");
@@ -288,7 +288,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(2))),
                 List.of(Relationship.empty(person(3))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true, null);
 
         assertThat(spouseFamilyIds(result.getPerson("I2"))).containsExactly("F1");
         assertThat(spouseFamilyIds(result.getPerson("I3"))).isEmpty();
@@ -304,7 +304,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(2))),
                 List.of(Relationship.empty(person(3))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true, null);
 
         assertThat(parentFamilyIds(result.getPerson("I3"))).containsExactly("F1");
         assertThat(parentFamilyIds(result.getPerson("I2"))).isEmpty();
@@ -317,7 +317,7 @@ class GedcomParsingServiceFormatTests {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(4))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true, null);
 
         assertThat(result.getPeople()).hasSize(1);
         assertThat(result.getFamilies()).isEmpty();
@@ -339,7 +339,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(rel(person(6), 10, 10)),
                 List.of(rel(person(7), 10, 10)));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 4, 2, 2, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 4, 2, 2, null, true, true, null);
 
         Set<String> resultIds = result.getPeople().stream()
                 .map(Person::getId)
@@ -356,7 +356,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(rel(person(2), 2, 2)),
                 List.of(rel(person(3), 2, 3)));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 1, 2, 2, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 1, 2, 2, null, true, true, null);
 
         Set<String> resultIds = result.getPeople().stream().map(Person::getId).collect(Collectors.toSet());
         assertThat(resultIds).containsExactly("I2");
@@ -371,7 +371,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(rel(person(3), 3, 0)),   // asc > maxAsc, desc=0 → excluded
                 List.of(rel(person(4), 3, 1)));  // asc > maxAsc, desc=1 → excluded
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 2, 2, 2, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 2, 2, 2, null, true, true, null);
 
         Set<String> resultIds = result.getPeople().stream().map(Person::getId).collect(Collectors.toSet());
         assertThat(resultIds).containsExactly("I2");
@@ -385,7 +385,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(rel(person(2), 1, 2)),   // asc=1 < maxAsc=2, desc=2 == maxDesc → included
                 List.of(rel(person(3), 1, 3)));   // asc=1 < maxAsc=2, desc=3 > maxDesc=2 → excluded
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 1, 2, 2, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 1, 2, 2, null, true, true, null);
 
         Set<String> resultIds = result.getPeople().stream().map(Person::getId).collect(Collectors.toSet());
         assertThat(resultIds).containsExactly("I2");
@@ -400,7 +400,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(rel(person(3), 0, 0)),
                 List.of(rel(person(4), 0, 0)));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 5, 0, 0, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 5, 0, 0, null, true, true, null);
 
         assertThat(result.getPeople()).hasSize(3);
     }
@@ -414,7 +414,7 @@ class GedcomParsingServiceFormatTests {
                 .map(List::of)
                 .toList();
 
-        Gedcom result = gedcomParsingService.format(original, allPeople, AlivePersonFilter.ALLOW, false, false, null, null, 1, 1, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, allPeople, AlivePersonFilter.ALLOW, false, false, null, null, 1, 1, null, true, true, null);
 
         assertThat(result.getPeople()).hasSameSizeAs(original.getPeople());
     }
@@ -427,7 +427,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(rel(person(2), 0, 0)),   // desc=0 ≤ maxDesc=0 → included
                 List.of(rel(person(3), 0, 1)));   // desc=1 > maxDesc=0 → excluded
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 0, 5, 0, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 0, 5, 0, null, true, true, null);
 
         Set<String> resultIds = result.getPeople().stream().map(Person::getId).collect(Collectors.toSet());
         assertThat(resultIds).containsExactly("I2");
@@ -449,7 +449,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(rel(person(4), 2, 1)),
                 List.of(rel(person(5), 2, 2)));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 3, 1, 2, 1, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 3, 1, 2, 1, true, true, null);
 
         Set<String> resultIds = result.getPeople().stream().map(Person::getId).collect(Collectors.toSet());
         assertThat(resultIds).containsExactlyInAnyOrder("I2", "I3", "I4");
@@ -465,7 +465,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(rel(person(3), 2, 0)),
                 List.of(rel(person(4), 2, 1)));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 2, 1, 2, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 2, 1, 2, null, true, true, null);
 
         Set<String> resultIds = result.getPeople().stream().map(Person::getId).collect(Collectors.toSet());
         assertThat(resultIds).containsExactly("I2");
@@ -487,7 +487,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(inLaw(person(4), 1, 1)),
                 List.of(inLaw(person(5), 1, 2)));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 3, 2, 2, null, false, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 3, 2, 2, null, false, true, null);
 
         Set<String> resultIds = result.getPeople().stream().map(Person::getId).collect(Collectors.toSet());
         assertThat(resultIds).containsExactlyInAnyOrder("I2", "I3", "I4");
@@ -505,7 +505,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(rel(person(3), 2, 1)),
                 List.of(inLaw(person(4), 2, 1)));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 2, 2, 2, null, true, false);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, 2, 2, 2, null, true, false, null);
 
         Set<String> resultIds = result.getPeople().stream().map(Person::getId).collect(Collectors.toSet());
         assertThat(resultIds).containsExactlyInAnyOrder("I2", "I3");
@@ -518,7 +518,7 @@ class GedcomParsingServiceFormatTests {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(2))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true, null);
 
         assertThat(result.getHeader().getCharacterSet().getValue()).isEqualTo("UTF-8");
         assertThat(result.getHeader().getGedcomVersion().getVersion()).isEqualTo("5.5.1");
@@ -530,7 +530,7 @@ class GedcomParsingServiceFormatTests {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(2))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, 2, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, 2, null, 10, 10, null, true, true, null);
 
         @SuppressWarnings("unchecked")
         List<org.folg.gedcom.model.GedcomTag> moreTags =
@@ -546,7 +546,7 @@ class GedcomParsingServiceFormatTests {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(2))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true, null);
 
         assertThat(result.getHeader().getExtension(org.folg.gedcom.parser.ModelParser.MORE_TAGS_EXTENSION_KEY)).isNull();
     }
@@ -559,7 +559,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(2))),
                 List.of(Relationship.empty(person(3))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true, null);
 
         assertThat(result.getFamily("F1")).isNotNull();
         assertThat(result.getPerson("I2")).isNotNull();
@@ -577,7 +577,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(3))));
 
         Path outputPath = tempDir.resolve("output.ged");
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true, null);
         gedcomParsingService.write(result, outputPath);
 
         assertThat(outputPath).exists();
@@ -593,7 +593,7 @@ class GedcomParsingServiceFormatTests {
         Path outputPath = tempDir.resolve("output.ged");
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(2))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true, null);
         gedcomParsingService.write(result, outputPath);
 
         Gedcom reparsed = gedcomParsingService.parseGedcom(outputPath);
@@ -619,7 +619,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(rel(person(3), 1, 1)),
                 List.of(rel(person(4), 2, 1)));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, true, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, true, null, null, 10, 10, null, true, true, null);
 
         assertThat(result.getPerson("I2")).isNotNull();
         assertThat(result.getPerson("I3")).isNull();
@@ -639,7 +639,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(rel(person(4), 0, 1)),
                 List.of(rel(person(5), 0, 2)));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, true, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, true, null, null, 10, 10, null, true, true, null);
 
         assertThat(result.getPerson("I2")).isNotNull();
         assertThat(result.getPerson("I3")).isNotNull();
@@ -654,7 +654,7 @@ class GedcomParsingServiceFormatTests {
         Relationship spouseOfParent = new Relationship(person(2), 1, 0, true, false, false, null, null, null, null);
         List<List<Relationship>> rels = List.of(List.of(spouseOfParent));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, true, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, true, null, null, 10, 10, null, true, true, null);
 
         assertThat(result.getPerson("I2")).isNotNull();
     }
@@ -667,7 +667,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(rel(person(3), 1, 1)),
                 List.of(rel(person(4), 2, 1)));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true, null);
 
         assertThat(result.getPerson("I3")).isNotNull();
         assertThat(result.getPerson("I4")).isNotNull();
@@ -685,7 +685,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(2))),
                 List.of(Relationship.empty(person(3))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SKIP, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SKIP, false, false, null, null, 10, 10, null, true, true, null);
 
         assertThat(result.getPeople()).isEmpty();
         assertThat(result.getFamilies()).isEmpty();
@@ -701,7 +701,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(2))),
                 List.of(Relationship.empty(person(3))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SHOW_SURNAME_ONLY, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SHOW_SURNAME_ONLY, false, false, null, null, 10, 10, null, true, true, null);
 
         // All 3 alive persons are still included.
         assertThat(result.getPeople()).hasSize(3);
@@ -714,7 +714,7 @@ class GedcomParsingServiceFormatTests {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SHOW_SURNAME_ONLY, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SHOW_SURNAME_ONLY, false, false, null, null, 10, 10, null, true, true, null);
 
         Person i1 = result.getPerson("I1");
         assertThat(i1.getNames()).isNotEmpty();
@@ -733,7 +733,7 @@ class GedcomParsingServiceFormatTests {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(2))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SHOW_SURNAME_ONLY, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SHOW_SURNAME_ONLY, false, false, null, null, 10, 10, null, true, true, null);
 
         assertThat(result.getPerson("I2").getEventsFacts()).isEmpty();
     }
@@ -748,7 +748,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(2))),
                 List.of(Relationship.empty(person(3))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SHOW_SURNAME_ONLY, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SHOW_SURNAME_ONLY, false, false, null, null, 10, 10, null, true, true, null);
 
         assertThat(result.getFamilies()).hasSize(1);
         Family f1 = result.getFamily("F1");
@@ -767,7 +767,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(2))),
                 List.of(Relationship.empty(person(3))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SHOW_SURNAME_ONLY, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SHOW_SURNAME_ONLY, false, false, null, null, 10, 10, null, true, true, null);
 
         assertThat(result.getFamily("F1").getEventsFacts()).isEmpty();
     }
@@ -781,7 +781,7 @@ class GedcomParsingServiceFormatTests {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(2))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, null, 10, 10, null, true, true, null);
 
         List<String> tags = result.getPerson("I2").getEventsFacts().stream().map(EventFact::getTag).toList();
         assertThat(tags).containsExactlyInAnyOrder("SEX", "BIRT");
@@ -793,7 +793,7 @@ class GedcomParsingServiceFormatTests {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(3))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, null, 10, 10, null, true, true, null);
 
         List<String> tags = result.getPerson("I3").getEventsFacts().stream().map(EventFact::getTag).toList();
         assertThat(tags).containsExactlyInAnyOrder("SEX", "BIRT", "BAPM");
@@ -806,7 +806,7 @@ class GedcomParsingServiceFormatTests {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, null, 10, 10, null, true, true, null);
 
         EventFact birt = result.getPerson("I1").getEventsFacts().stream()
                 .filter(e -> "BIRT".equals(e.getTag())).findFirst().orElseThrow();
@@ -822,7 +822,7 @@ class GedcomParsingServiceFormatTests {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(2))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, null, 10, 10, null, true, true, null);
 
         Name name = result.getPerson("I2").getNames().getFirst();
         assertThat(name.getGiven()).isEqualTo("Test Mother");
@@ -840,7 +840,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(2))),
                 List.of(Relationship.empty(person(3))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, null, 10, 10, null, true, true, null);
 
         Family f1 = result.getFamily("F1");
         assertThat(f1).isNotNull();
@@ -863,7 +863,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(2))),
                 List.of(Relationship.empty(person(3))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, null, 10, 10, null, true, true, null);
 
         Family f1 = result.getFamily("F1");
         assertThat(f1).isNotNull();
@@ -883,7 +883,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(3))),
                 List.of(Relationship.empty(person(5))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, null, 10, 10, null, true, true, null);
 
         Family f3 = result.getFamily("F3");
         assertThat(f3).isNotNull();
@@ -901,7 +901,7 @@ class GedcomParsingServiceFormatTests {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(23))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, null, 10, 10, null, true, true, null);
 
         EventFact chr = result.getPerson("I23").getEventsFacts().stream()
                 .filter(e -> "CHR".equals(e.getTag())).findFirst().orElseThrow();
@@ -917,7 +917,7 @@ class GedcomParsingServiceFormatTests {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(23))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, null, 10, 10, null, true, true, null);
 
         List<String> tags = result.getPerson("I23").getEventsFacts().stream().map(EventFact::getTag).toList();
         assertThat(tags).containsExactlyInAnyOrder("SEX", "CHR", "DEAT", "BURI");
@@ -940,7 +940,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(1))),
                 List.of(Relationship.empty(person(23))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SKIP, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SKIP, false, false, null, null, 10, 10, null, true, true, null);
 
         assertThat(result.getPerson("I1")).isNull();
         assertThat(result.getPerson("I23")).isNotNull();
@@ -955,7 +955,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(1))),
                 List.of(Relationship.empty(person(4))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, true, false, null, null, 10, 10, null, true, true, null);
 
         assertThat(result.getFamily("F2")).isNotNull();
         assertThat(result.getFamily("F2").getEventsFacts()).isEmpty();
@@ -967,7 +967,7 @@ class GedcomParsingServiceFormatTests {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 10, 10, null, true, true, null);
 
         assertThat(result.getNotes()).hasSize(1);
         Note note = result.getNotes().getFirst();
@@ -985,7 +985,7 @@ class GedcomParsingServiceFormatTests {
                 List.of(Relationship.empty(person(2))),
                 List.of(Relationship.empty(person(3))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SKIP, true, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SKIP, true, false, null, null, 10, 10, null, true, true, null);
 
         assertThat(result.getPeople()).isEmpty();
         assertThat(result.getFamilies()).isEmpty();
@@ -997,7 +997,7 @@ class GedcomParsingServiceFormatTests {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(2))));
 
-        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SHOW_SURNAME_ONLY, true, false, null, null, 10, 10, null, true, true);
+        Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.SHOW_SURNAME_ONLY, true, false, null, null, 10, 10, null, true, true, null);
 
         Person i2 = result.getPerson("I2");
         assertThat(i2.getNames()).isNotEmpty();
@@ -1013,7 +1013,7 @@ class GedcomParsingServiceFormatTests {
     void format_validation_negativeMaxAscDepth_throws() throws Exception {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
-        assertThatThrownBy(() -> gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, -1, 0, null, true, true))
+        assertThatThrownBy(() -> gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, -1, 0, null, true, true, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("maxAscDepth");
     }
@@ -1022,7 +1022,7 @@ class GedcomParsingServiceFormatTests {
     void format_validation_negativeMaxDescDepth_throws() throws Exception {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
-        assertThatThrownBy(() -> gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 0, -1, null, true, true))
+        assertThatThrownBy(() -> gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 0, -1, null, true, true, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("maxDescDepth");
     }
@@ -1031,7 +1031,7 @@ class GedcomParsingServiceFormatTests {
     void format_validation_negativeTrimTriggerSize_throws() throws Exception {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
-        assertThatThrownBy(() -> gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, -1, 0, 0, null, true, true))
+        assertThatThrownBy(() -> gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, -1, 0, 0, null, true, true, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("trimTriggerSize");
     }
@@ -1040,7 +1040,7 @@ class GedcomParsingServiceFormatTests {
     void format_validation_negativeDistantAncestorDescLimit_throws() throws Exception {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
-        assertThatThrownBy(() -> gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 0, 2, -1, true, true))
+        assertThatThrownBy(() -> gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 0, 2, -1, true, true, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("distantAncestorDescLimit");
     }
@@ -1049,7 +1049,7 @@ class GedcomParsingServiceFormatTests {
     void format_validation_distantAncestorDescLimitEqualToMaxDescDepth_throws() throws Exception {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
-        assertThatThrownBy(() -> gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 0, 2, 2, true, true))
+        assertThatThrownBy(() -> gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 0, 2, 2, true, true, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("distantAncestorDescLimit");
     }
@@ -1058,7 +1058,7 @@ class GedcomParsingServiceFormatTests {
     void format_validation_distantAncestorDescLimitGreaterThanMaxDescDepth_throws() throws Exception {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
-        assertThatThrownBy(() -> gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 0, 2, 3, true, true))
+        assertThatThrownBy(() -> gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 0, 2, 3, true, true, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("distantAncestorDescLimit");
     }
@@ -1069,7 +1069,7 @@ class GedcomParsingServiceFormatTests {
         // would fire for all of them and maxAscDepth=0 becomes meaningless.
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
-        assertThatThrownBy(() -> gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 0, 2, 0, true, true))
+        assertThatThrownBy(() -> gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 0, 2, 0, true, true, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("maxAscDepth");
     }
@@ -1079,7 +1079,7 @@ class GedcomParsingServiceFormatTests {
         // maxAscDepth=0 alone is valid (no ancestors in the main range).
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
-        gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 0, 2, null, true, true);
+        gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 0, 2, null, true, true, null);
     }
 
     @Test
@@ -1087,6 +1087,6 @@ class GedcomParsingServiceFormatTests {
         // maxAscDepth=1 > 0, distantAncestorDescLimit=0 < maxDescDepth=2 → valid combination.
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
-        gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 1, 2, 0, true, true);
+        gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 1, 2, 0, true, true, null);
     }
 }

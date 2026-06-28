@@ -114,6 +114,7 @@ public class GeneaAzulWebResources {
             @Nullable Integer distantAncestorDescLimit,
             boolean includeInLawsAtMaxDescDepth,
             boolean includeInLawsAtMaxAscDepth,
+            @Nullable Integer maxCollateralDescDepth,
             boolean includeSpouseAncestors) {}
 
     @Test
@@ -121,211 +122,211 @@ public class GeneaAzulWebResources {
         // Add sub-gedcom configs here (person IDs to be provided):
         List<SubGedcomConfig> configs = List.of(
                 // Losardo
-                new SubGedcomConfig(512563, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(512563, true, 0, 1, 4, null, true, true, null, true),
                 // Piazza
-                new SubGedcomConfig(572, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(572, true, 0, 1, 4, null, true, true, null, true),
                 // Gennuso
-                new SubGedcomConfig(557058, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(557058, true, 0, 1, 4, null, true, true, null, true),
                 // Catriel
-                new SubGedcomConfig(511661, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(511661, true, 0, 1, 4, null, true, true, null, true),
                 // Labaronnie
-                new SubGedcomConfig(549805, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(549805, true, 0, 1, 4, null, true, true, null, true),
                 // Acosta
-                new SubGedcomConfig(530481, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(530481, true, 0, 1, 4, null, true, true, null, true),
                 // Solano
-                new SubGedcomConfig(530416, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(530416, true, 0, 1, 4, null, true, true, null, true),
                 // Begbeder
-                new SubGedcomConfig(505373, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(505373, true, 0, 1, 4, null, true, true, null, true),
                 // Dhérété
-                new SubGedcomConfig(529854, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(529854, true, 0, 1, 4, null, true, true, null, true),
                 // Gallicchio
-                new SubGedcomConfig(509443, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(509443, true, 0, 1, 4, null, true, true, null, true),
                 // Falconaro
-                new SubGedcomConfig(516988, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(516988, true, 0, 1, 3, null, true, true, null, true),
                 // Mandagaran
-                new SubGedcomConfig(511254, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(511254, true, 0, 1, 4, null, true, true, null, true),
                 // Émbil
-                new SubGedcomConfig(510902, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(510902, true, 0, 1, 4, null, true, true, null, true),
                 // Moroni
-                new SubGedcomConfig(515935, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(515935, true, 0, 1, 4, null, true, true, null, true),
                 // Ciano
-                new SubGedcomConfig(504901, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(504901, true, 0, 1, 4, null, true, true, null, true),
                 // Pérez de Villarreal
-                new SubGedcomConfig(512049, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(512049, true, 0, 1, 4, null, true, true, null, true),
                 // Picot
-                new SubGedcomConfig(504252, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(504252, true, 0, 1, 4, null, true, true, null, true),
                 // Saparrat
-                new SubGedcomConfig(503103, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(503103, true, 0, 1, 4, null, true, true, null, true),
                 // Cachenaut
-                new SubGedcomConfig(317, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(317, true, 0, 1, 4, null, true, true, null, true),
                 // Lier
-                new SubGedcomConfig(526, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(526, true, 0, 1, 4, null, true, true, null, true),
                 // Laddaga
-                new SubGedcomConfig(543443, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(543443, true, 0, 1, 4, null, true, true, null, true),
                 // Grierson
-                new SubGedcomConfig(515268, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(515268, true, 0, 1, 4, null, true, true, null, true),
                 // Mirande
-                new SubGedcomConfig(517810, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(517810, true, 0, 1, 3, null, true, true, null, true),
                 // Le Vigne
-                new SubGedcomConfig(521667, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(521667, true, 0, 1, 4, null, true, true, null, true),
                 // Tumminaro
-                new SubGedcomConfig(503406, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(503406, true, 0, 1, 4, null, true, true, null, true),
                 // Sombra
-                new SubGedcomConfig(536853, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(536853, true, 0, 1, 3, null, true, true, null, true),
                 // Adrogué
-                new SubGedcomConfig(508992, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(508992, true, 0, 1, 3, null, true, true, null, true),
                 // Castellár
-                new SubGedcomConfig(506750, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(506750, true, 0, 1, 4, null, true, true, null, true),
                 // Dhers
-                new SubGedcomConfig(515508, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(515508, true, 0, 1, 4, null, true, true, null, true),
                 // Bergoglio
-                new SubGedcomConfig(525144, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(525144, true, 0, 1, 4, null, true, true, null, true),
                 // Bourdette
-                new SubGedcomConfig(506001, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(506001, true, 0, 1, 4, null, true, true, null, true),
                 // Pomphile
-                new SubGedcomConfig(517820, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(517820, true, 0, 1, 4, null, true, true, null, true),
                 // Hournau
-                new SubGedcomConfig(503270, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(503270, true, 0, 1, 4, null, true, true, null, true),
                 // Cordeviola
-                new SubGedcomConfig(505564, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(505564, true, 0, 1, 3, null, true, true, null, true),
                 // Duclós
-                new SubGedcomConfig(570958, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(570958, true, 0, 1, 3, null, true, true, null, true),
                 // Génova
-                new SubGedcomConfig(558022, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(558022, true, 0, 1, 4, null, true, true, null, true),
                 // Navas
-                new SubGedcomConfig(558017, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(558017, true, 0, 1, 4, null, true, true, null, true),
                 // Maicá
-                new SubGedcomConfig(517457, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(517457, true, 0, 1, 4, null, true, true, null, true),
                 // Mastantuono
-                new SubGedcomConfig(528443, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(528443, true, 0, 1, 3, null, true, true, null, true),
                 // Mailharro
-                new SubGedcomConfig(502886, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(502886, true, 0, 1, 4, null, true, true, null, true),
                 // Arrouy
-                new SubGedcomConfig(504124, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(504124, true, 0, 1, 4, null, true, true, null, true),
                 // Prat
-                new SubGedcomConfig(503006, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(503006, true, 0, 1, 4, null, true, true, null, true),
                 // Zabala
-                new SubGedcomConfig(503479, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(503479, true, 0, 1, 4, null, true, true, null, true),
                 // Arguiano
-                new SubGedcomConfig(539276, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(539276, true, 0, 1, 4, null, true, true, null, true),
                 // Puppio
-                new SubGedcomConfig(504654, true, 0, 1, 2, null, true, true, true),
+                new SubGedcomConfig(504654, true, 0, 1, 2, null, true, true, null, true),
                 // Álvaro
-                new SubGedcomConfig(504669, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(504669, true, 0, 1, 3, null, true, true, null, true),
                 // Picaroni
-                new SubGedcomConfig(511915, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(511915, true, 0, 1, 3, null, true, true, null, true),
                 // Grippaldi
-                new SubGedcomConfig(505769, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(505769, true, 0, 1, 3, null, true, true, null, true),
                 // Ciminelli
-                new SubGedcomConfig(178, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(178, true, 0, 1, 3, null, true, true, null, true),
                 // Sparaíno
-                new SubGedcomConfig(512657, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(512657, true, 0, 1, 3, null, true, true, null, true),
                 // Basile
-                new SubGedcomConfig(512663, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(512663, true, 0, 1, 3, null, true, true, null, true),
                 // Arrubia
-                new SubGedcomConfig(523471, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(523471, true, 0, 1, 3, null, true, true, null, true),
                 // Arrastúa
-                new SubGedcomConfig(483, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(483, true, 0, 1, 3, null, true, true, null, true),
                 // Arrastía
-                new SubGedcomConfig(502162, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(502162, true, 0, 1, 3, null, true, true, null, true),
                 // Petersen
-                new SubGedcomConfig(543211, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(543211, true, 0, 1, 4, null, true, true, null, true),
                 // Yannuzzi
-                new SubGedcomConfig(508901, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(508901, true, 0, 1, 4, null, true, true, null, true),
                 // Cornec
-                new SubGedcomConfig(552123, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(552123, true, 0, 1, 3, null, true, true, null, true),
                 // Layús
-                new SubGedcomConfig(531723, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(531723, true, 0, 1, 4, null, true, true, null, true),
                 // Larrocca
-                new SubGedcomConfig(503673, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(503673, true, 0, 1, 3, null, true, true, null, true),
                 // Olza
-                new SubGedcomConfig(556324, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(556324, true, 0, 1, 3, null, true, true, null, true),
                 // Borneo
-                new SubGedcomConfig(511072, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(511072, true, 0, 1, 4, null, true, true, null, true),
                 // Marateo
-                new SubGedcomConfig(529942, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(529942, true, 0, 1, 4, null, true, true, null, true),
                 // Guedes
-                new SubGedcomConfig(540210, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(540210, true, 0, 1, 4, null, true, true, null, true),
                 // carus -> Carús
-                new SubGedcomConfig(511262, true, 0, 1, 2, null, true, true, true),
+                new SubGedcomConfig(511262, true, 0, 1, 2, null, true, true, null, true),
                 // marquestau -> Marquestau
-                new SubGedcomConfig(546785, true, 0, 1, 2, null, true, true, true),
+                new SubGedcomConfig(546785, true, 0, 1, 2, null, true, true, null, true),
                 // kollmann -> Kollmann
-                new SubGedcomConfig(513459, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(513459, true, 0, 1, 4, null, true, true, null, true),
                 // bardelli -> Bardelli
-                new SubGedcomConfig(569559, true, 0, 1, 2, null, true, true, true),
+                new SubGedcomConfig(569559, true, 0, 1, 2, null, true, true, null, true),
                 // comparato -> Comparato
-                new SubGedcomConfig(520424, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(520424, true, 0, 1, 3, null, true, true, null, true),
                 // oyarzabal -> Oyarzábal
-                new SubGedcomConfig(525017, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(525017, true, 0, 1, 3, null, true, true, null, true),
                 // cier -> Cier
-                new SubGedcomConfig(515869, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(515869, true, 0, 1, 3, null, true, true, null, true),
                 // claverie -> Claveríe
-                new SubGedcomConfig(505897, true, 0, 1, 2, null, true, true, true),
+                new SubGedcomConfig(505897, true, 0, 1, 2, null, true, true, null, true),
                 // brescia -> Brescia
-                new SubGedcomConfig(505878, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(505878, true, 0, 1, 3, null, true, true, null, true),
                 // camarotte -> Camarotte
-                new SubGedcomConfig(505872, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(505872, true, 0, 1, 3, null, true, true, null, true),
                 // toscano -> Toscano
-                new SubGedcomConfig(507508, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(507508, true, 0, 1, 4, null, true, true, null, true),
                 // azimonti -> Azimonti
-                new SubGedcomConfig(540543, true, 0, 1, 2, null, true, true, true),
+                new SubGedcomConfig(540543, true, 0, 1, 2, null, true, true, null, true),
                 // forestieri -> Forastieri
-                new SubGedcomConfig(527528, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(527528, true, 0, 1, 3, null, true, true, null, true),
                 // testavin-touron -> Turón
-                new SubGedcomConfig(503774, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(503774, true, 0, 1, 4, null, true, true, null, true),
                 // di-lergna -> Dilernia
-                new SubGedcomConfig(514689, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(514689, true, 0, 1, 4, null, true, true, null, true),
                 // giangrande -> Giangrande
-                new SubGedcomConfig(521437, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(521437, true, 0, 1, 4, null, true, true, null, true),
                 // despervasques -> Desperbasques
-                new SubGedcomConfig(547605, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(547605, true, 0, 1, 4, null, true, true, null, true),
                 // dours -> Dours
-                new SubGedcomConfig(505242, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(505242, true, 0, 1, 4, null, true, true, null, true),
                 // pontot -> Ponthot
-                new SubGedcomConfig(505245, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(505245, true, 0, 1, 4, null, true, true, null, true),
                 // tellechea -> Tellechea
-                new SubGedcomConfig(535058, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(535058, true, 0, 1, 4, null, true, true, null, true),
                 // garciarena-zuloaga -> Garciarena (Berástegui, España)
-                new SubGedcomConfig(505047, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(505047, true, 0, 1, 4, null, true, true, null, true),
                 // latronico -> Latrónica
-                new SubGedcomConfig(512306, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(512306, true, 0, 1, 4, null, true, true, null, true),
                 // garciarena-y-mariezcurrena -> Garciarena (Ezcurra, España)
-                new SubGedcomConfig(511651, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(511651, true, 0, 1, 4, null, true, true, null, true),
                 // montenegro -> Montenegro
-                new SubGedcomConfig(503342, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(503342, true, 0, 1, 4, null, true, true, null, true),
                 // baldovino -> Baldovino
-                new SubGedcomConfig(503474, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(503474, true, 0, 1, 4, null, true, true, null, true),
                 // sahaspe -> Sahaspé
-                new SubGedcomConfig(546736, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(546736, true, 0, 1, 4, null, true, true, null, true),
                 // ghisoli -> Ghissoli
-                new SubGedcomConfig(512868, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(512868, true, 0, 1, 3, null, true, true, null, true),
                 // iztueta -> Iztueta
-                new SubGedcomConfig(521747, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(521747, true, 0, 1, 4, null, true, true, null, true),
                 // pinero-1 -> Piñero (Dolores, Argentina)
-                new SubGedcomConfig(524083, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(524083, true, 0, 1, 3, null, true, true, null, true),
                 // pinero-2 -> Piñero (Dolores, Argentina)
-                new SubGedcomConfig(525514, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(525514, true, 0, 1, 3, null, true, true, null, true),
                 // bohn -> Bohn
-                new SubGedcomConfig(551685, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(551685, true, 0, 1, 4, null, true, true, null, true),
                 // vignau-1 -> Vignau (Maslacq)
-                new SubGedcomConfig(526595, true, 0, 1, 4, null, true, true, true),
+                new SubGedcomConfig(526595, true, 0, 1, 4, null, true, true, null, true),
                 // vignau-2 -> Vignau (Oloron-Sainte-Marie)
-                new SubGedcomConfig(519553, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(519553, true, 0, 1, 3, null, true, true, null, true),
                 // loustau -> Loustau
-                new SubGedcomConfig(509020, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(509020, true, 0, 1, 3, null, true, true, null, true),
                 // hollmann -> Holman
-                new SubGedcomConfig(568869, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(568869, true, 0, 1, 3, null, true, true, null, true),
                 // salamone -> Salamone
-                new SubGedcomConfig(573202, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(573202, true, 0, 1, 3, null, true, true, null, true),
                 // santopaolo -> Santopaolo
-                new SubGedcomConfig(546202, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(546202, true, 0, 1, 3, null, true, true, null, true),
                 // lopez-claro -> López Claro
-                new SubGedcomConfig(504548, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(504548, true, 0, 1, 3, null, true, true, null, true),
                 // stickar -> Stickar
-                new SubGedcomConfig(557255, true, 0, 1, 3, null, true, true, true),
+                new SubGedcomConfig(557255, true, 0, 1, 3, null, true, true, null, true),
                 // severiens -> Severiens
-                new SubGedcomConfig(527946, true, 0, 1, 4, null, true, true, true)
+                new SubGedcomConfig(527946, true, 0, 1, 4, null, true, true, null, true)
         );
 
         Path outputDir = Path.of("../geneaazul-web/data/gedcom");
@@ -368,7 +369,8 @@ public class GeneaAzulWebResources {
                     config.maxDescDepth(),
                     config.distantAncestorDescLimit(),
                     config.includeInLawsAtMaxDescDepth(),
-                    config.includeInLawsAtMaxAscDepth());
+                    config.includeInLawsAtMaxAscDepth(),
+                    config.maxCollateralDescDepth());
 
             Path output = outputDir.resolve("sub-gedcom-" + personLastnames.get(i) + ".ged");
             gedcomParsingService.write(subGedcom, output);
