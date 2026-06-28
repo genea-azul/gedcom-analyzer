@@ -1089,4 +1089,92 @@ class GedcomParsingServiceFormatTests {
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
         gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 1, 2, 0, true, true, null);
     }
+
+    @Test
+    void format_validation_negativeMaxCollateralDescDepth_throws() throws Exception {
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
+        assertThatThrownBy(() -> gedcomParsingService.format(
+                original, rels, AlivePersonFilter.ALLOW, false, false, null, null,
+                1, 2, null, true, true, -1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("maxCollateralDescDepth");
+    }
+
+    // ── maxCollateralDescDepth ────────────────────────────────────────────────
+    //
+    // A sibling is asc=1, desc=1, isInLaw=false  → isDirect()=false
+    // A sibling spouse is asc=1, desc=1, isInLaw=true → isDirect()=false
+    // A niece/nephew is asc=1, desc=2, isInLaw=false → isDirect()=false
+    // A grandchild is asc=0, desc=2, isInLaw=false  → isDirect()=true  (asc==0)
+    // A step-parent is asc=1, desc=0, isInLaw=true  → isDirect()=true  (desc==0)
+    // directLineageOnly=false is required; otherwise siblings are already excluded.
+
+    @Test
+    void format_collateral_includesSiblings() throws Exception {
+        // maxCollateralDescDepth=1 with directLineageOnly=false:
+        // sibling (asc=1,desc=1,blood) passes — desc=1 <= 1 and not in-law.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(
+                List.of(rel(person(2), 1, 1)));
+
+        Gedcom result = gedcomParsingService.format(
+                original, rels, AlivePersonFilter.ALLOW, false, false, null, null,
+                1, 2, null, true, true, 1);
+
+        assertThat(result.getPerson("I2")).isNotNull();
+    }
+
+    @Test
+    void format_collateral_excludesSiblingSpouses() throws Exception {
+        // sibling spouse (asc=1,desc=1,inLaw=true): not isDirect, is in-law → excluded.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(
+                List.of(rel(person(2), 1, 1)),
+                List.of(inLaw(person(3), 1, 1)));
+
+        Gedcom result = gedcomParsingService.format(
+                original, rels, AlivePersonFilter.ALLOW, false, false, null, null,
+                1, 2, null, true, true, 1);
+
+        assertThat(result.getPerson("I2")).isNotNull();   // sibling included
+        assertThat(result.getPerson("I3")).isNull();       // sibling spouse excluded
+    }
+
+    @Test
+    void format_collateral_excludesSiblingDescendants() throws Exception {
+        // niece/nephew (asc=1,desc=2,blood): not isDirect, desc=2 > maxCollateralDescDepth=1 → excluded.
+        // grandchild (asc=0,desc=2,blood): isDirect (asc==0) → always included.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(
+                List.of(rel(person(2), 1, 1)),   // sibling
+                List.of(rel(person(4), 1, 2)),   // niece/nephew
+                List.of(rel(person(5), 0, 2)));  // grandchild
+
+        Gedcom result = gedcomParsingService.format(
+                original, rels, AlivePersonFilter.ALLOW, false, false, null, null,
+                1, 3, null, true, true, 1);
+
+        assertThat(result.getPerson("I2")).isNotNull();   // sibling included
+        assertThat(result.getPerson("I4")).isNull();       // niece/nephew excluded
+        assertThat(result.getPerson("I5")).isNotNull();   // grandchild unaffected (isDirect)
+    }
+
+    @Test
+    void format_collateral_null_includesEverything() throws Exception {
+        // maxCollateralDescDepth=null → no-op: sibling, sibling spouse, niece all included.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(
+                List.of(rel(person(2), 1, 1)),
+                List.of(inLaw(person(3), 1, 1)),
+                List.of(rel(person(4), 1, 2)));
+
+        Gedcom result = gedcomParsingService.format(
+                original, rels, AlivePersonFilter.ALLOW, false, false, null, null,
+                1, 3, null, true, true, null);
+
+        assertThat(result.getPerson("I2")).isNotNull();
+        assertThat(result.getPerson("I3")).isNotNull();
+        assertThat(result.getPerson("I4")).isNotNull();
+    }
 }
