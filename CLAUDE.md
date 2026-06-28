@@ -162,27 +162,36 @@ Gedcom format(
     List<List<Relationship>> relationshipsList,
     AlivePersonFilter alivePersonFilter,      // SKIP | SHOW_SURNAME_ONLY | show all
     boolean displayOnlyBasic,                 // keep only birth/death/marriage events
-    boolean directLineageOnly,               // filter: isDirect() == true only
+    boolean directLineageOnly,                // filter: isDirect() == true only
     @Nullable Integer rootPersonId,           // written as _ROOT tag in output
     @Nullable Integer trimTriggerSize,        // null=never trim, 0=always, N=trim if size>N
     int maxAscDepth,
     int maxDescDepth,
     @Nullable Integer distantAncestorDescLimit, // desc cap for ancestors beyond maxAscDepth
     boolean includeInLawsAtMaxDescDepth,
-    boolean includeInLawsAtMaxAscDepth)
+    boolean includeInLawsAtMaxAscDepth,
+    @Nullable Integer maxCollateralDescDepth) // null=no collateral restriction
 ```
 
-**Keep condition** (when trimming is active):
+**Collateral filter** (applied unconditionally when `maxCollateralDescDepth` is non-null, before trimming):
 
-```java
+```
+isDirect()                                              → always keep
+!isDirect() AND isInLaw                                 → always exclude
+!isDirect() AND !isInLaw AND desc ≤ maxCollateralDescDepth → keep
+```
+
+`directLineageOnly=true` pre-filters using `isDirect()` so collaterals never reach this filter.
+
+**Keep condition** (when trimming is active, applied after the collateral filter):
+
+```
 (asc ≤ maxAscDepth AND desc ≤ maxDescDepth
     AND (includeInLawsAtMaxDescDepth OR desc < maxDescDepth OR !isInLaw)
     AND (includeInLawsAtMaxAscDepth  OR asc < maxAscDepth  OR !isInLaw))
 OR
 (distantAncestorDescLimit != null AND asc > maxAscDepth AND desc ≤ distantAncestorDescLimit)
 ```
-
-`directLineageOnly` pre-filters using `isDirect()` before depth trimming.
 
 ### `SubGedcomConfig` (in `GeneaAzulWebResources`)
 
@@ -196,10 +205,11 @@ record SubGedcomConfig(
     @Nullable Integer distantAncestorDescLimit,
     boolean includeInLawsAtMaxDescDepth,
     boolean includeInLawsAtMaxAscDepth,
+    @Nullable Integer maxCollateralDescDepth,
     boolean includeSpouseAncestors)
 ```
 
-Most web configs use `directLineageOnly=true, trimTriggerSize=0, maxAscDepth=1` with `maxDescDepth` 2–4. Set `includeSpouseAncestors=true` to include the root person's spouse's ancestors (ONLY_ASC pass from spouse).
+Most web configs use `directLineageOnly=true, trimTriggerSize=0, maxAscDepth=1` with `maxDescDepth` 2–4. Set `includeSpouseAncestors=true` to include the root person's spouse's ancestors (ONLY_ASC pass from spouse). Set `maxCollateralDescDepth=1` (and `directLineageOnly=false`) to include blood siblings of the root person while excluding their spouses and descendants. `null` disables the collateral filter entirely (backward-compatible default).
 
 ---
 
