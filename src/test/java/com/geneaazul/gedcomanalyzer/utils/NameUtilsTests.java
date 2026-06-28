@@ -446,6 +446,114 @@ public class NameUtilsTests {
                     Surname matching = PersonUtils.getShortenedSurnameMainWord("Caciatore", properties.getNormalizedSurnamesMap()).orElse(null);
                     assertThat(surname.matches(matching)).isTrue();
                 });
+
+        name.setSurname("Fuccillo");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("Fuccillo");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("fuchila");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("fuchil_");
+
+                    Surname matching = PersonUtils.getShortenedSurnameMainWord("Fuchila", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(matching)).isTrue();
+                });
+    }
+
+    @Test
+    public void testGetShortenedSurnameMainWordSpecialCases() {
+        Name name = new Name();
+        name.setGiven("?");
+        Person person = new Person();
+        person.addName(name);
+
+        // "López" must not group with the compound forms
+        name.setSurname("López");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("López");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("lopes");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("lopes");
+
+                    Surname lopezOsornio = PersonUtils.getShortenedSurnameMainWord("López Osornio", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(lopezOsornio)).isFalse();
+
+                    Surname lopezDeOsornio = PersonUtils.getShortenedSurnameMainWord("López de Osornio", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(lopezDeOsornio)).isFalse();
+                });
+
+        // "López Osornio" and "López de Osornio" must group together but not with "López"
+        name.setSurname("López Osornio");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("López Osornio");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("lopesosornio");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("lopesosorn_");
+
+                    Surname lopezDeOsornio = PersonUtils.getShortenedSurnameMainWord("López de Osornio", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(lopezDeOsornio)).isTrue();
+
+                    Surname lopez = PersonUtils.getShortenedSurnameMainWord("López", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(lopez)).isFalse();
+                });
+
+        name.setSurname("López de Osornio");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("López de Osornio");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("lopesosornio");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("lopesosorn_");
+
+                    Surname lopezOsornio = PersonUtils.getShortenedSurnameMainWord("López Osornio", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(lopezOsornio)).isTrue();
+                });
+
+        // "Fernández" must not group with the compound forms
+        name.setSurname("Fernández");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("Fernández");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("fernandes");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("fernandes");
+
+                    Surname fernandezVillegas = PersonUtils.getShortenedSurnameMainWord("Fernández Villegas", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(fernandezVillegas)).isFalse();
+
+                    Surname fernandezDeVillegas = PersonUtils.getShortenedSurnameMainWord("Fernández de Villegas", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(fernandezDeVillegas)).isFalse();
+                });
+
+        // "Fernández Villegas" and "Fernández de Villegas" must group together but not with "Fernández"
+        name.setSurname("Fernández Villegas");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("Fernández Villegas");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("fernandesvilegas");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("fernandesvilegas");
+
+                    Surname fernandezDeVillegas = PersonUtils.getShortenedSurnameMainWord("Fernández de Villegas", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(fernandezDeVillegas)).isTrue();
+
+                    Surname fernandez = PersonUtils.getShortenedSurnameMainWord("Fernández", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(fernandez)).isFalse();
+                });
+
+        name.setSurname("Fernández de Villegas");
+        assertThat(PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap()))
+                .get()
+                .satisfies(surname -> {
+                    assertThat(surname.value()).isEqualTo("Fernández de Villegas");
+                    assertThat(surname.normalizedMainWord()).isEqualTo("fernandesvilegas");
+                    assertThat(surname.shortenedMainWord()).isEqualTo("fernandesvilegas");
+
+                    Surname fernandezVillegas = PersonUtils.getShortenedSurnameMainWord("Fernández Villegas", properties.getNormalizedSurnamesMap()).orElse(null);
+                    assertThat(surname.matches(fernandezVillegas)).isTrue();
+                });
     }
 
 }

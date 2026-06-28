@@ -1,6 +1,5 @@
 package com.geneaazul.gedcomanalyzer.service;
 
-import tools.jackson.databind.ObjectMapper;
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.domain.TreeBuilderSubmission;
 import com.geneaazul.gedcomanalyzer.model.dto.TreeBuilderSubmissionDetailsDto;
@@ -11,6 +10,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.OffsetDateTime;
 import java.util.List;

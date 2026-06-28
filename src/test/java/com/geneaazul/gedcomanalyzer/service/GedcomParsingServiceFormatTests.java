@@ -33,6 +33,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Tests for {@link GedcomParsingService#format}.
@@ -80,11 +81,11 @@ class GedcomParsingServiceFormatTests {
     }
 
     private static Relationship rel(EnrichedPerson person, int asc, int desc) {
-        return new Relationship(person, asc, desc, false, false, null, null, null, null);
+        return new Relationship(person, asc, desc, false, false, false, null, null, null, null);
     }
 
     private static Relationship inLaw(EnrichedPerson person, int asc, int desc) {
-        return new Relationship(person, asc, desc, true, false, null, null, null, null);
+        return new Relationship(person, asc, desc, true, false, false, null, null, null, null);
     }
 
     private static List<String> husbandIds(Family f) {
@@ -474,7 +475,7 @@ class GedcomParsingServiceFormatTests {
 
     @Test
     void format_trimming_spouseFlagA_excludesInLawsAtExactDescBoundary() throws Exception {
-        // maxAsc=2, maxDesc=2, includeSpousesOfDescendantsA=false.
+        // maxAsc=2, maxDesc=2, includeInLawsAtMaxDescDepth=false.
         // I2 (asc=1,desc=1, not in-law): included.
         // I3 (asc=1,desc=2, not in-law): included (desc==maxDesc but not in-law).
         // I4 (asc=1,desc=1, in-law): included (desc<maxDesc, flag doesn't fire).
@@ -494,7 +495,7 @@ class GedcomParsingServiceFormatTests {
 
     @Test
     void format_trimming_spouseFlagB_excludesInLawsAtExactAscBoundary() throws Exception {
-        // maxAsc=2, maxDesc=2, includeSpousesOfDescendantsB=false.
+        // maxAsc=2, maxDesc=2, includeInLawsAtMaxAscDepth=false.
         // I2 (asc=1,desc=1, in-law): included (asc<maxAsc, flag doesn't fire).
         // I3 (asc=2,desc=1, not in-law): included (asc==maxAsc but not in-law).
         // I4 (asc=2,desc=1, in-law): EXCLUDED (asc==maxAsc AND in-law AND flag=false).
@@ -602,13 +603,13 @@ class GedcomParsingServiceFormatTests {
         assertThat(i2.getNames().getFirst().getValue()).contains("Test Mother");
     }
 
-    // ── onlyDirectLineage ─────────────────────────────────────────────────────
+    // ── directLineageOnly ─────────────────────────────────────────────────────
     //
     // isDirect() = distanceToAncestorRootPerson==0 (descendant) OR distanceToAncestorThisPerson==0 (direct ancestor).
     // Collateral relatives (siblings, uncles, cousins) have both distances > 0 → excluded.
 
     @Test
-    void format_onlyDirectLineage_excludesCollateralRelatives() throws Exception {
+    void format_directLineageOnly_excludesCollateralRelatives() throws Exception {
         // I2 as "parent" (asc=1, desc=0) → isDirect → kept
         // I3 as "sibling" (asc=1, desc=1) → not direct → excluded
         // I4 as "uncle"   (asc=2, desc=1) → not direct → excluded
@@ -626,7 +627,7 @@ class GedcomParsingServiceFormatTests {
     }
 
     @Test
-    void format_onlyDirectLineage_includesDirectAncestorsAndDescendants() throws Exception {
+    void format_directLineageOnly_includesDirectAncestorsAndDescendants() throws Exception {
         // I2 as "parent" (asc=1, desc=0)      → isDirect → kept
         // I3 as "grandparent" (asc=2, desc=0) → isDirect → kept
         // I4 as "child" (asc=0, desc=1)       → isDirect → kept
@@ -647,10 +648,10 @@ class GedcomParsingServiceFormatTests {
     }
 
     @Test
-    void format_onlyDirectLineage_includesSpousesOfDirectAncestors() throws Exception {
+    void format_directLineageOnly_includesSpousesOfDirectAncestors() throws Exception {
         // A spouse of an ancestor has distanceToAncestorThisPerson==0 and isInLaw==true → isDirect → kept.
         Gedcom original = freshGedcom();
-        Relationship spouseOfParent = new Relationship(person(2), 1, 0, true, false, null, null, null, null);
+        Relationship spouseOfParent = new Relationship(person(2), 1, 0, true, false, false, null, null, null, null);
         List<List<Relationship>> rels = List.of(List.of(spouseOfParent));
 
         Gedcom result = gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, true, null, null, 10, 10, null, true, true);
@@ -659,8 +660,8 @@ class GedcomParsingServiceFormatTests {
     }
 
     @Test
-    void format_onlyDirectLineage_false_includesCollateralRelatives() throws Exception {
-        // With onlyDirectLineage=false (default), collateral relatives are not filtered out.
+    void format_directLineageOnly_false_includesCollateralRelatives() throws Exception {
+        // With directLineageOnly=false (default), collateral relatives are not filtered out.
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(
                 List.of(rel(person(3), 1, 1)),
@@ -1004,5 +1005,88 @@ class GedcomParsingServiceFormatTests {
         assertThat(i2.getNames().getFirst().getSurname()).isEqualTo("Family2");
         assertThat(i2.getNames().getFirst().getGiven()).isEqualTo("<privado>");
         assertThat(i2.getEventsFacts()).isEmpty();
+    }
+
+    // ── validation ────────────────────────────────────────────────────────────
+
+    @Test
+    void format_validation_negativeMaxAscDepth_throws() throws Exception {
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
+        assertThatThrownBy(() -> gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, -1, 0, null, true, true))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("maxAscDepth");
+    }
+
+    @Test
+    void format_validation_negativeMaxDescDepth_throws() throws Exception {
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
+        assertThatThrownBy(() -> gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 0, -1, null, true, true))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("maxDescDepth");
+    }
+
+    @Test
+    void format_validation_negativeTrimTriggerSize_throws() throws Exception {
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
+        assertThatThrownBy(() -> gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, -1, 0, 0, null, true, true))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("trimTriggerSize");
+    }
+
+    @Test
+    void format_validation_negativeDistantAncestorDescLimit_throws() throws Exception {
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
+        assertThatThrownBy(() -> gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 0, 2, -1, true, true))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("distantAncestorDescLimit");
+    }
+
+    @Test
+    void format_validation_distantAncestorDescLimitEqualToMaxDescDepth_throws() throws Exception {
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
+        assertThatThrownBy(() -> gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 0, 2, 2, true, true))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("distantAncestorDescLimit");
+    }
+
+    @Test
+    void format_validation_distantAncestorDescLimitGreaterThanMaxDescDepth_throws() throws Exception {
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
+        assertThatThrownBy(() -> gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 0, 2, 3, true, true))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("distantAncestorDescLimit");
+    }
+
+    @Test
+    void format_validation_distantAncestorDescLimitWithZeroMaxAscDepth_throws() throws Exception {
+        // maxAscDepth=0 with distantAncestorDescLimit set: every ancestor has asc>0, so clause 2
+        // would fire for all of them and maxAscDepth=0 becomes meaningless.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
+        assertThatThrownBy(() -> gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 0, 2, 0, true, true))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("maxAscDepth");
+    }
+
+    @Test
+    void format_validation_zeroMaxAscDepth_withoutDistantAncestorDescLimit_doesNotThrow() throws Exception {
+        // maxAscDepth=0 alone is valid (no ancestors in the main range).
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
+        gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 0, 2, null, true, true);
+    }
+
+    @Test
+    void format_validation_validDistantAncestorDescLimit_doesNotThrow() throws Exception {
+        // maxAscDepth=1 > 0, distantAncestorDescLimit=0 < maxDescDepth=2 → valid combination.
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(1))));
+        gedcomParsingService.format(original, rels, AlivePersonFilter.ALLOW, false, false, null, null, 1, 2, 0, true, true);
     }
 }
