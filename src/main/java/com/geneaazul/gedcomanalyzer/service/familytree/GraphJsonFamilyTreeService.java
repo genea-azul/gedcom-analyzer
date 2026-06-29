@@ -1,5 +1,6 @@
 package com.geneaazul.gedcomanalyzer.service.familytree;
 
+import tools.jackson.databind.ObjectMapper;
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
@@ -15,8 +16,6 @@ import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-
-import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;

@@ -726,8 +726,7 @@ public class HighLoadCalculationsTests {
                 3,
                 null,
                 true,
-                true,
-                null);
+                true);
         gedcomParsingService.write(subGedcom, subGedcomPath);
     }
 

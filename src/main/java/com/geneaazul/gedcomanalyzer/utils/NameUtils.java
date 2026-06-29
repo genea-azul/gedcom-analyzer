@@ -29,13 +29,13 @@ public class NameUtils {
     private static final String[] GIVEN_NAME_COMMON_EXTRAS             = { " cadette", " cadete", " cadet", " detto ", " dita ", " dite ", " dit " };
     private static final String[] GIVEN_NAME_COMMON_EXTRAS_REPLACEMENT = {         "",        "",       "",       " ",      " ",      " ",     " " };
 
-    private static final String[] SURNAME_SPECIAL_CASES             = { "fernandez villegas", "fernandes vilegas", "lopez claro", "lopes claro", "lopez osornio", "lopes osornio", "zarco vaca", "sarco vaca" };
-    private static final String[] SURNAME_SPECIAL_CASES_REPLACEMENT = { "fernandesvilegas",   "fernandesvilegas",  "lopesclaro",  "lopesclaro",  "lopesosornio",  "lopesosornio",  "sarcovaca",  "sarcovaca" };
+    private static final String[] SURNAME_SPECIAL_CASES             = { "fernandes vilegas", "lopes osornio" };
+    private static final String[] SURNAME_SPECIAL_CASES_REPLACEMENT = { "fernandesvilegas", "lopesosornio" };
 
     private static final Pattern SURNAME_COMMON_CONNECTOR_PATTERN =
              Pattern.compile("^([^ ]+)(?: (da|de|di|do|du|del|der|della|delle|dall|das|dos|la|le|lo|las|los|san))+ (.+)$");
     private static final Pattern SURNAME_COMMON_PREFIX_PATTERN =
-            Pattern.compile("^([a-z]|ahets|da|de|di|do|du|del|der|della|delle|dal|dall|dalla|das|dos|la|le|li|lo|las|los|mc|mac|oro|san|sant|santa|santo|saint|sainte|st|van|vander|von) +((?!y +).*)$");
+            Pattern.compile("^([a-z]|ahets|da|de|di|do|du|del|der|della|delle|dall|das|dos|la|le|li|lo|las|los|mc|mac|oro|san|sant|santa|santo|saint|sainte|st|van|vander|von) +((?!y +).*)$");
     private static final Pattern SURNAME_DOUBLE_LETTERS_PATTERN = Pattern.compile("([a-z])\\1+");
     private static final Pattern SURNAME_VOWELS_ENDING_PATTERN = Pattern.compile("[aeiou]+$");
     private static final String SURNAME_VOWELS_ENDING_REPLACEMENT = "_";

@@ -61,7 +61,7 @@ public class AdminControllerIT extends AbstractControllerIT {
                         .file(multipartFile)
                         .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.personsCount", is(34)))
+                .andExpect(jsonPath("$.personsCount", is(23)))
                 .andExpect(jsonPath("$.personDuplicates", hasSize(0)))
                 .andExpect(jsonPath("$.invalidAlivePersons", hasSize(0)));
     }

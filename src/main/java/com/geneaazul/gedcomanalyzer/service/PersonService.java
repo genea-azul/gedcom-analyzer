@@ -147,10 +147,6 @@ public class PersonService {
 
         EnrichedPerson person = toVisitRelationship.person();
 
-        // Pre-condition is evaluated before the visited check, so it blocks ALL paths to this person —
-        // not just the current one. If path A is blocked by the pre-condition, a shorter path B that
-        // arrives later will also be blocked. Callers that want to stop expanding from a person but
-        // still allow alternate shorter paths should use stopTraversingPostCondition instead.
         if (stopTraversingPreCondition.test(person, toVisitRelationship.getDistance())) {
             return;
         }
@@ -213,12 +209,8 @@ public class PersonService {
                 Relationships.from(toVisitRelationship),
                 (r1, r2) -> r1.merge(r2, visitedRelationshipTraversalStrategy));
 
-        // 32 was chosen as a practical ceiling: it covers ~16 generations of pure ancestry (asc=16,
-        // desc=0) or more realistically ~10 generations up + several lateral hops, which exceeds any
-        // real-world GEDCOM dataset. The traversal is recursive (DFS via call stack), so this also
-        // guards against stack overflow. A named constant would improve readability; the value itself
-        // is intentional and unlikely to need changing.
         if (toVisitRelationship.getDistance() == 32) {
+            // If max level or recursion is reached, stop the search
             return;
         }
 
@@ -267,14 +259,7 @@ public class PersonService {
                 Relationships.from(toVisitRelationship),
                 Relationships::mergeTreeSides);
 
-        // Propagate merged tree sides to relatives. This can cascade hop-by-hop through the graph,
-        // but it terminates efficiently: the containsAll guard at the top of this method ensures each
-        // person's tree sides are updated only when a genuinely new side is discovered, and since
-        // TreeSideType is a bounded enum (4 values), each person can be updated at most 4 times
-        // across the whole traversal. Total cost is O(|TreeSideType| × edges) — the same order as
-        // the initial traversal itself. The main downside is that propagation re-enters the recursive
-        // DFS call stack; a future improvement could use an iterative BFS pass over the
-        // already-visited map to avoid deep stacks in large endogamous datasets.
+        // Propagate merged tree sides to relatives
         resolveRelativesToTraverse(
                 toVisitRelationship.person(),
                 toVisitRelationship.getDistance(),
@@ -372,14 +357,7 @@ public class PersonService {
              *   - 1 element with empty spouse (this person, 1 parent family)
              *   - 1 element with spouse (the biological or adopted parent)
              *   - 2 elements (the biological and adopted parents)
-             *
-             * The algorithm assumes at most 2 parents per child (biological + adoptive). This holds
-             * for well-formed GEDCOM files, but some real-world GEDCOMs encode 3+ FAMC links (e.g.
-             * biological mother + biological father + step-parent as a separate family). Currently
-             * those cases throw to surface the anomaly rather than silently producing wrong isHalf
-             * values. A future improvement could fall through to Map.of() (treat as full siblings)
-             * instead of throwing, so malformed files degrade gracefully rather than crashing the
-             * whole traversal.
+             * Traversal assumes at most 2 parents per child (e.g. biological + adoptive); GEDCOM with 3+ parents is unsupported.
              */
             if (previousPersonParents.isEmpty() || previousPersonParents.size() > 2) {
                 throw new UnsupportedOperationException("Unsupported number of parents: " + previousPersonParents.size());

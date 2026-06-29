@@ -29,7 +29,6 @@ public class RelationshipDto {
     private Integer generation;
     private Integer grade;
     private Boolean isInLaw;
-    private Boolean isSpouseFamily;
     private Boolean isHalf;
     private AdoptionType adoptionType;
     private SexType spouseSex;

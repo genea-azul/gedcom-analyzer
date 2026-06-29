@@ -393,46 +393,7 @@ public class GedcomAnalyzerService {
     }
 
     /**
-     * Counts distinct surname groups among people linked to a given place, grouping spelling
-     * variants under a single canonical entry and surfacing phonetically-related surnames.
-     *
-     * <p><b>Grouping key — normalizedMainWord</b>: each raw surname is reduced to a canonical
-     * "main word" by {@link NameUtils#normalizeSurnameToMainWord}: connector particles and
-     * prefixes are stripped or concatenated, double letters are collapsed, and common phonetic
-     * equivalences are applied (b↔v, z→s, etc.). The {@code normalizedSurnamesMap} then maps
-     * known variant spellings to their canonical form (e.g. "mendevil" → "mendivil"), so
-     * "Mendivil" and "Mendevil" collapse into one group counted together.
-     * Compound surnames without a connector word (e.g. "González Fernández") are also
-     * grouped with their first-word base ("González") because {@code substringBefore(" ")}
-     * extracts only the first word when no connector particle is present.
-     *
-     * <p><b>Sub-process 1 — surnamesCardinality</b>: raw occurrence count of every distinct
-     * surname value exactly as stored in the GEDCOM (e.g. "Mendivil"→3, "Mendevil"→1).
-     * Used later to report per-variant counts inside each group.
-     *
-     * <p><b>Sub-process 2 — normalizedMainWordCardinality</b>: occurrence count keyed by
-     * {@code normalizedMainWord}. All variants that share the same normalized key are summed
-     * into a single total (e.g. "mendivil"→4 for Mendivil+Mendevil combined). This total
-     * becomes {@link SurnamesCardinality#value()}.
-     *
-     * <p><b>Sub-process 3 — normalizedMainWordsByShortened</b>: groups normalized main words
-     * by their {@code shortenedMainWord} (trailing vowels replaced with {@code _}).
-     * Words that share a shortened form are phonetically similar families and are surfaced as
-     * {@link SurnamesCardinality#relatedNormalized()} — a hint that these distinct surname
-     * groups may share a common ancestor or origin.
-     *
-     * <p><b>Sub-process 4 — surnamesByNormalized</b>: maps each {@code normalizedMainWord} to
-     * the set of raw surname values that reduce to it, each paired with its individual count.
-     * The most-frequent raw form becomes the display name ({@link SurnamesCardinality#mainSurname()}),
-     * and the remaining forms become {@link SurnamesCardinality#variantsCardinality()}.
-     *
-     * <p>Results are sorted by total count descending, then by simplified surname ascending.
-     *
-     * @param people              full person list to search within
-     * @param placeOfAnyEvent     place name used to filter people (suffix / exact match per {@code isExactPlace})
-     * @param isAlive             {@code true} for alive-only, {@code false} for deceased-only, {@code null} for all
-     * @param includeSpousePlaces whether a person's spouse's place also qualifies them
-     * @param isExactPlace        {@code true} for exact place match, {@code false} for "ends with" match
+     * .
      */
     public List<SurnamesCardinality> getSurnamesCardinalityByPlaceOfAnyEvent(
             List<EnrichedPerson> people,
@@ -448,7 +409,6 @@ public class GedcomAnalyzerService {
                 .flatMap(Optional::stream)
                 .toList();
 
-        // Sub-process 1: raw count per distinct surname value
         List<String> surnames = surnamesByPlaceOfBirth
                 .stream()
                 .map(Surname::value)
@@ -456,19 +416,16 @@ public class GedcomAnalyzerService {
 
         Map<String, Integer> surnamesCardinality = CollectionUtils.getCardinalityMap(surnames);
 
-        // Sub-process 2: total count per normalized main word (groups spelling variants)
         List<String> normalizedMainWords = surnamesByPlaceOfBirth
                 .stream()
                 .map(Surname::normalizedMainWord)
                 .toList();
         Map<String, Integer> normalizedMainWordCardinality = CollectionUtils.getCardinalityMap(normalizedMainWords);
 
-        // Sub-process 3: which normalized main words share the same shortened form (phonetically related families)
         Map<String, Set<String>> normalizedMainWordsByShortened = surnamesByPlaceOfBirth
                 .stream()
                 .collect(Collectors.groupingBy(Surname::shortenedMainWord, Collectors.mapping(Surname::normalizedMainWord, Collectors.toSet())));
 
-        // Sub-process 4: raw surname values (with their individual counts) grouped by normalized main word
         Map<String, Set<Pair<String, Integer>>> surnamesByNormalized = surnamesByPlaceOfBirth
                 .stream()
                 .collect(Collectors.groupingBy(
@@ -486,7 +443,6 @@ public class GedcomAnalyzerService {
                     String normalizedMainWord = entry.getKey();
                     String shortenedMainWord = NameUtils.shortenSurnameMainWord(normalizedMainWord);
 
-                    // Sort: most frequent first, then alphabetically for ties.
                     List<Pair<String, Integer>> cardinalityList = surnamesByNormalized.get(entry.getKey())
                             .stream()
                             .sorted(Comparator
@@ -495,62 +451,18 @@ public class GedcomAnalyzerService {
                                     .thenComparing(Pair::getLeft))
                             .toList();
 
-                    // Determine the display surname value.
-                    String mostFrequent = cardinalityList.getFirst().getLeft();
-
-                    // Rule 1: if the most-frequent form starts with a shorter form in the same group,
-                    // prefer the shorter form as the display name (the shorter form "wins" regardless
-                    // of frequency). e.g. "González Fernández" (8) + "González" (3) → "González" (11).
-                    // Pick the shortest matching prefix in case there are multiple candidates.
-                    String mainSurnameValue = cardinalityList.stream()
-                            .map(Pair::getLeft)
-                            .filter(candidate -> mostFrequent.startsWith(candidate + " "))
-                            .min(Comparator.comparingInt(String::length))
-                            .orElse(null);
-
-                    // Rule 2: when no shorter prefix exists and all forms are compound (e.g. only
-                    // "Tascón Álvarez" and "Tascón Fernández" exist, with no plain "Tascón"),
-                    // progressively strip the last word until the normalizedMainWord would change —
-                    // that shortest form becomes the display name.
-                    // e.g. "da Costa Abrantes" → strip "Abrantes" → "da Costa" (still "dacosta") ✓
-                    // Guard (automatic): "De Paula" → strip "Paula" → normalized("de") ≠ "depaula" → stop, unchanged ✓
-                    if (mainSurnameValue == null) {
-                        if (cardinalityList.stream().allMatch(pair -> pair.getLeft().contains(" "))) {
-                            String candidate = mostFrequent;
-                            String simplifiedCandidate = NameUtils.simplifyName(mostFrequent);
-                            while (simplifiedCandidate.contains(" ")) {
-                                String shorter = StringUtils.substringBeforeLast(simplifiedCandidate, " ");
-                                if (!normalizedMainWord.equals(NameUtils.normalizeSurnameToMainWord(shorter, Map.of()))) {
-                                    break;
-                                }
-                                simplifiedCandidate = shorter;
-                                candidate = StringUtils.substringBeforeLast(candidate, " ");
-                            }
-                            if (!candidate.equals(mostFrequent)) {
-                                mainSurnameValue = candidate;
-                            }
-                        }
-                        if (mainSurnameValue == null) {
-                            mainSurnameValue = mostFrequent;
-                        }
-                    }
-
                     return new SurnamesCardinality(
                             entry.getValue(),
-                            // Display surname: most-frequent form, unless a shorter prefix form exists in the
-                            // group (Rule 1) or all forms are compound with no simple base (Rule 2).
                             Surname.of(
-                                    mainSurnameValue,
-                                    NameUtils.simplifyName(mainSurnameValue),
+                                    cardinalityList.getFirst().getLeft(),
+                                    NameUtils.simplifyName(cardinalityList.getFirst().getLeft()),
                                     normalizedMainWord,
                                     shortenedMainWord),
                             cardinalityList.getFirst().getRight(),
-                            // Remaining raw forms are spelling variants
                             cardinalityList
                                     .stream()
                                     .skip(1)
                                     .toList(),
-                            // Other normalized words that share the same shortened form (related families)
                             normalizedMainWordsByShortened.get(shortenedMainWord)
                                     .stream()
                                     .filter(related -> !related.equals(normalizedMainWord))
@@ -564,19 +476,6 @@ public class GedcomAnalyzerService {
                 .toList();
     }
 
-    /**
-     * Represents one surname group as returned by {@link #getSurnamesCardinalityByPlaceOfAnyEvent}.
-     *
-     * @param value                 total person count for this surname group (all spelling variants combined)
-     * @param mainSurname           canonical display surname — the most-frequent raw form in this group,
-     *                              with its {@code normalizedMainWord} and {@code shortenedMainWord}
-     *                              recomputed from the group key rather than from the raw value
-     * @param mainSurnameCardinality count for the most-frequent raw form specifically
-     * @param variantsCardinality   other raw forms in this group, each paired with its individual count,
-     *                              sorted by frequency descending then alphabetically
-     * @param relatedNormalized     normalized main words of other groups that share the same shortened form —
-     *                              different families whose surnames are phonetically similar
-     */
     public record SurnamesCardinality (
             Integer value,
             Surname mainSurname,
