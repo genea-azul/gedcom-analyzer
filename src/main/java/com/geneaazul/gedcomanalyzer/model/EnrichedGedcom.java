@@ -139,7 +139,7 @@ public class EnrichedGedcom {
         this.deceasedCount = this.people.size() - aliveCount;
         this.distinguishedCount = distinguishedCount;
         this.nativeCount = nativeCount;
-        this.azulSurnamesCount = 4640; // TODO: replace with actual count
+        this.azulSurnamesCount = 4653; // TODO: replace with actual count, keep in-sync with geneaazul-web/data/surnames.json
         this.azulMayorsCount = azulMayorsCount;
         // TODO: azulDisappearedCount counts disappeared persons across all places, not just those
         //       linked to Azul. Consider filtering by Azul place in a future improvement.

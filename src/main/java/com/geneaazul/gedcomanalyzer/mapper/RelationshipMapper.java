@@ -105,6 +105,7 @@ public class RelationshipMapper {
                 .generation(generation)
                 .grade(grade)
                 .isInLaw(relationship.isInLaw())
+                .isSpouseFamily(relationship.isSpouseFamily())
                 .isHalf(relationship.isHalf())
                 .adoptionType(Optional.ofNullable(relationship.adoptionTypeAsc())
                         .map(adoptionTypeAsc -> Optional.ofNullable(relationship.adoptionTypeDesc())
@@ -258,6 +259,26 @@ public class RelationshipMapper {
             Assert.isTrue(relationship.getIsInLaw(), "isInLaw should be true");
             Assert.isNull(relationship.getAdoptionType(), "adoptionType should be null");
             return separated + "pareja";
+        }
+
+        // Spouse-family branch must come before spousePrefix is computed: isSpouseFamily relationships
+        // have isInLaw=true, so without this early return they would receive a "pareja de …" prefix
+        // from the PARENT block below, which is incorrect.
+        if (Boolean.TRUE.equals(relationship.getIsSpouseFamily())) {
+            String sexSuffix = getSexSuffixInSpanish(relationship.getPersonSex());
+            if (relationship.getGeneration() == 1) {
+                return "suegr" + sexSuffix;
+            }
+            String or = "";
+            if (relationship.getGeneration() >= 11) {
+                String secondary = "ancestro polític" + sexSuffix + " de " + relationship.getGeneration() + " generaciones";
+                if (onlySecondaryDescription) {
+                    return secondary;
+                }
+                or = "  (" + secondary + ")";
+            }
+            String ancestorName = getRelationshipNameInSpanish(relationship.getGeneration(), sexSuffix, Sort.Direction.ASC);
+            return ancestorName + " polític" + sexSuffix + or;
         }
 
         String spousePrefix = (relationship.getIsInLaw() ? separated + "pareja de " : "");
@@ -497,6 +518,15 @@ public class RelationshipMapper {
         return defaultValue;
     }
 
+    /**
+     * For regular in-law relationships ({@code isInLaw=true, isSpouseFamily=false}) the Spanish
+     * label names the linking relative, e.g. "pareja de <b>madre</b>" — so the sex suffix must come
+     * from the related person (spouseSex), not from the in-law person themselves.
+     * <p>
+     * For spouse-family relationships ({@code isSpouseFamily=true}) the label names the person
+     * directly ("suegro/suegra"), so personSex is used. That branch never calls this method; it
+     * calls {@link #getSexSuffixInSpanish(SexType)} with personSex directly.
+     */
     private String getSexSuffixInSpanish(RelationshipDto relationship) {
         if (relationship.getIsInLaw()) {
             return getSexSuffixInSpanish(relationship.getSpouseSex());

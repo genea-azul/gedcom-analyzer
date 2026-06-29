@@ -19,10 +19,12 @@ import org.springframework.test.context.ActiveProfiles;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.assertj.core.api.Assertions;
 import org.folg.gedcom.model.Name;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -64,19 +66,6 @@ public class GeneaAzulWebResources {
         gedcom = gedcomHolder.getGedcom();
     }
 
-    // ── ISO-2 code → flag emoji (regional indicator letters) ──────────
-    private static String toFlagEmoji(@Nullable String isoCode) {
-        if (isoCode == null) return "🌎";
-        return switch (isoCode) {
-            case "GB-ENG" -> "🏴󠁧󠁢󠁥󠁮󠁧󠁿";
-            case "GB-SCT" -> "🏴󠁧󠁢󠁳󠁣󠁴󠁿";
-            case "GB-NIR" -> "🏴󠁧󠁢󠁮󠁩󠁲󠁿";
-            default -> isoCode.chars()
-                    .mapToObj(c -> new String(Character.toChars(0x1F1E6 + c - 'A')))
-                    .collect(Collectors.joining());
-        };
-    }
-
     // ── Known country → ISO-2 code (null for non-country entries) ─────
     private static final Map<String, String> COUNTRY_ISO = new LinkedHashMap<>();
     static {
@@ -104,7 +93,7 @@ public class GeneaAzulWebResources {
         COUNTRY_ISO.put("Bolivia",              "BO");
         COUNTRY_ISO.put("Venezuela",            "VE");
         COUNTRY_ISO.put("Ecuador",              "EC");
-        COUNTRY_ISO.put("Océano Atlántico",     null);
+        COUNTRY_ISO.put("Océano Atlántico",     "OCEAN");
         COUNTRY_ISO.put("Australia",            "AU");
         COUNTRY_ISO.put("Bulgaria",             "BG");
         COUNTRY_ISO.put("China",                "CN");
@@ -118,31 +107,252 @@ public class GeneaAzulWebResources {
 
     record SubGedcomConfig(
             Integer personId,
-            boolean onlyDirectLineage,
-            @Nullable Integer maxPeopleInGedcomThreshold,
-            int maxAscDistanceThreshold,
-            int maxDescDistanceThreshold,
-            @Nullable Integer maxDescDistanceThresholdForAncestors,
-            boolean includeSpousesOfDescendantsA,
-            boolean includeSpousesOfDescendantsB) {}
+            boolean directLineageOnly,
+            @Nullable Integer trimTriggerSize,
+            int maxAscDepth,
+            int maxDescDepth,
+            @Nullable Integer distantAncestorDescLimit,
+            boolean includeInLawsAtMaxDescDepth,
+            boolean includeInLawsAtMaxAscDepth,
+            @Nullable Integer maxCollateralDescDepth,
+            boolean includeSpouseAncestors) {}
 
     @Test
     public void generateWebSubGedcoms() throws IOException {
         // Add sub-gedcom configs here (person IDs to be provided):
         List<SubGedcomConfig> configs = List.of(
-                new SubGedcomConfig(512563, true, 0, 1, 4, null, true, true),
-                new SubGedcomConfig(572, true, 0, 1, 4, null, true, true),
-                new SubGedcomConfig(511661, true, 0, 1, 4, null, false, false)
+                // Losardo
+                new SubGedcomConfig(512563, true, 0, 1, 4, null, true, true, null, true),
+                // Piazza
+                new SubGedcomConfig(572, true, 0, 1, 4, null, true, true, null, true),
+                // Gennuso
+                new SubGedcomConfig(557058, true, 0, 1, 4, null, true, true, null, true),
+                // Catriel
+                new SubGedcomConfig(511661, true, 0, 1, 4, null, true, true, null, true),
+                // Labaronnie
+                new SubGedcomConfig(549805, true, 0, 1, 4, null, true, true, null, true),
+                // Acosta
+                new SubGedcomConfig(530481, true, 0, 1, 4, null, true, true, null, true),
+                // Solano
+                new SubGedcomConfig(530416, true, 0, 1, 4, null, true, true, null, true),
+                // Begbeder
+                new SubGedcomConfig(505373, true, 0, 1, 4, null, true, true, null, true),
+                // Dhérété
+                new SubGedcomConfig(529854, true, 0, 1, 4, null, true, true, null, true),
+                // Gallicchio
+                new SubGedcomConfig(509443, true, 0, 1, 4, null, true, true, null, true),
+                // Falconaro
+                new SubGedcomConfig(516988, true, 0, 1, 3, null, true, true, null, true),
+                // Mandagaran
+                new SubGedcomConfig(511254, true, 0, 1, 4, null, true, true, null, true),
+                // Émbil
+                new SubGedcomConfig(510902, true, 0, 1, 4, null, true, true, null, true),
+                // Moroni
+                new SubGedcomConfig(515935, true, 0, 1, 4, null, true, true, null, true),
+                // Ciano
+                new SubGedcomConfig(504901, true, 0, 1, 4, null, true, true, null, true),
+                // Pérez de Villarreal
+                new SubGedcomConfig(512049, true, 0, 1, 4, null, true, true, null, true),
+                // Picot
+                new SubGedcomConfig(504252, true, 0, 1, 4, null, true, true, null, true),
+                // Saparrat
+                new SubGedcomConfig(503103, true, 0, 1, 4, null, true, true, null, true),
+                // Cachenaut
+                new SubGedcomConfig(317, true, 0, 1, 4, null, true, true, null, true),
+                // Lier
+                new SubGedcomConfig(526, true, 0, 1, 4, null, true, true, null, true),
+                // Laddaga
+                new SubGedcomConfig(543443, true, 0, 1, 4, null, true, true, null, true),
+                // Grierson
+                new SubGedcomConfig(515268, true, 0, 1, 4, null, true, true, null, true),
+                // Mirande
+                new SubGedcomConfig(517810, true, 0, 1, 3, null, true, true, null, true),
+                // Le Vigne
+                new SubGedcomConfig(521667, true, 0, 1, 4, null, true, true, null, true),
+                // Tumminaro
+                new SubGedcomConfig(503406, true, 0, 1, 4, null, true, true, null, true),
+                // Sombra
+                new SubGedcomConfig(536853, true, 0, 1, 3, null, true, true, null, true),
+                // Adrogué
+                new SubGedcomConfig(508992, true, 0, 1, 3, null, true, true, null, true),
+                // Castellár
+                new SubGedcomConfig(506750, true, 0, 1, 4, null, true, true, null, true),
+                // Dhers
+                new SubGedcomConfig(515508, true, 0, 1, 4, null, true, true, null, true),
+                // Bergoglio
+                new SubGedcomConfig(525144, true, 0, 1, 4, null, true, true, null, true),
+                // Bourdette
+                new SubGedcomConfig(506001, true, 0, 1, 4, null, true, true, null, true),
+                // Pomphile
+                new SubGedcomConfig(517820, true, 0, 1, 4, null, true, true, null, true),
+                // Hournau
+                new SubGedcomConfig(503270, true, 0, 1, 4, null, true, true, null, true),
+                // Cordeviola
+                new SubGedcomConfig(505564, true, 0, 1, 3, null, true, true, null, true),
+                // Duclós
+                new SubGedcomConfig(570958, true, 0, 1, 3, null, true, true, null, true),
+                // Génova
+                new SubGedcomConfig(558022, true, 0, 1, 4, null, true, true, null, true),
+                // Navas
+                new SubGedcomConfig(558017, true, 0, 1, 4, null, true, true, null, true),
+                // Maicá
+                new SubGedcomConfig(517457, true, 0, 1, 4, null, true, true, null, true),
+                // Mastantuono
+                new SubGedcomConfig(528443, true, 0, 1, 3, null, true, true, null, true),
+                // Mailharro
+                new SubGedcomConfig(502886, true, 0, 1, 4, null, true, true, null, true),
+                // Arrouy
+                new SubGedcomConfig(504124, true, 0, 1, 4, null, true, true, null, true),
+                // Prat
+                new SubGedcomConfig(503006, true, 0, 1, 4, null, true, true, null, true),
+                // Zabala
+                new SubGedcomConfig(503479, true, 0, 1, 4, null, true, true, null, true),
+                // Arguiano
+                new SubGedcomConfig(539276, true, 0, 1, 4, null, true, true, null, true),
+                // Puppio
+                new SubGedcomConfig(504654, true, 0, 1, 2, null, true, true, null, true),
+                // Álvaro
+                new SubGedcomConfig(504669, true, 0, 1, 3, null, true, true, null, true),
+                // Picaroni
+                new SubGedcomConfig(511915, true, 0, 1, 3, null, true, true, null, true),
+                // Grippaldi
+                new SubGedcomConfig(505769, true, 0, 1, 3, null, true, true, null, true),
+                // Ciminelli
+                new SubGedcomConfig(178, true, 0, 1, 3, null, true, true, null, true),
+                // Sparaíno
+                new SubGedcomConfig(512657, true, 0, 1, 3, null, true, true, null, true),
+                // Basile
+                new SubGedcomConfig(512663, true, 0, 1, 3, null, true, true, null, true),
+                // Arrubia
+                new SubGedcomConfig(523471, true, 0, 1, 3, null, true, true, null, true),
+                // Arrastúa
+                new SubGedcomConfig(483, true, 0, 1, 3, null, true, true, null, true),
+                // Arrastía
+                new SubGedcomConfig(502162, true, 0, 1, 3, null, true, true, null, true),
+                // Petersen
+                new SubGedcomConfig(543211, true, 0, 1, 4, null, true, true, null, true),
+                // Yannuzzi
+                new SubGedcomConfig(508901, true, 0, 1, 4, null, true, true, null, true),
+                // Cornec
+                new SubGedcomConfig(552123, true, 0, 1, 3, null, true, true, null, true),
+                // Layús
+                new SubGedcomConfig(531723, true, 0, 1, 4, null, true, true, null, true),
+                // Larrocca
+                new SubGedcomConfig(503673, true, 0, 1, 3, null, true, true, null, true),
+                // Olza
+                new SubGedcomConfig(556324, true, 0, 1, 3, null, true, true, null, true),
+                // Borneo
+                new SubGedcomConfig(511072, true, 0, 1, 4, null, true, true, null, true),
+                // Marateo
+                new SubGedcomConfig(529942, true, 0, 1, 4, null, true, true, null, true),
+                // Guedes
+                new SubGedcomConfig(540210, true, 0, 1, 4, null, true, true, null, true),
+                // carus -> Carús
+                new SubGedcomConfig(511262, true, 0, 1, 2, null, true, true, null, true),
+                // marquestau -> Marquestau
+                new SubGedcomConfig(546785, true, 0, 1, 2, null, true, true, null, true),
+                // kollmann -> Kollmann
+                new SubGedcomConfig(513459, true, 0, 1, 4, null, true, true, null, true),
+                // bardelli -> Bardelli
+                new SubGedcomConfig(569559, true, 0, 1, 2, null, true, true, null, true),
+                // comparato -> Comparato
+                new SubGedcomConfig(520424, true, 0, 1, 3, null, true, true, null, true),
+                // oyarzabal -> Oyarzábal
+                new SubGedcomConfig(525017, true, 0, 1, 3, null, true, true, null, true),
+                // cier -> Cier
+                new SubGedcomConfig(515869, true, 0, 1, 3, null, true, true, null, true),
+                // claverie -> Claveríe
+                new SubGedcomConfig(505897, true, 0, 1, 2, null, true, true, null, true),
+                // brescia -> Brescia
+                new SubGedcomConfig(505878, true, 0, 1, 3, null, true, true, null, true),
+                // camarotte -> Camarotte
+                new SubGedcomConfig(505872, true, 0, 1, 3, null, true, true, null, true),
+                // toscano -> Toscano
+                new SubGedcomConfig(507508, true, 0, 1, 4, null, true, true, null, true),
+                // azimonti -> Azimonti
+                new SubGedcomConfig(540543, true, 0, 1, 2, null, true, true, null, true),
+                // forestieri -> Forastieri
+                new SubGedcomConfig(527528, true, 0, 1, 3, null, true, true, null, true),
+                // testavin-touron -> Turón
+                new SubGedcomConfig(503774, true, 0, 1, 4, null, true, true, null, true),
+                // di-lergna -> Dilernia
+                new SubGedcomConfig(514689, true, 0, 1, 4, null, true, true, null, true),
+                // giangrande -> Giangrande
+                new SubGedcomConfig(521437, true, 0, 1, 4, null, true, true, null, true),
+                // despervasques -> Desperbasques
+                new SubGedcomConfig(547605, true, 0, 1, 4, null, true, true, null, true),
+                // dours -> Dours
+                new SubGedcomConfig(505242, true, 0, 1, 4, null, true, true, null, true),
+                // pontot -> Ponthot
+                new SubGedcomConfig(505245, true, 0, 1, 4, null, true, true, null, true),
+                // tellechea -> Tellechea
+                new SubGedcomConfig(535058, true, 0, 1, 4, null, true, true, null, true),
+                // garciarena-zuloaga -> Garciarena (Berástegui, España)
+                new SubGedcomConfig(505047, true, 0, 1, 4, null, true, true, null, true),
+                // latronico -> Latrónica
+                new SubGedcomConfig(512306, true, 0, 1, 4, null, true, true, null, true),
+                // garciarena-y-mariezcurrena -> Garciarena (Ezcurra, España)
+                new SubGedcomConfig(511651, true, 0, 1, 4, null, true, true, null, true),
+                // montenegro -> Montenegro
+                new SubGedcomConfig(503342, true, 0, 1, 4, null, true, true, null, true),
+                // baldovino -> Baldovino
+                new SubGedcomConfig(503474, true, 0, 1, 4, null, true, true, null, true),
+                // sahaspe -> Sahaspé
+                new SubGedcomConfig(546736, true, 0, 1, 4, null, true, true, null, true),
+                // ghisoli -> Ghissoli
+                new SubGedcomConfig(512868, true, 0, 1, 3, null, true, true, null, true),
+                // iztueta -> Iztueta
+                new SubGedcomConfig(521747, true, 0, 1, 4, null, true, true, null, true),
+                // pinero-1 -> Piñero (Dolores, Argentina)
+                new SubGedcomConfig(524083, true, 0, 1, 3, null, true, true, null, true),
+                // pinero-2 -> Piñero (Dolores, Argentina)
+                new SubGedcomConfig(525514, true, 0, 1, 3, null, true, true, null, true),
+                // bohn -> Bohn
+                new SubGedcomConfig(551685, true, 0, 1, 4, null, true, true, null, true),
+                // vignau-1 -> Vignau (Maslacq)
+                new SubGedcomConfig(526595, true, 0, 1, 4, null, true, true, null, true),
+                // vignau-2 -> Vignau (Oloron-Sainte-Marie)
+                new SubGedcomConfig(519553, true, 0, 1, 3, null, true, true, null, true),
+                // loustau -> Loustau
+                new SubGedcomConfig(509020, true, 0, 1, 3, null, true, true, null, true),
+                // hollmann -> Holman
+                new SubGedcomConfig(568869, true, 0, 1, 3, null, true, true, null, true),
+                // salamone -> Salamone
+                new SubGedcomConfig(573202, true, 0, 1, 3, null, true, true, null, true),
+                // santopaolo -> Santopaolo
+                new SubGedcomConfig(546202, true, 0, 1, 3, null, true, true, null, true),
+                // lopez-claro -> López Claro
+                new SubGedcomConfig(504548, true, 0, 1, 3, null, true, true, null, true),
+                // stickar -> Stickar
+                new SubGedcomConfig(557255, true, 0, 1, 3, null, true, true, null, true),
+                // severiens -> Severiens
+                new SubGedcomConfig(527946, true, 0, 1, 4, null, true, true, null, true)
         );
 
         Path outputDir = Path.of("../geneaazul-web/data/gedcom");
         Files.createDirectories(outputDir);
 
-        for (SubGedcomConfig config : configs) {
+        // Pre-calculate the filename suffix for every config so that surnames that map to the same
+        // simplified string (e.g. two distinct Garciarena or Vignau families) receive a -1/-2/-3
+        // disambiguation suffix rather than silently overwriting each other's output file.
+        List<String> rawLastnames = configs.stream()
+                .map(config -> Objects.requireNonNull(gedcom.getPersonById(config.personId()),
+                        "Person not found: I" + config.personId())
+                        .getSurname()
+                        .map(Surname::simplified)
+                        .map(surname -> StringUtils.replaceChars(surname, ' ', '-'))
+                        .orElseGet(() -> config.personId().toString()))
+                .toList();
+        List<String> personLastnames = assignLastnameSuffixes(rawLastnames);
+
+        for (int i = 0; i < configs.size(); i++) {
+            SubGedcomConfig config = configs.get(i);
             EnrichedPerson person = Objects.requireNonNull(gedcom.getPersonById(config.personId()),
                     "Person not found: I" + config.personId());
 
-            List<List<Relationship>> relationshipsList = familyTreeHelper.getRelationshipsWithNotInLawPriority(person);
+            List<List<Relationship>> relationshipsList = familyTreeHelper.getRelationshipsWithNotInLawPriority(
+                person,
+                 config.includeSpouseAncestors());
 
             System.out.printf("generateWebSubGedcoms: I%d %s — people in tree: %d%n",
                     config.personId(), person.getDisplayName(), relationshipsList.size());
@@ -152,26 +362,58 @@ public class GeneaAzulWebResources {
                     relationshipsList,
                     AlivePersonFilter.SHOW_SURNAME_ONLY,
                     true,
-                    config.onlyDirectLineage(),
+                    config.directLineageOnly(),
                     config.personId(),
-                    config.maxPeopleInGedcomThreshold(),
-                    config.maxAscDistanceThreshold(),
-                    config.maxDescDistanceThreshold(),
-                    config.maxDescDistanceThresholdForAncestors(),
-                    config.includeSpousesOfDescendantsA(),
-                    config.includeSpousesOfDescendantsB());
+                    config.trimTriggerSize(),
+                    config.maxAscDepth(),
+                    config.maxDescDepth(),
+                    config.distantAncestorDescLimit(),
+                    config.includeInLawsAtMaxDescDepth(),
+                    config.includeInLawsAtMaxAscDepth(),
+                    config.maxCollateralDescDepth());
 
-            String personLastname = gedcom.getPersonById(config.personId())
-                    .getSurname()
-                    .map(Surname::simplified)
-                    .orElseGet(() -> config.personId().toString());
-            Path output = outputDir.resolve("sub-gedcom-" + personLastname + ".ged");
+            Path output = outputDir.resolve("sub-gedcom-" + personLastnames.get(i) + ".ged");
             gedcomParsingService.write(subGedcom, output);
             System.out.println("Written: " + output.toAbsolutePath());
         }
     }
 
-    @Disabled
+    /**
+     * Given a list of raw lastnames in config order, returns a same-size list where any lastname
+     * that appears more than once receives a {@code -1}, {@code -2}, … suffix in order of first
+     * appearance. Unique lastnames are returned unchanged.
+     * <p>
+     * Example: {@code ["garcia", "vignau", "garcia"]} → {@code ["garcia-1", "vignau", "garcia-2"]}
+     */
+    static List<String> assignLastnameSuffixes(List<String> rawLastnames) {
+        Map<String, Long> counts = rawLastnames.stream()
+                .collect(Collectors.groupingBy(s -> s, Collectors.counting()));
+        Map<String, Integer> counters = new LinkedHashMap<>();
+        List<String> result = new ArrayList<>(rawLastnames.size());
+        for (String raw : rawLastnames) {
+            result.add(counts.get(raw) > 1
+                    ? raw + "-" + counters.merge(raw, 1, Integer::sum)
+                    : raw);
+        }
+        return result;
+    }
+
+    @Test
+    public void assignLastnameSuffixes_assignsSuffixesForDuplicates() {
+        Assertions.assertThat(assignLastnameSuffixes(List.of()))
+                .isEmpty();
+        Assertions.assertThat(assignLastnameSuffixes(List.of("garcia")))
+                .containsExactly("garcia");
+        Assertions.assertThat(assignLastnameSuffixes(List.of("garcia", "perez")))
+                .containsExactly("garcia", "perez");
+        Assertions.assertThat(assignLastnameSuffixes(List.of("garcia", "garcia")))
+                .containsExactly("garcia-1", "garcia-2");
+        Assertions.assertThat(assignLastnameSuffixes(List.of("garcia", "perez", "garcia")))
+                .containsExactly("garcia-1", "perez", "garcia-2");
+        Assertions.assertThat(assignLastnameSuffixes(List.of("a", "a", "b", "a")))
+                .containsExactly("a-1", "a-2", "b", "a-3");
+    }
+
     @Test
     public void generateSurnamesJson() throws IOException {
         List<GedcomAnalyzerService.SurnamesCardinality> cardinalities = gedcomAnalyzerService
@@ -241,8 +483,8 @@ public class GeneaAzulWebResources {
         GroupDef alemaniaRusia  = new GroupDef("Alemania / Rusia",             null,             "DE");
         GroupDef inglaterra     = new GroupDef("Inglaterra",                   null,             "GB-ENG");
         GroupDef siriaLibano    = new GroupDef("Siria / Líbano",               null,             "SY");
-        GroupDef yugoslavia     = new GroupDef("Croacia / Eslovenia / Serbia", "Yugoslavia",     "HR");
-        GroupDef checoslovaquia = new GroupDef("República Checa / Eslovaquia", "Checoslovaquia", "CZ");
+        GroupDef yugoslavia     = new GroupDef("Croacia / Eslovenia / Serbia", "Yugoslavia",     "YU");
+        GroupDef checoslovaquia = new GroupDef("República Checa / Eslovaquia", "Checoslovaquia", "CS");
 
         groups.put("Alemania",         alemaniaRusia);
         groups.put("Rusia",            alemaniaRusia);
@@ -295,7 +537,6 @@ public class GeneaAzulWebResources {
 
             String iso      = isoByGroup.get(key);
             String formerly = formerlyByGroup.get(key);
-            String flag     = toFlagEmoji(iso);
 
             List<String> topSurnames = surnamesByGroup.getOrDefault(key, Map.of()).entrySet().stream()
                     .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
@@ -310,8 +551,8 @@ public class GeneaAzulWebResources {
                     .collect(Collectors.joining(", ", "[", "]"));
 
             sb.append(String.format(
-                    "  { \"country\": \"%s\", \"formerly\": %s, \"flag\": \"%s\", \"isoCode\": %s, \"count\": %d, \"percentage\": %.2f, \"topSurnames\": %s }%s\n",
-                    key.replace("\"", "\\\""), formerlyJson, flag, isoJson, count, pct, surnamesJson,
+                    "  { \"country\": \"%s\", \"formerly\": %s, \"isoCode\": %s, \"count\": %d, \"percentage\": %.2f, \"topSurnames\": %s }%s\n",
+                    key.replace("\"", "\\\""), formerlyJson, isoJson, count, pct, surnamesJson,
                     i < sorted.size() - 1 ? "," : ""));
         }
         sb.append("]");
@@ -337,6 +578,28 @@ public class GeneaAzulWebResources {
                                 Comparator.nullsLast(Comparator.naturalOrder())))
                 .toList();
 
+        // ── Load existing labels ─────────────────────────────────────────────
+        // Primary key: personId (stable once assigned); fallback: composite key for
+        // first run when the existing JSON predates the personId field.
+        Path output = Path.of("../geneaazul-web/data/personalities.json");
+        Map<Integer, List<String>> labelsByPersonId = new LinkedHashMap<>();
+        Map<String, List<String>> labelsByCompositeKey = new LinkedHashMap<>();
+        if (Files.exists(output)) {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(output.toFile());
+            for (JsonNode node : root) {
+                JsonNode labelsNode = node.get("labels");
+                if (labelsNode == null || !labelsNode.isArray()) continue;
+                List<String> labels = new ArrayList<>();
+                for (JsonNode label : labelsNode) labels.add(label.asString());
+                JsonNode pidNode = node.get("personId");
+                if (pidNode != null && !pidNode.isNull()) {
+                    labelsByPersonId.put(pidNode.asInt(), labels);
+                }
+                labelsByCompositeKey.put(personalityCompositeKey(node), labels);
+            }
+        }
+
         StringBuilder sb = new StringBuilder("[\n");
         for (int i = 0; i < personalities.size(); i++) {
             EnrichedPerson ep = personalities.get(i);
@@ -345,7 +608,7 @@ public class GeneaAzulWebResources {
             String title = null, titleFull = null, givenName = null, surname = null, nickname = null, nameSuffix = null;
             Name name = ep.getLegacyPerson()
                     .filter(lp -> !lp.getNames().isEmpty())
-                    .map(lp -> lp.getNames().get(0))
+                    .map(lp -> lp.getNames().getFirst())
                     .orElse(null);
             if (name != null) {
                 title = StringUtils.trimToNull(name.getPrefix());
@@ -377,16 +640,30 @@ public class GeneaAzulWebResources {
             String birthPlace = ep.getPlaceOfBirth().map(Place::name).orElse(null);
             String deathPlace = ep.getPlaceOfDeath().map(Place::name).orElse(null);
 
+            // ── Labels ──────────────────────────────────────────────────
+            List<String> labels = labelsByPersonId.containsKey(ep.getId())
+                    ? labelsByPersonId.get(ep.getId())
+                    : labelsByCompositeKey.getOrDefault(
+                            personalityCompositeKey(givenName, surname, nameSuffix, birthYear, deathYear),
+                            List.of());
+            if (labels.isEmpty()) {
+                System.out.printf("WARNING: No labels for personality I%d — %s%n", ep.getId(), ep.getDisplayName());
+            }
+            String labelsJson = labels.stream()
+                    .map(l -> "\"" + l.replace("\\", "\\\\").replace("\"", "\\\"") + "\"")
+                    .collect(Collectors.joining(", "));
+
             sb.append(String.format(
-                    "  {\"title\": %s, \"titleFull\": %s, \"givenName\": %s, \"surname\": %s, \"nickname\": %s, \"nameSuffix\": %s, \"isAlive\": %s, \"birthYear\": %s, \"deathYear\": %s, \"birthPlace\": %s, \"deathPlace\": %s}%s\n",
+                    "  {\"personId\": %d, \"title\": %s, \"titleFull\": %s, \"givenName\": %s, \"surname\": %s, \"nickname\": %s, \"nameSuffix\": %s, \"isAlive\": %s, \"birthYear\": %s, \"deathYear\": %s, \"birthPlace\": %s, \"deathPlace\": %s, \"labels\": [%s]}%s\n",
+                    ep.getId(),
                     jsonStr(title), jsonStr(titleFull), jsonStr(givenName), jsonStr(surname), jsonStr(nickname), jsonStr(nameSuffix),
                     ep.isAlive(),
                     jsonStr(birthYear), jsonStr(deathYear), jsonStr(birthPlace), jsonStr(deathPlace),
+                    labelsJson,
                     i < personalities.size() - 1 ? "," : ""));
         }
         sb.append("]");
 
-        Path output = Path.of("../geneaazul-web/data/personalities.json");
         Files.writeString(output, sb);
         System.out.println("Written: " + output.toAbsolutePath());
     }
@@ -394,6 +671,25 @@ public class GeneaAzulWebResources {
     private static String jsonStr(@Nullable String value) {
         if (value == null) return "null";
         return "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
+    }
+
+    private static String personalityCompositeKey(JsonNode node) {
+        return personalityCompositeKey(
+                node.has("givenName") && !node.get("givenName").isNull() ? node.get("givenName").asString() : null,
+                node.has("surname") && !node.get("surname").isNull() ? node.get("surname").asString() : null,
+                node.has("nameSuffix") && !node.get("nameSuffix").isNull() ? node.get("nameSuffix").asString() : null,
+                node.has("birthYear") && !node.get("birthYear").isNull() ? node.get("birthYear").asString() : null,
+                node.has("deathYear") && !node.get("deathYear").isNull() ? node.get("deathYear").asString() : null);
+    }
+
+    private static String personalityCompositeKey(
+            @Nullable String givenName, @Nullable String surname, @Nullable String nameSuffix,
+            @Nullable String birthYear, @Nullable String deathYear) {
+        return (givenName != null ? givenName : "") + "|"
+                + (surname != null ? surname : "") + "|"
+                + (nameSuffix != null ? nameSuffix : "") + "|"
+                + (birthYear != null ? birthYear : "") + "|"
+                + (deathYear != null ? deathYear : "");
     }
 
     private record TimelineEntry(

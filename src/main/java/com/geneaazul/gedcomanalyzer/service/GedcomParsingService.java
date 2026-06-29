@@ -35,8 +35,6 @@ import org.folg.gedcom.parser.ModelParser;
 import org.folg.gedcom.visitors.GedcomWriter;
 import org.xml.sax.SAXParseException;
 
-import jakarta.annotation.Nullable;
-
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -57,6 +55,8 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
+
+import jakarta.annotation.Nullable;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -166,39 +166,37 @@ public class GedcomParsingService {
     /**
      * Builds a filtered sub-GEDCOM from the given relationships list.
      *
-     * <p>Trimming is active when {@code maxPeopleInGedcomThreshold} is non-null and the tree size
-     * exceeds it (or when the threshold is {@code 0}, which is always exceeded). When trimming is
+     * <p>Trimming is active when {@code trimTriggerSize} is non-null and the tree size
+     * exceeds it (or when the trigger is {@code 0}, which is always exceeded). When trimming is
      * active, a person is kept if either of these two clauses holds
      * ({@code asc = distanceToAncestorRootPerson}, {@code desc = distanceToAncestorThisPerson}):
      * <pre>
      *   Clause 1 (main range):
-     *     asc &lt;= maxAscDistanceThreshold  AND  desc &lt;= maxDescDistanceThreshold
+     *     asc &lt;= maxAscDepth  AND  desc &lt;= maxDescDepth
      *
-     *   Clause 2 (ancestor overflow, only when maxDescDistanceThresholdForAncestors is non-null):
-     *     asc &gt; maxAscDistanceThreshold  AND  desc &lt;= maxDescDistanceThresholdForAncestors
+     *   Clause 2 (ancestor overflow, only when distantAncestorDescLimit is non-null):
+     *     asc &gt; maxAscDepth  AND  desc &lt;= distantAncestorDescLimit
      * </pre>
      * Clause 1 caps both the root person's ancestors and their extended descendants.
      * Clause 2 re-admits ancestors beyond the main asc cap, but restricts their family to a
      * tight desc window (typically 0 or 1) so their full subtree is not pulled in.
-     * Set {@code maxDescDistanceThresholdForAncestors = null} to disable clause 2 entirely.
+     * Set {@code distantAncestorDescLimit = null} to disable clause 2 entirely.
      *
      * @param gedcom the source GEDCOM
      * @param relationshipsList one entry per person, each a list of relationship alternatives
      * @param alivePersonFilter how to handle living persons
-     * @param displayOnlyBasic if true, copy only essential event tags (birth, death, marriage…)
-     *                         and basic name fields; notes on events are preserved either way
-     * @param onlyDirectLineage if true, exclude collateral relatives (siblings, cousins, etc.)
+     * @param displayOnlyBasic if true, copy only essential event tags (birth, death, marriage…) and basic name fields; notes on events are preserved either way
+     * @param directLineageOnly if true, exclude collateral relatives (siblings, cousins, etc.)
      * @param rootPersonId if non-null, written as {@code _ROOT} in the output header
-     * @param maxPeopleInGedcomThreshold null = never trim; 0 = always trim; N &gt; 0 = trim only
-     *                                   when the tree exceeds N people
-     * @param maxAscDistanceThreshold max ancestor levels included in the main range
-     * @param maxDescDistanceThreshold max descendant levels included in the main range
-     * @param maxDescDistanceThresholdForAncestors desc cap for ancestors beyond the main asc range
-     *                                             (null = disabled, i.e. no ancestor overflow)
-     * @param includeSpousesOfDescendantsA if false, in-law relatives at exactly
-     *                                     {@code desc == maxDescDistanceThreshold} are excluded
-     * @param includeSpousesOfDescendantsB if false, in-law relatives at exactly
-     *                                     {@code asc == maxAscDistanceThreshold} are excluded
+     * @param trimTriggerSize null = never trim; 0 = always trim; N &gt; 0 = trim only when the tree exceeds N people
+     * @param maxAscDepth max ancestor levels included in the main range
+     * @param maxDescDepth max descendant levels included in the main range
+     * @param distantAncestorDescLimit desc cap for ancestors beyond the main asc range (null = disabled, i.e. no ancestor overflow)
+     * @param includeInLawsAtMaxDescDepth if false, in-law relatives at exactly {@code desc == maxDescDepth} are excluded
+     * @param includeInLawsAtMaxAscDepth if false, in-law relatives at exactly {@code asc == maxAscDepth} are excluded
+     * @param maxCollateralDescDepth null = no restriction on collateral relatives; N &gt;= 0 = exclude all
+     *                               non-direct in-law entries and restrict non-direct blood entries to
+     *                               {@code desc &le; N}; has no effect when {@code directLineageOnly} is true
      * @return filtered sub-GEDCOM ready to be written
      */
     public Gedcom format(
@@ -206,36 +204,68 @@ public class GedcomParsingService {
             List<List<Relationship>> relationshipsList,
             AlivePersonFilter alivePersonFilter,
             boolean displayOnlyBasic,
-            boolean onlyDirectLineage,
+            boolean directLineageOnly,
             @Nullable Integer rootPersonId,
-            @Nullable Integer maxPeopleInGedcomThreshold,
-            int maxAscDistanceThreshold,
-            int maxDescDistanceThreshold,
-            @Nullable Integer maxDescDistanceThresholdForAncestors,
-            boolean includeSpousesOfDescendantsA,
-            boolean includeSpousesOfDescendantsB) {
+            @Nullable Integer trimTriggerSize,
+            int maxAscDepth,
+            int maxDescDepth,
+            @Nullable Integer distantAncestorDescLimit,
+            boolean includeInLawsAtMaxDescDepth,
+            boolean includeInLawsAtMaxAscDepth,
+            @Nullable Integer maxCollateralDescDepth) {
         log.info("Format gedcom: people in tree: {}, max people threshold: {}",
-                relationshipsList.size(), maxPeopleInGedcomThreshold);
+                relationshipsList.size(), trimTriggerSize);
 
-        boolean trimGedcom = maxPeopleInGedcomThreshold != null
-                && relationshipsList.size() > maxPeopleInGedcomThreshold;
+        if (maxAscDepth < 0) {
+            throw new IllegalArgumentException("maxAscDepth must be >= 0: " + maxAscDepth);
+        }
+        if (maxDescDepth < 0) {
+            throw new IllegalArgumentException("maxDescDepth must be >= 0: " + maxDescDepth);
+        }
+        if (trimTriggerSize != null && trimTriggerSize < 0) {
+            throw new IllegalArgumentException("trimTriggerSize must be >= 0 when non-null: " + trimTriggerSize);
+        }
+        if (distantAncestorDescLimit != null && distantAncestorDescLimit < 0) {
+            throw new IllegalArgumentException("distantAncestorDescLimit must be >= 0 when non-null: " + distantAncestorDescLimit);
+        }
+        if (distantAncestorDescLimit != null && distantAncestorDescLimit >= maxDescDepth) {
+            throw new IllegalArgumentException(
+                    "distantAncestorDescLimit must be < maxDescDepth when non-null: "
+                            + distantAncestorDescLimit + " >= " + maxDescDepth);
+        }
+        if (distantAncestorDescLimit != null && maxAscDepth == 0) {
+            throw new IllegalArgumentException(
+                    "distantAncestorDescLimit requires maxAscDepth > 0: with maxAscDepth=0 every ancestor"
+                            + " satisfies asc > 0 so clause 2 would apply to all of them, making maxAscDepth meaningless");
+        }
+        if (maxCollateralDescDepth != null && maxCollateralDescDepth < 0) {
+            throw new IllegalArgumentException(
+                    "maxCollateralDescDepth must be >= 0 when non-null: " + maxCollateralDescDepth);
+        }
+
+        boolean trimGedcom = trimTriggerSize != null
+                && relationshipsList.size() > trimTriggerSize;
 
         Set<String> personIds = relationshipsList
                 .stream()
                 .filter(l -> alivePersonFilter != AlivePersonFilter.SKIP || !l.getFirst().person().isAlive())
-                .filter(l -> !onlyDirectLineage || l.getFirst().isDirect())
+                .filter(l -> !directLineageOnly || l.getFirst().isDirect())
+                .filter(l -> maxCollateralDescDepth == null
+                        || l.getFirst().isDirect()
+                        || (!l.getFirst().isInLaw()
+                                && l.getFirst().distanceToAncestorThisPerson() <= maxCollateralDescDepth))
                 .filter(l -> !trimGedcom
-                        || l.getFirst().distanceToAncestorRootPerson() <= maxAscDistanceThreshold
-                                && l.getFirst().distanceToAncestorThisPerson() <= maxDescDistanceThreshold
-                                && (includeSpousesOfDescendantsA
-                                        || l.getFirst().distanceToAncestorThisPerson() < maxDescDistanceThreshold
+                        || l.getFirst().distanceToAncestorRootPerson() <= maxAscDepth
+                                && l.getFirst().distanceToAncestorThisPerson() <= maxDescDepth
+                                && (includeInLawsAtMaxDescDepth
+                                        || l.getFirst().distanceToAncestorThisPerson() < maxDescDepth
                                         || !l.getFirst().isInLaw())
-                                && (includeSpousesOfDescendantsB
-                                        || l.getFirst().distanceToAncestorRootPerson() < maxAscDistanceThreshold
+                                && (includeInLawsAtMaxAscDepth
+                                        || l.getFirst().distanceToAncestorRootPerson() < maxAscDepth
                                         || !l.getFirst().isInLaw())
-                        || maxDescDistanceThresholdForAncestors != null
-                                && l.getFirst().distanceToAncestorRootPerson() > maxAscDistanceThreshold
-                                && l.getFirst().distanceToAncestorThisPerson() <= maxDescDistanceThresholdForAncestors)
+                        || distantAncestorDescLimit != null
+                                && l.getFirst().distanceToAncestorRootPerson() > maxAscDepth
+                                && l.getFirst().distanceToAncestorThisPerson() <= distantAncestorDescLimit)
                 .map(List::getFirst)
                 .map(Relationship::person)
                 .map(EnrichedPerson::getId)
@@ -323,7 +353,7 @@ public class GedcomParsingService {
 
         if (trimGedcom) {
             log.warn("Gedcom was trimmed! people in tree: {}, max people threshold: {}, final people in tree: {}",
-                    relationshipsList.size(), maxPeopleInGedcomThreshold, personIds.size());
+                    relationshipsList.size(), trimTriggerSize, personIds.size());
         }
 
         return newGedcom;
