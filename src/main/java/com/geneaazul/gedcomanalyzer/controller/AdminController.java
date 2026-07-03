@@ -1,12 +1,15 @@
 package com.geneaazul.gedcomanalyzer.controller;
 
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
+import com.geneaazul.gedcomanalyzer.model.dto.CommentDetailsDto;
+import com.geneaazul.gedcomanalyzer.model.dto.CommentStatus;
 import com.geneaazul.gedcomanalyzer.model.dto.GedcomAnalysisDto;
 import com.geneaazul.gedcomanalyzer.model.dto.GedcomMetadataDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchConnectionDetailsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyDetailsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.TreeBuilderSubmissionDetailsDto;
 import com.geneaazul.gedcomanalyzer.model.dto.UsageStatsDto;
+import com.geneaazul.gedcomanalyzer.service.CommentService;
 import com.geneaazul.gedcomanalyzer.service.ConnectionService;
 import com.geneaazul.gedcomanalyzer.service.FamilyService;
 import com.geneaazul.gedcomanalyzer.service.GedcomAnalyzerService;
@@ -55,6 +58,7 @@ public class AdminController {
     private final FamilyService familyService;
     private final ConnectionService connectionService;
     private final TreeBuilderService treeBuilderService;
+    private final CommentService commentService;
 
     // ── Gedcom ──────────────────────────────────────────────────────────────
 
@@ -148,6 +152,24 @@ public class AdminController {
             @RequestParam(defaultValue = "10") int size) {
         log.info("Tree builder submissions latest [ page={}, size={} ]", page, size);
         return treeBuilderService.getLatest(page, size);
+    }
+
+    // ── Comments ────────────────────────────────────────────────────────────
+
+    @GetMapping("/comments/latest")
+    public List<CommentDetailsDto> getLatestComments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        log.info("Comments latest [ page={}, size={} ]", page, size);
+        return commentService.getLatest(page, size);
+    }
+
+    @GetMapping("/comments/{commentId}/status")
+    public CommentDetailsDto updateCommentStatus(
+            @PathVariable Long commentId,
+            @RequestParam CommentStatus status) {
+        log.info("Update comment status [ commentId={}, status={} ]", commentId, status);
+        return commentService.updateStatus(commentId, status);
     }
 
 }
