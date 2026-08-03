@@ -1,6 +1,9 @@
 package com.geneaazul.gedcomanalyzer.model.dto;
 
+import org.apache.commons.lang3.StringUtils;
+
 import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -55,5 +58,10 @@ public class CommentSubmitDto {
     @NotBlank
     @Size(max = 2000)
     private String body;
+
+    @AssertTrue(message = "authorEmail is required when authorWantsContact is true")
+    private boolean isAuthorEmailPresentWhenWantsContact() {
+        return !authorWantsContact || StringUtils.isNotBlank(authorEmail);
+    }
 
 }

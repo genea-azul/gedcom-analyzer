@@ -10,10 +10,12 @@ $(document).ready(function() {
             size: searchParams.get("size") || undefined,
             isMatch: searchParams.get("isMatch") || undefined,
             isReviewed: (isToReview ? false : (searchParams.get("isReviewed") || undefined)),
-            hasContact: searchParams.get("hasContact") || undefined
+            hasContact: searchParams.get("hasContact") || undefined,
+            token: searchParams.get("token") || undefined
         },
         success: function(data) {
-            data.forEach((element, index) => data[index] = removeEmpty(element));
+            var token = searchParams.get("token");
+            data.forEach((element, index) => data[index] = removeEmpty(appendTokenToLinks(element, token)));
             $("#result-container").jsonViewer(data, {collapsed: false, rootCollapsable: false});
         },
         error: function(xhr) {
@@ -44,4 +46,17 @@ var removeEmpty = function(obj) {
     return Object.entries(obj)
         .filter(([_, v]) => v != null)
         .reduce((acc, [k, v]) => ({ ...acc, [k]: v === Object(v) ? removeEmpty(v) : v }), {});
+}
+
+/* Appends &token=... (or ?token=... if the link has no query string yet) to every
+   *Link field, so clicking an action link (e.g. markReviewedLink) in the JSON
+   viewer carries the same admin token used to load this page. */
+var appendTokenToLinks = function(obj, token) {
+    if (!token) return obj;
+    Object.keys(obj).forEach(function(key) {
+        if (key.toLowerCase().endsWith("link") && typeof obj[key] === "string") {
+            obj[key] += (obj[key].indexOf("?") === -1 ? "?" : "&") + "token=" + encodeURIComponent(token);
+        }
+    });
+    return obj;
 }

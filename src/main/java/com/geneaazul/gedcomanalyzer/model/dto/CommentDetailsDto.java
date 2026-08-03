@@ -42,6 +42,10 @@ public class CommentDetailsDto {
     @ToString.Include
     private CommentStatus status;
     @ToString.Include
+    private String markApprovedLink;
+    @ToString.Include
+    private String markRejectedLink;
+    @ToString.Include
     private OffsetDateTime createDate;
     @Nullable
     private String clientIpAddress;

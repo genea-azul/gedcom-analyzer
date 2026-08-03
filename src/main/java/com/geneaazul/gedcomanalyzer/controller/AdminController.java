@@ -44,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Admin-only endpoints. No @CrossOrigin — the public website must never call these.
- * Security (IP allowlist / token auth) to be added in a follow-up.
+ * Gated by {@link com.geneaazul.gedcomanalyzer.config.AdminTokenFilter} via ?token=... when ADMIN_TOKEN is set.
  */
 @Slf4j
 @RestController
@@ -159,9 +159,12 @@ public class AdminController {
     @GetMapping("/comments/latest")
     public List<CommentDetailsDto> getLatestComments(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        log.info("Comments latest [ page={}, size={} ]", page, size);
-        return commentService.getLatest(page, size);
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam @Nullable CommentStatus status,
+            HttpServletRequest request) {
+        log.info("Comments latest [ page={}, size={}, status={} ]", page, size, status);
+        String context = StringUtils.substringBefore(request.getRequestURL().toString(), "/api");
+        return commentService.getLatest(page, size, status, context);
     }
 
     @GetMapping("/comments/{commentId}/status")

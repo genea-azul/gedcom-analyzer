@@ -188,6 +188,62 @@ public class CommentControllerIT extends AbstractControllerIT {
     }
 
     @Test
+    public void testSubmitWantsContactWithoutEmail() throws Exception {
+        CommentSubmitDto submitDto = CommentSubmitDto.builder()
+                .contextType(CommentContextType.FAMILY)
+                .contextId("gennuso")
+                .commentType(CommentType.MEMORY)
+                .authorName("Ana")
+                .authorWantsContact(true)
+                .body("Un recuerdo.")
+                .build();
+
+        mvc.perform(post(URL)
+                        .content(objectMapper.writeValueAsBytes(submitDto))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testSubmitWantsContactWithBlankEmail() throws Exception {
+        String json = "{\"contextType\":\"FAMILY\",\"contextId\":\"gennuso\",\"commentType\":\"MEMORY\","
+                + "\"authorName\":\"Ana\",\"authorWantsContact\":true,\"authorEmail\":\"\",\"body\":\"Un recuerdo.\"}";
+
+        mvc.perform(post(URL)
+                        .content(json)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testSubmitWantsContactWithEmailSuccess() throws Exception {
+        CommentSubmitDto submitDto = CommentSubmitDto.builder()
+                .contextType(CommentContextType.FAMILY)
+                .contextId("gennuso")
+                .commentType(CommentType.MEMORY)
+                .authorName("Ana")
+                .authorWantsContact(true)
+                .authorEmail("ana@example.com")
+                .body("Un recuerdo.")
+                .build();
+
+        doReturn(UserComment.builder()
+                .id(43L)
+                .build())
+                .when(userCommentRepository)
+                .save(any());
+
+        mvc.perform(post(URL)
+                        .content(objectMapper.writeValueAsBytes(submitDto))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.commentId", is(43)));
+    }
+
+    @Test
     public void testSubmitRateLimited() throws Exception {
         CommentSubmitDto submitDto = CommentSubmitDto.builder()
                 .contextType(CommentContextType.FAMILY)
@@ -298,6 +354,31 @@ public class CommentControllerIT extends AbstractControllerIT {
                 .andReturn();
 
         log.info("{} response:\n{}", url, result.getResponse().getContentAsString(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testAdminGetLatestCommentsFilteredByStatus() throws Exception {
+        UserComment comment = UserComment.builder()
+                .id(8L)
+                .contextType(CommentContextType.FAMILY)
+                .contextId("gennuso")
+                .commentType(CommentType.MEMORY)
+                .authorName("Silvia")
+                .body("Necesito saber si mi abuelo...")
+                .status(CommentStatus.PENDING)
+                .build();
+
+        doReturn(new PageImpl<>(List.of(comment)))
+                .when(userCommentRepository)
+                .findByStatus(eq(CommentStatus.PENDING), any(Pageable.class));
+
+        String url = "/api/admin/comments/latest?page=0&size=30&status=PENDING";
+        mvc.perform(get(url)
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id", is(8)))
+                .andExpect(jsonPath("$[0].status", is("PENDING")));
     }
 
     @Test

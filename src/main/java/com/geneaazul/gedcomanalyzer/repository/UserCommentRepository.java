@@ -4,6 +4,8 @@ import com.geneaazul.gedcomanalyzer.domain.UserComment;
 import com.geneaazul.gedcomanalyzer.model.dto.CommentContextType;
 import com.geneaazul.gedcomanalyzer.model.dto.CommentStatus;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,6 +17,8 @@ public interface UserCommentRepository extends JpaRepository<UserComment, Long> 
 
     long countByClientIpAddressAndCreateDateBetween(
             String clientIpAddress, OffsetDateTime from, OffsetDateTime to);
+
+    Page<UserComment> findByStatus(CommentStatus status, Pageable pageable);
 
     List<UserComment> findByContextTypeAndContextIdAndStatusOrderByCreateDateAsc(
             CommentContextType contextType, String contextId, CommentStatus status);

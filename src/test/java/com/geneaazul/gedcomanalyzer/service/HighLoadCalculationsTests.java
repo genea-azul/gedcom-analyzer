@@ -10,6 +10,7 @@ import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
 import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
+import com.geneaazul.gedcomanalyzer.model.Relationships;
 import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.model.dto.AlivePersonFilter;
 import com.geneaazul.gedcomanalyzer.model.dto.RelationshipDto;
@@ -28,6 +29,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.StringEscapeUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -795,6 +797,38 @@ public class HighLoadCalculationsTests {
                 .toList();
 
         System.out.println();
+    }
+
+    @Test
+    public void listAzulMayorsWithFrenchAncestor() {
+        // Mirrors EnrichedGedcom's private AZUL_MAYOR_EXCLUDED_IDS / AZUL_MAYOR_TITLE_PREFIXES constants
+        Set<Integer> azulMayorExcludedIds = Set.of(504379, 545429, 552956);
+        String[] azulMayorTitlePrefixes = {"Jz. Pz.", "Int. Mun.", "Pte. Mun.", "Com. Mun."};
+
+        List<EnrichedPerson> azulMayors = gedcom.getPeople()
+                .stream()
+                .filter(EnrichedPerson::isDistinguishedPerson)
+                .filter(person -> !azulMayorExcludedIds.contains(person.getId()))
+                .filter(person -> Strings.CS.startsWithAny(person.getDisplayName(), azulMayorTitlePrefixes))
+                .toList();
+
+        List<EnrichedPerson> azulMayorsWithFrenchAncestor = azulMayors
+                .stream()
+                // ONLY_ASC traversal walks pure blood ancestors, any number of generations up
+                .filter(mayor -> personService
+                        .getPeopleInTree(mayor, false, true, false)
+                        .stream()
+                        .map(Relationships::findLast)
+                        .map(Relationship::person)
+                        .anyMatch(ancestor -> ancestor.getPlaceOfBirth()
+                                .map(Place::country)
+                                .filter("Francia"::equals)
+                                .isPresent()))
+                .toList();
+
+        System.out.println("Azul mayors: " + azulMayors.size());
+        System.out.println("Azul mayors with a French ancestor: " + azulMayorsWithFrenchAncestor.size());
+        azulMayorsWithFrenchAncestor.forEach(mayor -> System.out.println(mayor.getId() + " - " + mayor.getDisplayName()));
     }
 
 }

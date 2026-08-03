@@ -9,7 +9,9 @@ import com.geneaazul.gedcomanalyzer.model.dto.CommentStatus;
 import com.geneaazul.gedcomanalyzer.model.dto.CommentSubmitDto;
 import com.geneaazul.gedcomanalyzer.repository.UserCommentRepository;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -83,10 +85,13 @@ public class CommentService {
     }
 
     @Transactional(readOnly = true)
-    public List<CommentDetailsDto> getLatest(int page, int size) {
+    public List<CommentDetailsDto> getLatest(int page, int size, @Nullable CommentStatus status, @Nullable String linkBaseUrl) {
         size = Math.min(size, MAX_PAGE_SIZE);
-        return commentRepository
-                .findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id")))
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+        Page<UserComment> results = status != null
+                ? commentRepository.findByStatus(status, pageable)
+                : commentRepository.findAll(pageable);
+        return results
                 .stream()
                 .map(c -> CommentDetailsDto.builder()
                         .id(c.getId())
@@ -102,6 +107,14 @@ public class CommentService {
                         .createDate(c.getCreateDate())
                         .clientIpAddress(c.getClientIpAddress())
                         .build())
+                .peek(details -> {
+                    if (linkBaseUrl != null && details.getStatus() != CommentStatus.APPROVED) {
+                        details.setMarkApprovedLink(linkBaseUrl + "/api/admin/comments/" + details.getId() + "/status?status=APPROVED");
+                    }
+                    if (linkBaseUrl != null && details.getStatus() != CommentStatus.REJECTED) {
+                        details.setMarkRejectedLink(linkBaseUrl + "/api/admin/comments/" + details.getId() + "/status?status=REJECTED");
+                    }
+                })
                 .toList();
     }
 

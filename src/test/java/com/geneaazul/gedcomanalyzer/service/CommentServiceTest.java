@@ -31,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -351,7 +352,7 @@ class CommentServiceTest {
 
         when(commentRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(comment)));
 
-        List<CommentDetailsDto> result = commentService.getLatest(0, 10);
+        List<CommentDetailsDto> result = commentService.getLatest(0, 10, null, null);
 
         assertThat(result).hasSize(1);
         CommentDetailsDto dto = result.getFirst();
@@ -368,7 +369,7 @@ class CommentServiceTest {
     void getLatest_cappedAtMaxPageSize() {
         when(commentRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of()));
 
-        commentService.getLatest(0, Integer.MAX_VALUE);
+        commentService.getLatest(0, Integer.MAX_VALUE, null, null);
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
         verify(commentRepository).findAll(pageableCaptor.capture());
@@ -379,11 +380,79 @@ class CommentServiceTest {
     void getLatest_belowMaxPageSize_usesRequestedSize() {
         when(commentRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of()));
 
-        commentService.getLatest(0, 25);
+        commentService.getLatest(0, 25, null, null);
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
         verify(commentRepository).findAll(pageableCaptor.capture());
         assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(25);
+    }
+
+    @Test
+    void getLatest_withStatus_queriesFindByStatus() {
+        when(commentRepository.findByStatus(eq(CommentStatus.PENDING), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        commentService.getLatest(0, 10, CommentStatus.PENDING, null);
+
+        verify(commentRepository).findByStatus(eq(CommentStatus.PENDING), any(Pageable.class));
+        verify(commentRepository, never()).findAll(any(Pageable.class));
+    }
+
+    @Test
+    void getLatest_noLinkBaseUrl_linksAreNull() {
+        UserComment comment = UserComment.builder()
+                .id(1L)
+                .contextType(CommentContextType.FAMILY)
+                .contextId("gennuso")
+                .commentType(CommentType.MEMORY)
+                .authorName("Ana")
+                .body("Recuerdo")
+                .status(CommentStatus.PENDING)
+                .build();
+        when(commentRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(comment)));
+
+        CommentDetailsDto dto = commentService.getLatest(0, 10, null, null).getFirst();
+
+        assertThat(dto.getMarkApprovedLink()).isNull();
+        assertThat(dto.getMarkRejectedLink()).isNull();
+    }
+
+    @Test
+    void getLatest_pendingWithLinkBaseUrl_setsBothLinks() {
+        UserComment comment = UserComment.builder()
+                .id(7L)
+                .contextType(CommentContextType.FAMILY)
+                .contextId("gennuso")
+                .commentType(CommentType.MEMORY)
+                .authorName("Ana")
+                .body("Recuerdo")
+                .status(CommentStatus.PENDING)
+                .build();
+        when(commentRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(comment)));
+
+        CommentDetailsDto dto = commentService.getLatest(0, 10, null, "https://example.com").getFirst();
+
+        assertThat(dto.getMarkApprovedLink()).isEqualTo("https://example.com/api/admin/comments/7/status?status=APPROVED");
+        assertThat(dto.getMarkRejectedLink()).isEqualTo("https://example.com/api/admin/comments/7/status?status=REJECTED");
+    }
+
+    @Test
+    void getLatest_approvedWithLinkBaseUrl_omitsApprovedLinkOnly() {
+        UserComment comment = UserComment.builder()
+                .id(8L)
+                .contextType(CommentContextType.FAMILY)
+                .contextId("gennuso")
+                .commentType(CommentType.MEMORY)
+                .authorName("Ana")
+                .body("Recuerdo")
+                .status(CommentStatus.APPROVED)
+                .build();
+        when(commentRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(comment)));
+
+        CommentDetailsDto dto = commentService.getLatest(0, 10, null, "https://example.com").getFirst();
+
+        assertThat(dto.getMarkApprovedLink()).isNull();
+        assertThat(dto.getMarkRejectedLink()).isEqualTo("https://example.com/api/admin/comments/8/status?status=REJECTED");
     }
 
     // ── updateStatus ─────────────────────────────────────────────────────────

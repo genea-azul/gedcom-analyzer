@@ -3,15 +3,12 @@ $(document).ready(function() {
 
     $.ajax({
         type: "GET",
-        url: "/api/admin/search/family/latest",
+        url: "/api/admin/comments/latest",
         contentType: "application/json",
         data: {
             page: searchParams.get("page") || undefined,
             size: searchParams.get("size") || undefined,
-            isMatch: searchParams.get("isMatch") || undefined,
-            isReviewed: (isToReview ? false : (searchParams.get("isReviewed") || undefined)),
-            isIgnored: (isNotIgnored ? false : (searchParams.get("isIgnored") || undefined)),
-            hasContact: searchParams.get("hasContact") || undefined,
+            status: (isToReview ? "PENDING" : (searchParams.get("status") || undefined)),
             token: searchParams.get("token") || undefined
         },
         success: function(data) {
@@ -23,13 +20,12 @@ $(document).ready(function() {
             console.log(xhr);
             $("#result-container").jsonViewer(JSON.parse("{\"error\": \"!\"}"), {collapsed: false, rootCollapsable: false});
 
-            // Get error details
             try {
                 var errorJson;
                 if (xhr.status >= 500 && xhr.status < 600) {
-                    errorJson = "{\"error\": \"El servidor se est\u00E1 reiniciando, intent\u00E1 de nuevo.\"}";
+                    errorJson = "{\"error\": \"El servidor se está reiniciando, intentá de nuevo.\"}";
                 } else if (xhr.status == 0) {
-                    errorJson = "{\"error\": \"El servidor est\u00E1 ca\u00EDdo, intent\u00E1 de nuevo.\"}";
+                    errorJson = "{\"error\": \"El servidor está caído, intentá de nuevo.\"}";
                 } else {
                     errorJson = "{\"error\": \"" + xhr.responseJSON.error + " (" + xhr.responseJSON.message + ")\"}";
                 }
@@ -50,7 +46,7 @@ var removeEmpty = function(obj) {
 }
 
 /* Appends &token=... (or ?token=... if the link has no query string yet) to every
-   *Link field, so clicking an action link (e.g. markReviewedLink) in the JSON
+   *Link field, so clicking an action link (e.g. markApprovedLink) in the JSON
    viewer carries the same admin token used to load this page. */
 var appendTokenToLinks = function(obj, token) {
     if (!token) return obj;
