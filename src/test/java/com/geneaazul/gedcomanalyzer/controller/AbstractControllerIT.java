@@ -4,13 +4,14 @@ import com.geneaazul.gedcomanalyzer.Application;
 import com.geneaazul.gedcomanalyzer.repository.SearchConnectionRepository;
 import com.geneaazul.gedcomanalyzer.repository.SearchFamilyRepository;
 import com.geneaazul.gedcomanalyzer.repository.TreeBuilderSubmissionRepository;
+import com.geneaazul.gedcomanalyzer.repository.UserCommentRepository;
 
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-@WebMvcTest({SearchController.class, GedcomAnalyzerController.class, TreeBuilderController.class, AdminController.class})
+@WebMvcTest({SearchController.class, GedcomAnalyzerController.class, TreeBuilderController.class, AdminController.class, CommentController.class})
 @ComponentScan(basePackageClasses = Application.class)
 @ActiveProfiles("test")
 public abstract class AbstractControllerIT {
@@ -21,5 +22,7 @@ public abstract class AbstractControllerIT {
     protected SearchConnectionRepository searchConnectionRepository;
     @MockitoBean
     protected TreeBuilderSubmissionRepository treeBuilderSubmissionRepository;
+    @MockitoBean
+    protected UserCommentRepository userCommentRepository;
 
 }

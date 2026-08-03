@@ -7,7 +7,8 @@ $(document).ready(function() {
         contentType: "application/json",
         data: {
             page: searchParams.get("page") || undefined,
-            size: searchParams.get("size") || undefined
+            size: searchParams.get("size") || undefined,
+            token: searchParams.get("token") || undefined
         },
         success: function(data) {
             data.forEach((element, index) => {

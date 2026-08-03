@@ -326,7 +326,21 @@ public class GeneaAzulWebResources {
                 // stickar -> Stickar
                 new SubGedcomConfig(557255, true, 0, 1, 3, null, true, true, null, true),
                 // severiens -> Severiens
-                new SubGedcomConfig(527946, true, 0, 1, 4, null, true, true, null, true)
+                new SubGedcomConfig(527946, true, 0, 1, 4, null, true, true, null, true),
+                // calderaro -> Calderaro
+                new SubGedcomConfig(509932, true, 0, 1, 3, null, true, true, null, true),
+                // duhalde -> Duhalde
+                new SubGedcomConfig(541678, true, 0, 1, 4, null, true, true, null, true),
+                // chrestia -> Chrestía
+                new SubGedcomConfig(565508, true, 0, 1, 4, null, true, true, null, true),
+                // dalessandro -> D'Alessandro
+                new SubGedcomConfig(543161, true, 0, 1, 4, null, true, true, null, true),
+                // sarmiento -> Sarmiento
+                new SubGedcomConfig(546231, true, 0, 1, 4, null, true, true, null, true),
+                // avila -> Ávila
+                new SubGedcomConfig(543577, true, 0, 1, 3, null, true, true, null, true),
+                // de-bonis -> Delbonis
+                new SubGedcomConfig(504002, true, 0, 1, 3, null, true, true, null, true)
         );
 
         Path outputDir = Path.of("../geneaazul-web/data/gedcom");

@@ -151,4 +151,19 @@ public class AppController {
         return new ModelAndView("tree-builder/latest", params);
     }
 
+    @GetMapping("/comments/latest")
+    public ModelAndView commentsLatest() {
+        Map<String, ?> params = Map.of(
+                "projectVersion", projectVersion);
+        return new ModelAndView("comments/latest", params);
+    }
+
+    @GetMapping("/comments/latestToReview")
+    public ModelAndView commentsLatestToReview() {
+        Map<String, ?> params = Map.of(
+                "projectVersion", projectVersion,
+                "toReview", true);
+        return new ModelAndView("comments/latest", params);
+    }
+
 }
