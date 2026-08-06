@@ -50,8 +50,10 @@ public class GeneaAzulWebResources {
     private GedcomHolder gedcomHolder;
     @Autowired
     private GedcomAnalyzerService gedcomAnalyzerService;
+    /*
     @Autowired
     private SearchService searchService;
+    */
     @Autowired
     private SurnameService surnameService;
     @Autowired
@@ -333,14 +335,48 @@ public class GeneaAzulWebResources {
                 new SubGedcomConfig(541678, true, 0, 1, 4, null, true, true, null, true),
                 // chrestia -> Chrestía
                 new SubGedcomConfig(565508, true, 0, 1, 4, null, true, true, null, true),
-                // dalessandro -> D'Alessandro
+                // dalessandro-1 -> D'Alessandro (Rotondella, Italia)
                 new SubGedcomConfig(543161, true, 0, 1, 4, null, true, true, null, true),
+                // dalessandro-2 -> D'Alessandro (Rotondella, Italia)
+                new SubGedcomConfig(554795, true, 0, 1, 4, null, true, true, null, true),
+                // dalessandro-3 -> D'Alessandro (Rotonda, Italia)
+                new SubGedcomConfig(532881, true, 0, 1, 4, null, true, true, null, true),
+                // dalessandro-4 -> D'Alessandro (Italia)
+                new SubGedcomConfig(547649, true, 0, 1, 4, null, true, true, null, true),
                 // sarmiento -> Sarmiento
                 new SubGedcomConfig(546231, true, 0, 1, 4, null, true, true, null, true),
                 // avila -> Ávila
                 new SubGedcomConfig(543577, true, 0, 1, 3, null, true, true, null, true),
                 // de-bonis -> Delbonis
-                new SubGedcomConfig(504002, true, 0, 1, 3, null, true, true, null, true)
+                new SubGedcomConfig(504002, true, 0, 1, 3, null, true, true, null, true),
+                // scalcini -> Scalcini
+                new SubGedcomConfig(512031, true, 0, 1, 4, null, true, true, null, true),
+                // zazzali -> Sassali
+                new SubGedcomConfig(550610, true, 0, 1, 4, null, true, true, null, true),
+                // louge-1 -> Louge (Sédeilhac, Francia)
+                new SubGedcomConfig(523372, true, 0, 1, 4, null, true, true, null, true),
+                // louge-2 -> Louge (Nizan-Gesse, Francia)
+                new SubGedcomConfig(512615, true, 0, 1, 4, null, true, true, null, true),
+                // armentano-1 -> Armentano (San Severino Lucano, Italia)
+                new SubGedcomConfig(500699, true, 0, 1, 4, null, true, true, null, true),
+                // armentano-2 -> Armentano (San Severino Lucano, Italia)
+                new SubGedcomConfig(16, true, 0, 1, 4, null, true, true, null, true),
+                // sarno -> Sarno
+                new SubGedcomConfig(517062, true, 0, 1, 4, null, true, true, null, true),
+                // prezioso -> Prezioso
+                new SubGedcomConfig(509495, true, 0, 1, 4, null, true, true, null, true),
+                // cuccaro -> Cúccaro
+                new SubGedcomConfig(515301, true, 0, 1, 4, null, true, true, null, true),
+                // cupparo -> Cúpparo
+                new SubGedcomConfig(508353, true, 0, 1, 4, null, true, true, null, true),
+                // torchia-1 -> Torchia (Pittarella, Italia)
+                new SubGedcomConfig(521227, true, 0, 1, 4, null, true, true, null, true),
+                // torchia-2 -> Torchia (Pittarella, Italia)
+                new SubGedcomConfig(529306, true, 0, 1, 4, null, true, true, null, true),
+                // riviere -> Rivière
+                new SubGedcomConfig(562114, true, 0, 1, 5, null, true, true, null, true),
+                // lurbe -> Lurbé
+                new SubGedcomConfig(532738, true, 0, 1, 5, null, true, true, null, true)
         );
 
         Path outputDir = Path.of("../geneaazul-web/data/gedcom");
@@ -387,8 +423,8 @@ public class GeneaAzulWebResources {
                     config.maxCollateralDescDepth());
 
             Path output = outputDir.resolve("sub-gedcom-" + personLastnames.get(i) + ".ged");
-            gedcomParsingService.write(subGedcom, output);
-            System.out.println("Written: " + output.toAbsolutePath());
+            boolean changed = gedcomParsingService.writeIfChanged(subGedcom, output);
+            System.out.println((changed ? "Written: " : "Unchanged, skipped: ") + output.toAbsolutePath());
         }
     }
 

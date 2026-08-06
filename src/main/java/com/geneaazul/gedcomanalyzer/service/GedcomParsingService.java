@@ -36,10 +36,12 @@ import org.folg.gedcom.visitors.GedcomWriter;
 import org.xml.sax.SAXParseException;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -398,6 +400,39 @@ public class GedcomParsingService {
             GedcomWriter writer = new GedcomWriter();
             writer.write(gedcom, out);
         }
+    }
+
+    /**
+     * Like {@link #write(Gedcom, Path)}, but skips writing (and returns {@code false}) when the
+     * existing file's content is identical except for the header {@code 1 DATE} line — the header
+     * timestamp is always regenerated, so a plain content comparison would always detect a diff.
+     */
+    public boolean writeIfChanged(Gedcom gedcom, Path gedcomPath) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        new GedcomWriter().write(gedcom, out);
+        byte[] newContent = out.toByteArray();
+
+        if (Files.exists(gedcomPath) && contentEqualsIgnoringDateLine(Files.readAllBytes(gedcomPath), newContent)) {
+            return false;
+        }
+
+        Files.write(gedcomPath, newContent);
+        return true;
+    }
+
+    private static boolean contentEqualsIgnoringDateLine(byte[] existingContent, byte[] newContent) {
+        String[] existingLines = new String(existingContent, StandardCharsets.UTF_8).split("\n", -1);
+        String[] newLines = new String(newContent, StandardCharsets.UTF_8).split("\n", -1);
+        if (existingLines.length != newLines.length) {
+            return false;
+        }
+        for (int i = 0; i < existingLines.length; i++) {
+            boolean isDateLine = existingLines[i].strip().startsWith("1 DATE") && newLines[i].strip().startsWith("1 DATE");
+            if (!isDateLine && !existingLines[i].equals(newLines[i])) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void setRootPerson(Gedcom gedcom, int personId) {
