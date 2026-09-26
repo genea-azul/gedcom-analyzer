@@ -105,6 +105,7 @@ public class GeneaAzulWebResources {
         COUNTRY_ISO.put("Nicaragua",            "NI");
         COUNTRY_ISO.put("República Dominicana", "DO");
         COUNTRY_ISO.put("Rumania",              "RO");
+        COUNTRY_ISO.put("Moldavia",             "MD");
     }
 
     record SubGedcomConfig(

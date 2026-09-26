@@ -6,7 +6,6 @@ import com.geneaazul.gedcomanalyzer.service.TreeBuilderService;
 import com.geneaazul.gedcomanalyzer.utils.InetAddressUtils;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,7 +29,7 @@ public class TreeBuilderController {
     private final TreeBuilderService treeBuilderService;
 
     @PostMapping("/submit")
-    @CrossOrigin(originPatterns = { "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
+    @GeneaAzulCrossOrigin
     public TreeBuilderSubmitResultDto submit(
             @Valid @RequestBody TreeBuilderSubmitDto submitDto,
             HttpServletRequest request) {

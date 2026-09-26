@@ -48,6 +48,8 @@ public class GedcomAnalyzerProperties {
     private int maxClientRequestsCountSpecialThreshold = 3;
     private int maxClientRequestsHoursThreshold = 1;
     private Set<String> clientsWithSpecialThreshold = Set.of();
+    // Non-persisted family searches (tree-builder live lookup) are not stored, so they are counted in memory
+    private int maxClientLookupRequestsCountThreshold = 120;
 
     private boolean deleteUploadedGedcom = false;
     private boolean storeFamilySearch = true;

@@ -215,12 +215,16 @@ Most web configs use `directLineageOnly=true, trimTriggerSize=0, maxAscDepth=1` 
 
 ## REST API endpoints
 
+**CORS**: public endpoints use `@GeneaAzulCrossOrigin` (production domains + the Cloudflare Pages project `geneaazul-web.pages.dev` and its `*.geneaazul-web.pages.dev` previews). Never add a raw `@CrossOrigin` list; admin endpoints have no CORS on purpose.
+
+**Errors**: `ApiExceptionHandler` renders MVC exceptions as problem details with an `errorCode` property (`INVALID-REQUEST`, `TOO-MANY-REQUESTS`, `NOT-FOUND`, `ERROR`). The website maps these codes to Spanish messages — treat them as API contract. Business errors of successful searches still go in the `errors` array of the 200 response.
+
 ### `SearchController` — `/api/search`
 
 | Method | Path | Description |
 |---|---|---|
 | `POST` | `/family` | Search by person name + spouse name; returns matches with obfuscation options |
-| `POST` | `/surnames` | Search surnames with frequency |
+| `POST` | `/surnames` | Search surnames with frequency (429 when rate-limited) |
 | `POST` | `/connection` | Find relationship path between two people |
 | `GET` | `/family-tree/{personUuid}/plainPdf` | Download PDF family tree |
 | `GET` | `/family-tree/{personUuid}/graphJson` | Download JSON graph family tree |
@@ -244,7 +248,7 @@ Most web configs use `directLineageOnly=true, trimTriggerSize=0, maxAscDepth=1` 
 
 | Method | Path | Description |
 |---|---|---|
-| `POST` | `/submit` | Submit a tree-builder request (rate-limited, returns 429 if exceeded) |
+| `POST` | `/submit` | Submit a tree-builder request (rate-limited, returns 429 if exceeded). Each person accepts day/month/year of birth and death, birth/death place, and `relationshipType` (partner only); the whole DTO is stored as JSON in `TreeBuilderSubmission.payload` |
 
 ### `AdminController` — `/api/admin`
 
@@ -310,6 +314,7 @@ Place matching for `findPersonsByPlaceOfAnyEvent` includes: birth, death, marria
 - `maxClientRequestsCountSpecialThreshold` — 3 (tighter, for special endpoints)
 - `maxClientRequestsHoursThreshold` — 1 hour window
 - `clientsWithSpecialThreshold` — IP whitelist
+- `maxClientLookupRequestsCountThreshold` — 120 (in-memory, max 50,000 tracked clients; client IP comes from the unforgeable `Fly-Client-IP` header first); non-persisted family searches (`persist=false`, the website's tree-builder live lookup) are counted in memory by `ClientRequestRateLimiter`, because the DB-based counter only sees persisted searches
 
 **Age/relationship validation thresholds:**
 

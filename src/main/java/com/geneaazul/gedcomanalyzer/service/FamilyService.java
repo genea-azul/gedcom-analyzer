@@ -162,6 +162,15 @@ public class FamilyService {
 
     @Transactional(readOnly = true)
     public boolean isAllowedSearch(@Nullable String clientIpAddress) {
+        return isAllowedSearch(clientIpAddress, true);
+    }
+
+    /**
+     * @param currentRequestPersisted whether the request being checked was already stored (and is thus
+     *                                included in the count); non-persisted lookups must not get that allowance
+     */
+    @Transactional(readOnly = true)
+    public boolean isAllowedSearch(@Nullable String clientIpAddress, boolean currentRequestPersisted) {
         if (clientIpAddress == null) {
             return true;
         }
@@ -173,7 +182,7 @@ public class FamilyService {
         long connectionClientRequests = searchConnectionRepository.countByClientIpAddressAndCreateDateBetween(clientIpAddress, createDateFrom, createDateTo);
 
         boolean isSpecialThresholdClient = properties.getClientsWithSpecialThreshold().contains(clientIpAddress);
-        int offset = 1; // Since search is persisted before setting the result we need to skip last persisted one
+        int offset = currentRequestPersisted ? 1 : 0;
         return (familyClientRequests + connectionClientRequests - offset) < (isSpecialThresholdClient
                 ? properties.getMaxClientRequestsCountSpecialThreshold()
                 : properties.getMaxClientRequestsCountThreshold());

@@ -8,7 +8,6 @@ import com.geneaazul.gedcomanalyzer.service.CommentService;
 import com.geneaazul.gedcomanalyzer.utils.InetAddressUtils;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,7 +34,7 @@ public class CommentController {
     private final CommentService commentService;
 
     @PostMapping
-    @CrossOrigin(originPatterns = { "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
+    @GeneaAzulCrossOrigin
     public CommentSubmitResultDto submit(
             @Valid @RequestBody CommentSubmitDto submitDto,
             HttpServletRequest request) {
@@ -60,7 +59,7 @@ public class CommentController {
     }
 
     @GetMapping
-    @CrossOrigin(originPatterns = { "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
+    @GeneaAzulCrossOrigin
     public List<CommentDto> getApproved(
             @RequestParam CommentContextType contextType,
             @RequestParam String contextId) {
