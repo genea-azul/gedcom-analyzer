@@ -1,5 +1,6 @@
 package com.geneaazul.gedcomanalyzer.utils;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -10,6 +11,8 @@ import java.util.Optional;
 import jakarta.servlet.http.HttpServletRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -17,6 +20,17 @@ class InetAddressUtilsTests {
 
     @Mock
     private HttpServletRequest request;
+
+    @BeforeEach
+    void noHeadersByDefault() {
+        lenient().when(request.getHeader(anyString())).thenReturn(null);
+    }
+
+    @Test
+    void getRemoteAddress_flyClientIpWinsOverClientControlledHeaders() {
+        when(request.getHeader("Fly-Client-IP")).thenReturn("203.0.113.7");
+        assertThat(InetAddressUtils.getRemoteAddress(request)).contains("203.0.113.7");
+    }
 
     @Test
     void getRemoteAddress_withXRealIp_returnsIt() {

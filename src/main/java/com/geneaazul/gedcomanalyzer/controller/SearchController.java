@@ -11,6 +11,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.SearchFamilyResultDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnameResultDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchSurnamesResultDto;
+import com.geneaazul.gedcomanalyzer.service.ClientRequestRateLimiter;
 import com.geneaazul.gedcomanalyzer.service.ConnectionService;
 import com.geneaazul.gedcomanalyzer.service.FamilyService;
 import com.geneaazul.gedcomanalyzer.service.SurnameService;
@@ -23,10 +24,10 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.util.InMemoryResource;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,11 +35,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -63,9 +66,10 @@ public class SearchController {
     private final FamilyTreeManager familyTreeManager;
     private final PlainFamilyTreePdfService plainFamilyTreePdfService;
     private final GraphJsonFamilyTreeService graphJsonFamilyTreeService;
+    private final ClientRequestRateLimiter clientRequestRateLimiter;
 
     @PostMapping("/family")
-    @CrossOrigin(originPatterns = { "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
+    @GeneaAzulCrossOrigin
     public SearchFamilyResultDto searchFamily(
             @Valid @RequestBody SearchFamilyDto searchFamilyDto,
             HttpServletRequest request) {
@@ -98,6 +102,21 @@ public class SearchController {
             updateSearchResult(searchId, searchFamilyResult);
 
             return searchFamilyResult;
+        }
+
+        // Non-persisted searches (tree-builder live lookup, or storeFamilySearch=false) add nothing to the
+        // DB-based counter, so they are also counted in memory. The DB quota still applies: persist=false
+        // must not let a client that exhausted it keep searching.
+        if (!shouldPersist && !clientIpAddress
+                .map(ip -> familyService.isAllowedSearch(ip, false)
+                        && clientRequestRateLimiter.tryAcquire(
+                                "family-lookup:" + ip,
+                                properties.getMaxClientLookupRequestsCountThreshold(),
+                                Duration.ofHours(properties.getMaxClientRequestsHoursThreshold())))
+                .orElse(true)) {
+            return SearchFamilyResultDto.builder()
+                    .errors(List.of("TOO-MANY-REQUESTS"))
+                    .build();
         }
 
         SearchFamilyResultDto searchFamilyResult = familyService.search(searchFamilyDto);
@@ -137,7 +156,7 @@ public class SearchController {
     }
 
     @PostMapping("/surnames")
-    @CrossOrigin(originPatterns = { "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
+    @GeneaAzulCrossOrigin
     public SearchSurnamesResultDto searchSurnames(@Valid @RequestBody SearchSurnamesDto searchSurnamesDto, HttpServletRequest request) {
 
         Optional<String> clientIpAddress = InetAddressUtils.getRemoteAddress(request);
@@ -145,8 +164,7 @@ public class SearchController {
         if (!clientIpAddress
                 .map(familyService::isAllowedSearch)
                 .orElse(true)) {
-            return SearchSurnamesResultDto.builder()
-                    .build();
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS);
         }
 
         SearchSurnamesResultDto searchSurnamesResult = surnameService.search(searchSurnamesDto);
@@ -163,7 +181,7 @@ public class SearchController {
     }
 
     @GetMapping("/family-tree/{personUuid}/plainPdf")
-    @CrossOrigin(originPatterns = { "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" }, exposedHeaders = { "Content-Disposition", "File-Name" })
+    @GeneaAzulCrossOrigin(exposedHeaders = { "Content-Disposition", "File-Name" })
     public ResponseEntity<Resource> getPlainFamilyTreePdf(
             @PathVariable UUID personUuid,
             @RequestParam @Nullable Boolean obfuscateLiving,
@@ -225,7 +243,7 @@ public class SearchController {
     }
 
     @GetMapping("/family-tree/{personUuid}/graphJson")
-    @CrossOrigin(originPatterns = { "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
+    @GeneaAzulCrossOrigin
     public ResponseEntity<Resource> getGraphFamilyTreeJson(
             @PathVariable UUID personUuid,
             @RequestParam @Nullable Boolean obfuscateLiving,
@@ -287,7 +305,7 @@ public class SearchController {
     }
 
     @PostMapping("/connection")
-    @CrossOrigin(originPatterns = { "http://geneaazul.com.ar:[*]", "https://geneaazul.com.ar:[*]", "http://*.geneaazul.com.ar:[*]", "https://*.geneaazul.com.ar:[*]" })
+    @GeneaAzulCrossOrigin
     public SearchConnectionResultDto searchConnection(
             @Valid @RequestBody SearchConnectionDto searchConnectionDto,
             HttpServletRequest request) {

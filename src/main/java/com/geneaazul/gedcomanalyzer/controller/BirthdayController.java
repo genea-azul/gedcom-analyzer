@@ -6,7 +6,6 @@ import com.geneaazul.gedcomanalyzer.model.dto.SimplePersonDto;
 import com.geneaazul.gedcomanalyzer.service.BirthdayService;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,12 +29,7 @@ public class BirthdayController {
     private final GedcomAnalyzerProperties properties;
 
     @GetMapping("/azul-today")
-    @CrossOrigin(originPatterns = {
-            "http://geneaazul.com.ar:[*]",
-            "https://geneaazul.com.ar:[*]",
-            "http://*.geneaazul.com.ar:[*]",
-            "https://*.geneaazul.com.ar:[*]",
-    })
+    @GeneaAzulCrossOrigin
     public List<SimplePersonDto> getBirthdaysInAzulToday(HttpServletRequest request) {
         LocalDate today = LocalDate.now(properties.getZoneId());
         log.debug("Fetching Azul birthdays for today [ date={}, httpRequestId={} ]", today, request.getRequestId());
@@ -43,12 +37,7 @@ public class BirthdayController {
     }
 
     @GetMapping("/ephemerides-this-month")
-    @CrossOrigin(originPatterns = {
-            "http://geneaazul.com.ar:[*]",
-            "https://geneaazul.com.ar:[*]",
-            "http://*.geneaazul.com.ar:[*]",
-            "https://*.geneaazul.com.ar:[*]",
-    })
+    @GeneaAzulCrossOrigin
     public EphemeridesDto getEphemeridesThisMonth(HttpServletRequest request) {
         LocalDate today = LocalDate.now(properties.getZoneId());
         log.debug("Fetching efemérides for this month [ date={}, httpRequestId={} ]", today, request.getRequestId());

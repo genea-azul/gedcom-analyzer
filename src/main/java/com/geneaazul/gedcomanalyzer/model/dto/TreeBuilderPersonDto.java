@@ -31,6 +31,16 @@ public class TreeBuilderPersonDto {
     @ToString.Include
     private SexType sex;
 
+    @Min(1)
+    @Max(31)
+    @ToString.Include
+    private Integer birthDay;
+
+    @Min(1)
+    @Max(12)
+    @ToString.Include
+    private Integer birthMonth;
+
     @Min(0)
     @Max(2100)
     @ToString.Include
@@ -43,9 +53,27 @@ public class TreeBuilderPersonDto {
     @ToString.Include
     private Boolean isDeceased;
 
+    @Min(1)
+    @Max(31)
+    @ToString.Include
+    private Integer deathDay;
+
+    @Min(1)
+    @Max(12)
+    @ToString.Include
+    private Integer deathMonth;
+
     @Min(0)
     @Max(2100)
     @ToString.Include
     private Integer deathYear;
+
+    @Size(max = 80)
+    @ToString.Include
+    private String deathPlace;
+
+    /** Only meaningful for the partner. */
+    @ToString.Include
+    private TreeBuilderRelationshipType relationshipType;
 
 }

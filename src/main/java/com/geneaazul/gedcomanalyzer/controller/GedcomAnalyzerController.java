@@ -6,7 +6,6 @@ import com.geneaazul.gedcomanalyzer.service.GedcomAnalyzerService;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,12 +34,7 @@ public class GedcomAnalyzerController {
     private String projectVersion;
 
     @GetMapping
-    @CrossOrigin(originPatterns = {
-            "http://geneaazul.com.ar:[*]",
-            "https://geneaazul.com.ar:[*]",
-            "http://*.geneaazul.com.ar:[*]",
-            "https://*.geneaazul.com.ar:[*]",
-    })
+    @GeneaAzulCrossOrigin
     public Map<String, Object> analyzeGedcom(HttpServletRequest request) {
         log.info("Accessing the API [ httpRequestId={} ]", request.getRequestId());
         return Map.of(
@@ -56,12 +50,7 @@ public class GedcomAnalyzerController {
     }
 
     @GetMapping("/metadata")
-    @CrossOrigin(originPatterns = {
-            "http://geneaazul.com.ar:[*]",
-            "https://geneaazul.com.ar:[*]",
-            "http://*.geneaazul.com.ar:[*]",
-            "https://*.geneaazul.com.ar:[*]",
-    })
+    @GeneaAzulCrossOrigin
     public GedcomMetadataDto getGedcomMetadata() {
         return gedcomAnalyzerService.getGedcomMetadata(gedcomHolder.getGedcom());
     }

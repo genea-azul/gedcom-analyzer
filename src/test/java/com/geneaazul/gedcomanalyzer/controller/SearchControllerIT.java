@@ -1,5 +1,6 @@
 package com.geneaazul.gedcomanalyzer.controller;
 
+import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.domain.SearchConnection;
 import com.geneaazul.gedcomanalyzer.domain.SearchFamily;
 import com.geneaazul.gedcomanalyzer.model.dto.SearchConnectionDto;
@@ -18,19 +19,28 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import tools.jackson.databind.ObjectMapper;
 
 import java.nio.charset.StandardCharsets;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -233,6 +243,205 @@ public class SearchControllerIT extends AbstractControllerIT {
                 .andReturn();
 
         log.info("{} response:\n{}", url, result.getResponse().getContentAsString(StandardCharsets.UTF_8));
+    }
+
+
+    @Autowired
+    private GedcomAnalyzerProperties properties;
+
+    @Test
+    public void testSearchSurnamesRateLimitedReturns429WithErrorCode() throws Exception {
+        doReturn(100L)
+                .when(searchFamilyRepository)
+                .countByClientIpAddressAndCreateDateBetween(anyString(), any(OffsetDateTime.class), any(OffsetDateTime.class));
+
+        mvc.perform(post("/api/search/surnames")
+                        .content(objectMapper.writeValueAsBytes(SearchSurnamesDto.builder()
+                                .surnames(List.of("Family1"))
+                                .build()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-Forwarded-For", "9.9.9.9")
+                        .with(csrf()))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.errorCode", is("TOO-MANY-REQUESTS")));
+    }
+
+    @Test
+    public void testNonPersistedSearchesAreRateLimitedInMemory() throws Exception {
+        int originalThreshold = properties.getMaxClientLookupRequestsCountThreshold();
+        properties.setMaxClientLookupRequestsCountThreshold(2);
+        try {
+            byte[] body = objectMapper.writeValueAsBytes(SearchFamilyDto.builder()
+                    .individual(SearchPersonDto.builder()
+                            .givenName("Some")
+                            .surname("Person")
+                            .build())
+                    .persist(false)
+                    .build());
+
+            for (int i = 0; i < 2; i++) {
+                mvc.perform(post("/api/search/family")
+                                .content(body)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("X-Forwarded-For", "5.6.7.8")
+                                .with(csrf()))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.errors", not(hasItem("TOO-MANY-REQUESTS"))));
+            }
+
+            mvc.perform(post("/api/search/family")
+                            .content(body)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header("X-Forwarded-For", "5.6.7.8")
+                            .with(csrf()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.errors", hasItem("TOO-MANY-REQUESTS")))
+                    .andExpect(jsonPath("$.people", hasSize(0)));
+
+            // Another client is unaffected
+            mvc.perform(post("/api/search/family")
+                            .content(body)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header("X-Forwarded-For", "5.6.7.9")
+                            .with(csrf()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.errors", not(hasItem("TOO-MANY-REQUESTS"))));
+        } finally {
+            properties.setMaxClientLookupRequestsCountThreshold(originalThreshold);
+        }
+    }
+
+    @Test
+    public void testPersistFalseDoesNotBypassTheDatabaseQuota() throws Exception {
+        doReturn(100L)
+                .when(searchFamilyRepository)
+                .countByClientIpAddressAndCreateDateBetween(anyString(), any(OffsetDateTime.class), any(OffsetDateTime.class));
+
+        mvc.perform(post("/api/search/family")
+                        .content(objectMapper.writeValueAsBytes(SearchFamilyDto.builder()
+                                .individual(SearchPersonDto.builder()
+                                        .givenName("Some")
+                                        .surname("Person")
+                                        .build())
+                                .persist(false)
+                                .build()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-Forwarded-For", "7.7.7.7")
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.errors", hasItem("TOO-MANY-REQUESTS")))
+                .andExpect(jsonPath("$.people", hasSize(0)));
+    }
+
+    @Test
+    public void testPersistFalseIsDeniedAtExactlyTheDatabaseQuota() throws Exception {
+        // Exactly at the quota: a stored search would be the one over it, and so is a non-stored lookup
+        doReturn((long) properties.getMaxClientRequestsCountThreshold())
+                .when(searchFamilyRepository)
+                .countByClientIpAddressAndCreateDateBetween(anyString(), any(OffsetDateTime.class), any(OffsetDateTime.class));
+
+        mvc.perform(post("/api/search/family")
+                        .content(objectMapper.writeValueAsBytes(SearchFamilyDto.builder()
+                                .individual(SearchPersonDto.builder()
+                                        .givenName("Some")
+                                        .surname("Person")
+                                        .build())
+                                .persist(false)
+                                .build()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-Forwarded-For", "7.7.7.8")
+                        .with(csrf()))
+                .andExpect(jsonPath("$.errors", hasItem("TOO-MANY-REQUESTS")));
+    }
+
+    @Test
+    public void testSearchesAreLimitedInMemoryWhenStoringIsDisabled() throws Exception {
+        int originalThreshold = properties.getMaxClientLookupRequestsCountThreshold();
+        properties.setMaxClientLookupRequestsCountThreshold(1);
+        properties.setStoreFamilySearch(false);
+        try {
+            byte[] body = objectMapper.writeValueAsBytes(SearchFamilyDto.builder()
+                    .individual(SearchPersonDto.builder()
+                            .givenName("Some")
+                            .surname("Person")
+                            .build())
+                    .build());
+
+            mvc.perform(post("/api/search/family")
+                            .content(body)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header("X-Forwarded-For", "8.8.4.4")
+                            .with(csrf()))
+                    .andExpect(jsonPath("$.errors", not(hasItem("TOO-MANY-REQUESTS"))));
+
+            mvc.perform(post("/api/search/family")
+                            .content(body)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header("X-Forwarded-For", "8.8.4.4")
+                            .with(csrf()))
+                    .andExpect(jsonPath("$.errors", hasItem("TOO-MANY-REQUESTS")));
+        } finally {
+            properties.setMaxClientLookupRequestsCountThreshold(originalThreshold);
+            properties.setStoreFamilySearch(true);
+        }
+    }
+
+    @Test
+    public void testSearchFamilyFieldTooLongReturnsInvalidRequestErrorCode() throws Exception {
+        mvc.perform(post("/api/search/family")
+                        .content(objectMapper.writeValueAsBytes(SearchFamilyDto.builder()
+                                .individual(SearchPersonDto.builder()
+                                        .givenName("A".repeat(61))
+                                        .surname("Person")
+                                        .build())
+                                .build()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode", is("INVALID-REQUEST")));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "https://geneaazul.com.ar",
+            "https://www.geneaazul.com.ar",
+            "https://geneaazul-web.pages.dev",
+            "https://3f2a1b9c.geneaazul-web.pages.dev",
+            "https://fix-router.geneaazul-web.pages.dev",
+    })
+    public void testCorsPreflightAllowsWebsiteOrigins(String origin) throws Exception {
+        mvc.perform(options("/api/search/family")
+                        .header(HttpHeaders.ORIGIN, origin)
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "content-type"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "https://evil.example.com",
+            "https://other-project.pages.dev",
+            "https://geneaazul-web.pages.dev.evil.com",
+    })
+    public void testCorsPreflightRejectsOtherOrigins(String origin) throws Exception {
+        mvc.perform(options("/api/search/family")
+                        .header(HttpHeaders.ORIGIN, origin)
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST"))
+                .andExpect(status().isForbidden())
+                .andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
+    }
+
+    @Test
+    public void testCorsExposesDownloadHeadersOnPdfEndpoint() throws Exception {
+        mvc.perform(options("/api/search/family-tree/" + UUID.randomUUID() + "/plainPdf")
+                        .header(HttpHeaders.ORIGIN, "https://geneaazul.com.ar")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET"))
+                .andExpect(status().isOk());
+
+        mvc.perform(get("/api/search/family-tree/" + UUID.randomUUID() + "/plainPdf")
+                        .header(HttpHeaders.ORIGIN, "https://geneaazul.com.ar"))
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, containsString("File-Name")));
     }
 
 }

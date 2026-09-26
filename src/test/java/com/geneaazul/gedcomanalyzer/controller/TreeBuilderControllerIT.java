@@ -3,6 +3,7 @@ package com.geneaazul.gedcomanalyzer.controller;
 import com.geneaazul.gedcomanalyzer.domain.TreeBuilderSubmission;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.model.dto.TreeBuilderPersonDto;
+import com.geneaazul.gedcomanalyzer.model.dto.TreeBuilderRelationshipType;
 import com.geneaazul.gedcomanalyzer.model.dto.TreeBuilderSubmitDto;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 import java.nio.charset.StandardCharsets;
@@ -22,11 +25,13 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -257,7 +262,88 @@ public class TreeBuilderControllerIT extends AbstractControllerIT {
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("X-Forwarded-For", "1.2.3.4")
                         .with(csrf()))
-                .andExpect(status().isTooManyRequests());
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.errorCode", is("TOO-MANY-REQUESTS")));
+    }
+
+    @Test
+    public void testSubmitPersistsFullDatesDeathPlaceAndRelationshipType() throws Exception {
+        TreeBuilderSubmitDto submitDto = TreeBuilderSubmitDto.builder()
+                .ego(TreeBuilderPersonDto.builder()
+                        .givenName("María")
+                        .surname("González")
+                        .birthDay(15)
+                        .birthMonth(4)
+                        .birthYear(1985)
+                        .build())
+                .partner(TreeBuilderPersonDto.builder()
+                        .givenName("Juan")
+                        .surname("Pérez")
+                        .relationshipType(TreeBuilderRelationshipType.DIVORCED)
+                        .build())
+                .father(TreeBuilderPersonDto.builder()
+                        .givenName("José")
+                        .surname("González")
+                        .isDeceased(true)
+                        .deathDay(2)
+                        .deathMonth(11)
+                        .deathYear(2010)
+                        .deathPlace("Azul")
+                        .build())
+                .contact("maria@example.com")
+                .build();
+
+        doReturn(TreeBuilderSubmission.builder()
+                .id(7L)
+                .build())
+                .when(treeBuilderSubmissionRepository)
+                .save(any());
+
+        mvc.perform(post(URL)
+                        .content(objectMapper.writeValueAsBytes(submitDto))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf()))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<TreeBuilderSubmission> captor = ArgumentCaptor.forClass(TreeBuilderSubmission.class);
+        verify(treeBuilderSubmissionRepository).save(captor.capture());
+        JsonNode payload = objectMapper.readTree(captor.getValue().getPayload());
+
+        assertThat(payload.at("/ego/birthDay").asInt()).isEqualTo(15);
+        assertThat(payload.at("/ego/birthMonth").asInt()).isEqualTo(4);
+        assertThat(payload.at("/partner/relationshipType").asString()).isEqualTo("DIVORCED");
+        assertThat(payload.at("/father/deathDay").asInt()).isEqualTo(2);
+        assertThat(payload.at("/father/deathMonth").asInt()).isEqualTo(11);
+        assertThat(payload.at("/father/deathPlace").asString()).isEqualTo("Azul");
+    }
+
+    @Test
+    public void testSubmitInvalidBirthDayReturnsInvalidRequestErrorCode() throws Exception {
+        TreeBuilderSubmitDto submitDto = TreeBuilderSubmitDto.builder()
+                .ego(TreeBuilderPersonDto.builder()
+                        .givenName("Ana")
+                        .birthDay(32)
+                        .build())
+                .build();
+
+        mvc.perform(post(URL)
+                        .content(objectMapper.writeValueAsBytes(submitDto))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode", is("INVALID-REQUEST")));
+    }
+
+    @Test
+    public void testSubmitUnknownRelationshipTypeReturnsInvalidRequestErrorCode() throws Exception {
+        String body = "{\"ego\":{\"givenName\":\"Ana\"},\"partner\":{\"givenName\":\"Juan\",\"relationshipType\":\"NOT_A_TYPE\"}}";
+
+        mvc.perform(post(URL)
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode", is("INVALID-REQUEST")));
     }
 
 }
