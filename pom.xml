@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.3</version>
+		<version>4.1.2</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
@@ -20,20 +20,18 @@
 
 	<properties>
 		<java.version>25</java.version>
-		<google-guava.version>33.5.0-jre</google-guava.version>
-		<google-api-drive.version>v3-rev20260220-2.0.0</google-api-drive.version>
-		<gedcom-java.version>1.14.0</gedcom-java.version>
-		<icu4j.version>77.1</icu4j.version>
-		<pdfbox.version>3.0.6</pdfbox.version>
-		<commons-codec.version>1.21.0</commons-codec.version>
-		<commons-collections4.version>4.5.0</commons-collections4.version>
-		<commons-compress.version>1.28.0</commons-compress.version>
+		<google-guava.version>33.7.2-jre</google-guava.version>
+		<google-api-drive.version>v3-rev20261011-2.0.0</google-api-drive.version>
+		<gedcom.version>1.15.0</gedcom.version>
+		<icu4j.version>79.1</icu4j.version>
+		<pdfbox.version>3.0.8</pdfbox.version>
+		<commons-codec.version>1.23.0</commons-codec.version>
+		<commons-collections4.version>4.6.0</commons-collections4.version>
 		<commons-csv.version>1.14.1</commons-csv.version>
 		<commons-exec.version>1.6.0</commons-exec.version>
-		<commons-io.version>2.21.0</commons-io.version>
-		<commons-lang3.version>3.20.0</commons-lang3.version>
-		<commons-math4.version>4.0-beta1</commons-math4.version>
-		<commons-rng.version>1.6</commons-rng.version>
+		<commons-io.version>2.22.0</commons-io.version>
+		<commons-lang3.version>3.21.0</commons-lang3.version>
+		<commons-rng.version>1.7</commons-rng.version>
 		<commons-text.version>1.15.0</commons-text.version>
 	</properties>
 
@@ -94,33 +92,29 @@
 		<!-- GEDCOM dependencies -->
 		<dependency>
 			<groupId>org.familysearch.gedcom</groupId>
-			<artifactId>gedcom-java</artifactId>
-			<version>${gedcom-java.version}</version>
+			<artifactId>gedcom</artifactId>
+			<version>${gedcom.version}</version>
+			<exclusions>
+				<!-- Only used by the library's command-line tools -->
+				<exclusion>
+					<groupId>args4j</groupId>
+					<artifactId>args4j</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- ICU4J dependencies-->
 		<dependency>
 			<groupId>com.ibm.icu</groupId>
-			<artifactId>icu4j-core</artifactId>
-			<version>${icu4j.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.ibm.icu</groupId>
-			<artifactId>icu4j-translit</artifactId>
+			<artifactId>icu4j</artifactId>
 			<version>${icu4j.version}</version>
 		</dependency>
 
 		<!-- Apache PDF Box dependencies -->
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
-			<artifactId>pdfbox-tools</artifactId>
+			<artifactId>pdfbox</artifactId>
 			<version>${pdfbox.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.junit.jupiter</groupId>
-					<artifactId>junit-jupiter</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 
 		<!-- Apache Commons dependencies -->
@@ -214,11 +208,6 @@
 			</dependency>
 			<dependency>
 				<groupId>org.apache.commons</groupId>
-				<artifactId>commons-compress</artifactId>
-				<version>${commons-compress.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.commons</groupId>
 				<artifactId>commons-csv</artifactId>
 				<version>${commons-csv.version}</version>
 			</dependency>
@@ -231,11 +220,6 @@
 				<groupId>org.apache.commons</groupId>
 				<artifactId>commons-lang3</artifactId>
 				<version>${commons-lang3.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.commons</groupId>
-				<artifactId>commons-math4-core</artifactId>
-				<version>${commons-math4.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.commons</groupId>
@@ -352,10 +336,6 @@
 			<id>central</id>
 			<name>Maven Central Repository</name>
 			<url>https://repo.maven.apache.org/maven2</url>
-		</repository>
-		<repository>
-			<id>local-maven-repo</id>
-			<url>file:///${project.basedir}/.mvn/repo</url>
 		</repository>
 	</repositories>
 

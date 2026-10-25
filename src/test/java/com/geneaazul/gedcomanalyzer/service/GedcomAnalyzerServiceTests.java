@@ -17,6 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -483,7 +484,7 @@ public class GedcomAnalyzerServiceTests {
         gedcom
                 .getPeople()
                 .stream()
-                .filter(person -> StringUtils.containsAnyIgnoreCase(person.getDisplayName(), "Mun.", "Pte.", "Diác.", "Pbro.", "Padre ", "Rev.", "Sor ", "Mons.", "Cacique", "Gdor.", "Gdora.", "Bto.", "Bta.", "Cde.", "Cdesa.", "Pnt.", "Gral.", "Cnel.", "Ctan.", "Alfz.", "Tte. Cnel."))
+                .filter(person -> Strings.CI.containsAny(person.getDisplayName(), "Mun.", "Pte.", "Diác.", "Pbro.", "Padre ", "Rev.", "Sor ", "Mons.", "Cacique", "Gdor.", "Gdora.", "Bto.", "Bta.", "Cde.", "Cdesa.", "Pnt.", "Gral.", "Cnel.", "Ctan.", "Alfz.", "Tte. Cnel."))
                 .filter(Predicate.not(EnrichedPerson::isDistinguishedPerson))
                 .forEach(System.out::println);
     }

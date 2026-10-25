@@ -420,7 +420,7 @@ public class HighLoadCalculationsTests {
     }
 
     private static String getSurnameForSorting(String surname) {
-        return StringUtils.stripAccents(StringUtils.replace(StringUtils.lowerCase(surname), "ñ", "o "));
+        return StringUtils.stripAccents(Strings.CS.replace(StringUtils.lowerCase(surname), "ñ", "o "));
     }
 
     private static List<ImmigrantsSurnameReduce> mergeSurnamesLists(List<ImmigrantsSurnameReduce> l1, List<ImmigrantsSurnameReduce> l2) {
