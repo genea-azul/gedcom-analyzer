@@ -47,7 +47,7 @@ Or set `gedcom-storage-local-path` in `src/main/resources/application-local.prop
 
 - **Deploys:** pushing to `main` runs `./mvnw verify` in GitHub Actions and, if it passes, `flyctl deploy` (`.github/workflows/fly-deploy.yml`).
 - **GEDCOM:** loaded from Google Drive (`flyio` profile) into `/tmp`; a newer Drive file is picked up automatically, or with `GET /api/admin/gedcom-analyzer/reload`.
-- **Startup:** the image carries a JDK AOT cache (`/app/app.aot`, recorded at build time) that roughly halves Spring's startup on a cold boot.
+- **Startup:** the GEDCOM loads right away on boot; searches work ~23 s after a cold boot (resuming from suspend takes ~1 s).
 
 ---
 
