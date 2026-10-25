@@ -1,5 +1,6 @@
 package com.geneaazul.gedcomanalyzer.service;
 
+import com.geneaazul.gedcomanalyzer.analysis.GedcomStatisticsService;
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
 import com.geneaazul.gedcomanalyzer.model.AncestryGenerations;
@@ -61,9 +62,9 @@ import jakarta.annotation.Nullable;
 public class HighLoadCalculationsTests {
 
     @Autowired
-    private GedcomHolder gedcomHolder;
+    private GedcomStatisticsService gedcomStatisticsService;
     @Autowired
-    private GedcomAnalyzerService gedcomAnalyzerService;
+    private GedcomHolder gedcomHolder;
     @Autowired
     private SearchService searchService;
     @Autowired
@@ -88,7 +89,7 @@ public class HighLoadCalculationsTests {
 
     @Test
     public void getSurnamesCardinalityByPlaceOfAnyEvent() {
-        List<GedcomAnalyzerService.SurnamesCardinality> surnamesCardinalities = gedcomAnalyzerService
+        List<GedcomStatisticsService.SurnamesCardinality> surnamesCardinalities = gedcomStatisticsService
                 .getSurnamesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null, true, false);
         System.out.println("getSurnamesCardinalityByPlaceOfAnyEvent (" + surnamesCardinalities.size() + "):");
         surnamesCardinalities
@@ -136,11 +137,11 @@ public class HighLoadCalculationsTests {
     @Test
     public void getAncestryCountriesCardinalityByPlaceOfAnyEvent() {
         Boolean isAlive = Boolean.TRUE;
-        List<GedcomAnalyzerService.SurnamesByCountryCardinality> places = gedcomAnalyzerService
+        List<GedcomStatisticsService.SurnamesByCountryCardinality> places = gedcomStatisticsService
                 .getAncestryCountriesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", isAlive, true, false);
         int totalSurnames = places
                 .stream()
-                .mapToInt(GedcomAnalyzerService.SurnamesByCountryCardinality::cardinality)
+                .mapToInt(GedcomStatisticsService.SurnamesByCountryCardinality::cardinality)
                 .sum();
         System.out.println("getAncestryCountriesCardinalityByPlaceOfAnyEvent: " + places.size() + " places and " + totalSurnames + " surnames");
         List<EnrichedPerson> people = searchService
@@ -157,7 +158,7 @@ public class HighLoadCalculationsTests {
     @Test
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     public void getImmigrantsCitiesCardinalityByPlaceOfAnyEvent() throws IOException {
-        List<GedcomAnalyzerService.SurnamesByCityCardinality> places = gedcomAnalyzerService
+        List<GedcomStatisticsService.SurnamesByCityCardinality> places = gedcomStatisticsService
                 .getImmigrantsCitiesCardinalityByPlaceOfAnyEvent(
                         gedcom.getPeople(),
                         "Azul, Buenos Aires, Argentina",
@@ -171,10 +172,10 @@ public class HighLoadCalculationsTests {
                         // isExactPlace: relates to placeOfAnyEvent, set true to match exactly instead of "ends with" matching
                         false,
                         false,
-                        GedcomAnalyzerService.PlacePart.FULL); // set COUNTRY when generating statistics per country
+                        GedcomStatisticsService.PlacePart.FULL); // set COUNTRY when generating statistics per country
         int totalImmigrants = places
                 .stream()
-                .mapToInt(GedcomAnalyzerService.SurnamesByCityCardinality::cardinality)
+                .mapToInt(GedcomStatisticsService.SurnamesByCityCardinality::cardinality)
                 .sum();
         System.out.println("getImmigrantsCitiesCardinalityByPlaceOfAnyEvent: " + places.size() + " places and " + totalImmigrants + " immigrants");
 
