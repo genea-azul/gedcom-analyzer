@@ -53,6 +53,12 @@ class ProfilePictureCacheTest {
         server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
         server.createContext("/", exchange -> {
             requests.incrementAndGet();
+            if (exchange.getRequestURI().getPath().contains("redirect")) {
+                exchange.getResponseHeaders().add("Location", "http://127.0.0.1:" + server.getAddress().getPort() + "/elsewhere.jpg");
+                exchange.sendResponseHeaders(302, -1);
+                exchange.close();
+                return;
+            }
             boolean missing = exchange.getRequestURI().getPath().contains("missing");
             byte[] body = missing ? "gone".getBytes(StandardCharsets.UTF_8) : jpeg;
             exchange.sendResponseHeaders(missing ? 403 : 200, body.length);
@@ -154,6 +160,16 @@ class ProfilePictureCacheTest {
 
         assertThat(status.failed()).isEqualTo(2);
         assertThat(status.cached()).isZero();
+        assertThat(requests).hasValue(1);
+    }
+
+    @Test
+    void redirectsAreNotFollowedSoTheHostAllowlistCannotBeBypassed() {
+        ProfilePicture redirecting = signed("redirect_J.jpg", inAWeek());
+
+        ProfilePictureCache.SyncStatus status = cache.sync(gedcomWith(redirecting)).orElseThrow();
+
+        assertThat(status.failed()).isEqualTo(1);
         assertThat(requests).hasValue(1);
     }
 

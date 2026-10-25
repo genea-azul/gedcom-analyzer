@@ -77,7 +77,8 @@ public class ProfilePictureCache {
     public ProfilePictureCache(GedcomAnalyzerProperties properties) {
         this(properties, HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
-                .followRedirects(HttpClient.Redirect.NORMAL)
+                // Never follow redirects: the host allowlist is only checked for the URL in the GEDCOM
+                .followRedirects(HttpClient.Redirect.NEVER)
                 .build());
     }
 
