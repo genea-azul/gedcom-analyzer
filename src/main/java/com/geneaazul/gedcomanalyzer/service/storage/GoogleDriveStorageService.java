@@ -6,6 +6,7 @@ import com.geneaazul.gedcomanalyzer.service.GedcomParsingService;
 
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.util.DateTime;
 import com.google.api.services.drive.Drive;
 
 import java.io.IOException;
@@ -15,6 +16,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.Instant;
+import java.util.Optional;
 import java.util.Arrays;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
@@ -91,11 +94,43 @@ public class GoogleDriveStorageService implements StorageService {
         }
     }
 
+    /**
+     * The local copy is written when downloaded, so a Drive file modified after it is a new upload.
+     */
+    @Override
+    public Optional<Instant> findNewerGedcomVersion() throws IOException {
+        Path localPath = properties.getGedcomStorageLocalPath();
+        Instant remoteModified = driveFileModifiedTime();
+        if (Files.notExists(localPath)) {
+            return Optional.of(remoteModified);
+        }
+        Instant localModified = Files.getLastModifiedTime(localPath).toInstant();
+        log.info("Google Drive gedcom modified at {}, local copy from {}", remoteModified, localModified);
+        return remoteModified.isAfter(localModified) ? Optional.of(remoteModified) : Optional.empty();
+    }
+
+    protected Instant driveFileModifiedTime() throws IOException {
+        DateTime modifiedTime = drive()
+                .files()
+                .get(properties.getGedcomStorageGoogleDriveFileId())
+                .setFields("modifiedTime")
+                .execute()
+                .getModifiedTime();
+        return Instant.ofEpochMilli(modifiedTime.getValue());
+    }
+
     protected void downloadDriveFile(OutputStream outputStream) throws IOException {
+        drive()
+                .files()
+                .get(properties.getGedcomStorageGoogleDriveFileId())
+                .executeMediaAndDownloadTo(outputStream);
+    }
+
+    private Drive drive() {
         int connectTimeoutMillis = Math.toIntExact(properties.getGoogleDriveConnectTimeout().toMillis());
         int readTimeoutMillis = Math.toIntExact(properties.getGoogleDriveReadTimeout().toMillis());
         // Public file read with an API key: no OAuth credentials needed
-        Drive drive = new Drive.Builder(
+        return new Drive.Builder(
                 new NetHttpTransport(),
                 GsonFactory.getDefaultInstance(),
                 request -> request
@@ -106,11 +141,6 @@ public class GoogleDriveStorageService implements StorageService {
                                 .set("key", properties.getGoogleApiKey())))
                 .setApplicationName("gedcom-analyzer")
                 .build();
-
-        drive
-                .files()
-                .get(properties.getGedcomStorageGoogleDriveFileId())
-                .executeMediaAndDownloadTo(outputStream);
     }
 
     private static void extractSingleGedcom(Path zip, Path target) throws IOException {

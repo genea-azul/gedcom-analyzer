@@ -20,12 +20,11 @@ WORKDIR /workspace
 COPY /src ./src
 RUN ./mvnw clean package -DskipTests
 
-# stage 4 - unpack the compiled code
+# stage 4 - extract the jar into a launchable layout (application jar + lib/), which the AOT cache requires
 FROM base AS unpack
 WORKDIR /workspace
-RUN mkdir -p build/libs/dependency
-COPY --from=build /workspace/target/*.jar build/libs/app.jar
-RUN cd build/libs/dependency; jar -xf ../app.jar
+COPY --from=build /workspace/target/*.jar app.jar
+RUN java -Djarmode=tools -jar app.jar extract --destination extracted
 
 # stage 5 - JRE on Alpine
 FROM eclipse-temurin:25-jre-alpine AS jre
@@ -34,8 +33,16 @@ RUN addgroup -S -g 1001 gedcomanalyzerapp && \
 
 # stage 6 - make runnable based on the JRE and the built code
 FROM jre AS app
-COPY --from=unpack --chown=gedcomanalyzeruser:gedcomanalyzerapp /workspace/build/libs/dependency/BOOT-INF/lib /app/lib
-COPY --from=unpack --chown=gedcomanalyzeruser:gedcomanalyzerapp /workspace/build/libs/dependency/META-INF /app/META-INF
-COPY --from=unpack --chown=gedcomanalyzeruser:gedcomanalyzerapp /workspace/build/libs/dependency/BOOT-INF/classes /app
+WORKDIR /app
+COPY --from=unpack --chown=gedcomanalyzeruser:gedcomanalyzerapp /workspace/extracted/ /app/
+# Training run: start the Spring context once and record an AOT cache of the loaded and linked classes
+# (JDK 25, JEP 483/514/515); Spring starts ~60% faster on a cold boot. The reload delay keeps the
+# training run from looking for a GEDCOM, and the GC flags match fly.toml's JAVA_OPTS.
+RUN java -XX:+UseG1GC -XX:+UseCompactObjectHeaders -XX:AOTCacheOutput=/app/app.aot \
+        -Dspring.context.exit=onRefresh -jar /app/app.jar \
+        --spring.profiles.active=local --spring.datasource.url=jdbc:h2:mem:aot \
+        --gedcom.reload-delay-in-secs=3600 --temp-dir=/tmp/aot-training \
+        --logging.level.org.hibernate.SQL=WARN \
+    && rm -rf /tmp/aot-training
 VOLUME /tmp
-ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -cp app:app/lib/* com.geneaazul.gedcomanalyzer.Application"]
+ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -XX:AOTCache=/app/app.aot -jar /app/app.jar"]

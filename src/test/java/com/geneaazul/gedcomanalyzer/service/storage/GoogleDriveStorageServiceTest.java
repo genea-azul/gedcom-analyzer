@@ -13,6 +13,8 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
+import java.time.Instant;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -46,12 +48,19 @@ class GoogleDriveStorageServiceTest {
         when(properties.getGedcomStorageGoogleDriveFileId()).thenReturn("drive-file-id");
     }
 
+    private Instant driveModifiedTime = Instant.parse("2026-10-25T22:00:00Z");
+
     private GoogleDriveStorageService service() {
         return new GoogleDriveStorageService(localStorageService, properties) {
             @Override
             protected void downloadDriveFile(OutputStream outputStream) throws IOException {
                 downloads++;
                 outputStream.write(driveContent);
+            }
+
+            @Override
+            protected Instant driveFileModifiedTime() {
+                return driveModifiedTime;
             }
         };
     }
@@ -130,6 +139,28 @@ class GoogleDriveStorageServiceTest {
         assertThat(GoogleDriveStorageService.looksLikeGedcom(withBom)).isTrue();
         assertThat(GoogleDriveStorageService.looksLikeGedcom(withoutBom)).isTrue();
         assertThat(GoogleDriveStorageService.looksLikeGedcom(empty)).isFalse();
+    }
+
+
+    @Test
+    void aDriveFileModifiedAfterTheLocalCopyIsANewerVersion() throws Exception {
+        Files.writeString(localPath, OLD_GEDCOM);
+        Files.setLastModifiedTime(localPath, FileTime.from(driveModifiedTime.minusSeconds(60)));
+
+        assertThat(service().findNewerGedcomVersion()).contains(driveModifiedTime);
+    }
+
+    @Test
+    void aLocalCopyDownloadedAfterTheLastUploadIsCurrent() throws Exception {
+        Files.writeString(localPath, OLD_GEDCOM);
+        Files.setLastModifiedTime(localPath, FileTime.from(driveModifiedTime.plusSeconds(60)));
+
+        assertThat(service().findNewerGedcomVersion()).isEmpty();
+    }
+
+    @Test
+    void aMissingLocalCopyMeansTheDriveFileIsNewer() throws Exception {
+        assertThat(service().findNewerGedcomVersion()).contains(driveModifiedTime);
     }
 
 }
