@@ -3,6 +3,7 @@ package com.geneaazul.gedcomanalyzer.model;
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.service.SearchService;
+import com.geneaazul.gedcomanalyzer.utils.PersonUuids;
 
 import org.apache.commons.lang3.Strings;
 import org.folg.gedcom.model.Gedcom;
@@ -34,6 +35,7 @@ public class EnrichedGedcom {
     private final String gedcomName;
     @Nullable
     private final ZonedDateTime modifiedDateTime;
+    private final PersonUuids personUuids;
     private final GedcomAnalyzerProperties properties;
 
     private final List<EnrichedPerson> people;
@@ -70,12 +72,14 @@ public class EnrichedGedcom {
             Gedcom legacyGedcom,
             String gedcomName,
             @Nullable ZonedDateTime modifiedDateTime,
+            byte[] personUuidSecret,
             GedcomAnalyzerProperties properties,
             SearchService searchService) {
 
         this.legacyGedcom = properties.isKeepReferenceToLegacyGedcom() ? legacyGedcom : null;
         this.gedcomName = gedcomName;
         this.modifiedDateTime = modifiedDateTime;
+        this.personUuids = PersonUuids.of(personUuidSecret, modifiedDateTime);
         this.properties = properties;
 
         this.people = getEnrichedPeople(legacyGedcom);
@@ -172,17 +176,19 @@ public class EnrichedGedcom {
             Gedcom legacyGedcom,
             String gedcomName,
             ZonedDateTime modifiedDateTime,
+            byte[] personUuidSecret,
             GedcomAnalyzerProperties properties,
             SearchService searchService) {
-        return new EnrichedGedcom(legacyGedcom, gedcomName, modifiedDateTime, properties, searchService);
+        return new EnrichedGedcom(legacyGedcom, gedcomName, modifiedDateTime, personUuidSecret, properties, searchService);
     }
 
     public static EnrichedGedcom of(
             Gedcom legacyGedcom,
             String gedcomName,
+            byte[] personUuidSecret,
             GedcomAnalyzerProperties properties,
             SearchService searchService) {
-        return new EnrichedGedcom(legacyGedcom, gedcomName, null, properties, searchService);
+        return new EnrichedGedcom(legacyGedcom, gedcomName, null, personUuidSecret, properties, searchService);
     }
 
     public Optional<Gedcom> getLegacyGedcom() {

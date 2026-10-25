@@ -17,6 +17,7 @@ import com.geneaazul.gedcomanalyzer.service.GedcomParsingService;
 import com.geneaazul.gedcomanalyzer.service.TreeBuilderService;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -76,7 +78,10 @@ public class AdminController {
     @GetMapping("/gedcom-analyzer/reload")
     public GedcomMetadataDto reloadAndGetGedcomMetadata() {
         Instant start = Instant.now();
-        gedcomHolder.reloadFromStorage(true);
+        if (!gedcomHolder.reloadFromStorage(true)) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Reload failed, serving the previously cached gedcom (see logs)");
+        }
         Duration reloadDuration = Duration.between(start, Instant.now());
         return gedcomAnalyzerService.getGedcomMetadata(gedcomHolder.getGedcom(), reloadDuration);
     }

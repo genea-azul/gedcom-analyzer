@@ -2,6 +2,8 @@ package com.geneaazul.gedcomanalyzer.service;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -16,24 +18,26 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Scheduled job that deletes old family-tree export files (.csv, .html, .pdf)
- * from the temp directory. Runs once a week; files older than 120 days are removed.
+ * Deletes old family-tree exports (.csv, .html, .json, .pdf, .txt) from the temp directory,
+ * keeping the pyvis {@code lib/} assets the HTML exports load.
+ *
+ * <p>Person UUIDs change on every GEDCOM import, so older exports can no longer be requested.
+ * Runs at startup as well as daily: the Fly machine is suspended most of the time and
+ * misses scheduled runs, but every deploy or restart goes through startup.
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class FamilyTreeCleanupScheduler {
 
-    private static final int RETENTION_DAYS = 120;
-    private static final List<String> CLEANUP_EXTENSIONS = List.of(".csv", ".html", ".pdf");
+    static final int RETENTION_DAYS = 30;
+    private static final List<String> CLEANUP_EXTENSIONS = List.of(".csv", ".html", ".json", ".pdf", ".txt");
+    private static final String ASSETS_DIR = "lib";
 
     private final GedcomAnalyzerProperties properties;
 
-    /**
-     * Runs every Sunday at 02:00 (server timezone).
-     * Spring cron: second minute hour day-of-month month day-of-week
-     */
-    @Scheduled(cron = "0 0 2 * * SUN")
+    @EventListener(ApplicationReadyEvent.class)
+    @Scheduled(cron = "0 0 3 * * *")
     public void deleteOldFamilyTreeFiles() {
         Path familyTreesDir = properties.getTempDir().resolve("family-trees");
         if (!Files.isDirectory(familyTreesDir)) {
@@ -46,6 +50,7 @@ public class FamilyTreeCleanupScheduler {
 
         try (Stream<Path> paths = Files.walk(familyTreesDir)
                 .filter(Files::isRegularFile)
+                .filter(p -> !familyTreesDir.relativize(p).startsWith(ASSETS_DIR))
                 .filter(this::hasCleanupExtension)
                 .filter(p -> getLastModifiedInstant(p).isBefore(cutoff))) {
 

@@ -1,6 +1,7 @@
 package com.geneaazul.gedcomanalyzer.service;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
+import com.geneaazul.gedcomanalyzer.config.PersonUuidSecret;
 import com.geneaazul.gedcomanalyzer.model.Aka;
 import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
@@ -77,19 +78,20 @@ public class GedcomParsingService {
 
     private final GedcomAnalyzerProperties properties;
     private final SearchService searchService;
+    private final PersonUuidSecret personUuidSecret;
 
     public EnrichedGedcom parse(Path gedcomPath) throws IOException, SAXParseException {
         Gedcom gedcom = parseGedcom(gedcomPath);
         ZonedDateTime gedcomModifiedTime = Files.getLastModifiedTime(gedcomPath)
                 .toInstant()
                 .atZone(properties.getZoneId());
-        return EnrichedGedcom.of(gedcom, gedcomPath.toString(), gedcomModifiedTime, properties, searchService);
+        return EnrichedGedcom.of(gedcom, gedcomPath.toString(), gedcomModifiedTime, personUuidSecret.get(), properties, searchService);
     }
 
     public EnrichedGedcom parse(byte[] gedcomBytes, String gedcomName) throws SAXParseException, IOException {
         ByteArrayInputStream inputStream = new ByteArrayInputStream(gedcomBytes);
         Gedcom gedcom = parseGedcom(inputStream);
-        return EnrichedGedcom.of(gedcom, gedcomName, properties, searchService);
+        return EnrichedGedcom.of(gedcom, gedcomName, personUuidSecret.get(), properties, searchService);
     }
 
     public EnrichedGedcom parse(MultipartFile gedcomFile) throws IOException, SAXParseException {
@@ -104,7 +106,7 @@ public class GedcomParsingService {
 
             Path gedcomPath = uploadAndDecompress(gedcomDirPath, gedcomFile);
             Gedcom gedcom = parseGedcom(gedcomPath);
-            return EnrichedGedcom.of(gedcom, gedcomFile.getOriginalFilename(), properties, searchService);
+            return EnrichedGedcom.of(gedcom, gedcomFile.getOriginalFilename(), personUuidSecret.get(), properties, searchService);
 
         } finally {
             if (properties.isDeleteUploadedGedcom() && gedcomDirPath != null) {

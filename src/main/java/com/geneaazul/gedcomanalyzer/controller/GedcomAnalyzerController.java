@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Duration;
 import java.util.Map;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,6 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api/gedcom-analyzer")
 @RequiredArgsConstructor
 public class GedcomAnalyzerController {
+
+    private static final Duration READINESS_WAIT = Duration.ofSeconds(25);
 
     private final GedcomAnalyzerService gedcomAnalyzerService;
     private final GedcomHolder gedcomHolder;
@@ -37,6 +40,8 @@ public class GedcomAnalyzerController {
     @GeneaAzulCrossOrigin
     public Map<String, Object> analyzeGedcom(HttpServletRequest request) {
         log.info("Accessing the API [ httpRequestId={} ]", request.getRequestId());
+        // The website keeps its search forms hidden until this answers: only answer once searches can work
+        gedcomHolder.getGedcom(READINESS_WAIT);
         return Map.of(
                 "env", activeProfiles,
                 "version", projectVersion,

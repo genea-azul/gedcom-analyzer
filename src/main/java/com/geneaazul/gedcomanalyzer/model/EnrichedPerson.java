@@ -103,7 +103,7 @@ public class EnrichedPerson {
         this.gedcom = gedcom;
 
         id = PersonUtils.getId(person);
-        uuid = PersonUtils.getUuid(id, gedcom.getModifiedDateTime());
+        uuid = gedcom.getPersonUuids().uuid(id);
         sex = PersonUtils.getSex(person);
         givenName = PersonUtils.getNormalizedGivenName(person, properties.getNormalizedGivenNamesMap());
         surname = PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap());

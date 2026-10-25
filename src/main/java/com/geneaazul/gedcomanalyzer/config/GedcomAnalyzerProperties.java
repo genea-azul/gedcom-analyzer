@@ -37,6 +37,8 @@ public class GedcomAnalyzerProperties {
     private String googleApiKey;
     private String gedcomStorageGoogleDriveFileId;
     private String adminToken;
+    // Base64; when blank a random one is generated once and kept in temp-dir (see PersonUuidSecret)
+    private String personUuidSecret;
     private Duration googleDriveConnectTimeout = Duration.ofMillis(3000);
     private Duration googleDriveReadTimeout = Duration.ofMillis(3000);
 

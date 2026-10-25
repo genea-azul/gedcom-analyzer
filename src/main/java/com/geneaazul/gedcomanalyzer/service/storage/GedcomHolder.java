@@ -6,9 +6,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.PreDestroy;
 
 import lombok.RequiredArgsConstructor;
@@ -19,50 +20,102 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class GedcomHolder {
 
+    static final Duration DEFAULT_WAIT = Duration.ofSeconds(30);
+
     private final StorageService storageService;
 
-    private final LinkedBlockingQueue<EnrichedGedcom> gedcomQueue = new LinkedBlockingQueue<>();
+    private final Object monitor = new Object();
+    private final ReentrantLock reloadLock = new ReentrantLock();
 
+    @Nullable
+    private volatile EnrichedGedcom gedcom;
+
+    /**
+     * Returns the loaded GEDCOM, waiting while it is (re)loading.
+     *
+     * @throws GedcomNotLoadedException if it is still not available after {@link #DEFAULT_WAIT}
+     */
     public EnrichedGedcom getGedcom() {
-        try {
-            EnrichedGedcom gedcom = gedcomQueue.poll(30, TimeUnit.SECONDS);
-
-            if (gedcom != null) {
-                gedcomQueue.offer(gedcom);
-                return gedcom;
-            }
-
-        } catch (InterruptedException e) {
-            // do nothing
-        }
-
-        throw new IllegalStateException("Server is starting, please try again.");
+        return getGedcom(DEFAULT_WAIT);
     }
 
-    public void reloadFromStorage(boolean refreshCachedGedcom) {
+    public EnrichedGedcom getGedcom(Duration maxWait) {
+        EnrichedGedcom current = gedcom;
+        if (current != null) {
+            return current;
+        }
+
+        long deadline = System.nanoTime() + maxWait.toNanos();
+        synchronized (monitor) {
+            while ((current = gedcom) == null) {
+                long remaining = deadline - System.nanoTime();
+                if (remaining <= 0) {
+                    throw new GedcomNotLoadedException();
+                }
+                try {
+                    TimeUnit.NANOSECONDS.timedWait(monitor, remaining);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new GedcomNotLoadedException();
+                }
+            }
+            return current;
+        }
+    }
+
+    public boolean isLoaded() {
+        return gedcom != null;
+    }
+
+    /**
+     * Loads the GEDCOM from storage. Concurrent calls are rejected rather than queued.
+     *
+     * <p>The current GEDCOM is released before loading because two of them don't fit in the
+     * production heap; requests wait meanwhile. If a refreshed GEDCOM fails to load, the cached
+     * copy is loaded again so the site keeps serving the last good data.
+     *
+     * @return whether the requested GEDCOM was loaded
+     * @throws ReloadInProgressException if another reload is running
+     */
+    public boolean reloadFromStorage(boolean refreshCachedGedcom) {
+        if (!reloadLock.tryLock()) {
+            throw new ReloadInProgressException();
+        }
         try {
+            setGedcom(null);
             Instant start = Instant.now();
-            // Clear before loading to free the old GEDCOM's memory first.
-            // This causes a brief window (~seconds) where getGedcom() will block,
-            // but reload is a manual admin operation that runs at most once per week,
-            // so the trade-off is acceptable.
-            // NOTE: if storageService.getGedcom() throws, the queue stays empty and
-            // the server will reject all requests until restarted. The admin triggering
-            // the reload is expected to notice the error response and act accordingly.
-            gedcomQueue.clear();
-            EnrichedGedcom gedcom = storageService.getGedcom(refreshCachedGedcom);
-            gedcomQueue.offer(gedcom);
+            try {
+                setGedcom(storageService.getGedcom(refreshCachedGedcom));
+                log.info("Gedcom file loaded: {} - total time: {}", storageService.getGedcomName(), Duration.between(start, Instant.now()));
+                return true;
+            } catch (Throwable e) {
+                log.error("Error when loading gedcom file: {}", storageService.getGedcomName(), e);
+            }
 
-            log.info("Gedcom file loaded: {} - total time: {}", storageService.getGedcomName(), Duration.between(start, Instant.now()));
+            if (refreshCachedGedcom) {
+                try {
+                    setGedcom(storageService.getGedcom(false));
+                    log.warn("Restored the previously cached gedcom file: {}", storageService.getGedcomName());
+                } catch (Throwable e) {
+                    log.error("Error when restoring the cached gedcom file: {}", storageService.getGedcomName(), e);
+                }
+            }
+            return false;
+        } finally {
+            reloadLock.unlock();
+        }
+    }
 
-        } catch (Throwable e) {
-            log.error("Error when loading gedcom file: {}", storageService.getGedcomName(), e);
+    private void setGedcom(@Nullable EnrichedGedcom newGedcom) {
+        synchronized (monitor) {
+            gedcom = newGedcom;
+            monitor.notifyAll();
         }
     }
 
     @PreDestroy
     public void preDestroy() {
-        gedcomQueue.clear();
+        setGedcom(null);
     }
 
 }

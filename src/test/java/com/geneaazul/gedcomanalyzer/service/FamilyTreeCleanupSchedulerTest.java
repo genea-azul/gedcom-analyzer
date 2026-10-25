@@ -31,11 +31,11 @@ class FamilyTreeCleanupSchedulerTest {
     }
 
     @Test
-    void deleteOldFamilyTreeFiles_deletesOnlyOldCsvHtmlPdf() throws Exception {
+    void deleteOldFamilyTreeFiles_deletesOnlyOldExports() throws Exception {
         Path familyTreesDir = tempDir.resolve("family-trees");
         Files.createDirectories(familyTreesDir);
 
-        Instant oldInstant = Instant.now().minus(121, ChronoUnit.DAYS);
+        Instant oldInstant = Instant.now().minus(FamilyTreeCleanupScheduler.RETENTION_DAYS + 1, ChronoUnit.DAYS);
 
         Path oldCsv = familyTreesDir.resolve("old.csv");
         Path oldHtml = familyTreesDir.resolve("old.html");
@@ -52,7 +52,11 @@ class FamilyTreeCleanupSchedulerTest {
         createFileWithAge(newPdf, Instant.now());
 
         Path oldTxt = familyTreesDir.resolve("old.txt");
+        Path oldJson = familyTreesDir.resolve("old_visible.json");
+        Path oldOther = familyTreesDir.resolve("old.log");
         createFileWithAge(oldTxt, oldInstant);
+        createFileWithAge(oldJson, oldInstant);
+        createFileWithAge(oldOther, oldInstant);
 
         scheduler.deleteOldFamilyTreeFiles();
 
@@ -62,7 +66,25 @@ class FamilyTreeCleanupSchedulerTest {
         assertThat(newCsv).exists();
         assertThat(newHtml).exists();
         assertThat(newPdf).exists();
-        assertThat(oldTxt).exists();
+        assertThat(oldTxt).doesNotExist();
+        assertThat(oldJson).doesNotExist();
+        assertThat(oldOther).exists();
+    }
+
+    @Test
+    void deleteOldFamilyTreeFiles_keepsThePyvisAssets() throws Exception {
+        Path assets = tempDir.resolve("family-trees").resolve("lib").resolve("vis-9.1.2");
+        Files.createDirectories(assets);
+        Path oldAsset = assets.resolve("vis-network.min.js");
+        Path oldAssetJson = assets.resolve("bindings.json");
+        Instant oldInstant = Instant.now().minus(FamilyTreeCleanupScheduler.RETENTION_DAYS + 1, ChronoUnit.DAYS);
+        createFileWithAge(oldAsset, oldInstant);
+        createFileWithAge(oldAssetJson, oldInstant);
+
+        scheduler.deleteOldFamilyTreeFiles();
+
+        assertThat(oldAsset).exists();
+        assertThat(oldAssetJson).exists();
     }
 
     @Test
@@ -71,7 +93,7 @@ class FamilyTreeCleanupSchedulerTest {
         Path subdir = familyTreesDir.resolve("subdir");
         Files.createDirectories(subdir);
 
-        Instant oldInstant = Instant.now().minus(121, ChronoUnit.DAYS);
+        Instant oldInstant = Instant.now().minus(FamilyTreeCleanupScheduler.RETENTION_DAYS + 1, ChronoUnit.DAYS);
         Path oldInSubdir = subdir.resolve("old.csv");
         createFileWithAge(oldInSubdir, oldInstant);
 
@@ -103,8 +125,7 @@ class FamilyTreeCleanupSchedulerTest {
         Path familyTreesDir = tempDir.resolve("family-trees");
         Files.createDirectories(familyTreesDir);
 
-        // 119 days ago = within retention; should NOT be deleted
-        Instant withinRetention = Instant.now().minus(119, ChronoUnit.DAYS);
+        Instant withinRetention = Instant.now().minus(FamilyTreeCleanupScheduler.RETENTION_DAYS - 1, ChronoUnit.DAYS);
         Path withinRetentionFile = familyTreesDir.resolve("recent.csv");
         createFileWithAge(withinRetentionFile, withinRetention);
 

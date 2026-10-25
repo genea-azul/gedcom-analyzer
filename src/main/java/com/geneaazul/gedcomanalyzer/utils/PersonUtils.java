@@ -41,7 +41,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -97,23 +96,6 @@ public class PersonUtils {
                 .filter(StringUtils::isNumeric)
                 .map(Integer::valueOf)
                 .orElseGet(RNG::nextInt);
-    }
-
-    public static UUID getUuid(
-            Integer id,
-            @Nullable ZonedDateTime modifiedDateTime) {
-
-        long offset = Optional.ofNullable(modifiedDateTime)
-                .filter(mdt -> mdt.getNano() != 0)
-                .map(mdt -> mdt.getNano() / 1_000L)
-                .orElse(1L);
-        long personId = id * offset;
-
-        long timestamp = Optional.ofNullable(modifiedDateTime)
-                .map(ZonedDateTime::toEpochSecond)
-                .orElseGet(RNG::nextLong);
-
-        return new UUID(personId, timestamp);
     }
 
     public static boolean isAlive(Person person) {
