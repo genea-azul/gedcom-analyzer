@@ -9,7 +9,6 @@ import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResult;
 import com.geneaazul.gedcomanalyzer.model.PersonComparisonResults;
 import com.geneaazul.gedcomanalyzer.model.Place;
-import com.geneaazul.gedcomanalyzer.model.ProfilePicture;
 import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.model.dto.NameAndPictureDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
@@ -18,6 +17,7 @@ import com.geneaazul.gedcomanalyzer.model.dto.PersonDuplicateDto;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonWithReferenceDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SimplePersonDto;
 import com.geneaazul.gedcomanalyzer.model.dto.SpouseWithChildrenDto;
+import com.geneaazul.gedcomanalyzer.service.photo.ProfilePictureCache;
 import com.geneaazul.gedcomanalyzer.utils.DateUtils;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 
@@ -38,6 +38,7 @@ public class PersonMapper {
 
     private final RelationshipMapper relationshipMapper;
     private final AncestryGenerationsMapper ancestryGenerationsMapper;
+    private final ProfilePictureCache profilePictureCache;
 
     public List<PersonDto> toPersonDto(
             Collection<EnrichedPerson> persons,
@@ -77,8 +78,7 @@ public class PersonMapper {
                         .filter(aka -> !(obfuscateName && person.isAlive()))
                         .map(Aka::value)
                         .orElse(null))
-                .profilePicture(person.getProfilePicture()
-                        .map(ProfilePicture::file)
+                .profilePicture(profilePictureCache.publicUrl(person)
                         .orElse(null))
                 .dateOfBirth(person.getDateOfBirth()
                         .map(date -> DateUtils.obfuscateDate(date, obfuscateLiving && person.isAlive()))
@@ -138,8 +138,7 @@ public class PersonMapper {
                 .aka(person.getAka()
                         .map(Aka::value)
                         .orElse(null))
-                .profilePicture(person.getProfilePicture()
-                        .map(ProfilePicture::file)
+                .profilePicture(profilePictureCache.publicUrl(person)
                         .orElse(null))
                 .dateOfBirth(person.getDateOfBirth()
                         .map(Date::format)
@@ -161,8 +160,7 @@ public class PersonMapper {
                 .stream()
                 .map(person -> NameAndPictureDto.builder()
                         .name(person.getDisplayName())
-                        .file(person.getProfilePicture()
-                                .map(ProfilePicture::file)
+                        .file(profilePictureCache.publicUrl(person)
                                 .orElse(null))
                         .build())
                 .toList();

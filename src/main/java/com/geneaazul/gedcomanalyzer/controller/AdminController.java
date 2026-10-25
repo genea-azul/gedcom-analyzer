@@ -15,6 +15,7 @@ import com.geneaazul.gedcomanalyzer.service.FamilyService;
 import com.geneaazul.gedcomanalyzer.service.GedcomAnalyzerService;
 import com.geneaazul.gedcomanalyzer.service.GedcomParsingService;
 import com.geneaazul.gedcomanalyzer.service.TreeBuilderService;
+import com.geneaazul.gedcomanalyzer.service.photo.ProfilePictureCache;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 
 import org.springframework.http.HttpStatus;
@@ -61,6 +62,7 @@ public class AdminController {
     private final ConnectionService connectionService;
     private final TreeBuilderService treeBuilderService;
     private final CommentService commentService;
+    private final ProfilePictureCache profilePictureCache;
 
     // ── Gedcom ──────────────────────────────────────────────────────────────
 
@@ -84,6 +86,13 @@ public class AdminController {
         }
         Duration reloadDuration = Duration.between(start, Instant.now());
         return gedcomAnalyzerService.getGedcomMetadata(gedcomHolder.getGedcom(), reloadDuration);
+    }
+
+    @GetMapping("/gedcom-analyzer/photos")
+    public Map<String, Object> getProfilePictureCacheStatus() {
+        return profilePictureCache.lastSync()
+                .<Map<String, Object>>map(status -> Map.of("lastSync", status))
+                .orElseGet(() -> Map.of("lastSync", "not run yet"));
     }
 
     @PostMapping("/gedcom-analyzer")

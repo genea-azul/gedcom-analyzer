@@ -25,8 +25,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -88,7 +90,7 @@ public class ConnectionService {
                     return searchConnection;
                 })
                 .map(searchConnectionMapper::toSearchConnectionDetailsDto)
-                .orElseThrow(() -> new RuntimeException("SearchConnection not found id=" + searchConnectionId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SearchConnection not found id=" + searchConnectionId));
     }
 
     public SearchConnectionResultDto search(SearchConnectionDto searchConnectionDto) {

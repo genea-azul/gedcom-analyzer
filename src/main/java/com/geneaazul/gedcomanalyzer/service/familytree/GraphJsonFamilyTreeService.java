@@ -8,11 +8,11 @@ import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.FamilyTree;
 import com.geneaazul.gedcomanalyzer.model.FamilyTreeType;
-import com.geneaazul.gedcomanalyzer.model.ProfilePicture;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.dto.FamilyTreeGraphDto;
 import com.geneaazul.gedcomanalyzer.model.dto.FamilyTreeGraphDto.FamilyNodeDto;
 import com.geneaazul.gedcomanalyzer.model.dto.FamilyTreeGraphDto.PersonNodeDto;
+import com.geneaazul.gedcomanalyzer.service.photo.ProfilePictureCache;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 
@@ -44,16 +44,19 @@ public class GraphJsonFamilyTreeService extends AbstractFamilyTreeService {
 
     private final ObjectMapper objectMapper;
     private final RelationshipMapper relationshipMapper;
+    private final ProfilePictureCache profilePictureCache;
 
     public GraphJsonFamilyTreeService(
             GedcomHolder gedcomHolder,
             FamilyTreeHelper familyTreeHelper,
             GedcomAnalyzerProperties properties,
             ObjectMapper objectMapper,
-            RelationshipMapper relationshipMapper) {
+            RelationshipMapper relationshipMapper,
+            ProfilePictureCache profilePictureCache) {
         super(gedcomHolder, familyTreeHelper, properties, FamilyTreeType.GRAPH_JSON, "json", MediaType.APPLICATION_JSON);
         this.objectMapper = objectMapper;
         this.relationshipMapper = relationshipMapper;
+        this.profilePictureCache = profilePictureCache;
     }
 
     @Override
@@ -174,7 +177,7 @@ public class GraphJsonFamilyTreeService extends AbstractFamilyTreeService {
         }
     }
 
-    private static PersonNodeDto toPersonNodeDto(
+    private PersonNodeDto toPersonNodeDto(
             EnrichedPerson ep,
             boolean obfuscateLiving,
             @Nullable String relationship,
@@ -202,7 +205,7 @@ public class GraphJsonFamilyTreeService extends AbstractFamilyTreeService {
                 .displayName(PersonUtils.obfuscateName(ep, obfuscate))
                 .sex(ep.getSex())
                 .aka(obfuscate ? null : ep.getAka().map(Aka::value).orElse(null))
-                .profilePicture(obfuscate ? null : ep.getProfilePicture().map(ProfilePicture::file).orElse(null))
+                .profilePicture(obfuscate ? null : profilePictureCache.publicUrl(ep).orElse(null))
                 .yearOfBirth(yearOfBirth)
                 .circaBirth(circaBirth)
                 .yearOfDeath(yearOfDeath)

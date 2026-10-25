@@ -1,12 +1,17 @@
 package com.geneaazul.gedcomanalyzer.config;
 
-import org.apache.commons.lang3.StringUtils;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.List;
 
+import jakarta.annotation.Nullable;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,8 +21,9 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * Gates admin pages/endpoints behind a static token (env var ADMIN_TOKEN), passed as
- * ?token=... so the plain admin pages stay bookmarkable. If ADMIN_TOKEN is unset, this
- * filter is a no-op (dev/test convenience) — admin routes are open, same as before.
+ * ?token=... so the plain admin pages stay bookmarkable, or as an X-Admin-Token header.
+ * If ADMIN_TOKEN is unset the admin routes are open locally, but closed in production:
+ * a missing secret must not expose the admin endpoints.
  */
 @Component
 @RequiredArgsConstructor
@@ -30,7 +36,10 @@ public class AdminTokenFilter extends OncePerRequestFilter {
             "/tree-builder/",
             "/comments/latest");
 
+    static final String TOKEN_HEADER = "X-Admin-Token";
+
     private final GedcomAnalyzerProperties properties;
+    private final Environment environment;
 
     @Override
     protected void doFilterInternal(
@@ -41,7 +50,9 @@ public class AdminTokenFilter extends OncePerRequestFilter {
         String requestPath = request.getRequestURI();
 
         boolean isProtectedPath = PROTECTED_PATH_PREFIXES.stream().anyMatch(requestPath::startsWith);
-        boolean isAuthorized = StringUtils.isBlank(adminToken) || adminToken.equals(request.getParameter("token"));
+        boolean isAuthorized = StringUtils.isBlank(adminToken)
+                ? !environment.matchesProfiles("prod", "flyio")
+                : matches(adminToken, request.getHeader(TOKEN_HEADER)) || matches(adminToken, request.getParameter("token"));
 
         if (isProtectedPath && !isAuthorized) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -51,6 +62,12 @@ public class AdminTokenFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private static boolean matches(String expected, @Nullable String actual) {
+        return actual != null && MessageDigest.isEqual(
+                expected.getBytes(StandardCharsets.UTF_8),
+                actual.getBytes(StandardCharsets.UTF_8));
     }
 
 }

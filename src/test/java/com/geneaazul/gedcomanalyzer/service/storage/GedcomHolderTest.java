@@ -5,7 +5,9 @@ import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -17,7 +19,8 @@ import static org.mockito.Mockito.when;
 class GedcomHolderTest {
 
     private final StorageService storageService = mock(StorageService.class);
-    private final GedcomHolder holder = new GedcomHolder(storageService);
+    private final List<Object> events = new CopyOnWriteArrayList<>();
+    private final GedcomHolder holder = new GedcomHolder(storageService, events::add);
 
     @Test
     void notLoadedYetFailsWithServiceUnavailableAfterWaiting() {
@@ -52,6 +55,7 @@ class GedcomHolderTest {
         holder.reloadFromStorage(true);
         assertThat(holder.getGedcom()).isSameAs(second);
         assertThat(holder.getGedcom()).isSameAs(second);
+        assertThat(events).containsExactly(new GedcomLoadedEvent(first), new GedcomLoadedEvent(second));
     }
 
     @Test
@@ -62,6 +66,7 @@ class GedcomHolderTest {
 
         assertThat(holder.reloadFromStorage(true)).isFalse();
         assertThat(holder.getGedcom()).isSameAs(cached);
+        assertThat(events).containsExactly(new GedcomLoadedEvent(cached));
     }
 
     @Test

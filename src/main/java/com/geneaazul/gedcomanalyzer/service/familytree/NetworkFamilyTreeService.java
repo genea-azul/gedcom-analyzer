@@ -23,6 +23,7 @@ import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.FileWriter;
@@ -74,7 +75,7 @@ public class NetworkFamilyTreeService extends AbstractFamilyTreeService {
             List<List<Relationship>> relationshipsWithNotInLawPriority) {
 
         // Intermediate CSVs for the Python script, named after the (temporary, unique) HTML file
-        String baseName = StringUtils.removeEnd(exportFilePath.getFileName().toString(), ".html");
+        String baseName = Strings.CS.removeEnd(exportFilePath.getFileName().toString(), ".html");
         Path csvNodesPath = exportFilePath.resolveSibling(baseName + "_nodes.csv");
         Path csvEdgesPath = exportFilePath.resolveSibling(baseName + "_edges.csv");
         try {

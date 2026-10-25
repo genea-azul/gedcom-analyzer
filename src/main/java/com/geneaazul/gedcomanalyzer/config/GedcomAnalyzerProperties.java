@@ -42,6 +42,12 @@ public class GedcomAnalyzerProperties {
     private Duration googleDriveConnectTimeout = Duration.ofMillis(3000);
     private Duration googleDriveReadTimeout = Duration.ofMillis(3000);
 
+    // Absolute base URL of this API, used in links returned to the website (e.g. cached photos)
+    private String publicApiBaseUrl = "http://localhost:8080";
+    // Profile photos are only downloaded from these hosts (and their subdomains)
+    private List<String> profilePictureAllowedHostSuffixes = List.of("mhcache.com");
+    private int profilePictureDownloadConcurrency = 3;
+
     private String pyvisNetworkExportScriptFilename = "pyvis_network.py";
     private Integer maxPyvisNetworkNodesToExport = 500;
     private Integer maxGraphJsonNodesToExport = 250;

@@ -42,9 +42,8 @@ public class TreeBuilderController {
 
         Long submissionId = treeBuilderService.persistSubmission(submitDto, clientIpAddress.orElse(null));
 
-        log.info("Tree builder submission [ id={}, contact={}, httpRequestId={} ]",
+        log.info("Tree builder submission [ id={}, httpRequestId={} ]",
                 submissionId,
-                submitDto.getContact(),
                 request.getRequestId());
 
         return TreeBuilderSubmitResultDto.builder()

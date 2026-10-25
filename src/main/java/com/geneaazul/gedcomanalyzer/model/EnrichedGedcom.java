@@ -86,7 +86,7 @@ public class EnrichedGedcom {
 
         // General stats + all lookup indexes — single pass over the full people list
         this.familiesCount = legacyGedcom.getFamilies().size();
-        int maleCount = 0, aliveCount = 0, distinguishedCount = 0, nativeCount = 0;
+        int maleCount = 0, femaleCount = 0, aliveCount = 0, distinguishedCount = 0, nativeCount = 0;
         int azulMayorsCount = 0, azulDisappearedCount = 0;
         Map<Integer, EnrichedPerson> byId = new HashMap<>(this.people.size() * 2);
         Map<UUID, EnrichedPerson> byUuid = new HashMap<>(this.people.size() * 2);
@@ -98,6 +98,7 @@ public class EnrichedGedcom {
 
         for (EnrichedPerson person : this.people) {
             if (person.getSex() == SexType.M) maleCount++;
+            if (person.getSex() == SexType.F) femaleCount++;
             if (person.isAlive()) aliveCount++;
             if (person.isDistinguishedPerson()) {
                 distinguishedCount++;
@@ -138,7 +139,7 @@ public class EnrichedGedcom {
         }
 
         this.maleCount = maleCount;
-        this.femaleCount = this.people.size() - maleCount;
+        this.femaleCount = femaleCount;
         this.aliveCount = aliveCount;
         this.deceasedCount = this.people.size() - aliveCount;
         this.distinguishedCount = distinguishedCount;
