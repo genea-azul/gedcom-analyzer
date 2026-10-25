@@ -20,7 +20,7 @@ WORKDIR /workspace
 COPY /src ./src
 RUN ./mvnw clean package -DskipTests
 
-# stage 4 - extract the jar into a launchable layout (application jar + lib/), which the AOT cache requires
+# stage 4 - extract the jar into a launchable layout (application jar + lib/)
 FROM base AS unpack
 WORKDIR /workspace
 COPY --from=build /workspace/target/*.jar app.jar
@@ -35,14 +35,7 @@ RUN addgroup -S -g 1001 gedcomanalyzerapp && \
 FROM jre AS app
 WORKDIR /app
 COPY --from=unpack --chown=gedcomanalyzeruser:gedcomanalyzerapp /workspace/extracted/ /app/
-# Training run: start the Spring context once and record an AOT cache of the loaded and linked classes
-# (JDK 25, JEP 483/514/515); Spring starts ~60% faster on a cold boot. The reload delay keeps the
-# training run from looking for a GEDCOM, and the GC flags match fly.toml's JAVA_OPTS.
-RUN java -XX:+UseG1GC -XX:+UseCompactObjectHeaders -XX:AOTCacheOutput=/app/app.aot \
-        -Dspring.context.exit=onRefresh -jar /app/app.jar \
-        --spring.profiles.active=local --spring.datasource.url=jdbc:h2:mem:aot \
-        --gedcom.reload-delay-in-secs=3600 --temp-dir=/tmp/aot-training \
-        --logging.level.org.hibernate.SQL=WARN \
-    && rm -rf /tmp/aot-training
+# No JDK AOT cache: measured on Fly (2 shared vCPUs) it made cold boots slower, not faster — the
+# cache is recorded on the remote builder's CPU and partly rejected on the VM (Oct 2026)
 VOLUME /tmp
-ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -XX:AOTCache=/app/app.aot -jar /app/app.jar"]
+ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar /app/app.jar"]
