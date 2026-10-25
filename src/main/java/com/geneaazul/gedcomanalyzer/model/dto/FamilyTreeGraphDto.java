@@ -22,6 +22,7 @@ public record FamilyTreeGraphDto(
             Boolean circaBirth,
             Integer yearOfDeath,
             Boolean circaDeath,
+            String placeOfBirth,
             Boolean isAlive,
             Integer generation,
             String relationship) {

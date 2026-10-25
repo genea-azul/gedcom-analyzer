@@ -1,5 +1,6 @@
 package com.geneaazul.gedcomanalyzer.service;
 
+import com.geneaazul.gedcomanalyzer.analysis.GedcomStatisticsService;
 import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
@@ -45,12 +46,14 @@ import jakarta.annotation.Nullable;
 @ActiveProfiles("test")
 public class GeneaAzulWebResources {
 
+    private static final String PROFILE_PICTURE_URL_PREFIX = "https://gedcom-analyzer-app.fly.dev/api/photos/";
+
     public static final int MAX_SURNAMES_PER_COUNTRY = 22;
 
     @Autowired
-    private GedcomHolder gedcomHolder;
+    private GedcomStatisticsService gedcomStatisticsService;
     @Autowired
-    private GedcomAnalyzerService gedcomAnalyzerService;
+    private GedcomHolder gedcomHolder;
     /*
     @Autowired
     private SearchService searchService;
@@ -415,6 +418,8 @@ public class GeneaAzulWebResources {
                     SubGedcomOptions.builder()
                             .alivePersonFilter(AlivePersonFilter.SHOW_SURNAME_ONLY)
                             .displayOnlyBasic(true)
+                            // Photos served from the production cache (keys are stable across exports)
+                            .profilePictureUrlPrefix(PROFILE_PICTURE_URL_PREFIX)
                             .directLineageOnly(config.directLineageOnly())
                             .rootPersonId(config.personId())
                             .trimTriggerSize(config.trimTriggerSize())
@@ -470,20 +475,20 @@ public class GeneaAzulWebResources {
 
     @Test
     public void generateSurnamesJson() throws IOException {
-        List<GedcomAnalyzerService.SurnamesCardinality> cardinalities = gedcomAnalyzerService
+        List<GedcomStatisticsService.SurnamesCardinality> cardinalities = gedcomStatisticsService
                 .getSurnamesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", null, true, false);
 
         // Build a lookup map: normalizedMainWord → alive count
-        Map<String, Integer> aliveCountByNormalized = gedcomAnalyzerService
+        Map<String, Integer> aliveCountByNormalized = gedcomStatisticsService
                 .getSurnamesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), "Azul, Buenos Aires, Argentina", true, true, false)
                 .stream()
                 .collect(Collectors.toMap(
                         c -> c.mainSurname().normalizedMainWord(),
-                        GedcomAnalyzerService.SurnamesCardinality::value));
+                        GedcomStatisticsService.SurnamesCardinality::value));
 
         StringBuilder sb = new StringBuilder("[\n");
         for (int i = 0; i < cardinalities.size(); i++) {
-            GedcomAnalyzerService.SurnamesCardinality cardinality = cardinalities.get(i);
+            GedcomStatisticsService.SurnamesCardinality cardinality = cardinalities.get(i);
 
             List<String> variants = surnameService.getSurnameVariants(
                     cardinality.mainSurname(),
@@ -512,7 +517,7 @@ public class GeneaAzulWebResources {
     @Test
     public void generateImmigrationJson() throws IOException {
 
-        List<GedcomAnalyzerService.SurnamesByCityCardinality> places = gedcomAnalyzerService
+        List<GedcomStatisticsService.SurnamesByCityCardinality> places = gedcomStatisticsService
                 .getImmigrantsCitiesCardinalityByPlaceOfAnyEvent(
                         gedcom.getPeople(),
                         "Azul, Buenos Aires, Argentina",
@@ -526,7 +531,7 @@ public class GeneaAzulWebResources {
                         // isExactPlace: relates to placeOfAnyEvent, set true to match exactly instead of "ends with" matching
                         false,
                         false,
-                        GedcomAnalyzerService.PlacePart.COUNTRY);
+                        GedcomStatisticsService.PlacePart.COUNTRY);
 
         // ── Country groupings ──────────────────────────────────────────
         // Maps each raw GEDCOM country name to its canonical display name.
@@ -562,7 +567,7 @@ public class GeneaAzulWebResources {
         Map<String, String>  isoByGroup        = new LinkedHashMap<>();
         Map<String, Map<String, Integer>> surnamesByGroup = new LinkedHashMap<>();
 
-        for (GedcomAnalyzerService.SurnamesByCityCardinality place : places) {
+        for (GedcomStatisticsService.SurnamesByCityCardinality place : places) {
             GroupDef def = groups.get(place.country());
             String key      = def != null ? def.displayName() : place.country();
             String formerly = def != null ? def.formerly()    : null;
@@ -877,10 +882,10 @@ public class GeneaAzulWebResources {
                 });
 
         // Most common surname in Azul: year of earliest appearance
-        List<GedcomAnalyzerService.SurnamesCardinality> surnameCounts = gedcomAnalyzerService
+        List<GedcomStatisticsService.SurnamesCardinality> surnameCounts = gedcomStatisticsService
                 .getSurnamesCardinalityByPlaceOfAnyEvent(gedcom.getPeople(), azulPlace, null, true, false);
         if (!surnameCounts.isEmpty()) {
-            GedcomAnalyzerService.SurnamesCardinality top = surnameCounts.getFirst();
+            GedcomStatisticsService.SurnamesCardinality top = surnameCounts.getFirst();
             int earliestYear = azulPeople.stream()
                     .filter(p -> p.getSurname()
                             .map(s -> s.normalizedMainWord().equals(top.mainSurname().normalizedMainWord()))

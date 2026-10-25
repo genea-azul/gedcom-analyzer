@@ -13,6 +13,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
@@ -42,7 +43,7 @@ public class PlainFamilyTreeTxtServiceTests {
     private boolean onlySecondaryDescription;
 
     @Test
-    public void testExportToTXT() {
+    public void testExportToTXT() throws Exception {
 
         Instant start = Instant.now();
         EnrichedPerson person = gedcomHolder.getGedcom().getPersonById(4);
@@ -54,6 +55,7 @@ public class PlainFamilyTreeTxtServiceTests {
                 .getTempDir()
                 .resolve("family-trees")
                 .resolve("export_to_txt_test.txt");
+        Files.createDirectories(path.getParent());
 
         plainFamilyTreeTxtService.export(
                 path,

@@ -77,7 +77,8 @@ public class StorageConfig {
         private final GedcomHolder gedcomHolder;
         private final ExecutorService executorService;
 
-        @Value("${gedcom.reload-delay-in-secs:8}")
+        // Loading right away overlaps the GEDCOM parse with the rest of startup (a fixed 8 s delay used to add to every cold start)
+        @Value("${gedcom.reload-delay-in-secs:0}")
         private int gedcomReloadDelayInSecs;
 
         @PostConstruct

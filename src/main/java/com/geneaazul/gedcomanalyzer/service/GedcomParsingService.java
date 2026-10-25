@@ -24,6 +24,7 @@ import org.folg.gedcom.model.Gedcom;
 import org.folg.gedcom.model.GedcomTag;
 import org.folg.gedcom.model.GedcomVersion;
 import org.folg.gedcom.model.Header;
+import org.folg.gedcom.model.Media;
 import org.folg.gedcom.model.Name;
 import org.folg.gedcom.model.ParentFamilyRef;
 import org.folg.gedcom.model.Person;
@@ -203,6 +204,7 @@ public class GedcomParsingService {
         boolean includeInLawsAtMaxDescDepth = options.includeInLawsAtMaxDescDepth();
         boolean includeInLawsAtMaxAscDepth = options.includeInLawsAtMaxAscDepth();
         Integer maxCollateralDescDepth = options.maxCollateralDescDepth();
+        String profilePictureUrlPrefix = options.profilePictureUrlPrefix();
         log.info("Format gedcom: people in tree: {}, max people threshold: {}",
                 relationshipsList.size(), trimTriggerSize);
 
@@ -282,7 +284,8 @@ public class GedcomParsingService {
                         person.getParentFamilyRefs().stream().filter(ref -> familyIds.contains(ref.getRef())).toList(),
                         person.getSpouseFamilyRefs().stream().filter(ref -> familyIds.contains(ref.getRef())).toList(),
                         alivePersonIds.contains(person.getId()),
-                        displayOnlyBasic))
+                        displayOnlyBasic,
+                        profilePictureUrlPrefix))
                 .toList();
 
         Header header = new Header();
@@ -414,7 +417,8 @@ public class GedcomParsingService {
             List<ParentFamilyRef> parentFamilyRefs,
             List<SpouseFamilyRef> spouseFamilyRefs,
             boolean showSurnameOnly,
-            boolean displayOnlyBasic) {
+            boolean displayOnlyBasic,
+            @Nullable String profilePictureUrlPrefix) {
         Person copy = new Person();
         copy.setId(src.getId());
         copy.setParentFamilyRefs(parentFamilyRefs);
@@ -426,6 +430,18 @@ public class GedcomParsingService {
             copy.setEventsFacts(basicPersonEventFacts(src.getEventsFacts()));
             copy.setUid(src.getUid());
             copy.setUidTag(src.getUidTag());
+            if (profilePictureUrlPrefix != null) {
+                PersonUtils.getProfilePicture(src)
+                        .map(picture -> {
+                            Media media = new Media();
+                            media.setFormat("jpg");
+                            // The writer needs the tag name to emit "FILE"
+                            media.setFileTag("FILE");
+                            media.setFile(profilePictureUrlPrefix + picture.cacheKey() + ".jpg");
+                            return media;
+                        })
+                        .ifPresent(media -> copy.setMedia(List.of(media)));
+            }
         } else {
             copy.setNames(src.getNames());
             copy.setAssociations(src.getAssociations());

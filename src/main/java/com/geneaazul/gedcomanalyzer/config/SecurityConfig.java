@@ -1,24 +1,15 @@
 package com.geneaazul.gedcomanalyzer.config;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
-    @Value("${server.ssl.enabled:false}")
-    private boolean requiresSecureChannel;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -27,17 +18,7 @@ public class SecurityConfig {
                         .anyRequest()
                         .permitAll());
 
-        log.info("Using SSL on WEB: {}", requiresSecureChannel);
-
-        if (requiresSecureChannel) {
-            http.redirectToHttps(Customizer.withDefaults());
-        }
-
         http.csrf(AbstractHttpConfigurer::disable);
-
-        http.headers((headers) ->
-                headers
-                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
 
         return http.build();
     }

@@ -24,6 +24,9 @@ import lombok.Builder;
  * @param maxCollateralDescDepth      null = no restriction on collateral relatives; N &gt;= 0 = exclude all
  *                                    non-direct in-law entries and restrict non-direct blood entries to
  *                                    {@code desc <= N}; no effect when {@code directLineageOnly} is true
+ * @param profilePictureUrlPrefix     with {@code displayOnlyBasic}, people shown in full get their photo as an
+ *                                    {@code OBJE}/{@code FILE} of {@code prefix + cacheKey + ".jpg"} (the
+ *                                    {@code /api/photos/} cache, whose keys survive re-exports); null = no photos
  */
 @Builder(toBuilder = true)
 public record SubGedcomOptions(
@@ -37,7 +40,8 @@ public record SubGedcomOptions(
         @Nullable Integer distantAncestorDescLimit,
         boolean includeInLawsAtMaxDescDepth,
         boolean includeInLawsAtMaxAscDepth,
-        @Nullable Integer maxCollateralDescDepth) {
+        @Nullable Integer maxCollateralDescDepth,
+        @Nullable String profilePictureUrlPrefix) {
 
     public SubGedcomOptions {
         if (alivePersonFilter == null) {

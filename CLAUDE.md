@@ -13,18 +13,20 @@ com.geneaazul.gedcomanalyzer
 │   ├── PersonService            DFS traversal engine
 │   ├── FamilyTreeHelper         Orchestration: builds relationship lists for tree/sub-GEDCOM
 │   ├── GedcomParsingService     GEDCOM parsing, sub-GEDCOM filtering (format()), writing
-│   ├── SearchService            All person/surname/connection searches
-│   ├── GedcomAnalyzerService    GEDCOM-wide statistics and analytics
+│   ├── SearchService            The API's person/surname searches
+│   ├── GedcomAnalyzerService    The API's metadata, analysis and usage stats
 │   ├── ConnectionService        Shortest-path between two people
 │   ├── SurnameService           Surname variant queries
 │   ├── BirthdayService          Birthday/ephemerides
 │   ├── TreeBuilderService       User-submitted tree-builder requests
 │   ├── FamilyService            Family search persistence/retrieval
-│   ├── familytree/              Tree exporters (AbstractFamilyTreeService): PDF, TXT, HTML Pyvis, JSON graph
+│   ├── familytree/              Tree exporters (AbstractFamilyTreeService): PDF, TXT, JSON graph
 │   ├── photo/
 │   │   └── ProfilePictureCache  Thumbnails of the GEDCOM's MyHeritage photos (their URLs expire)
 │   └── storage/
 │       └── GedcomHolder         Holds the loaded GEDCOM; reloads publish GedcomLoadedEvent
+├── analysis/            Offline tools only (Makefile tool tests, web resource generator):
+│                        GedcomStatisticsService, AnalysisSearchService — not exposed by the API
 ├── model/               Core domain models (Relationship, EnrichedPerson, …)
 ├── domain/              JPA entities (SearchFamily, SearchConnection, TreeBuilderSubmission)
 ├── mapper/              DTO mappers
@@ -42,6 +44,8 @@ com.geneaazul.gedcomanalyzer
 - `getGedcom()` — returns it, waiting up to 30 s while it (re)loads; then throws `GedcomNotLoadedException` (503 + `Retry-After`). `GET /api/gedcom-analyzer` (the website's readiness gate) waits for it.
 - `reloadFromStorage(refreshCachedGedcom)` — releases the current GEDCOM first (two don't fit in the 2 GB VM), loads, and publishes `GedcomLoadedEvent`. Concurrent reloads are rejected (`ReloadInProgressException`, 409). If a refresh fails, the cached file is loaded again and the method returns `false`.
 - `GoogleDriveStorageService` downloads to a temp file (zip detected by content, extracted to the configured path), rejects non-GEDCOM content, keeps the previous file as `.previous` and restores it if the new one can't be parsed.
+- `GedcomAutoReloader` checks the source about 2 minutes after startup and then hourly (while the machine is awake) and reloads when Drive has a newer file (`StorageService.findNewerGedcomVersion()`: Drive `modifiedTime` later than the local copy's mtime). A version that failed to load is not retried until a newer one is uploaded.
+- Startup: the GEDCOM starts loading immediately (`gedcom.reload-delay-in-secs`, default 0) and the Docker image carries a JDK 25 AOT cache (`/app/app.aot`, recorded by a training run in the Dockerfile) — Spring starts ~60% faster on cold boots. Resumes from Fly suspend take ~1 s and don't depend on either.
 - **Person UUIDs** are `HMAC-SHA256(secret, GEDCOM file mtime, person id)` (`PersonUuids`): stable for the same file, new for every import, not computable from public data. The secret is `person-uuid-secret` or one generated once in `temp-dir/.person-uuid-secret` (`PersonUuidSecret`).
 
 **`EnrichedGedcom`** wraps the legacy GEDCOM with:
@@ -211,11 +215,13 @@ Most web configs use `directLineageOnly=true, trimTriggerSize=0, maxAscDepth=1` 
 
 ## REST API endpoints
 
-**Privacy policy**: obfuscation of living people is decided only by the server (`GedcomAnalyzerProperties.isObfuscateLiving()`, i.e. `!disable-obfuscate-living`); clients cannot turn it off. Tree exports (PDF, graph JSON, network HTML) are rate-limited per client in memory (`max-client-family-tree-requests-count-threshold`). Searches over quota are rejected before being stored.
+**Privacy policy**: obfuscation of living people is decided only by the server (`GedcomAnalyzerProperties.isObfuscateLiving()`, i.e. `!disable-obfuscate-living`); clients cannot turn it off. Tree exports (PDF, graph JSON) are rate-limited per client in memory (`max-client-family-tree-requests-count-threshold`). Searches over quota are rejected before being stored.
 
 **Exports**: `AbstractFamilyTreeService` owns file naming and lookup; generation is serialized per file and written to a temp file moved atomically. Never store per-tree state on the shared `EnrichedPerson` objects (use per-tree maps such as `FamilyTreeHelper.getPersonIndexes`).
 
 **Photos**: never return a MyHeritage URL directly — use `ProfilePictureCache.publicUrl(person)` (cached `/api/photos/{key}.jpg`, the original while still valid, or nothing).
+
+**Website pages**: the website lives on Cloudflare Pages; `AppController` only serves the admin HTML pages (`/search-family/latest`, `/comments/latest`, …) and answers `/`, `/no-redirect` and old `/family-tree/{uuid}[/network]` links with a 301 to geneaazul.com.ar (the pyvis network tree and Python were removed; the website's own 2D/3D viewers use graph JSON). Searches pre-generate only the graph JSON; PDFs are generated when downloaded.
 
 **CORS**: public endpoints use `@GeneaAzulCrossOrigin` (production domains + the Cloudflare Pages project `geneaazul-web.pages.dev` and its `*.geneaazul-web.pages.dev` previews). Never add a raw `@CrossOrigin` list; admin endpoints have no CORS on purpose.
 
@@ -276,26 +282,28 @@ Most web configs use `directLineageOnly=true, trimTriggerSize=0, maxAscDepth=1` 
 
 ---
 
-## Search engine (`SearchService`)
+## Search engine (`SearchService`, `analysis.AnalysisSearchService`)
+
+`SearchService` holds the searches the API uses; the date/place/data-quality finders used only by the offline tools live in `analysis.AnalysisSearchService` (marked † below).
 
 Primary search methods:
 
 | Method | Filters |
 |---|---|
 | `findPersonsByNameAndSpouseName()` | given name, surname, spouse name; exact/partial |
-| `findPersonsByMonthAndDayOfBirth()` | birth month/day; optional sex filter |
-| `findPersonsByMonthAndDayOfDeath()` | death month/day |
-| `findPersonsByDateOfBirthBetween()` | date range |
-| `findPersonsByPlaceOfBirth()` | place; exact or endsWith |
-| `findPersonsByPlaceOfDeath()` | place; exact or endsWith |
+| `findPersonsByMonthAndDayOfBirth()` † | birth month/day; optional sex filter |
+| `findPersonsByMonthAndDayOfDeath()` † | death month/day |
+| `findPersonsByDateOfBirthBetween()` † | date range |
+| `findPersonsByPlaceOfBirth()` † | place; exact or endsWith |
+| `findPersonsByPlaceOfDeath()` † | place; exact or endsWith |
 | `findPersonsByPlaceOfAnyEvent()` | any event (birth, marriage, residence, immigration…) |
 | `findPersonsByName()` / `findPersonsByNameAndYearOfBirth()` | name ± birth year |
 | `findDuplicatedPersons()` | scored duplicate detection |
-| `findPersonsByYearOfDeathAndNoParents()` | data quality: deceased with no parents |
+| `findPersonsByYearOfDeathAndNoParents()` † | data quality: deceased with no parents |
 | `findAlivePersonsTooOldOrWithFamilyMembersTooOld()` | age anomaly validation |
-| `findPersonsWithCustomEventFacts()` | custom GEDCOM events |
-| `findPersonsWithTagExtensions()` | custom GEDCOM tags |
-| `findPersonsWithNoCountryButParentsWithCountry()` | data quality: missing country |
+| `findPersonsWithCustomEventFacts()` † | custom GEDCOM events |
+| `findPersonsWithTagExtensions()` † | custom GEDCOM tags |
+| `findPersonsWithNoCountryButParentsWithCountry()` † | data quality: missing country |
 
 Common filter parameters: `SexType` (M/F/U), `AlivePersonFilter`, place exact-match vs. endsWith, date operators (BEF/AFT/ABT/EST).
 
@@ -314,7 +322,6 @@ Place matching for `findPersonsByPlaceOfAnyEvent` includes: birth, death, marria
 
 **Export limits:**
 
-- `maxPyvisNetworkNodesToExport` — 500
 - `maxGraphJsonNodesToExport` — 250
 
 **Rate limiting (per IP):**

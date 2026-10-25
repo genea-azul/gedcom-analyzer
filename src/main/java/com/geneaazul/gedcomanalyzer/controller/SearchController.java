@@ -117,12 +117,12 @@ public class SearchController {
 
         updateSearchResult(searchId, searchFamilyResult);
 
-        // Queue PDF Family Tree, HTML Pyvis Network and graph JSON generation
+        // Pre-generate only the cheap graph JSON (2D/3D viewers); PDFs are generated when downloaded
         familyTreeManager.queueFamilyTreeGeneration(
                 searchFamilyResult.getPeople(),
                 obfuscateLiving,
                 onlySecondaryDescription,
-                List.of(FamilyTreeType.PLAIN_PDF, FamilyTreeType.NETWORK, FamilyTreeType.GRAPH_JSON));
+                List.of(FamilyTreeType.GRAPH_JSON));
 
         return searchFamilyResult;
     }
