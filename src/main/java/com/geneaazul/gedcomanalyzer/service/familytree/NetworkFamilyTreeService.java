@@ -441,17 +441,10 @@ public class NetworkFamilyTreeService extends AbstractFamilyTreeService {
                 "<script src=\"lib/bindings/utils.js\"></script>",
                 "<script src=\"/js/family-tree/utils.js\"></script>");
 
+        // String.replace already replaces every occurrence (pyvis emits these twice)
         content = content.replace(
                 "<h1></h1>",
                 "");
-        // Twice same sentence
-        content = content.replace(
-                "<h1></h1>",
-                "");
-        content = content.replace(
-                "height: 600px;",
-                "height: 100%;");
-        // Twice same sentence
         content = content.replace(
                 "height: 600px;",
                 "height: 100%;");

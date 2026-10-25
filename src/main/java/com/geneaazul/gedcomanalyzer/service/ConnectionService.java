@@ -39,7 +39,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import jakarta.annotation.Nullable;
-import jakarta.validation.constraints.NotNull;
 
 import lombok.RequiredArgsConstructor;
 
@@ -164,7 +163,7 @@ public class ConnectionService {
                 .build();
     }
 
-    private static @NotNull List<String> getPossibleErrors(List<EnrichedPerson> person1Result, List<EnrichedPerson> person2Result) {
+    private static List<String> getPossibleErrors(List<EnrichedPerson> person1Result, List<EnrichedPerson> person2Result) {
         List<String> errors = new ArrayList<>();
         if (person1Result.isEmpty()) {
             errors.add("CONNECTIONS-PERSON-1-NOT-FOUND");
