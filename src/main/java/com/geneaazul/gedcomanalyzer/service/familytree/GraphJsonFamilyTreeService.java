@@ -8,6 +8,7 @@ import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.FamilyTree;
 import com.geneaazul.gedcomanalyzer.model.FamilyTreeType;
+import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.dto.FamilyTreeGraphDto;
 import com.geneaazul.gedcomanalyzer.model.dto.FamilyTreeGraphDto.FamilyNodeDto;
@@ -210,6 +211,7 @@ public class GraphJsonFamilyTreeService extends AbstractFamilyTreeService {
                 .circaBirth(circaBirth)
                 .yearOfDeath(yearOfDeath)
                 .circaDeath(circaDeath)
+                .placeOfBirth(obfuscate ? null : ep.getPlaceOfBirth().map(Place::name).orElse(null))
                 .isAlive(ep.isAlive())
                 .generation(generation)
                 .relationship(relationship)

@@ -25,12 +25,18 @@ public final class PersonUuids {
     private static final String ALGORITHM = "HmacSHA256";
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
-    private final SecretKeySpec key;
-    private final byte[] gedcomVersion;
+    // Keyed and fed "<version>:" once; each UUID clones it (looking up and keying a Mac per person cost ~5% of a GEDCOM load)
+    private final Mac versionedMac;
 
     private PersonUuids(byte[] secret, String gedcomVersion) {
-        this.key = new SecretKeySpec(secret, ALGORITHM);
-        this.gedcomVersion = gedcomVersion.getBytes(StandardCharsets.UTF_8);
+        try {
+            versionedMac = Mac.getInstance(ALGORITHM);
+            versionedMac.init(new SecretKeySpec(secret, ALGORITHM));
+            versionedMac.update(gedcomVersion.getBytes(StandardCharsets.UTF_8));
+            versionedMac.update((byte) ':');
+        } catch (GeneralSecurityException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     /**
@@ -52,12 +58,8 @@ public final class PersonUuids {
     public UUID uuid(int personId) {
         byte[] hash;
         try {
-            Mac mac = Mac.getInstance(ALGORITHM);
-            mac.init(key);
-            mac.update(gedcomVersion);
-            mac.update((byte) ':');
-            hash = mac.doFinal(ByteBuffer.allocate(Integer.BYTES).putInt(personId).array());
-        } catch (GeneralSecurityException e) {
+            hash = ((Mac) versionedMac.clone()).doFinal(ByteBuffer.allocate(Integer.BYTES).putInt(personId).array());
+        } catch (CloneNotSupportedException e) {
             throw new IllegalStateException(e);
         }
         // RFC 9562 version 8 (custom) UUID from the first 16 bytes

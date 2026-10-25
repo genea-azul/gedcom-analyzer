@@ -87,7 +87,8 @@ class SearchControllerPolicyIT extends AbstractControllerIT {
                 .getResponse()
                 .getContentAsString();
 
-        List<JsonNode> alive = StreamSupport.stream(objectMapper.readTree(json).get("persons").spliterator(), false)
+        List<JsonNode> persons = StreamSupport.stream(objectMapper.readTree(json).get("persons").spliterator(), false).toList();
+        List<JsonNode> alive = persons.stream()
                 .filter(node -> node.path("isAlive").asBoolean(false))
                 .toList();
         assertThat(alive).isNotEmpty();
@@ -96,6 +97,7 @@ class SearchControllerPolicyIT extends AbstractControllerIT {
             assertThat(node.path("aka").isMissingNode() || node.path("aka").isNull()).isTrue();
             assertThat(node.path("profilePicture").isMissingNode() || node.path("profilePicture").isNull()).isTrue();
             assertThat(node.path("yearOfBirth").isMissingNode() || node.path("yearOfBirth").isNull()).isTrue();
+            assertThat(node.path("placeOfBirth").isMissingNode() || node.path("placeOfBirth").isNull()).isTrue();
         });
     }
 
