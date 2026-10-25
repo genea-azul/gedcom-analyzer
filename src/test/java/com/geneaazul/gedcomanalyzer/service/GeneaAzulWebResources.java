@@ -45,6 +45,8 @@ import jakarta.annotation.Nullable;
 @ActiveProfiles("test")
 public class GeneaAzulWebResources {
 
+    private static final String PROFILE_PICTURE_URL_PREFIX = "https://gedcom-analyzer-app.fly.dev/api/photos/";
+
     public static final int MAX_SURNAMES_PER_COUNTRY = 22;
 
     @Autowired
@@ -415,6 +417,8 @@ public class GeneaAzulWebResources {
                     SubGedcomOptions.builder()
                             .alivePersonFilter(AlivePersonFilter.SHOW_SURNAME_ONLY)
                             .displayOnlyBasic(true)
+                            // Photos served from the production cache (keys are stable across exports)
+                            .profilePictureUrlPrefix(PROFILE_PICTURE_URL_PREFIX)
                             .directLineageOnly(config.directLineageOnly())
                             .rootPersonId(config.personId())
                             .trimTriggerSize(config.trimTriggerSize())

@@ -3,6 +3,7 @@ package com.geneaazul.gedcomanalyzer.service;
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.ProfilePicture;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.SubGedcomOptions;
 import com.geneaazul.gedcomanalyzer.model.dto.AlivePersonFilter;
@@ -17,6 +18,8 @@ import org.folg.gedcom.model.ChildRef;
 import org.folg.gedcom.model.EventFact;
 import org.folg.gedcom.model.Family;
 import org.folg.gedcom.model.Gedcom;
+import org.folg.gedcom.model.GedcomTag;
+import org.folg.gedcom.model.Media;
 import org.folg.gedcom.model.Name;
 import org.folg.gedcom.model.Note;
 import org.folg.gedcom.model.ParentFamilyRef;
@@ -27,7 +30,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -107,6 +112,62 @@ class GedcomParsingServiceFormatTests {
 
     private static List<String> parentFamilyIds(Person p) {
         return p.getParentFamilyRefs().stream().map(ParentFamilyRef::getRef).toList();
+    }
+
+    // ── profile pictures ──────────────────────────────────────────────────────
+
+    private static void addPersonalPhoto(Person person, String url) {
+        Media media = new Media();
+        media.setFormat("jpg");
+        media.setFile(url);
+        GedcomTag personalPhoto = new GedcomTag(null, "_PERSONALPHOTO", null);
+        personalPhoto.setValue("Y");
+        media.putExtension("folg.more_tags", new ArrayList<>(List.of(personalPhoto)));
+        person.setMedia(new ArrayList<>(List.of(media)));
+    }
+
+    @Test
+    void format_withPhotoPrefix_givesShownPeopleTheirCachedPhotoAndHidesLivingOnes() throws Exception {
+        Gedcom original = freshGedcom();
+        EnrichedPerson deceased = enrichedGedcom.getPeople().stream().filter(p -> !p.isAlive()).findFirst().orElseThrow();
+        EnrichedPerson alive = enrichedGedcom.getPeople().stream().filter(EnrichedPerson::isAlive).findFirst().orElseThrow();
+        String signed = "https://sites-cf.mhcache.com/e/1/c2lnbmVk/023/419/1551/000011_photo_J.jpg";
+        addPersonalPhoto(original.getPerson("I" + deceased.getId()), signed);
+        addPersonalPhoto(original.getPerson("I" + alive.getId()), signed.replace("000011", "000012"));
+        List<List<Relationship>> rels = List.of(
+                List.of(Relationship.empty(deceased)),
+                List.of(Relationship.empty(alive)));
+
+        Gedcom result = gedcomParsingService.format(original, rels, SubGedcomOptions.builder()
+                .alivePersonFilter(AlivePersonFilter.SHOW_SURNAME_ONLY)
+                .displayOnlyBasic(true)
+                .profilePictureUrlPrefix("https://api.example.org/api/photos/")
+                .build());
+
+        String key = new ProfilePicture("jpg", signed).cacheKey();
+        assertThat(result.getPerson("I" + deceased.getId()).getMedia())
+                .singleElement()
+                .satisfies(media -> assertThat(media.getFile()).isEqualTo("https://api.example.org/api/photos/" + key + ".jpg"));
+        assertThat(result.getPerson("I" + alive.getId()).getMedia()).isEmpty();
+
+        Path written = tempDir.resolve("with-photos.ged");
+        gedcomParsingService.write(result, written);
+        assertThat(Files.readString(written))
+                .contains("1 OBJE")
+                .contains("2 FORM jpg")
+                .contains("2 FILE https://api.example.org/api/photos/" + key + ".jpg");
+    }
+
+    @Test
+    void format_withoutPhotoPrefix_writesNoPhotosInBasicMode() throws Exception {
+        Gedcom original = freshGedcom();
+        EnrichedPerson deceased = enrichedGedcom.getPeople().stream().filter(p -> !p.isAlive()).findFirst().orElseThrow();
+        addPersonalPhoto(original.getPerson("I" + deceased.getId()), "https://sites-cf.mhcache.com/e/1/c2ln/023/x_J.jpg");
+
+        Gedcom result = gedcomParsingService.format(original, List.of(List.of(Relationship.empty(deceased))),
+                SubGedcomOptions.builder().displayOnlyBasic(true).build());
+
+        assertThat(result.getPerson("I" + deceased.getId()).getMedia()).isEmpty();
     }
 
     // ── mutation guard ────────────────────────────────────────────────────────
