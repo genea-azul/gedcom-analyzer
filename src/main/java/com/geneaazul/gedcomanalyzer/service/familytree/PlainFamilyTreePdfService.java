@@ -654,13 +654,10 @@ public class PlainFamilyTreePdfService extends AbstractFamilyTreeService {
             boolean onlySecondaryDescription) {
         long startTime = System.currentTimeMillis();
 
-        var shortestPathFromSource = PathUtils.calculateShortestPathFromSource(
+        PathUtils.ShortestPaths shortestPaths = PathUtils.calculateShortestPathsFromSource(
                 person.getGedcom(),
                 person,
-                true,
                 true);
-        Map<Integer, Integer> shortestDistancesByPersonId = shortestPathFromSource.getLeft();
-        Map<Integer, List<Integer>> shortestPathsByPersonId = shortestPathFromSource.getRight();
 
         List<FormattedShortestPathDistance> formattedShortestPathDistances = person.getGedcom()
                 .getPeople()
@@ -672,7 +669,7 @@ public class PlainFamilyTreePdfService extends AbstractFamilyTreeService {
                         distinguished.getSurname().map(Surname::simplified).orElseThrow(),
                         distinguished.getDisplayName(),
                         distinguishedRelatives.contains(distinguished.getId()),
-                        shortestDistancesByPersonId.get(distinguished.getId())))
+                        shortestPaths.distanceTo(distinguished.getId())))
                 .filter(distance -> distance.distance() != null)
                 .sorted(Comparator.comparing(FormattedShortestPathDistance::distance)
                         .thenComparing(FormattedShortestPathDistance::isRelative, Comparator.reverseOrder())
@@ -686,7 +683,7 @@ public class PlainFamilyTreePdfService extends AbstractFamilyTreeService {
                 .stream()
                 .map(shortestPathPersonId -> {
                     List<FormattedShortestPathRelationship> formattedShortestPathRelationships = new ArrayList<>();
-                    List<Integer> shortestPath = shortestPathsByPersonId.getOrDefault(shortestPathPersonId, List.of());
+                    List<Integer> shortestPath = shortestPaths.pathTo(shortestPathPersonId);
                     if (shortestPath.size() > 1) {
                         for (int i = 0; i < shortestPath.size(); i++) {
                             EnrichedPerson personA = Objects.requireNonNull(person.getGedcom().getPersonById(shortestPath.get(i)));

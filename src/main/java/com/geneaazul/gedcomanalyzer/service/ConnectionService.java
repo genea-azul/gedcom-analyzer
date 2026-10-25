@@ -127,11 +127,8 @@ public class ConnectionService {
 
         if (errors.isEmpty()) {
             EnrichedPerson person1 = person1Result.getFirst();
-            Pair<Map<Integer, Integer>, Map<Integer, List<Integer>>> distancesAndPaths = PathUtils
-                    .calculateShortestPathFromSource(gedcom, person1, true, true);
-
             EnrichedPerson person2 = person2Result.getFirst();
-            List<Integer> shortestPath = distancesAndPaths.getRight().getOrDefault(person2.getId(), List.of());
+            List<Integer> shortestPath = PathUtils.calculateShortestPath(gedcom, person1, person2, true);
 
             for (int i = 0; i < shortestPath.size() - 1; i++) {
                 EnrichedPerson personA = gedcom.getPersonById(shortestPath.get(i));

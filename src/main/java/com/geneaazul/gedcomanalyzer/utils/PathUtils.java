@@ -3,115 +3,118 @@ package com.geneaazul.gedcomanalyzer.utils;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 
-import org.apache.commons.lang3.tuple.Pair;
-
+import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.PriorityQueue;
 import java.util.Queue;
-import java.util.Set;
-import java.util.stream.Stream;
+
+import jakarta.annotation.Nullable;
 
 import lombok.experimental.UtilityClass;
 
+/**
+ * Shortest paths over direct family ties (parents, optionally siblings, spouses, children).
+ *
+ * <p>Every tie counts as one step, so a breadth-first search finds shortest paths in O(people)
+ * time and memory. Ties between equally short paths are resolved deterministically in the order
+ * parents, siblings, spouses, children.
+ */
 @UtilityClass
 public class PathUtils {
 
-    public static Pair<Map<Integer, Integer>, Map<Integer, List<Integer>>> calculateShortestPathFromSource(
+    public record ShortestPaths(int sourceId, Map<Integer, Integer> distances, Map<Integer, Integer> predecessors) {
+
+        /**
+         * @return the distance from the source, or {@code null} if the person is not reachable
+         */
+        @Nullable
+        public Integer distanceTo(int personId) {
+            return distances.get(personId);
+        }
+
+        /**
+         * @return person ids from the source to the target (both included), or an empty list if unreachable
+         */
+        public List<Integer> pathTo(int personId) {
+            if (!distances.containsKey(personId)) {
+                return List.of();
+            }
+            List<Integer> path = new ArrayList<>(distances.get(personId) + 1);
+            for (Integer id = personId; id != null; id = predecessors.get(id)) {
+                path.add(id);
+            }
+            Collections.reverse(path);
+            return path;
+        }
+    }
+
+    public static ShortestPaths calculateShortestPathsFromSource(
+            EnrichedGedcom gedcom,
+            EnrichedPerson source,
+            boolean isSiblingDirectRel) {
+        return breadthFirstSearch(gedcom, source, isSiblingDirectRel, null);
+    }
+
+    /**
+     * Stops as soon as the target is reached instead of exploring the whole tree.
+     */
+    public static List<Integer> calculateShortestPath(
+            EnrichedGedcom gedcom,
+            EnrichedPerson source,
+            EnrichedPerson target,
+            boolean isSiblingDirectRel) {
+        return breadthFirstSearch(gedcom, source, isSiblingDirectRel, target.getId()).pathTo(target.getId());
+    }
+
+    private static ShortestPaths breadthFirstSearch(
             EnrichedGedcom gedcom,
             EnrichedPerson source,
             boolean isSiblingDirectRel,
-            boolean includePaths) {
+            @Nullable Integer targetId) {
 
-        Map<Integer, Integer> distances = new HashMap<>(gedcom.getPeople().size());
-        Map<Integer, List<Integer>> shortestPaths = new HashMap<>(gedcom.getPeople().size());
+        Map<Integer, Integer> distances = new HashMap<>();
+        Map<Integer, Integer> predecessors = new HashMap<>();
+        Queue<Integer> queue = new ArrayDeque<>();
 
         distances.put(source.getId(), 0);
-        if (includePaths) {
-            shortestPaths.put(source.getId(), new ArrayList<>());
+        queue.add(source.getId());
+
+        while (!queue.isEmpty()) {
+            Integer currentId = queue.remove();
+            if (currentId.equals(targetId)) {
+                break;
+            }
+            EnrichedPerson current = Objects.requireNonNull(gedcom.getPersonById(currentId));
+            int nextDistance = distances.get(currentId) + 1;
+
+            visit(current.getParents(), currentId, nextDistance, distances, predecessors, queue);
+            if (isSiblingDirectRel) {
+                visit(current.getAllSiblings(), currentId, nextDistance, distances, predecessors, queue);
+            }
+            visit(current.getSpouses(), currentId, nextDistance, distances, predecessors, queue);
+            visit(current.getChildren(), currentId, nextDistance, distances, predecessors, queue);
         }
 
-        Queue<Pair<Integer, Integer>> unsettledNodes = new PriorityQueue<>(
-                gedcom.getPeople().size(),
-                Comparator.comparing(Pair::getRight));
-        Set<Integer> settledNodes = new HashSet<>(gedcom.getPeople().size());
-
-        unsettledNodes.add(Pair.of(source.getId(), 0));
-
-        while (!unsettledNodes.isEmpty()) {
-            Pair<Integer, Integer> currentData = unsettledNodes.remove();
-            Integer currentNodeId = currentData.getLeft();
-
-            // Unsettled nodes can contain repeated node ids, cause it adds many distances to it before processing it
-            if (settledNodes.contains(currentNodeId)) {
-                continue;
-            }
-
-            Integer sourceDistance = currentData.getRight();
-            EnrichedPerson currentNode = Objects.requireNonNull(gedcom.getPersonById(currentNodeId));
-
-            List<EnrichedPerson> directRelatives = Stream
-                    .of(
-                            currentNode.getParents(),
-                            (isSiblingDirectRel ? currentNode.getAllSiblings() : List.<EnrichedPerson>of()),
-                            currentNode.getSpouses(),
-                            currentNode.getChildren())
-                    .flatMap(List::stream)
-                    .toList();
-
-            for (EnrichedPerson adjacentNode : directRelatives) {
-                if (!settledNodes.contains(adjacentNode.getId())) {
-                    Integer adjacentDistance = calculateMinimumDistance(
-                            adjacentNode.getId(),
-                            1,
-                            currentNodeId,
-                            sourceDistance,
-                            distances,
-                            shortestPaths,
-                            includePaths);
-                    unsettledNodes.add(Pair.of(adjacentNode.getId(), adjacentDistance));
-                }
-            }
-
-            settledNodes.add(currentNodeId);
-            if (includePaths) {
-                shortestPaths.get(currentNodeId).add(currentNodeId);
-            }
-        }
-
-        return Pair.of(distances, shortestPaths);
+        return new ShortestPaths(source.getId(), distances, predecessors);
     }
 
-    private static Integer calculateMinimumDistance(
-            Integer evaluationNodeId,
-            @SuppressWarnings("SameParameterValue") Integer edgeWeigh,
-            Integer sourceNodeId,
-            Integer sourceDistance,
+    private static void visit(
+            List<EnrichedPerson> relatives,
+            Integer fromId,
+            int distance,
             Map<Integer, Integer> distances,
-            Map<Integer, List<Integer>> shortestPaths,
-            boolean includePaths) {
-
-        Integer newDistance = sourceDistance + edgeWeigh;
-        Integer evaluationNodeDistance = distances.getOrDefault(evaluationNodeId, Integer.MAX_VALUE);
-
-        if (newDistance < evaluationNodeDistance) {
-            distances.put(evaluationNodeId, newDistance);
-
-            if (includePaths) {
-                List<Integer> shortestPath = new ArrayList<>(shortestPaths.getOrDefault(sourceNodeId, List.of()));
-                shortestPath.add(sourceNodeId);
-                shortestPaths.put(evaluationNodeId, shortestPath);
+            Map<Integer, Integer> predecessors,
+            Queue<Integer> queue) {
+        for (EnrichedPerson relative : relatives) {
+            if (distances.putIfAbsent(relative.getId(), distance) == null) {
+                predecessors.put(relative.getId(), fromId);
+                queue.add(relative.getId());
             }
-
-            return newDistance;
         }
-
-        return evaluationNodeDistance;
     }
 
 }
