@@ -31,7 +31,6 @@ public class FamilyTreeManager {
             List<PersonDto> people,
             boolean obfuscateLiving,
             boolean onlySecondaryDescription,
-            boolean forceRewrite,
             List<FamilyTreeType> types) {
 
         if (people.isEmpty()) {
@@ -43,7 +42,7 @@ public class FamilyTreeManager {
                 .map(PersonDto::getUuid)
                 .toList();
 
-        FamilyTreeTaskParams taskParams = new FamilyTreeTaskParams(peopleUuids, obfuscateLiving, onlySecondaryDescription, forceRewrite, types);
+        FamilyTreeTaskParams taskParams = new FamilyTreeTaskParams(peopleUuids, obfuscateLiving, onlySecondaryDescription, types);
         FamilyTreeTask task = new FamilyTreeTask(taskParams, this);
         executorService.submit(task);
     }
@@ -52,7 +51,6 @@ public class FamilyTreeManager {
             List<UUID> personUuids,
             boolean obfuscateLiving,
             boolean onlySecondaryDescription,
-            boolean forceRewrite,
             List<FamilyTreeType> types) {
 
         personUuids
@@ -69,7 +67,7 @@ public class FamilyTreeManager {
                     List<FamilyTreeService> familyTreeServices = types
                             .stream()
                             .map(familyTreeServiceByType::get)
-                            .filter(familyTreeService -> forceRewrite || familyTreeService.isMissingFamilyTree(
+                            .filter(familyTreeService -> familyTreeService.isMissingFamilyTree(
                                     person,
                                     familyTreeFileIdPrefix,
                                     familyTreeFileSuffix))

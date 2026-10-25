@@ -183,9 +183,7 @@ public class SearchControllerIT extends AbstractControllerIT {
          */
         url = "/api/search/family-tree/" + personUuid + "/plainPdf";
         MvcResult result = mvc.perform(get(url)
-                        .queryParam("obfuscateLiving", "false")
                         .queryParam("onlySecondaryDescription", "false") // not considered if not re-generated
-                        .queryParam("forceRewrite", "false") // already forced in previous search
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_PDF))
@@ -199,7 +197,6 @@ public class SearchControllerIT extends AbstractControllerIT {
          */
         url = "/family-tree/" + personUuid + "/network";
         result = mvc.perform(get(url)
-                        .queryParam("f", "0")
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.TEXT_HTML))

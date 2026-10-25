@@ -118,17 +118,25 @@ class AbstractFamilyTreeServiceTest {
     }
 
     @Test
-    void aFailedExportKeepsThePreviousFileAndLeavesNoTemporaryFile() throws Exception {
+    void aFailedExportLeavesNoFileSoTheNextRequestRetries() throws Exception {
         Path finalPath = service.getExportFilePath(person, "juan_perez", "");
-        Files.createDirectories(finalPath.getParent());
-        Files.writeString(finalPath, "previous");
-        Files.setLastModifiedTime(finalPath, java.nio.file.attribute.FileTime.fromMillis(0));
         service.failure = new IllegalStateException("export failed");
 
         assertThatThrownBy(this::generate).hasMessage("export failed");
+        assertThat(Files.list(finalPath.getParent())).isEmpty();
 
-        assertThat(Files.readString(finalPath)).isEqualTo("previous");
-        assertThat(Files.list(finalPath.getParent())).containsExactly(finalPath);
+        service.failure = null;
+        generate();
+        assertThat(Files.readString(finalPath)).isEqualTo("complete");
+        assertThat(service.exports).hasValue(2);
+    }
+
+    @Test
+    void anExistingExportIsNotGeneratedAgain() throws Exception {
+        generate();
+        generate();
+
+        assertThat(service.exports).hasValue(1);
     }
 
     @Test

@@ -169,7 +169,8 @@ public class PyvisNetworkMapper {
             return spouse.getId().toString();
         }
 
-        return (person.getOrderKey().compareTo(spouse.getOrderKey()) < 0)
+        // Any order works as long as both members of the couple produce the same id
+        return person.getId() < spouse.getId()
                 ? person.getId() + "-" + spouse.getId()
                 : spouse.getId() + "-" + person.getId();
     }

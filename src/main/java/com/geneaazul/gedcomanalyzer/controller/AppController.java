@@ -97,7 +97,7 @@ public class AppController {
                 request.getRequestId());
 
         Optional<FamilyTree> maybeFamilyTree = networkFamilyTreeService
-                .getFamilyTree(personUuid, obfuscateLiving, true, false);
+                .getFamilyTree(personUuid, obfuscateLiving, true);
 
         if (maybeFamilyTree.isEmpty()) {
             return ResponseEntity.badRequest()

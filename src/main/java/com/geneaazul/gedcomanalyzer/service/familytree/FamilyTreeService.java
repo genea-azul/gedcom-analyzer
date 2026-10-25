@@ -15,6 +15,9 @@ public interface FamilyTreeService {
             String familyTreeFileIdPrefix,
             String familyTreeFileSuffix);
 
+    /**
+     * Generates the export unless it already exists (e.g. created by a concurrent caller).
+     */
     void generateFamilyTree(
             EnrichedPerson person,
             String familyTreeFileIdPrefix,
@@ -26,7 +29,6 @@ public interface FamilyTreeService {
     Optional<FamilyTree> getFamilyTree(
             UUID personUuid,
             boolean obfuscateLiving,
-            boolean onlySecondaryDescription,
-            boolean forceRewrite);
+            boolean onlySecondaryDescription);
 
 }

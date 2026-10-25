@@ -13,11 +13,8 @@ import org.springframework.http.MediaType;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.FileTime;
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -112,11 +109,10 @@ public abstract class AbstractFamilyTreeService implements FamilyTreeService {
             List<List<Relationship>> relationshipsWithNotInLawPriority) {
 
         Path exportFilePath = getExportFilePath(person, familyTreeFileIdPrefix, familyTreeFileSuffix);
-        Instant requestedAt = Instant.now();
         ReentrantLock lock = LOCKS.computeIfAbsent(exportFilePath, _ -> new ReentrantLock());
         lock.lock();
         try {
-            if (wasWrittenSince(exportFilePath, requestedAt)) {
+            if (Files.exists(exportFilePath)) {
                 // Another thread generated it while this one waited for the lock
                 return;
             }
@@ -149,8 +145,7 @@ public abstract class AbstractFamilyTreeService implements FamilyTreeService {
     public Optional<FamilyTree> getFamilyTree(
             UUID personUuid,
             boolean obfuscateLiving,
-            boolean onlySecondaryDescription,
-            boolean forceRewrite) {
+            boolean onlySecondaryDescription) {
 
         EnrichedGedcom gedcom = gedcomHolder.getGedcom();
         EnrichedPerson person = gedcom.getPersonByUuid(personUuid);
@@ -163,7 +158,7 @@ public abstract class AbstractFamilyTreeService implements FamilyTreeService {
         String familyTreeFileSuffix = getFamilyTreeFileSuffix(obfuscateLiving);
         Path exportFilePath = getExportFilePath(person, familyTreeFileIdPrefix, familyTreeFileSuffix);
 
-        if (forceRewrite || Files.notExists(exportFilePath)) {
+        if (Files.notExists(exportFilePath)) {
             generateFamilyTree(
                     person,
                     familyTreeFileIdPrefix,
@@ -180,17 +175,6 @@ public abstract class AbstractFamilyTreeService implements FamilyTreeService {
                 exportFilePath,
                 exportFileMediaType,
                 properties.getLocale()));
-    }
-
-    private static boolean wasWrittenSince(Path path, Instant instant) {
-        try {
-            FileTime lastModified = Files.getLastModifiedTime(path);
-            return !lastModified.toInstant().isBefore(instant);
-        } catch (NoSuchFileException e) {
-            return false;
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 
     private static void deleteQuietly(Path path) {

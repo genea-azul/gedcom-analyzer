@@ -136,6 +136,7 @@ public class PlainFamilyTreePdfService extends AbstractFamilyTreeService {
         log.info("Generating plain family tree PDF");
 
         Set<Integer> distinguishedRelatives = new HashSet<>();
+        Map<Integer, Integer> personIndexes = FamilyTreeHelper.getPersonIndexes(peopleInTree);
         List<FormattedRelationship> formattedRelationships = peopleInTree
                 .stream()
                 .peek(relationships -> {
@@ -147,6 +148,7 @@ public class PlainFamilyTreePdfService extends AbstractFamilyTreeService {
                         .stream()
                         .map(relationship -> relationshipMapper.toRelationshipDto(
                                 relationship,
+                                personIndexes.get(relationship.person().getId()),
                                 getObfuscateCondition(obfuscateLiving, person, relationship)))
                         .map(relationship -> relationshipMapper.formatInSpanish(relationship, onlySecondaryDescription))
                         .toList())
@@ -160,6 +162,7 @@ public class PlainFamilyTreePdfService extends AbstractFamilyTreeService {
                 calculateFormattedShortestPath(
                         person,
                         distinguishedRelatives,
+                        personIndexes,
                         obfuscateLiving,
                         onlySecondaryDescription);
 
@@ -646,6 +649,7 @@ public class PlainFamilyTreePdfService extends AbstractFamilyTreeService {
     private Pair<List<FormattedShortestPathDistance>, List<List<FormattedShortestPathRelationship>>> calculateFormattedShortestPath(
             EnrichedPerson person,
             Set<Integer> distinguishedRelatives,
+            Map<Integer, Integer> personIndexes,
             boolean obfuscateLiving,
             boolean onlySecondaryDescription) {
         long startTime = System.currentTimeMillis();
@@ -694,6 +698,7 @@ public class PlainFamilyTreePdfService extends AbstractFamilyTreeService {
                                     : Relationship.empty(personA);
                             RelationshipDto relationshipDto = relationshipMapper.toRelationshipDto(
                                     relationship,
+                                    personIndexes.get(personA.getId()),
                                     getObfuscateCondition(obfuscateLiving, person, personA, i));
                             FormattedRelationship formattedRelationship = relationshipMapper.formatInSpanish(relationshipDto, onlySecondaryDescription);
 

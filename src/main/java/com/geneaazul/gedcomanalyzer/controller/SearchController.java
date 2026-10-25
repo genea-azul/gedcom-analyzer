@@ -122,7 +122,6 @@ public class SearchController {
                 searchFamilyResult.getPeople(),
                 obfuscateLiving,
                 onlySecondaryDescription,
-                false,
                 List.of(FamilyTreeType.PLAIN_PDF, FamilyTreeType.NETWORK, FamilyTreeType.GRAPH_JSON));
 
         return searchFamilyResult;
@@ -208,8 +207,7 @@ public class SearchController {
                 .getFamilyTree(
                         personUuid,
                         obfuscateLiving,
-                        onlySecondaryDescriptionEnabled,
-                        false);
+                        onlySecondaryDescriptionEnabled);
 
         log.info("{} [ personUuid={}, personId={}, obfuscateLiving={}, onlySecondaryDescription={}, httpRequestId={} ]",
                 logLabel,

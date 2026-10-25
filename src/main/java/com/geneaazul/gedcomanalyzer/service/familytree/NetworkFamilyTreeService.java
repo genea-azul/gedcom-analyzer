@@ -252,7 +252,7 @@ public class NetworkFamilyTreeService extends AbstractFamilyTreeService {
                             .stream()
                             .filter(swc -> swc.getSpouse().isPresent())
                             .filter(swc -> idsToExport.contains(swc.getSpouse().get().getId()))
-                            .filter(swc -> person.getOrderKey().compareTo(swc.getSpouse().get().getOrderKey()) < 0)
+                            .filter(swc -> person.getId() < swc.getSpouse().get().getId())
                             .filter(swc -> hasChildrenToExport(swc.getChildren(), idsToExport))
                             .forEach(swc -> {
                                 try {
@@ -316,7 +316,7 @@ public class NetworkFamilyTreeService extends AbstractFamilyTreeService {
                         .filter(swc -> swc.getSpouse().isPresent())
                         .filter(swc -> idsToExport.contains(swc.getSpouse().get().getId()))
                         .filter(swc -> hasChildrenToExport(swc.getChildren(), idsToExport)
-                                || person.getOrderKey().compareTo(swc.getSpouse().get().getOrderKey()) < 0)
+                                || person.getId() < swc.getSpouse().get().getId())
                         .forEach(swc -> {
                             try {
                                 String[] coupleCsvRecord = pyvisNetworkMapper.toPyvisSpouseEdgeCsvRecord(
