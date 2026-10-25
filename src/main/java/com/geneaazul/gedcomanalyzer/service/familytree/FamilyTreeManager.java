@@ -64,7 +64,7 @@ public class FamilyTreeManager {
                     }
 
                     String familyTreeFileIdPrefix = familyTreeHelper.getFamilyTreeFileId(person);
-                    String familyTreeFileSuffix = obfuscateLiving ? "" : "_visible";
+                    String familyTreeFileSuffix = AbstractFamilyTreeService.getFamilyTreeFileSuffix(obfuscateLiving);
 
                     List<FamilyTreeService> familyTreeServices = types
                             .stream()

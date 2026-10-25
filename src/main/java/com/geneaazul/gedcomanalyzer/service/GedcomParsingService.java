@@ -2,14 +2,10 @@ package com.geneaazul.gedcomanalyzer.service;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.config.PersonUuidSecret;
-import com.geneaazul.gedcomanalyzer.model.Aka;
-import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
-import com.geneaazul.gedcomanalyzer.model.ProfilePicture;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.dto.AlivePersonFilter;
-import com.geneaazul.gedcomanalyzer.model.dto.FamilyTreeGraphDto.PersonNodeDto;
 import com.geneaazul.gedcomanalyzer.utils.FamilyUtils;
 import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 
@@ -361,39 +357,6 @@ public class GedcomParsingService {
         }
 
         return newGedcom;
-    }
-
-    public static PersonNodeDto toPersonNodeDto(EnrichedPerson ep, @Nullable String relationship, @Nullable Integer generation) {
-        Integer yearOfBirth = null;
-        Boolean circaBirth = null;
-        if (ep.getDateOfBirth().isPresent()) {
-            Date dob = ep.getDateOfBirth().get();
-            yearOfBirth = dob.getYear().getValue();
-            circaBirth = dob.getOperator() == Date.Operator.ABT || dob.getOperator() == Date.Operator.EST;
-        }
-
-        Integer yearOfDeath = null;
-        Boolean circaDeath = null;
-        if (ep.getDateOfDeath().isPresent()) {
-            Date dod = ep.getDateOfDeath().get();
-            yearOfDeath = dod.getYear().getValue();
-            circaDeath = dod.getOperator() == Date.Operator.ABT || dod.getOperator() == Date.Operator.EST;
-        }
-
-        return PersonNodeDto.builder()
-                .id(ep.getId())
-                .displayName(ep.getDisplayName())
-                .sex(ep.getSex())
-                .aka(ep.getAka().map(Aka::value).orElse(null))
-                .profilePicture(ep.getProfilePicture().map(ProfilePicture::file).orElse(null))
-                .yearOfBirth(yearOfBirth)
-                .circaBirth(circaBirth)
-                .yearOfDeath(yearOfDeath)
-                .circaDeath(circaDeath)
-                .isAlive(ep.isAlive())
-                .generation(generation)
-                .relationship(relationship)
-                .build();
     }
 
     public void write(Gedcom gedcom, Path gedcomPath) throws IOException {

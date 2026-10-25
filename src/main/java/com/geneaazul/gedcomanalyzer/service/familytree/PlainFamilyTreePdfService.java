@@ -4,6 +4,7 @@ import com.geneaazul.gedcomanalyzer.config.EmbeddedFontsConfig;
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.FamilyTreeType;
 import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
 import com.geneaazul.gedcomanalyzer.model.FormattedShortestPathDistance;
 import com.geneaazul.gedcomanalyzer.model.FormattedShortestPathRelationship;
@@ -56,7 +57,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
+public class PlainFamilyTreePdfService extends AbstractFamilyTreeService {
 
     @SuppressWarnings("unused")
     private static final float A4_MAX_OFFSET_X = 590f;
@@ -117,6 +118,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                 gedcomHolder,
                 familyTreeHelper,
                 properties,
+                FamilyTreeType.PLAIN_PDF,
                 "pdf",
                 MediaType.APPLICATION_PDF);
         this.personService = personService;

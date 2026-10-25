@@ -21,6 +21,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -33,6 +34,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -41,125 +43,50 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
-public class NetworkFamilyTreeService implements FamilyTreeService {
+public class NetworkFamilyTreeService extends AbstractFamilyTreeService {
 
-    private final GedcomHolder gedcomHolder;
-    private final FamilyTreeHelper familyTreeHelper;
+    private static final Duration PYTHON_TIMEOUT = Duration.ofMinutes(2);
+
     private final PyvisNetworkMapper pyvisNetworkMapper;
     private final RelationshipMapper relationshipMapper;
-    private final GedcomAnalyzerProperties properties;
 
-    public Path getNetworkHtmlFile(
-            EnrichedPerson person,
-            String familyTreeFileIdPrefix,
-            String familyTreeFileSuffix) {
-
-        return properties
-                .getTempDir()
-                .resolve("family-trees")
-                .resolve(familyTreeFileIdPrefix + "_" + person.getUuid() + familyTreeFileSuffix + ".html");
+    public NetworkFamilyTreeService(
+            GedcomHolder gedcomHolder,
+            FamilyTreeHelper familyTreeHelper,
+            GedcomAnalyzerProperties properties,
+            PyvisNetworkMapper pyvisNetworkMapper,
+            RelationshipMapper relationshipMapper) {
+        super(gedcomHolder, familyTreeHelper, properties, FamilyTreeType.NETWORK, "html", MediaType.TEXT_HTML);
+        this.pyvisNetworkMapper = pyvisNetworkMapper;
+        this.relationshipMapper = relationshipMapper;
     }
 
     @Override
-    public boolean isMissingFamilyTree(
+    protected void export(
+            Path exportFilePath,
             EnrichedPerson person,
-            String familyTreeFileIdPrefix,
-            String familyTreeFileSuffix) {
-
-        Path htmlPyvisNetworkFilePath = getNetworkHtmlFile(
-                person,
-                familyTreeFileIdPrefix,
-                familyTreeFileSuffix);
-
-        return Files.notExists(htmlPyvisNetworkFilePath);
-    }
-
-    @Override
-    public void generateFamilyTree(
-            EnrichedPerson person,
-            String familyTreeFileIdPrefix,
-            String familyTreeFileSuffix,
             boolean obfuscateLiving,
             boolean onlySecondaryDescription,
             List<List<Relationship>> relationshipsWithNotInLawPriority) {
 
-        log.info("Generating network family tree HTML [ personId={}, personUuid={} ]", person.getId(), person.getUuid());
-        long startTime = System.currentTimeMillis();
-
-        Path htmlPyvisNetworkFilePath = getNetworkHtmlFile(
-                person,
-                familyTreeFileIdPrefix,
-                familyTreeFileSuffix);
-
-        Path csvPyvisNetworkNodesFilePath = properties
-                .getTempDir()
-                .resolve("family-trees")
-                .resolve(familyTreeFileIdPrefix + "_nodes_" + person.getUuid() + familyTreeFileSuffix + ".csv");
-
-        Path csvPyvisNetworkEdgesFilePath = properties
-                .getTempDir()
-                .resolve("family-trees")
-                .resolve(familyTreeFileIdPrefix + "_edges_" + person.getUuid() + familyTreeFileSuffix + ".csv");
-
-        generate(
-                htmlPyvisNetworkFilePath,
-                csvPyvisNetworkNodesFilePath,
-                csvPyvisNetworkEdgesFilePath,
-                obfuscateLiving,
-                relationshipsWithNotInLawPriority);
-
-        long totalTime = System.currentTimeMillis() - startTime;
-        log.info("Completed network family tree HTML [ personId={}, personUuid={}, ms={} ]", person.getId(), person.getUuid(), totalTime);
-    }
-
-    @Override
-    public Optional<FamilyTree> getFamilyTree(
-            UUID personUuid,
-            boolean obfuscateLiving,
-            boolean onlySecondaryDescription,
-            boolean forceRewrite) {
-
-        EnrichedGedcom gedcom = gedcomHolder.getGedcom();
-        EnrichedPerson person = gedcom.getPersonByUuid(personUuid);
-        if (person == null) {
-            log.warn("Person not found [ personUuid={}, modifiedDateTime={} ]", personUuid, gedcom.getModifiedDateTime());
-            return Optional.empty();
+        // Intermediate CSVs for the Python script, named after the (temporary, unique) HTML file
+        String baseName = StringUtils.removeEnd(exportFilePath.getFileName().toString(), ".html");
+        Path csvNodesPath = exportFilePath.resolveSibling(baseName + "_nodes.csv");
+        Path csvEdgesPath = exportFilePath.resolveSibling(baseName + "_edges.csv");
+        try {
+            generate(exportFilePath, csvNodesPath, csvEdgesPath, obfuscateLiving, relationshipsWithNotInLawPriority);
+        } finally {
+            try {
+                Files.deleteIfExists(csvNodesPath);
+                Files.deleteIfExists(csvEdgesPath);
+            } catch (IOException e) {
+                log.warn("Could not delete the pyvis CSV files of {}", exportFilePath, e);
+            }
         }
-
-        String familyTreeFileIdPrefix = familyTreeHelper.getFamilyTreeFileId(person);
-        String familyTreeFileSuffix = obfuscateLiving ? "" : "_visible";
-
-        Path htmlPyvisNetworkFilePath = getNetworkHtmlFile(
-                person,
-                familyTreeFileIdPrefix,
-                familyTreeFileSuffix);
-
-        if (forceRewrite || Files.notExists(htmlPyvisNetworkFilePath)) {
-            List<List<Relationship>> relationshipsWithNotInLawPriority = familyTreeHelper
-                    .getRelationshipsWithNotInLawPriority(person);
-
-            generateFamilyTree(
-                    person,
-                    familyTreeFileIdPrefix,
-                    familyTreeFileSuffix,
-                    obfuscateLiving,
-                    onlySecondaryDescription,
-                    relationshipsWithNotInLawPriority);
-        }
-
-        return Optional.of(new FamilyTree(
-                FamilyTreeType.NETWORK,
-                person,
-                "genea_azul_arbol_" + familyTreeFileIdPrefix + ".html",
-                htmlPyvisNetworkFilePath,
-                MediaType.TEXT_HTML,
-                properties.getLocale()));
     }
 
     @VisibleForTesting
@@ -497,6 +424,8 @@ public class NetworkFamilyTreeService implements FamilyTreeService {
                 .addArgument(csvPyvisNetworkEdgesFilePath.getFileName().toString(), true);
 
         DefaultExecutor executor = DefaultExecutor.builder().get();
+        // A hung interpreter would otherwise hold one of the two generation threads forever
+        executor.setWatchdog(ExecuteWatchdog.builder().setTimeout(PYTHON_TIMEOUT).get());
         executor.execute(commandLine);
 
         if (Files.notExists(htmlPyvisNetworkFilePath)) {

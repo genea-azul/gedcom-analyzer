@@ -3,6 +3,7 @@ package com.geneaazul.gedcomanalyzer.service.familytree;
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.FamilyTreeType;
 import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
@@ -25,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-public class PlainFamilyTreeTxtService extends PlainFamilyTreeService {
+public class PlainFamilyTreeTxtService extends AbstractFamilyTreeService {
 
     private final RelationshipMapper relationshipMapper;
 
@@ -38,6 +39,7 @@ public class PlainFamilyTreeTxtService extends PlainFamilyTreeService {
                 gedcomHolder,
                 familyTreeHelper,
                 properties,
+                FamilyTreeType.PLAIN_TXT,
                 "txt",
                 MediaType.TEXT_PLAIN);
         this.relationshipMapper = relationshipMapper;

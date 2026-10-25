@@ -95,9 +95,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                         .placeOfBirth("Tapalqué")
                         .build())
                 .contact("juan.perez@gmail.com")
-                .obfuscateLiving(false)
                 .onlySecondaryDescription(true)
-                .isForceRewrite(true)
                 .build();
 
         doReturn(SearchFamily.builder()
@@ -156,9 +154,7 @@ public class SearchControllerIT extends AbstractControllerIT {
                         .givenName(fatherGivenName)
                         .sex(SexType.M)
                         .build())
-                .obfuscateLiving(false)         // default: true
                 .onlySecondaryDescription(true) // default: true
-                .isForceRewrite(true)           // default: false
                 .build();
 
         doReturn(SearchFamily.builder()

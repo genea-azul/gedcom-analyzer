@@ -1,6 +1,7 @@
 package com.geneaazul.gedcomanalyzer.service;
 
 import com.geneaazul.gedcomanalyzer.domain.SearchConnection;
+import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
 import com.geneaazul.gedcomanalyzer.mapper.SearchConnectionMapper;
 import com.geneaazul.gedcomanalyzer.model.Date;
@@ -52,6 +53,7 @@ public class ConnectionService {
     private final SearchConnectionRepository searchConnectionRepository;
     private final SearchConnectionMapper searchConnectionMapper;
     private final RelationshipMapper relationshipMapper;
+    private final GedcomAnalyzerProperties properties;
 
     @Transactional
     public Optional<Long> persistConnectionSearch(
@@ -139,7 +141,7 @@ public class ConnectionService {
                         .map(FormattedRelationship::relationshipDesc)
                         .orElse("<relación desconocida>");
                 if (i == 0) {
-                    Pair<String, String> personAInfo = displayPersonInfo(personA, false);
+                    Pair<String, String> personAInfo = displayPersonInfo(personA, properties.isObfuscateLiving() && personA.isAlive());
                     connections.add(
                             ConnectionDto.builder()
                                     .relationship(null)
@@ -147,7 +149,7 @@ public class ConnectionService {
                                     .personData(personAInfo.getRight())
                                     .build());
                 }
-                Pair<String, String> personBInfo = displayPersonInfo(personB, false);
+                Pair<String, String> personBInfo = displayPersonInfo(personB, properties.isObfuscateLiving() && personB.isAlive());
                 connections.add(
                         ConnectionDto.builder()
                                 .relationship(relationshipDesc)

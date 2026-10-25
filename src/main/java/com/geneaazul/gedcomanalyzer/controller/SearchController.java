@@ -16,6 +16,7 @@ import com.geneaazul.gedcomanalyzer.service.ConnectionService;
 import com.geneaazul.gedcomanalyzer.service.FamilyService;
 import com.geneaazul.gedcomanalyzer.service.SurnameService;
 import com.geneaazul.gedcomanalyzer.service.familytree.FamilyTreeManager;
+import com.geneaazul.gedcomanalyzer.service.familytree.FamilyTreeService;
 import com.geneaazul.gedcomanalyzer.service.familytree.GraphJsonFamilyTreeService;
 import com.geneaazul.gedcomanalyzer.service.familytree.PlainFamilyTreePdfService;
 import com.geneaazul.gedcomanalyzer.utils.InetAddressUtils;
@@ -76,56 +77,39 @@ public class SearchController {
 
         Optional<String> clientIpAddress = InetAddressUtils.getRemoteAddress(request);
 
-        // default: true
-        boolean obfuscateLiving = !properties.isDisableObfuscateLiving()
-                && BooleanUtils.isNotFalse(searchFamilyDto.getObfuscateLiving());
+        boolean obfuscateLiving = properties.isObfuscateLiving();
         // default: true
         boolean onlySecondaryDescription = BooleanUtils.isNotFalse(searchFamilyDto.getOnlySecondaryDescription());
-        // default: false
-        boolean forceRewrite = BooleanUtils.isTrue(searchFamilyDto.getIsForceRewrite());
-
-        Optional<Long> searchId = Optional.empty();
 
         boolean shouldPersist = properties.isStoreFamilySearch() && BooleanUtils.isNotFalse(searchFamilyDto.getPersist());
 
-        if (shouldPersist) {
-            searchId = familyService.persistFamilySearch(searchFamilyDto, obfuscateLiving, clientIpAddress.orElse(null));
-        }
-
-        if (shouldPersist && !clientIpAddress
-                .map(familyService::isAllowedSearch)
-                .orElse(true)) {
-            SearchFamilyResultDto searchFamilyResult =  SearchFamilyResultDto.builder()
-                    .errors(List.of("TOO-MANY-REQUESTS"))
-                    .build();
-
-            updateSearchResult(searchId, searchFamilyResult);
-
-            return searchFamilyResult;
-        }
-
-        // Non-persisted searches (tree-builder live lookup, or storeFamilySearch=false) add nothing to the
-        // DB-based counter, so they are also counted in memory. The DB quota still applies: persist=false
-        // must not let a client that exhausted it keep searching.
-        if (!shouldPersist && !clientIpAddress
+        // Checked before storing: rejected requests must not add rows (or a flood would grow the DB without bound)
+        boolean allowed = clientIpAddress
                 .map(ip -> familyService.isAllowedSearch(ip, false)
-                        && clientRequestRateLimiter.tryAcquire(
+                        // Non-persisted searches (tree-builder live lookup) add nothing to the DB-based
+                        // counter, so they are also counted in memory
+                        && (shouldPersist || clientRequestRateLimiter.tryAcquire(
                                 "family-lookup:" + ip,
                                 properties.getMaxClientLookupRequestsCountThreshold(),
-                                Duration.ofHours(properties.getMaxClientRequestsHoursThreshold())))
-                .orElse(true)) {
+                                Duration.ofHours(properties.getMaxClientRequestsHoursThreshold()))))
+                .orElse(true);
+        if (!allowed) {
+            log.info("Search family rejected: too many requests [ httpRequestId={} ]", request.getRequestId());
             return SearchFamilyResultDto.builder()
                     .errors(List.of("TOO-MANY-REQUESTS"))
                     .build();
         }
 
+        Optional<Long> searchId = shouldPersist
+                ? familyService.persistFamilySearch(searchFamilyDto, obfuscateLiving, clientIpAddress.orElse(null))
+                : Optional.empty();
+
         SearchFamilyResultDto searchFamilyResult = familyService.search(searchFamilyDto);
 
-        log.info("Search family [ searchId={}, obfuscateLiving={}, onlySecondaryDescription={}, forceRewrite={}, peopleInResult={}, potentialResults={}, errors={}, httpRequestId={} ]",
+        log.info("Search family [ searchId={}, obfuscateLiving={}, onlySecondaryDescription={}, peopleInResult={}, potentialResults={}, errors={}, httpRequestId={} ]",
                 searchId.orElse(null),
                 obfuscateLiving,
                 onlySecondaryDescription,
-                forceRewrite,
                 searchFamilyResult.getPeople().size(),
                 searchFamilyResult.getPotentialResults(),
                 searchFamilyResult.getErrors().size(),
@@ -138,7 +122,7 @@ public class SearchController {
                 searchFamilyResult.getPeople(),
                 obfuscateLiving,
                 onlySecondaryDescription,
-                forceRewrite,
+                false,
                 List.of(FamilyTreeType.PLAIN_PDF, FamilyTreeType.NETWORK, FamilyTreeType.GRAPH_JSON));
 
         return searchFamilyResult;
@@ -184,97 +168,58 @@ public class SearchController {
     @GeneaAzulCrossOrigin(exposedHeaders = { "Content-Disposition", "File-Name" })
     public ResponseEntity<Resource> getPlainFamilyTreePdf(
             @PathVariable UUID personUuid,
-            @RequestParam @Nullable Boolean obfuscateLiving,
             @RequestParam @Nullable Boolean onlySecondaryDescription,
-            @RequestParam @Nullable Boolean forceRewrite,
             HttpServletRequest request) throws IOException {
-
-        // default: true
-        boolean obfuscateLivingEnabled = !properties.isDisableObfuscateLiving()
-                && BooleanUtils.isNotFalse(obfuscateLiving);
-        // default: true
-        boolean onlySecondaryDescriptionEnabled = BooleanUtils.isNotFalse(onlySecondaryDescription);
-        // default: false
-        boolean forceRewriteEnabled = BooleanUtils.isTrue(forceRewrite);
-
-        Optional<FamilyTree> maybeFamilyTree = plainFamilyTreePdfService
-                .getFamilyTree(
-                        personUuid,
-                        obfuscateLivingEnabled,
-                        onlySecondaryDescriptionEnabled,
-                        forceRewriteEnabled);
-
-        log.info("Plain family tree [ personUuid={}, personId={}, obfuscateLiving={}, onlySecondaryDescriptionEnabled={}, forceRewrite={}, httpRequestId={} ]",
-                personUuid,
-                maybeFamilyTree
-                        .map(FamilyTree::person)
-                        .map(EnrichedPerson::getId)
-                        .orElse(null),
-                obfuscateLivingEnabled,
-                onlySecondaryDescriptionEnabled,
-                forceRewriteEnabled,
-                request.getRequestId());
-
-        if (maybeFamilyTree.isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .contentType(MediaType.TEXT_HTML)
-                    .body(new InMemoryResource("<h4>Identificador de persona inv&aacute;lido.</h4>"
-                            + "<p>Por favor realiz&aacute; una nueva b&uacute;squeda.</p>"));
-        }
-
-        FamilyTree familyTree = maybeFamilyTree.get();
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION,
-                ContentDisposition.attachment()
-                        .filename(familyTree.filename())
-                        .build()
-                        .toString());
-        headers.add(HttpHeaders.CONTENT_LANGUAGE, familyTree.locale().toString());
-        headers.add("File-Name", familyTree.filename());
-
-        FileSystemResource resource = new FileSystemResource(familyTree.path());
-
-        return ResponseEntity.ok()
-                .headers(headers)
-                .contentLength(resource.contentLength())
-                .contentType(familyTree.mediaType())
-                .body(resource);
+        return serveFamilyTree(plainFamilyTreePdfService, "Plain family tree", personUuid, onlySecondaryDescription, request);
     }
 
     @GetMapping("/family-tree/{personUuid}/graphJson")
     @GeneaAzulCrossOrigin
     public ResponseEntity<Resource> getGraphFamilyTreeJson(
             @PathVariable UUID personUuid,
-            @RequestParam @Nullable Boolean obfuscateLiving,
             @RequestParam @Nullable Boolean onlySecondaryDescription,
-            @RequestParam @Nullable Boolean forceRewrite,
+            HttpServletRequest request) throws IOException {
+        return serveFamilyTree(graphJsonFamilyTreeService, "Graph JSON family tree", personUuid, onlySecondaryDescription, request);
+    }
+
+    private ResponseEntity<Resource> serveFamilyTree(
+            FamilyTreeService familyTreeService,
+            String logLabel,
+            UUID personUuid,
+            @Nullable Boolean onlySecondaryDescription,
             HttpServletRequest request) throws IOException {
 
-        // default: true
-        boolean obfuscateLivingEnabled = !properties.isDisableObfuscateLiving()
-                && BooleanUtils.isNotFalse(obfuscateLiving);
+        // Each export is a full traversal plus file generation, and the trees include living people
+        boolean allowed = InetAddressUtils.getRemoteAddress(request)
+                .map(ip -> clientRequestRateLimiter.tryAcquire(
+                        "family-tree:" + ip,
+                        properties.getMaxClientFamilyTreeRequestsCountThreshold(),
+                        Duration.ofHours(properties.getMaxClientRequestsHoursThreshold())))
+                .orElse(true);
+        if (!allowed) {
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS);
+        }
+
+        boolean obfuscateLiving = properties.isObfuscateLiving();
         // default: true
         boolean onlySecondaryDescriptionEnabled = BooleanUtils.isNotFalse(onlySecondaryDescription);
-        // default: false
-        boolean forceRewriteEnabled = BooleanUtils.isTrue(forceRewrite);
 
-        Optional<FamilyTree> maybeFamilyTree = graphJsonFamilyTreeService
+        Optional<FamilyTree> maybeFamilyTree = familyTreeService
                 .getFamilyTree(
                         personUuid,
-                        obfuscateLivingEnabled,
+                        obfuscateLiving,
                         onlySecondaryDescriptionEnabled,
-                        forceRewriteEnabled);
+                        false);
 
-        log.info("Graph JSON family tree [ personUuid={}, personId={}, obfuscateLiving={}, onlySecondaryDescription={}, forceRewrite={}, httpRequestId={} ]",
+        log.info("{} [ personUuid={}, personId={}, obfuscateLiving={}, onlySecondaryDescription={}, httpRequestId={} ]",
+                logLabel,
                 personUuid,
                 maybeFamilyTree
                         .map(FamilyTree::person)
                         .map(EnrichedPerson::getId)
                         .orElse(null),
-                obfuscateLivingEnabled,
+                obfuscateLiving,
                 onlySecondaryDescriptionEnabled,
-                forceRewriteEnabled,
                 request.getRequestId());
 
         if (maybeFamilyTree.isEmpty()) {
@@ -312,23 +257,18 @@ public class SearchController {
 
         Optional<String> clientIpAddress = InetAddressUtils.getRemoteAddress(request);
 
-        Optional<Long> searchId = Optional.empty();
-
-        if (properties.isStoreConnectionSearch()) {
-            searchId = connectionService.persistConnectionSearch(searchConnectionDto, clientIpAddress.orElse(null));
-        }
-
         if (!clientIpAddress
-                .map(familyService::isAllowedSearch)
+                .map(ip -> familyService.isAllowedSearch(ip, false))
                 .orElse(true)) {
-            SearchConnectionResultDto searchConnectionResult =  SearchConnectionResultDto.builder()
+            log.info("Search connection rejected: too many requests [ httpRequestId={} ]", request.getRequestId());
+            return SearchConnectionResultDto.builder()
                     .errors(List.of("TOO-MANY-REQUESTS"))
                     .build();
-
-            updateSearchResult(searchId, searchConnectionResult);
-
-            return searchConnectionResult;
         }
+
+        Optional<Long> searchId = properties.isStoreConnectionSearch()
+                ? connectionService.persistConnectionSearch(searchConnectionDto, clientIpAddress.orElse(null))
+                : Optional.empty();
 
         SearchConnectionResultDto searchConnectionResult = connectionService.search(searchConnectionDto);
 

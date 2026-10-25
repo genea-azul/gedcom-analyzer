@@ -64,9 +64,7 @@ public class AppControllerIT extends AbstractControllerIT {
                         .placeOfBirth("Tapalqué")
                         .build())
                 .contact("juan.perez@gmail.com")
-                .obfuscateLiving(false)
                 .onlySecondaryDescription(true)
-                .isForceRewrite(false)
                 .build();
 
         doReturn(SearchFamily.builder()

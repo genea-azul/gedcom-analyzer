@@ -358,8 +358,7 @@ public class FamilyService {
                 .peek(person -> personService.setTransientProperties(person, true))
                 .toList();
 
-        boolean obfuscateLiving = !properties.isDisableObfuscateLiving()
-                && BooleanUtils.isNotFalse(searchFamilyDto.getObfuscateLiving());
+        boolean obfuscateLiving = properties.isObfuscateLiving();
 
         ObfuscationType obfuscationType = obfuscateLiving
                 ? ObfuscationType.SKIP_MAIN_PERSON_NAME

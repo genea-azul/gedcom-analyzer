@@ -3,18 +3,21 @@ package com.geneaazul.gedcomanalyzer.controller;
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.FamilyTree;
 import com.geneaazul.gedcomanalyzer.model.dto.PersonDto;
+import com.geneaazul.gedcomanalyzer.service.ClientRequestRateLimiter;
 import com.geneaazul.gedcomanalyzer.service.PersonService;
 import com.geneaazul.gedcomanalyzer.service.familytree.NetworkFamilyTreeService;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
+import com.geneaazul.gedcomanalyzer.utils.InetAddressUtils;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.CacheControl;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.io.IOException;
@@ -25,7 +28,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.RequiredArgsConstructor;
@@ -40,25 +42,24 @@ public class AppController {
     private final PersonService personService;
     private final NetworkFamilyTreeService networkFamilyTreeService;
     private final GedcomAnalyzerProperties properties;
+    private final ClientRequestRateLimiter clientRequestRateLimiter;
 
     @Value("${project.version}")
     private String projectVersion;
 
     @GetMapping("/")
-    public ModelAndView index(@RequestParam @Nullable String f) {
+    public ModelAndView index() {
         return new ModelAndView("index");
     }
 
     @GetMapping("/no-redirect")
-    public ModelAndView noRedirect(@RequestParam @Nullable String f) {
+    public ModelAndView noRedirect() {
         return new ModelAndView("site-v2/index");
     }
 
     @GetMapping("/family-tree/{personUuid}")
-    public ModelAndView familyTreeView(
-            @PathVariable UUID personUuid,
-            @RequestParam @Nullable String f) {
-        boolean obfuscateLiving = !properties.isDisableObfuscateLiving() && !"0".equals(f);
+    public ModelAndView familyTreeView(@PathVariable UUID personUuid) {
+        boolean obfuscateLiving = properties.isObfuscateLiving();
 
         String personDisplayName = personService
                 .getPersonDto(gedcomHolder.getGedcom(), personUuid)
@@ -76,9 +77,19 @@ public class AppController {
     @GetMapping("/family-tree/{personUuid}/network")
     public ResponseEntity<String> networkFamilyTreeView(
             @PathVariable UUID personUuid,
-            @RequestParam @Nullable String f,
             HttpServletRequest request) throws IOException {
-        boolean obfuscateLiving = !properties.isDisableObfuscateLiving() && !"0".equals(f);
+        // Same budget as the PDF / graph JSON exports: each one runs a traversal and a Python process
+        boolean allowed = InetAddressUtils.getRemoteAddress(request)
+                .map(ip -> clientRequestRateLimiter.tryAcquire(
+                        "family-tree:" + ip,
+                        properties.getMaxClientFamilyTreeRequestsCountThreshold(),
+                        Duration.ofHours(properties.getMaxClientRequestsHoursThreshold())))
+                .orElse(true);
+        if (!allowed) {
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS);
+        }
+
+        boolean obfuscateLiving = properties.isObfuscateLiving();
 
         log.info("Network family tree [ personUuid={}, obfuscateLiving={}, httpRequestId={} ]",
                 personUuid,
@@ -101,7 +112,8 @@ public class AppController {
         return ResponseEntity.ok()
                 .contentLength(Files.size(familyTree.path()))
                 .contentType(familyTree.mediaType())
-                .cacheControl(CacheControl.maxAge(Duration.ofDays(365)))
+                // UUIDs change on every GEDCOM import; a short TTL also lets removed data disappear
+                .cacheControl(CacheControl.maxAge(Duration.ofDays(7)))
                 .body(Files.readString(familyTree.path(), StandardCharsets.UTF_8));
     }
 
