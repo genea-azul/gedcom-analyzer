@@ -10,6 +10,7 @@ import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
 import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
+import com.geneaazul.gedcomanalyzer.model.SubGedcomOptions;
 import com.geneaazul.gedcomanalyzer.model.Relationships;
 import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.model.dto.AlivePersonFilter;
@@ -721,17 +722,11 @@ public class HighLoadCalculationsTests {
         org.folg.gedcom.model.Gedcom subGedcom = gedcomParsingService.format(
                 gedcom.getLegacyGedcom().get(),
                 relationshipsList,
-                AlivePersonFilter.ALLOW,
-                false,
-                false,
-                null,
-                250,
-                4,
-                3,
-                null,
-                true,
-                true,
-                null);
+                SubGedcomOptions.builder()
+                        .trimTriggerSize(250)
+                        .maxAscDepth(4)
+                        .maxDescDepth(3)
+                        .build());
         gedcomParsingService.write(subGedcom, subGedcomPath);
     }
 
