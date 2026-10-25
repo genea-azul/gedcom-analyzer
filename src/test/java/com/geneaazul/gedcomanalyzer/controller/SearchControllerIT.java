@@ -191,18 +191,6 @@ public class SearchControllerIT extends AbstractControllerIT {
                 .andReturn();
 
         log.info(url + " response:\n{}", result.getResponse().getContentAsString(StandardCharsets.ISO_8859_1).substring(0, 50));
-
-        /*
-         * Test view network family tree HTML
-         */
-        url = "/family-tree/" + personUuid + "/network";
-        result = mvc.perform(get(url)
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.TEXT_HTML))
-                .andReturn();
-
-        log.info("{} response:\n{}", url, result.getResponse().getContentAsString(StandardCharsets.ISO_8859_1).substring(0, 50));
     }
 
     @Test

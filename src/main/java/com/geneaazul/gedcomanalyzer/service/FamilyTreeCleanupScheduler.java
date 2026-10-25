@@ -18,8 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Deletes old family-tree exports (.csv, .html, .json, .pdf, .txt) from the temp directory,
- * keeping the pyvis {@code lib/} assets the HTML exports load.
+ * Deletes old family-tree exports (.csv, .html, .json, .pdf, .txt) from the temp directory.
  *
  * <p>Person UUIDs change on every GEDCOM import, so older exports can no longer be requested.
  * Runs at startup as well as daily: the Fly machine is suspended most of the time and
@@ -32,7 +31,6 @@ public class FamilyTreeCleanupScheduler {
 
     static final int RETENTION_DAYS = 30;
     private static final List<String> CLEANUP_EXTENSIONS = List.of(".csv", ".html", ".json", ".pdf", ".txt");
-    private static final String ASSETS_DIR = "lib";
 
     private final GedcomAnalyzerProperties properties;
 
@@ -50,7 +48,6 @@ public class FamilyTreeCleanupScheduler {
 
         try (Stream<Path> paths = Files.walk(familyTreesDir)
                 .filter(Files::isRegularFile)
-                .filter(p -> !familyTreesDir.relativize(p).startsWith(ASSETS_DIR))
                 .filter(this::hasCleanupExtension)
                 .filter(p -> getLastModifiedInstant(p).isBefore(cutoff))) {
 

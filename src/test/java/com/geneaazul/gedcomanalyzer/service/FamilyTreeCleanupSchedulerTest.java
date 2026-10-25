@@ -72,22 +72,6 @@ class FamilyTreeCleanupSchedulerTest {
     }
 
     @Test
-    void deleteOldFamilyTreeFiles_keepsThePyvisAssets() throws Exception {
-        Path assets = tempDir.resolve("family-trees").resolve("lib").resolve("vis-9.1.2");
-        Files.createDirectories(assets);
-        Path oldAsset = assets.resolve("vis-network.min.js");
-        Path oldAssetJson = assets.resolve("bindings.json");
-        Instant oldInstant = Instant.now().minus(FamilyTreeCleanupScheduler.RETENTION_DAYS + 1, ChronoUnit.DAYS);
-        createFileWithAge(oldAsset, oldInstant);
-        createFileWithAge(oldAssetJson, oldInstant);
-
-        scheduler.deleteOldFamilyTreeFiles();
-
-        assertThat(oldAsset).exists();
-        assertThat(oldAssetJson).exists();
-    }
-
-    @Test
     void deleteOldFamilyTreeFiles_deletesOldFilesInSubdirs() throws Exception {
         Path familyTreesDir = tempDir.resolve("family-trees");
         Path subdir = familyTreesDir.resolve("subdir");

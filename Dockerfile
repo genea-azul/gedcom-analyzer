@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Multi-stage build for Gedcom Analyzer (Java 25). Final image: Eclipse Temurin 25 JRE on Alpine + Python (pyvis).
+# Multi-stage build for Gedcom Analyzer (Java 25). Final image: Eclipse Temurin 25 JRE on Alpine.
 
 # stage 1 - define base JDK for builds
 FROM eclipse-temurin:25-jdk-alpine AS base
@@ -27,21 +27,13 @@ RUN mkdir -p build/libs/dependency
 COPY --from=build /workspace/target/*.jar build/libs/app.jar
 RUN cd build/libs/dependency; jar -xf ../app.jar
 
-# stage 5 - JRE on Alpine, install Python
-FROM eclipse-temurin:25-jre-alpine AS jre-py
-ENV PYTHONUNBUFFERED=1
-# Python only runs pyvis for the network HTML exports. pandas and numpy ship musllinux
-# wheels, so no compiler or headers are needed (and the venv brings its own pip).
-RUN apk add --no-cache python3 && \
-    python3 -m venv /opt/py && \
-    /opt/py/bin/pip install --no-cache-dir pyvis==0.3.2 pandas==3.1.0
-ENV VIRTUAL_ENV=/opt/py
-ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
+# stage 5 - JRE on Alpine
+FROM eclipse-temurin:25-jre-alpine AS jre
 RUN addgroup -S -g 1001 gedcomanalyzerapp && \
     adduser -S -u 1001 -G gedcomanalyzerapp -s /sbin/nologin -h /nonexistent gedcomanalyzeruser
 
-# stage 6 - make runnable based on jre-py and the built code
-FROM jre-py AS jre-py-app
+# stage 6 - make runnable based on the JRE and the built code
+FROM jre AS app
 COPY --from=unpack --chown=gedcomanalyzeruser:gedcomanalyzerapp /workspace/build/libs/dependency/BOOT-INF/lib /app/lib
 COPY --from=unpack --chown=gedcomanalyzeruser:gedcomanalyzerapp /workspace/build/libs/dependency/META-INF /app/META-INF
 COPY --from=unpack --chown=gedcomanalyzeruser:gedcomanalyzerapp /workspace/build/libs/dependency/BOOT-INF/classes /app

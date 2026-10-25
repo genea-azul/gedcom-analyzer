@@ -48,8 +48,6 @@ public class GedcomAnalyzerProperties {
     private List<String> profilePictureAllowedHostSuffixes = List.of("mhcache.com");
     private int profilePictureDownloadConcurrency = 3;
 
-    private String pyvisNetworkExportScriptFilename = "pyvis_network.py";
-    private Integer maxPyvisNetworkNodesToExport = 500;
     private Integer maxGraphJsonNodesToExport = 250;
 
     private int maxClientRequestsCountThreshold = 12;
