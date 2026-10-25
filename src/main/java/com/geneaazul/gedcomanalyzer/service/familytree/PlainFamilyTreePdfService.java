@@ -4,6 +4,7 @@ import com.geneaazul.gedcomanalyzer.config.EmbeddedFontsConfig;
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.FamilyTreeType;
 import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
 import com.geneaazul.gedcomanalyzer.model.FormattedShortestPathDistance;
 import com.geneaazul.gedcomanalyzer.model.FormattedShortestPathRelationship;
@@ -56,7 +57,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
+public class PlainFamilyTreePdfService extends AbstractFamilyTreeService {
 
     @SuppressWarnings("unused")
     private static final float A4_MAX_OFFSET_X = 590f;
@@ -117,6 +118,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                 gedcomHolder,
                 familyTreeHelper,
                 properties,
+                FamilyTreeType.PLAIN_PDF,
                 "pdf",
                 MediaType.APPLICATION_PDF);
         this.personService = personService;
@@ -134,6 +136,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
         log.info("Generating plain family tree PDF");
 
         Set<Integer> distinguishedRelatives = new HashSet<>();
+        Map<Integer, Integer> personIndexes = FamilyTreeHelper.getPersonIndexes(peopleInTree);
         List<FormattedRelationship> formattedRelationships = peopleInTree
                 .stream()
                 .peek(relationships -> {
@@ -145,6 +148,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                         .stream()
                         .map(relationship -> relationshipMapper.toRelationshipDto(
                                 relationship,
+                                personIndexes.get(relationship.person().getId()),
                                 getObfuscateCondition(obfuscateLiving, person, relationship)))
                         .map(relationship -> relationshipMapper.formatInSpanish(relationship, onlySecondaryDescription))
                         .toList())
@@ -158,6 +162,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                 calculateFormattedShortestPath(
                         person,
                         distinguishedRelatives,
+                        personIndexes,
                         obfuscateLiving,
                         onlySecondaryDescription);
 
@@ -644,17 +649,15 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
     private Pair<List<FormattedShortestPathDistance>, List<List<FormattedShortestPathRelationship>>> calculateFormattedShortestPath(
             EnrichedPerson person,
             Set<Integer> distinguishedRelatives,
+            Map<Integer, Integer> personIndexes,
             boolean obfuscateLiving,
             boolean onlySecondaryDescription) {
         long startTime = System.currentTimeMillis();
 
-        var shortestPathFromSource = PathUtils.calculateShortestPathFromSource(
+        PathUtils.ShortestPaths shortestPaths = PathUtils.calculateShortestPathsFromSource(
                 person.getGedcom(),
                 person,
-                true,
                 true);
-        Map<Integer, Integer> shortestDistancesByPersonId = shortestPathFromSource.getLeft();
-        Map<Integer, List<Integer>> shortestPathsByPersonId = shortestPathFromSource.getRight();
 
         List<FormattedShortestPathDistance> formattedShortestPathDistances = person.getGedcom()
                 .getPeople()
@@ -666,7 +669,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                         distinguished.getSurname().map(Surname::simplified).orElseThrow(),
                         distinguished.getDisplayName(),
                         distinguishedRelatives.contains(distinguished.getId()),
-                        shortestDistancesByPersonId.get(distinguished.getId())))
+                        shortestPaths.distanceTo(distinguished.getId())))
                 .filter(distance -> distance.distance() != null)
                 .sorted(Comparator.comparing(FormattedShortestPathDistance::distance)
                         .thenComparing(FormattedShortestPathDistance::isRelative, Comparator.reverseOrder())
@@ -680,7 +683,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                 .stream()
                 .map(shortestPathPersonId -> {
                     List<FormattedShortestPathRelationship> formattedShortestPathRelationships = new ArrayList<>();
-                    List<Integer> shortestPath = shortestPathsByPersonId.getOrDefault(shortestPathPersonId, List.of());
+                    List<Integer> shortestPath = shortestPaths.pathTo(shortestPathPersonId);
                     if (shortestPath.size() > 1) {
                         for (int i = 0; i < shortestPath.size(); i++) {
                             EnrichedPerson personA = Objects.requireNonNull(person.getGedcom().getPersonById(shortestPath.get(i)));
@@ -692,6 +695,7 @@ public class PlainFamilyTreePdfService extends PlainFamilyTreeService {
                                     : Relationship.empty(personA);
                             RelationshipDto relationshipDto = relationshipMapper.toRelationshipDto(
                                     relationship,
+                                    personIndexes.get(personA.getId()),
                                     getObfuscateCondition(obfuscateLiving, person, personA, i));
                             FormattedRelationship formattedRelationship = relationshipMapper.formatInSpanish(relationshipDto, onlySecondaryDescription);
 

@@ -3,6 +3,7 @@ package com.geneaazul.gedcomanalyzer.service.familytree;
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
+import com.geneaazul.gedcomanalyzer.model.FamilyTreeType;
 import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
@@ -19,13 +20,14 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-public class PlainFamilyTreeTxtService extends PlainFamilyTreeService {
+public class PlainFamilyTreeTxtService extends AbstractFamilyTreeService {
 
     private final RelationshipMapper relationshipMapper;
 
@@ -38,6 +40,7 @@ public class PlainFamilyTreeTxtService extends PlainFamilyTreeService {
                 gedcomHolder,
                 familyTreeHelper,
                 properties,
+                FamilyTreeType.PLAIN_TXT,
                 "txt",
                 MediaType.TEXT_PLAIN);
         this.relationshipMapper = relationshipMapper;
@@ -52,11 +55,15 @@ public class PlainFamilyTreeTxtService extends PlainFamilyTreeService {
             List<List<Relationship>> peopleInTree) {
         log.info("Generating plain family tree TXT");
 
+        Map<Integer, Integer> personIndexes = FamilyTreeHelper.getPersonIndexes(peopleInTree);
         List<FormattedRelationship> formattedRelationships = peopleInTree
                 .stream()
                 .map(relationships -> relationships
                         .stream()
-                        .map(relationship -> relationshipMapper.toRelationshipDto(relationship, obfuscateLiving))
+                        .map(relationship -> relationshipMapper.toRelationshipDto(
+                                relationship,
+                                personIndexes.get(relationship.person().getId()),
+                                obfuscateLiving))
                         .map(relationship -> relationshipMapper.formatInSpanish(relationship, onlySecondaryDescription))
                         .toList())
                 .map(frs -> frs

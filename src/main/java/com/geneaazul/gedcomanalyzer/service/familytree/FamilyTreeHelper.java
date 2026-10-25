@@ -9,12 +9,13 @@ import com.geneaazul.gedcomanalyzer.service.PersonService;
 
 import org.springframework.stereotype.Service;
 
-import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -89,8 +90,6 @@ public class FamilyTreeHelper {
             }
         }
 
-        MutableInt orderKey = new MutableInt(1);
-
         return relationshipsList
                 .stream()
                 // Make sure each relationship group has 1 or 2 elements (usually an in-law and a not-in-law relationship)
@@ -109,8 +108,19 @@ public class FamilyTreeHelper {
                     return List.copyOf(relationships.getOrderedRelationships());
                 })
                 .sorted(Comparator.comparing(List::getFirst))
-                .peek(relationships -> relationships.getFirst().person().setOrderKey(orderKey.getAndIncrement()))
                 .toList();
+    }
+
+    /**
+     * 1-based position of each person in a tree returned by {@link #getRelationshipsWithNotInLawPriority}.
+     * Computed per tree: storing it on the shared person objects raced between concurrent exports.
+     */
+    public static Map<Integer, Integer> getPersonIndexes(List<List<Relationship>> relationshipsWithNotInLawPriority) {
+        Map<Integer, Integer> indexes = new HashMap<>();
+        for (int i = 0; i < relationshipsWithNotInLawPriority.size(); i++) {
+            indexes.putIfAbsent(relationshipsWithNotInLawPriority.get(i).getFirst().person().getId(), i + 1);
+        }
+        return indexes;
     }
 
     /**

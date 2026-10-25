@@ -30,14 +30,11 @@ RUN cd build/libs/dependency; jar -xf ../app.jar
 # stage 5 - JRE on Alpine, install Python
 FROM eclipse-temurin:25-jre-alpine AS jre-py
 ENV PYTHONUNBUFFERED=1
-RUN apk add --no-cache python3 py3-pip python3-dev && \
-    ln -sf /usr/bin/python3 /usr/bin/python
-# Create isolated venv and install deps (build-base needed if pandas builds from source)
-RUN apk add --no-cache --virtual .build-deps build-base && \
+# Python only runs pyvis for the network HTML exports. pandas and numpy ship musllinux
+# wheels, so no compiler or headers are needed (and the venv brings its own pip).
+RUN apk add --no-cache python3 && \
     python3 -m venv /opt/py && \
-    /opt/py/bin/pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    /opt/py/bin/pip install --no-cache-dir pyvis==0.3.2 pandas==3.0.1 && \
-    apk del .build-deps
+    /opt/py/bin/pip install --no-cache-dir pyvis==0.3.2 pandas==3.1.0
 ENV VIRTUAL_ENV=/opt/py
 ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
 RUN addgroup -S -g 1001 gedcomanalyzerapp && \

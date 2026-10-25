@@ -6,6 +6,7 @@ import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
+import com.geneaazul.gedcomanalyzer.model.SubGedcomOptions;
 import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.model.dto.AlivePersonFilter;
 import com.geneaazul.gedcomanalyzer.service.familytree.FamilyTreeHelper;
@@ -411,17 +412,19 @@ public class GeneaAzulWebResources {
             org.folg.gedcom.model.Gedcom subGedcom = gedcomParsingService.format(
                     gedcom.getLegacyGedcom().get(),
                     relationshipsList,
-                    AlivePersonFilter.SHOW_SURNAME_ONLY,
-                    true,
-                    config.directLineageOnly(),
-                    config.personId(),
-                    config.trimTriggerSize(),
-                    config.maxAscDepth(),
-                    config.maxDescDepth(),
-                    config.distantAncestorDescLimit(),
-                    config.includeInLawsAtMaxDescDepth(),
-                    config.includeInLawsAtMaxAscDepth(),
-                    config.maxCollateralDescDepth());
+                    SubGedcomOptions.builder()
+                            .alivePersonFilter(AlivePersonFilter.SHOW_SURNAME_ONLY)
+                            .displayOnlyBasic(true)
+                            .directLineageOnly(config.directLineageOnly())
+                            .rootPersonId(config.personId())
+                            .trimTriggerSize(config.trimTriggerSize())
+                            .maxAscDepth(config.maxAscDepth())
+                            .maxDescDepth(config.maxDescDepth())
+                            .distantAncestorDescLimit(config.distantAncestorDescLimit())
+                            .includeInLawsAtMaxDescDepth(config.includeInLawsAtMaxDescDepth())
+                            .includeInLawsAtMaxAscDepth(config.includeInLawsAtMaxAscDepth())
+                            .maxCollateralDescDepth(config.maxCollateralDescDepth())
+                            .build());
 
             Path output = outputDir.resolve("sub-gedcom-" + personLastnames.get(i) + ".ged");
             boolean changed = gedcomParsingService.writeIfChanged(subGedcom, output);

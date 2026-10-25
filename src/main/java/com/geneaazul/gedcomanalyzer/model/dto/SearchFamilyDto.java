@@ -47,11 +47,7 @@ public class SearchFamilyDto {
     @ToString.Include
     private String contact;
     @Builder.Default
-    private Boolean obfuscateLiving = true;
-    @Builder.Default
     private Boolean onlySecondaryDescription = true;
-    @Builder.Default
-    private Boolean isForceRewrite = false;
     @Builder.Default
     private Boolean persist = true;
 

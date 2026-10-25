@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -273,11 +272,12 @@ public class AdminControllerIT extends AbstractControllerIT {
     }
 
     @Test
-    public void testMarkFamilySearchReviewed_notFound_throwsException() {
+    public void testMarkFamilySearchReviewed_notFound_returns404() throws Exception {
         doReturn(Optional.empty()).when(searchFamilyRepository).findById(999L);
 
-        assertThrows(Exception.class, () ->
-                mvc.perform(get("/api/admin/search/family/999/reviewed").with(csrf())));
+        mvc.perform(get("/api/admin/search/family/999/reviewed").with(csrf()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode", is("NOT-FOUND")));
     }
 
     // ── Search — connection ───────────────────────────────────────────────────

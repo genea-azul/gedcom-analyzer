@@ -20,9 +20,11 @@ com.geneaazul.gedcomanalyzer
 │   ├── BirthdayService          Birthday/ephemerides
 │   ├── TreeBuilderService       User-submitted tree-builder requests
 │   ├── FamilyService            Family search persistence/retrieval
-│   ├── familytree/              Tree exporters: PDF, HTML Pyvis, JSON graph
+│   ├── familytree/              Tree exporters (AbstractFamilyTreeService): PDF, TXT, HTML Pyvis, JSON graph
+│   ├── photo/
+│   │   └── ProfilePictureCache  Thumbnails of the GEDCOM's MyHeritage photos (their URLs expire)
 │   └── storage/
-│       └── GedcomHolder         Singleton GEDCOM holder (BlockingQueue)
+│       └── GedcomHolder         Holds the loaded GEDCOM; reloads publish GedcomLoadedEvent
 ├── model/               Core domain models (Relationship, EnrichedPerson, …)
 ├── domain/              JPA entities (SearchFamily, SearchConnection, TreeBuilderSubmission)
 ├── mapper/              DTO mappers
@@ -35,10 +37,12 @@ com.geneaazul.gedcomanalyzer
 
 ## GEDCOM loading
 
-**`GedcomHolder`** holds a single `EnrichedGedcom` in a `LinkedBlockingQueue<EnrichedGedcom>` (capacity 1).
+**`GedcomHolder`** holds the loaded `EnrichedGedcom` in a volatile field.
 
-- `getGedcom()` — polls with 30 s timeout; blocks if still loading.
-- `reloadFromStorage(refreshCachedGedcom)` — clears queue, reloads from Local or Google Drive storage.
+- `getGedcom()` — returns it, waiting up to 30 s while it (re)loads; then throws `GedcomNotLoadedException` (503 + `Retry-After`). `GET /api/gedcom-analyzer` (the website's readiness gate) waits for it.
+- `reloadFromStorage(refreshCachedGedcom)` — releases the current GEDCOM first (two don't fit in the 2 GB VM), loads, and publishes `GedcomLoadedEvent`. Concurrent reloads are rejected (`ReloadInProgressException`, 409). If a refresh fails, the cached file is loaded again and the method returns `false`.
+- `GoogleDriveStorageService` downloads to a temp file (zip detected by content, extracted to the configured path), rejects non-GEDCOM content, keeps the previous file as `.previous` and restores it if the new one can't be parsed.
+- **Person UUIDs** are `HMAC-SHA256(secret, GEDCOM file mtime, person id)` (`PersonUuids`): stable for the same file, new for every import, not computable from public data. The secret is `person-uuid-secret` or one generated once in `temp-dir/.person-uuid-secret` (`PersonUuidSecret`).
 
 **`EnrichedGedcom`** wraps the legacy GEDCOM with:
 
@@ -160,18 +164,10 @@ Final list: sorted by `Relationship.compareTo`, then sequential `orderKey` stamp
 Gedcom format(
     Gedcom gedcom,
     List<List<Relationship>> relationshipsList,
-    AlivePersonFilter alivePersonFilter,      // SKIP | SHOW_SURNAME_ONLY | show all
-    boolean displayOnlyBasic,                 // keep only birth/death/marriage events
-    boolean directLineageOnly,                // filter: isDirect() == true only
-    @Nullable Integer rootPersonId,           // written as _ROOT tag in output
-    @Nullable Integer trimTriggerSize,        // null=never trim, 0=always, N=trim if size>N
-    int maxAscDepth,
-    int maxDescDepth,
-    @Nullable Integer distantAncestorDescLimit, // desc cap for ancestors beyond maxAscDepth
-    boolean includeInLawsAtMaxDescDepth,
-    boolean includeInLawsAtMaxAscDepth,
-    @Nullable Integer maxCollateralDescDepth) // null=no collateral restriction
+    SubGedcomOptions options)
 ```
+
+`SubGedcomOptions` (record + builder, validated on build) holds `alivePersonFilter`, `displayOnlyBasic`, `directLineageOnly`, `rootPersonId` (written as `_ROOT`), `trimTriggerSize` (null = never trim, 0 = always, N = trim if size > N), `maxAscDepth`, `maxDescDepth`, `distantAncestorDescLimit`, `includeInLawsAtMaxDescDepth`, `includeInLawsAtMaxAscDepth`, `maxCollateralDescDepth`. `SubGedcomOptions.builder()` starts from keep-everyone defaults (ALLOW, unlimited depth, in-laws included), so callers only set what they change.
 
 **Collateral filter** (applied unconditionally when `maxCollateralDescDepth` is non-null, before trimming):
 
@@ -215,6 +211,12 @@ Most web configs use `directLineageOnly=true, trimTriggerSize=0, maxAscDepth=1` 
 
 ## REST API endpoints
 
+**Privacy policy**: obfuscation of living people is decided only by the server (`GedcomAnalyzerProperties.isObfuscateLiving()`, i.e. `!disable-obfuscate-living`); clients cannot turn it off. Tree exports (PDF, graph JSON, network HTML) are rate-limited per client in memory (`max-client-family-tree-requests-count-threshold`). Searches over quota are rejected before being stored.
+
+**Exports**: `AbstractFamilyTreeService` owns file naming and lookup; generation is serialized per file and written to a temp file moved atomically. Never store per-tree state on the shared `EnrichedPerson` objects (use per-tree maps such as `FamilyTreeHelper.getPersonIndexes`).
+
+**Photos**: never return a MyHeritage URL directly — use `ProfilePictureCache.publicUrl(person)` (cached `/api/photos/{key}.jpg`, the original while still valid, or nothing).
+
 **CORS**: public endpoints use `@GeneaAzulCrossOrigin` (production domains + the Cloudflare Pages project `geneaazul-web.pages.dev` and its `*.geneaazul-web.pages.dev` previews). Never add a raw `@CrossOrigin` list; admin endpoints have no CORS on purpose.
 
 **Errors**: `ApiExceptionHandler` renders MVC exceptions as problem details with an `errorCode` property (`INVALID-REQUEST`, `TOO-MANY-REQUESTS`, `NOT-FOUND`, `ERROR`). The website maps these codes to Spanish messages — treat them as API contract. Business errors of successful searches still go in the `errors` array of the 200 response.
@@ -244,6 +246,12 @@ Most web configs use `directLineageOnly=true, trimTriggerSize=0, maxAscDepth=1` 
 | `GET` | `/azul-today` | Birthdays for today |
 | `GET` | `/ephemerides-this-month` | Commemorative dates this month |
 
+### `PhotoController` — `/api/photos`
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/{key}.jpg` | Cached profile photo thumbnail (256 px JPEG, 1-year immutable cache) |
+
 ### `TreeBuilderController` — `/api/tree-builder`
 
 | Method | Path | Description |
@@ -256,7 +264,8 @@ Most web configs use `directLineageOnly=true, trimTriggerSize=0, maxAscDepth=1` 
 |---|---|---|
 | `GET` | `/gedcom-analyzer/health` | Admin health check |
 | `GET` | `/gedcom-analyzer/usageStats` | Usage statistics |
-| `GET` | `/gedcom-analyzer/reload` | Reload GEDCOM from storage |
+| `GET` | `/gedcom-analyzer/reload` | Reload GEDCOM from storage (500 if it failed and the cached one was restored, 409 if one is running) |
+| `GET` | `/gedcom-analyzer/photos` | Last profile-photo cache sync (referenced / cached / downloaded / expired / failed) |
 | `POST` | `/gedcom-analyzer` | Analyze an uploaded GEDCOM file |
 | `GET` | `/search/family/latest` | Latest family searches |
 | `GET` | `/search/family/{id}/reviewed` | Mark family search reviewed |
@@ -328,7 +337,11 @@ Place matching for `findPersonsByPlaceOfAnyEvent` includes: birth, death, marria
 
 - `storeFamilySearch` / `storeConnectionSearch` — persist searches to DB
 - `keepReferenceToLegacyGedcom` — false by default (memory optimization; legacy GEDCOM freed after enrichment)
-- `disableObfuscateLiving` — false by default
+- `disableObfuscateLiving` — false by default (production sets it to true)
+- `publicApiBaseUrl` — absolute base URL used in links returned to the website (cached photos)
+- `profilePictureAllowedHostSuffixes` (`mhcache.com`), `profilePictureDownloadConcurrency` (3)
+- `personUuidSecret` — Base64 secret for person UUIDs (generated on the volume when blank)
+- `maxClientFamilyTreeRequestsCountThreshold` — 60 tree exports per client and window
 - `deleteUploadedGedcom` — false by default
 
 **Normalized name maps** (loaded from `application.properties`, ~1000 lines):
@@ -336,3 +349,11 @@ Place matching for `findPersonsByPlaceOfAnyEvent` includes: birth, death, marria
 - `normalizedGivenNamesMap` — masculine/feminine given name variants
 - `normalizedSurnamesMap` — surname spelling variants
 - `namePrefixesMap` — title/prefix mappings (used in personalities JSON)
+
+---
+
+## Build and tests
+
+- `./mvnw verify` runs unit tests (surefire) and `*IT` integration tests (failsafe). CI runs it on every push and PR; deploys to Fly only happen after it passes.
+- `HighLoadCalculationsTests` and `GedcomAnalyzerServiceTests` are offline analysis tools (no assertions) tagged `tool` and excluded by default; run them with `-Dtests.excludedGroups=` (the Makefile targets do).
+- If the IDE compiles into `target/` at the same time, Maven may run stale classes ("Unresolved compilation problems"): use `./mvnw clean verify`.

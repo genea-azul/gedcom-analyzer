@@ -13,6 +13,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -60,7 +61,10 @@ public class FamilyTreeConfig {
                         .getTempDir()
                         .resolve(properties.getPyvisNetworkExportScriptFilename());
 
-                Files.copy(resource.getInputStream(), newScriptPath, StandardCopyOption.REPLACE_EXISTING);
+                // Always replaced so a deploy with a changed script doesn't keep the old copy on the volume
+                try (InputStream in = resource.getInputStream()) {
+                    Files.copy(in, newScriptPath, StandardCopyOption.REPLACE_EXISTING);
+                }
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }

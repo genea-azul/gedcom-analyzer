@@ -84,7 +84,6 @@ public class PersonService {
         person.setAncestryGenerations(ancestryGenerations);
         person.setMaxDistantRelationship(maxDistantRelationship);
         person.setDistinguishedPersonsInTree(distinguishedPersons);
-        person.setOrderKey(null);
 
         return relationships;
     }

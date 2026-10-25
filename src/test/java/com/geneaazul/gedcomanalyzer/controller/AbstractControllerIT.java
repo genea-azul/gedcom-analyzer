@@ -11,7 +11,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-@WebMvcTest({SearchController.class, GedcomAnalyzerController.class, TreeBuilderController.class, AdminController.class, CommentController.class})
+@WebMvcTest({SearchController.class, GedcomAnalyzerController.class, TreeBuilderController.class, AdminController.class, CommentController.class, PhotoController.class})
 @ComponentScan(basePackageClasses = Application.class)
 @ActiveProfiles("test")
 public abstract class AbstractControllerIT {

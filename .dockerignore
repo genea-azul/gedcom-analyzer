@@ -44,7 +44,6 @@
 **/.DS_Store
 
 # To keep
-!**/.mvn/repo/**/*
 !**/.mvn/wrapper/maven-wrapper.jar
 !**/**/src/main/**/target
 !**/**/src/test/**/target

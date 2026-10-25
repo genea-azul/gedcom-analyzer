@@ -2,6 +2,8 @@ package com.geneaazul.gedcomanalyzer.service.familytree;
 
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
+import com.geneaazul.gedcomanalyzer.model.Aka;
+import com.geneaazul.gedcomanalyzer.model.Date;
 import com.geneaazul.gedcomanalyzer.model.EnrichedGedcom;
 import com.geneaazul.gedcomanalyzer.model.EnrichedPerson;
 import com.geneaazul.gedcomanalyzer.model.FamilyTree;
@@ -10,8 +12,9 @@ import com.geneaazul.gedcomanalyzer.model.Relationship;
 import com.geneaazul.gedcomanalyzer.model.dto.FamilyTreeGraphDto;
 import com.geneaazul.gedcomanalyzer.model.dto.FamilyTreeGraphDto.FamilyNodeDto;
 import com.geneaazul.gedcomanalyzer.model.dto.FamilyTreeGraphDto.PersonNodeDto;
-import com.geneaazul.gedcomanalyzer.service.GedcomParsingService;
+import com.geneaazul.gedcomanalyzer.service.photo.ProfilePictureCache;
 import com.geneaazul.gedcomanalyzer.service.storage.GedcomHolder;
+import com.geneaazul.gedcomanalyzer.utils.PersonUtils;
 
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -31,99 +34,39 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.Nullable;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
-public class GraphJsonFamilyTreeService implements FamilyTreeService {
+public class GraphJsonFamilyTreeService extends AbstractFamilyTreeService {
 
-    private final GedcomHolder gedcomHolder;
-    private final FamilyTreeHelper familyTreeHelper;
-    private final GedcomAnalyzerProperties properties;
     private final ObjectMapper objectMapper;
     private final RelationshipMapper relationshipMapper;
+    private final ProfilePictureCache profilePictureCache;
 
-    public Path getJsonFile(
-            EnrichedPerson person,
-            String familyTreeFileIdPrefix,
-            String familyTreeFileSuffix) {
-
-        return properties
-                .getTempDir()
-                .resolve("family-trees")
-                .resolve(familyTreeFileIdPrefix + "_" + person.getUuid() + familyTreeFileSuffix + ".json");
+    public GraphJsonFamilyTreeService(
+            GedcomHolder gedcomHolder,
+            FamilyTreeHelper familyTreeHelper,
+            GedcomAnalyzerProperties properties,
+            ObjectMapper objectMapper,
+            RelationshipMapper relationshipMapper,
+            ProfilePictureCache profilePictureCache) {
+        super(gedcomHolder, familyTreeHelper, properties, FamilyTreeType.GRAPH_JSON, "json", MediaType.APPLICATION_JSON);
+        this.objectMapper = objectMapper;
+        this.relationshipMapper = relationshipMapper;
+        this.profilePictureCache = profilePictureCache;
     }
 
     @Override
-    public boolean isMissingFamilyTree(
+    protected void export(
+            Path exportFilePath,
             EnrichedPerson person,
-            String familyTreeFileIdPrefix,
-            String familyTreeFileSuffix) {
-
-        return Files.notExists(getJsonFile(person, familyTreeFileIdPrefix, familyTreeFileSuffix));
-    }
-
-    @Override
-    public void generateFamilyTree(
-            EnrichedPerson person,
-            String familyTreeFileIdPrefix,
-            String familyTreeFileSuffix,
             boolean obfuscateLiving,
             boolean onlySecondaryDescription,
             List<List<Relationship>> relationshipsWithNotInLawPriority) {
-
-        log.info("Generating graph JSON family tree [ personId={}, personUuid={} ]", person.getId(), person.getUuid());
-        long startTime = System.currentTimeMillis();
-
-        Path jsonFilePath = getJsonFile(person, familyTreeFileIdPrefix, familyTreeFileSuffix);
-
-        generate(jsonFilePath, obfuscateLiving, relationshipsWithNotInLawPriority);
-
-        long totalTime = System.currentTimeMillis() - startTime;
-        log.info("Completed graph JSON family tree [ personId={}, personUuid={}, ms={} ]", person.getId(), person.getUuid(), totalTime);
-    }
-
-    @Override
-    public Optional<FamilyTree> getFamilyTree(
-            UUID personUuid,
-            boolean obfuscateLiving,
-            boolean onlySecondaryDescription,
-            boolean forceRewrite) {
-
-        EnrichedGedcom gedcom = gedcomHolder.getGedcom();
-        EnrichedPerson person = gedcom.getPersonByUuid(personUuid);
-        if (person == null) {
-            log.warn("Person not found [ personUuid={}, modifiedDateTime={} ]", personUuid, gedcom.getModifiedDateTime());
-            return Optional.empty();
-        }
-
-        String familyTreeFileIdPrefix = familyTreeHelper.getFamilyTreeFileId(person);
-        String familyTreeFileSuffix = obfuscateLiving ? "" : "_visible";
-
-        Path jsonFilePath = getJsonFile(person, familyTreeFileIdPrefix, familyTreeFileSuffix);
-
-        if (forceRewrite || Files.notExists(jsonFilePath)) {
-            List<List<Relationship>> relationshipsWithNotInLawPriority = familyTreeHelper
-                    .getRelationshipsWithNotInLawPriority(person);
-
-            generateFamilyTree(
-                    person,
-                    familyTreeFileIdPrefix,
-                    familyTreeFileSuffix,
-                    obfuscateLiving,
-                    onlySecondaryDescription,
-                    relationshipsWithNotInLawPriority);
-        }
-
-        return Optional.of(new FamilyTree(
-                FamilyTreeType.GRAPH_JSON,
-                person,
-                "genea_azul_arbol_" + familyTreeFileIdPrefix + ".json",
-                jsonFilePath,
-                MediaType.APPLICATION_JSON,
-                properties.getLocale()));
+        generate(exportFilePath, obfuscateLiving, relationshipsWithNotInLawPriority);
     }
 
     private void generate(
@@ -176,8 +119,9 @@ public class GraphJsonFamilyTreeService implements FamilyTreeService {
 
         List<PersonNodeDto> personNodes = firstRelationships
                 .stream()
-                .map(r -> GedcomParsingService.toPersonNodeDto(
+                .map(r -> toPersonNodeDto(
                         r.person(),
+                        obfuscateLiving,
                         relationshipByPersonId.get(r.person().getId()),
                         r.getGeneration()))
                 .toList();
@@ -231,6 +175,45 @@ public class GraphJsonFamilyTreeService implements FamilyTreeService {
             case F -> wifeIds.add(person.getId());
             default -> husbandIds.add(person.getId());
         }
+    }
+
+    private PersonNodeDto toPersonNodeDto(
+            EnrichedPerson ep,
+            boolean obfuscateLiving,
+            @Nullable String relationship,
+            @Nullable Integer generation) {
+        boolean obfuscate = obfuscateLiving && ep.isAlive();
+
+        Integer yearOfBirth = null;
+        Boolean circaBirth = null;
+        if (!obfuscate && ep.getDateOfBirth().isPresent()) {
+            Date dob = ep.getDateOfBirth().get();
+            yearOfBirth = dob.getYear().getValue();
+            circaBirth = dob.getOperator() == Date.Operator.ABT || dob.getOperator() == Date.Operator.EST;
+        }
+
+        Integer yearOfDeath = null;
+        Boolean circaDeath = null;
+        if (ep.getDateOfDeath().isPresent()) {
+            Date dod = ep.getDateOfDeath().get();
+            yearOfDeath = dod.getYear().getValue();
+            circaDeath = dod.getOperator() == Date.Operator.ABT || dod.getOperator() == Date.Operator.EST;
+        }
+
+        return PersonNodeDto.builder()
+                .id(ep.getId())
+                .displayName(PersonUtils.obfuscateName(ep, obfuscate))
+                .sex(ep.getSex())
+                .aka(obfuscate ? null : ep.getAka().map(Aka::value).orElse(null))
+                .profilePicture(obfuscate ? null : profilePictureCache.publicUrl(ep).orElse(null))
+                .yearOfBirth(yearOfBirth)
+                .circaBirth(circaBirth)
+                .yearOfDeath(yearOfDeath)
+                .circaDeath(circaDeath)
+                .isAlive(ep.isAlive())
+                .generation(generation)
+                .relationship(relationship)
+                .build();
     }
 
 }

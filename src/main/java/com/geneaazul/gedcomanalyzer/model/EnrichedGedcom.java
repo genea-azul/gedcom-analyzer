@@ -3,6 +3,7 @@ package com.geneaazul.gedcomanalyzer.model;
 import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.model.dto.SexType;
 import com.geneaazul.gedcomanalyzer.service.SearchService;
+import com.geneaazul.gedcomanalyzer.utils.PersonUuids;
 
 import org.apache.commons.lang3.Strings;
 import org.folg.gedcom.model.Gedcom;
@@ -34,6 +35,7 @@ public class EnrichedGedcom {
     private final String gedcomName;
     @Nullable
     private final ZonedDateTime modifiedDateTime;
+    private final PersonUuids personUuids;
     private final GedcomAnalyzerProperties properties;
 
     private final List<EnrichedPerson> people;
@@ -70,19 +72,21 @@ public class EnrichedGedcom {
             Gedcom legacyGedcom,
             String gedcomName,
             @Nullable ZonedDateTime modifiedDateTime,
+            byte[] personUuidSecret,
             GedcomAnalyzerProperties properties,
             SearchService searchService) {
 
         this.legacyGedcom = properties.isKeepReferenceToLegacyGedcom() ? legacyGedcom : null;
         this.gedcomName = gedcomName;
         this.modifiedDateTime = modifiedDateTime;
+        this.personUuids = PersonUuids.of(personUuidSecret, modifiedDateTime);
         this.properties = properties;
 
         this.people = getEnrichedPeople(legacyGedcom);
 
         // General stats + all lookup indexes — single pass over the full people list
         this.familiesCount = legacyGedcom.getFamilies().size();
-        int maleCount = 0, aliveCount = 0, distinguishedCount = 0, nativeCount = 0;
+        int maleCount = 0, femaleCount = 0, aliveCount = 0, distinguishedCount = 0, nativeCount = 0;
         int azulMayorsCount = 0, azulDisappearedCount = 0;
         Map<Integer, EnrichedPerson> byId = new HashMap<>(this.people.size() * 2);
         Map<UUID, EnrichedPerson> byUuid = new HashMap<>(this.people.size() * 2);
@@ -94,6 +98,7 @@ public class EnrichedGedcom {
 
         for (EnrichedPerson person : this.people) {
             if (person.getSex() == SexType.M) maleCount++;
+            if (person.getSex() == SexType.F) femaleCount++;
             if (person.isAlive()) aliveCount++;
             if (person.isDistinguishedPerson()) {
                 distinguishedCount++;
@@ -134,7 +139,7 @@ public class EnrichedGedcom {
         }
 
         this.maleCount = maleCount;
-        this.femaleCount = this.people.size() - maleCount;
+        this.femaleCount = femaleCount;
         this.aliveCount = aliveCount;
         this.deceasedCount = this.people.size() - aliveCount;
         this.distinguishedCount = distinguishedCount;
@@ -172,17 +177,19 @@ public class EnrichedGedcom {
             Gedcom legacyGedcom,
             String gedcomName,
             ZonedDateTime modifiedDateTime,
+            byte[] personUuidSecret,
             GedcomAnalyzerProperties properties,
             SearchService searchService) {
-        return new EnrichedGedcom(legacyGedcom, gedcomName, modifiedDateTime, properties, searchService);
+        return new EnrichedGedcom(legacyGedcom, gedcomName, modifiedDateTime, personUuidSecret, properties, searchService);
     }
 
     public static EnrichedGedcom of(
             Gedcom legacyGedcom,
             String gedcomName,
+            byte[] personUuidSecret,
             GedcomAnalyzerProperties properties,
             SearchService searchService) {
-        return new EnrichedGedcom(legacyGedcom, gedcomName, null, properties, searchService);
+        return new EnrichedGedcom(legacyGedcom, gedcomName, null, personUuidSecret, properties, searchService);
     }
 
     public Optional<Gedcom> getLegacyGedcom() {

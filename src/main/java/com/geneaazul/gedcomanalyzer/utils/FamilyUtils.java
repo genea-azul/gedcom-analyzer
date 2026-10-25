@@ -42,7 +42,7 @@ public class FamilyUtils {
         return family.getEventsFacts()
                 .stream()
                 .anyMatch(eventFact
-                        -> DIVORCE_TAGS.contains(eventFact.getTag()) && eventFact.getValue().equals("Y")
+                        -> DIVORCE_TAGS.contains(eventFact.getTag()) && "Y".equals(eventFact.getValue())
                         || EVENT_TAGS.contains(eventFact.getTag()) && SEPARATION_EVENT_TYPES.contains(eventFact.getType()));
     }
 
@@ -70,7 +70,7 @@ public class FamilyUtils {
     public static Optional<String> getDateOfSeparation(Family family) {
         return family.getEventsFacts()
                 .stream()
-                .filter(eventFact -> DIVORCE_TAGS.contains(eventFact.getTag()) && eventFact.getValue().equals("Y"))
+                .filter(eventFact -> DIVORCE_TAGS.contains(eventFact.getTag()) && "Y".equals(eventFact.getValue()))
                 .findFirst()
                 .or(() -> family.getEventsFacts()
                         .stream()
@@ -105,7 +105,7 @@ public class FamilyUtils {
     public static Optional<String> getPlaceOfSeparation(Family family) {
         return family.getEventsFacts()
                 .stream()
-                .filter(eventFact -> DIVORCE_TAGS.contains(eventFact.getTag()) && eventFact.getValue().equals("Y"))
+                .filter(eventFact -> DIVORCE_TAGS.contains(eventFact.getTag()) && "Y".equals(eventFact.getValue()))
                 .findFirst()
                 .or(() -> family.getEventsFacts()
                         .stream()

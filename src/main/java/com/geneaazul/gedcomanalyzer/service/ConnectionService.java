@@ -1,6 +1,7 @@
 package com.geneaazul.gedcomanalyzer.service;
 
 import com.geneaazul.gedcomanalyzer.domain.SearchConnection;
+import com.geneaazul.gedcomanalyzer.config.GedcomAnalyzerProperties;
 import com.geneaazul.gedcomanalyzer.mapper.RelationshipMapper;
 import com.geneaazul.gedcomanalyzer.mapper.SearchConnectionMapper;
 import com.geneaazul.gedcomanalyzer.model.Date;
@@ -24,8 +25,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -36,7 +39,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import jakarta.annotation.Nullable;
-import jakarta.validation.constraints.NotNull;
 
 import lombok.RequiredArgsConstructor;
 
@@ -52,6 +54,7 @@ public class ConnectionService {
     private final SearchConnectionRepository searchConnectionRepository;
     private final SearchConnectionMapper searchConnectionMapper;
     private final RelationshipMapper relationshipMapper;
+    private final GedcomAnalyzerProperties properties;
 
     @Transactional
     public Optional<Long> persistConnectionSearch(
@@ -86,7 +89,7 @@ public class ConnectionService {
                     return searchConnection;
                 })
                 .map(searchConnectionMapper::toSearchConnectionDetailsDto)
-                .orElseThrow(() -> new RuntimeException("SearchConnection not found id=" + searchConnectionId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SearchConnection not found id=" + searchConnectionId));
     }
 
     public SearchConnectionResultDto search(SearchConnectionDto searchConnectionDto) {
@@ -123,11 +126,8 @@ public class ConnectionService {
 
         if (errors.isEmpty()) {
             EnrichedPerson person1 = person1Result.getFirst();
-            Pair<Map<Integer, Integer>, Map<Integer, List<Integer>>> distancesAndPaths = PathUtils
-                    .calculateShortestPathFromSource(gedcom, person1, true, true);
-
             EnrichedPerson person2 = person2Result.getFirst();
-            List<Integer> shortestPath = distancesAndPaths.getRight().getOrDefault(person2.getId(), List.of());
+            List<Integer> shortestPath = PathUtils.calculateShortestPath(gedcom, person1, person2, true);
 
             for (int i = 0; i < shortestPath.size() - 1; i++) {
                 EnrichedPerson personA = gedcom.getPersonById(shortestPath.get(i));
@@ -139,7 +139,7 @@ public class ConnectionService {
                         .map(FormattedRelationship::relationshipDesc)
                         .orElse("<relación desconocida>");
                 if (i == 0) {
-                    Pair<String, String> personAInfo = displayPersonInfo(personA, false);
+                    Pair<String, String> personAInfo = displayPersonInfo(personA, properties.isObfuscateLiving() && personA.isAlive());
                     connections.add(
                             ConnectionDto.builder()
                                     .relationship(null)
@@ -147,7 +147,7 @@ public class ConnectionService {
                                     .personData(personAInfo.getRight())
                                     .build());
                 }
-                Pair<String, String> personBInfo = displayPersonInfo(personB, false);
+                Pair<String, String> personBInfo = displayPersonInfo(personB, properties.isObfuscateLiving() && personB.isAlive());
                 connections.add(
                         ConnectionDto.builder()
                                 .relationship(relationshipDesc)
@@ -163,7 +163,7 @@ public class ConnectionService {
                 .build();
     }
 
-    private static @NotNull List<String> getPossibleErrors(List<EnrichedPerson> person1Result, List<EnrichedPerson> person2Result) {
+    private static List<String> getPossibleErrors(List<EnrichedPerson> person1Result, List<EnrichedPerson> person2Result) {
         List<String> errors = new ArrayList<>();
         if (person1Result.isEmpty()) {
             errors.add("CONNECTIONS-PERSON-1-NOT-FOUND");

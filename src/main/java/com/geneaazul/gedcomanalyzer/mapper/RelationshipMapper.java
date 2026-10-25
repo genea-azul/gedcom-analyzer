@@ -32,6 +32,16 @@ public class RelationshipMapper {
     public RelationshipDto toRelationshipDto(
             @Nullable Relationship relationship,
             boolean obfuscateCondition) {
+        return toRelationshipDto(relationship, null, obfuscateCondition);
+    }
+
+    /**
+     * @param personIndex position of the person in the exported tree (shown as a cross-reference), if any
+     */
+    public RelationshipDto toRelationshipDto(
+            @Nullable Relationship relationship,
+            @Nullable Integer personIndex,
+            boolean obfuscateCondition) {
 
         if (relationship == null) {
             return null;
@@ -86,7 +96,7 @@ public class RelationshipMapper {
         }
 
         return RelationshipDto.builder()
-                .personIndex(relationship.person().getOrderKey())
+                .personIndex(personIndex)
                 .personSex(relationship.person().getSex())
                 .personIsAlive(relationship.person().isAlive())
                 .personName(PersonUtils.obfuscateName(relationship.person(), obfuscateCondition))

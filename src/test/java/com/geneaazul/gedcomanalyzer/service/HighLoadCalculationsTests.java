@@ -10,6 +10,7 @@ import com.geneaazul.gedcomanalyzer.model.FormattedRelationship;
 import com.geneaazul.gedcomanalyzer.model.GivenName;
 import com.geneaazul.gedcomanalyzer.model.Place;
 import com.geneaazul.gedcomanalyzer.model.Relationship;
+import com.geneaazul.gedcomanalyzer.model.SubGedcomOptions;
 import com.geneaazul.gedcomanalyzer.model.Relationships;
 import com.geneaazul.gedcomanalyzer.model.Surname;
 import com.geneaazul.gedcomanalyzer.model.dto.AlivePersonFilter;
@@ -34,6 +35,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.StringEscapeUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -52,6 +54,7 @@ import java.util.stream.Stream;
 
 import jakarta.annotation.Nullable;
 
+@Tag("tool")
 @SpringBootTest
 @EnableConfigurationProperties
 @ActiveProfiles("test")
@@ -420,7 +423,7 @@ public class HighLoadCalculationsTests {
     }
 
     private static String getSurnameForSorting(String surname) {
-        return StringUtils.stripAccents(StringUtils.replace(StringUtils.lowerCase(surname), "ñ", "o "));
+        return StringUtils.stripAccents(Strings.CS.replace(StringUtils.lowerCase(surname), "ñ", "o "));
     }
 
     private static List<ImmigrantsSurnameReduce> mergeSurnamesLists(List<ImmigrantsSurnameReduce> l1, List<ImmigrantsSurnameReduce> l2) {
@@ -643,15 +646,15 @@ public class HighLoadCalculationsTests {
     @SuppressWarnings("DataFlowIssue")
     public void getShortestPathsToPersons() {
         EnrichedPerson person = gedcom.getPersonById(4);
-        Pair<Map<Integer, Integer>, Map<Integer, List<Integer>>> distancesAndPaths = PathUtils.calculateShortestPathFromSource(gedcom, person, true, true);
+        PathUtils.ShortestPaths shortestPaths = PathUtils.calculateShortestPathsFromSource(gedcom, person, true);
 
         System.out.println("getShortestPathsToPersons:");
-        System.out.println("distance from I4 to I1 (" + gedcom.getPersonById(1).getDisplayName() + "): " + distancesAndPaths.getLeft().get(1));
-        System.out.println("distance from I4 to I2 (" + gedcom.getPersonById(2).getDisplayName() + "): " + distancesAndPaths.getLeft().get(2));
-        System.out.println("distance from I4 to I3 (" + gedcom.getPersonById(3).getDisplayName() + "): " + distancesAndPaths.getLeft().get(3));
-        System.out.println("distance from I4 to I4 (" + gedcom.getPersonById(4).getDisplayName() + "): " + distancesAndPaths.getLeft().get(4));
-        System.out.println("distance from I4 to I5 (" + gedcom.getPersonById(5).getDisplayName() + "): " + distancesAndPaths.getLeft().get(5));
-        System.out.println("distance from I4 to I6 (" + gedcom.getPersonById(6).getDisplayName() + "): " + distancesAndPaths.getLeft().get(6));
+        System.out.println("distance from I4 to I1 (" + gedcom.getPersonById(1).getDisplayName() + "): " + shortestPaths.distanceTo(1));
+        System.out.println("distance from I4 to I2 (" + gedcom.getPersonById(2).getDisplayName() + "): " + shortestPaths.distanceTo(2));
+        System.out.println("distance from I4 to I3 (" + gedcom.getPersonById(3).getDisplayName() + "): " + shortestPaths.distanceTo(3));
+        System.out.println("distance from I4 to I4 (" + gedcom.getPersonById(4).getDisplayName() + "): " + shortestPaths.distanceTo(4));
+        System.out.println("distance from I4 to I5 (" + gedcom.getPersonById(5).getDisplayName() + "): " + shortestPaths.distanceTo(5));
+        System.out.println("distance from I4 to I6 (" + gedcom.getPersonById(6).getDisplayName() + "): " + shortestPaths.distanceTo(6));
 
         System.out.println();
         gedcom
@@ -659,13 +662,13 @@ public class HighLoadCalculationsTests {
                 .stream()
                 .filter(EnrichedPerson::isDistinguishedPerson)
                 .sorted(Comparator
-                        .<EnrichedPerson, Integer>comparing(d -> distancesAndPaths.getLeft().get(d.getId()), Comparator.nullsLast(Comparator.naturalOrder()))
+                        .<EnrichedPerson, Integer>comparing(d -> shortestPaths.distanceTo(d.getId()), Comparator.nullsLast(Comparator.naturalOrder()))
                         .thenComparing(d -> d.getSurname().map(Surname::simplified).orElse(null), Comparator.nullsLast(Comparator.naturalOrder()))
                         .thenComparing(d -> d.getGivenName().map(GivenName::simplified).orElse(null), Comparator.nullsLast(Comparator.naturalOrder())))
-                .forEach(distinguished -> System.out.println(StringUtils.rightPad(distinguished.getId().toString(), 8) + distinguished.getDisplayName() + ": " + distancesAndPaths.getLeft().get(distinguished.getId())));
+                .forEach(distinguished -> System.out.println(StringUtils.rightPad(distinguished.getId().toString(), 8) + distinguished.getDisplayName() + ": " + shortestPaths.distanceTo(distinguished.getId())));
 
         System.out.println();
-        List<Integer> shortestPath = distancesAndPaths.getRight().getOrDefault(525113, List.of());
+        List<Integer> shortestPath = shortestPaths.pathTo(525113);
         for (int i = 0; i < shortestPath.size() - 1; i++) {
             EnrichedPerson personA = gedcom.getPersonById(shortestPath.get(i));
             EnrichedPerson personB = gedcom.getPersonById(shortestPath.get(i + 1));
@@ -719,17 +722,11 @@ public class HighLoadCalculationsTests {
         org.folg.gedcom.model.Gedcom subGedcom = gedcomParsingService.format(
                 gedcom.getLegacyGedcom().get(),
                 relationshipsList,
-                AlivePersonFilter.ALLOW,
-                false,
-                false,
-                null,
-                250,
-                4,
-                3,
-                null,
-                true,
-                true,
-                null);
+                SubGedcomOptions.builder()
+                        .trimTriggerSize(250)
+                        .maxAscDepth(4)
+                        .maxDescDepth(3)
+                        .build());
         gedcomParsingService.write(subGedcom, subGedcomPath);
     }
 

@@ -148,8 +148,8 @@ public class CommentService {
                 .findByContextTypeAndContextIdAndAuthorWantsContactTrueAndAuthorEmailIsNotNullAndStatus(
                         dto.getContextType(), dto.getContextId(), CommentStatus.APPROVED);
         if (!others.isEmpty()) {
-            log.info("Reconnection candidate [ contextType={}, contextId={}, authorName={}, otherCount={} ]",
-                    dto.getContextType(), dto.getContextId(), dto.getAuthorName(), others.size());
+            log.info("Reconnection candidate [ contextType={}, contextId={}, otherCount={} ]",
+                    dto.getContextType(), dto.getContextId(), others.size());
         }
     }
 

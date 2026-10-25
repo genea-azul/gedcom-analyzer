@@ -37,8 +37,16 @@ public class GedcomAnalyzerProperties {
     private String googleApiKey;
     private String gedcomStorageGoogleDriveFileId;
     private String adminToken;
+    // Base64; when blank a random one is generated once and kept in temp-dir (see PersonUuidSecret)
+    private String personUuidSecret;
     private Duration googleDriveConnectTimeout = Duration.ofMillis(3000);
     private Duration googleDriveReadTimeout = Duration.ofMillis(3000);
+
+    // Absolute base URL of this API, used in links returned to the website (e.g. cached photos)
+    private String publicApiBaseUrl = "http://localhost:8080";
+    // Profile photos are only downloaded from these hosts (and their subdomains)
+    private List<String> profilePictureAllowedHostSuffixes = List.of("mhcache.com");
+    private int profilePictureDownloadConcurrency = 3;
 
     private String pyvisNetworkExportScriptFilename = "pyvis_network.py";
     private Integer maxPyvisNetworkNodesToExport = 500;
@@ -50,6 +58,8 @@ public class GedcomAnalyzerProperties {
     private Set<String> clientsWithSpecialThreshold = Set.of();
     // Non-persisted family searches (tree-builder live lookup) are not stored, so they are counted in memory
     private int maxClientLookupRequestsCountThreshold = 120;
+    // PDF / graph JSON downloads per client and window, counted in memory
+    private int maxClientFamilyTreeRequestsCountThreshold = 60;
 
     private boolean deleteUploadedGedcom = false;
     private boolean storeFamilySearch = true;
@@ -89,6 +99,13 @@ public class GedcomAnalyzerProperties {
     private Map<String, List<String>> surnameNormalized;
     @Getter(AccessLevel.NONE)
     private Map<String, String> namePrefix;
+
+    /**
+     * Server-side policy only: clients can no longer turn obfuscation off with request parameters.
+     */
+    public boolean isObfuscateLiving() {
+        return !disableObfuscateLiving;
+    }
 
     @PostConstruct
     public void postConstruct() {

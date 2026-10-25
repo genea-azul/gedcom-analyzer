@@ -1,5 +1,7 @@
 package com.geneaazul.gedcomanalyzer.config;
 
+import org.springframework.mock.env.MockEnvironment;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,12 +31,14 @@ class AdminTokenFilterTest {
     private PrintWriter writer;
 
     private GedcomAnalyzerProperties properties;
+    private MockEnvironment environment;
     private AdminTokenFilter filter;
 
     @BeforeEach
     void setUp() {
         properties = new GedcomAnalyzerProperties();
-        filter = new AdminTokenFilter(properties);
+        environment = new MockEnvironment();
+        filter = new AdminTokenFilter(properties, environment);
     }
 
     @Test
@@ -114,6 +118,44 @@ class AdminTokenFilterTest {
         filter.doFilter(request, response, filterChain);
 
         verify(filterChain).doFilter(request, response);
+    }
+
+
+    @Test
+    void noTokenConfiguredInProduction_protectedPath_blocksRequest() throws Exception {
+        environment.setActiveProfiles("prod", "flyio");
+        when(request.getRequestURI()).thenReturn("/api/admin/gedcom-analyzer/reload");
+        when(response.getWriter()).thenReturn(writer);
+
+        filter.doFilter(request, response, filterChain);
+
+        verify(response).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        verify(filterChain, never()).doFilter(request, response);
+    }
+
+    @Test
+    void tokenConfigured_protectedPath_headerToken_allowsRequest() throws Exception {
+        properties.setAdminToken("secret");
+        when(request.getRequestURI()).thenReturn("/api/admin/comments/latest");
+        when(request.getHeader(AdminTokenFilter.TOKEN_HEADER)).thenReturn("secret");
+
+        filter.doFilter(request, response, filterChain);
+
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void tokenConfigured_protectedPath_wrongHeaderAndParam_blocksRequest() throws Exception {
+        properties.setAdminToken("secret");
+        when(request.getRequestURI()).thenReturn("/api/admin/comments/latest");
+        when(request.getHeader(AdminTokenFilter.TOKEN_HEADER)).thenReturn("secre");
+        when(request.getParameter("token")).thenReturn("secret ");
+        when(response.getWriter()).thenReturn(writer);
+
+        filter.doFilter(request, response, filterChain);
+
+        verify(response).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        verify(filterChain, never()).doFilter(request, response);
     }
 
 }

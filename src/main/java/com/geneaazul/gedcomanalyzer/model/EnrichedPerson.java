@@ -94,8 +94,6 @@ public class EnrichedPerson {
     private Optional<Relationship> maxDistantRelationship;
     @Setter
     private List<EnrichedPerson> distinguishedPersonsInTree;
-    @Setter
-    private Integer orderKey;
 
     private EnrichedPerson(Person person, EnrichedGedcom gedcom) {
         this.properties = gedcom.getProperties();
@@ -103,7 +101,7 @@ public class EnrichedPerson {
         this.gedcom = gedcom;
 
         id = PersonUtils.getId(person);
-        uuid = PersonUtils.getUuid(id, gedcom.getModifiedDateTime());
+        uuid = gedcom.getPersonUuids().uuid(id);
         sex = PersonUtils.getSex(person);
         givenName = PersonUtils.getNormalizedGivenName(person, properties.getNormalizedGivenNamesMap());
         surname = PersonUtils.getShortenedSurnameMainWord(person, properties.getNormalizedSurnamesMap());
