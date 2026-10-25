@@ -14,7 +14,7 @@ run:
 		"-Dspring-boot.run.jvmArguments=-Xms512m -Xmx1024m -XX:+UseG1GC -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+HeapDumpOnOutOfMemoryError"
 
 test-gedcom-analyzer-service:
-	./mvnw test -Dtest=GedcomAnalyzerServiceTests$(if $(METHOD),\#$(METHOD),) -Dgedcom-storage-local-path=$(GEDCOM)
+	./mvnw test -Dtests.excludedGroups= -Dtest=GedcomAnalyzerServiceTests$(if $(METHOD),\#$(METHOD),) -Dgedcom-storage-local-path=$(GEDCOM)
 
 test-genea-azul-web-resources:
 	./mvnw test -Dtest=GeneaAzulWebResources$(if $(METHOD),\#$(METHOD),) -Dgedcom-storage-local-path=$(GEDCOM)
@@ -23,10 +23,10 @@ test-surname-service:
 	./mvnw test -Dtest=SurnameServiceTests$(if $(METHOD),\#$(METHOD),) -Dgedcom-storage-local-path=$(GEDCOM)
 
 test-high-load-calculations:
-	./mvnw test -Dtest=HighLoadCalculationsTests$(if $(METHOD),\#$(METHOD),) -Dgedcom-storage-local-path=$(GEDCOM)
+	./mvnw test -Dtests.excludedGroups= -Dtest=HighLoadCalculationsTests$(if $(METHOD),\#$(METHOD),) -Dgedcom-storage-local-path=$(GEDCOM)
 
 test-shortest-paths:
-	./mvnw test -Dtest=HighLoadCalculationsTests#getShortestPathsToPersons -Dgedcom-storage-local-path=$(GEDCOM)
+	./mvnw test -Dtests.excludedGroups= -Dtest=HighLoadCalculationsTests#getShortestPathsToPersons -Dgedcom-storage-local-path=$(GEDCOM)
 
 test-familytree:
 	./mvnw test -Dtest='com.geneaazul.gedcomanalyzer.service.familytree.*' \

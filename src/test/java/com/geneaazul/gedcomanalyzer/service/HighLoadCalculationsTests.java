@@ -34,6 +34,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.StringEscapeUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -52,6 +53,7 @@ import java.util.stream.Stream;
 
 import jakarta.annotation.Nullable;
 
+@Tag("tool")
 @SpringBootTest
 @EnableConfigurationProperties
 @ActiveProfiles("test")
