@@ -195,6 +195,8 @@ OR
 
 ### `SubGedcomConfig` (in `GeneaAzulWebResources`)
 
+`generateWebSubGedcoms` writes photos as `2 FILE /img/photos/{cacheKey}.jpg` and then copies every referenced photo the site lacks into `../geneaazul-web/img/photos/` from the production cache (`/api/photos/`). The site serves them from Cloudflare, so tree pages never wake this backend, which Fly bills while awake. `ROOT_FAMILIES` maps a root person to the marriage the tree opens on (`_ROOT_FAM`).
+
 ```java
 record SubGedcomConfig(
     Integer personId,

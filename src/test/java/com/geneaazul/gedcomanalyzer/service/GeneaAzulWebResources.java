@@ -37,7 +37,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 import jakarta.annotation.Nullable;
 
@@ -46,7 +55,11 @@ import jakarta.annotation.Nullable;
 @ActiveProfiles("test")
 public class GeneaAzulWebResources {
 
-    private static final String PROFILE_PICTURE_URL_PREFIX = "https://gedcom-analyzer-app.fly.dev/api/photos/";
+    /* Tree photos are served by the site (Cloudflare), so tree pages don't wake the backend (billed while awake) */
+    private static final String PROFILE_PICTURE_URL_PREFIX = "/img/photos/";
+    /* The production photo cache, whose keys survive re-exports; the site's photo files are copied from it */
+    private static final String PHOTO_SOURCE_URL_PREFIX = "https://gedcom-analyzer-app.fly.dev/api/photos/";
+    private static final Pattern SITE_PHOTO = Pattern.compile("^2 FILE /img/photos/([0-9a-f]{24})\\.jpg$", Pattern.MULTILINE);
 
     public static final int MAX_SURNAMES_PER_COUNTRY = 22;
 
@@ -130,7 +143,7 @@ public class GeneaAzulWebResources {
             boolean includeSpouseAncestors) {}
 
     @Test
-    public void generateWebSubGedcoms() throws IOException {
+    public void generateWebSubGedcoms() throws IOException, InterruptedException {
         // Add sub-gedcom configs here (person IDs to be provided):
         List<SubGedcomConfig> configs = List.of(
                 // Losardo
@@ -443,6 +456,51 @@ public class GeneaAzulWebResources {
             boolean changed = gedcomParsingService.writeIfChanged(subGedcom, output);
             System.out.println((changed ? "Written: " : "Unchanged, skipped: ") + output.toAbsolutePath());
         }
+
+        copyMissingPhotos(outputDir, Path.of("../geneaazul-web/img/photos"));
+    }
+
+    /** Keys of the site photos ({@code 2 FILE /img/photos/<key>.jpg}) a sub-GEDCOM references */
+    static Set<String> photoKeys(String gedcom) {
+        Set<String> keys = new TreeSet<>();
+        Matcher m = SITE_PHOTO.matcher(gedcom);
+        while (m.find()) {
+            keys.add(m.group(1));
+        }
+        return keys;
+    }
+
+    /**
+     * Copies into the site every photo the sub-GEDCOMs reference that it doesn't have yet, from the
+     * production photo cache. Photos missing there are reported; the tree shows a silhouette instead.
+     */
+    private static void copyMissingPhotos(Path gedcomDir, Path photosDir) throws IOException, InterruptedException {
+        Files.createDirectories(photosDir);
+        Set<String> keys = new TreeSet<>();
+        try (Stream<Path> files = Files.list(gedcomDir)) {
+            for (Path file : files.filter(f -> f.toString().endsWith(".ged")).toList()) {
+                keys.addAll(photoKeys(Files.readString(file)));
+            }
+        }
+        int copied = 0;
+        try (HttpClient http = HttpClient.newHttpClient()) {
+            for (String key : keys) {
+                Path target = photosDir.resolve(key + ".jpg");
+                if (Files.exists(target)) {
+                    continue;
+                }
+                HttpResponse<byte[]> response = http.send(
+                        HttpRequest.newBuilder(URI.create(PHOTO_SOURCE_URL_PREFIX + key + ".jpg")).GET().build(),
+                        HttpResponse.BodyHandlers.ofByteArray());
+                if (response.statusCode() == 200) {
+                    Files.write(target, response.body());
+                    copied++;
+                } else {
+                    System.out.println("Photo not available (HTTP " + response.statusCode() + "): " + key);
+                }
+            }
+        }
+        System.out.printf("Tree photos: %d referenced, %d copied into %s%n", keys.size(), copied, photosDir.toAbsolutePath());
     }
 
     /**
@@ -479,6 +537,24 @@ public class GeneaAzulWebResources {
                 .containsExactly("garcia-1", "perez", "garcia-2");
         Assertions.assertThat(assignLastnameSuffixes(List.of("a", "a", "b", "a")))
                 .containsExactly("a-1", "a-2", "b", "a-3");
+    }
+
+    @Test
+    public void photoKeys_findsTheSitePhotosOfASubGedcom() {
+        String gedcom = """
+                0 @I1@ INDI
+                1 OBJE
+                2 FILE /img/photos/0123456789abcdef01234567.jpg
+                0 @I2@ INDI
+                1 OBJE
+                2 FILE /img/photos/fedcba9876543210fedcba98.jpg
+                0 @I3@ INDI
+                1 OBJE
+                2 FILE https://example.org/acta.jpg
+                1 NOTE /img/photos/aaaaaaaaaaaaaaaaaaaaaaaa.jpg
+                """;
+        Assertions.assertThat(photoKeys(gedcom))
+                .containsExactlyInAnyOrder("0123456789abcdef01234567", "fedcba9876543210fedcba98");
     }
 
     @Test
