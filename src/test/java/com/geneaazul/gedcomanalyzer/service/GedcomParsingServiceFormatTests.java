@@ -604,6 +604,46 @@ class GedcomParsingServiceFormatTests {
     }
 
     @Test
+    void format_rootFamilyId_writesRootFamilyExtensionAfterRoot() throws Exception {
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(
+                List.of(Relationship.empty(person(1))),
+                List.of(Relationship.empty(person(2))));
+
+        Gedcom result = gedcomParsingService.format(original, rels,
+                SubGedcomOptions.builder().rootPersonId(1).rootFamilyId(1).maxAscDepth(10).maxDescDepth(10).build());
+
+        @SuppressWarnings("unchecked")
+        List<org.folg.gedcom.model.GedcomTag> moreTags =
+                (List<org.folg.gedcom.model.GedcomTag>) result.getHeader()
+                        .getExtension(org.folg.gedcom.parser.ModelParser.MORE_TAGS_EXTENSION_KEY);
+        assertThat(moreTags).extracting(org.folg.gedcom.model.GedcomTag::getTag).containsExactly("_ROOT", "_ROOT_FAM");
+        assertThat(moreTags.get(1).getRef()).isEqualTo("F1");
+    }
+
+    @Test
+    void format_rootFamilyId_notInOutput_isNotWritten() throws Exception {
+        Gedcom original = freshGedcom();
+        List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(2))));
+
+        Gedcom result = gedcomParsingService.format(original, rels,
+                SubGedcomOptions.builder().rootPersonId(2).rootFamilyId(999).maxAscDepth(10).maxDescDepth(10).build());
+
+        @SuppressWarnings("unchecked")
+        List<org.folg.gedcom.model.GedcomTag> moreTags =
+                (List<org.folg.gedcom.model.GedcomTag>) result.getHeader()
+                        .getExtension(org.folg.gedcom.parser.ModelParser.MORE_TAGS_EXTENSION_KEY);
+        assertThat(moreTags).extracting(org.folg.gedcom.model.GedcomTag::getTag).containsExactly("_ROOT");
+    }
+
+    @Test
+    void subGedcomOptions_rootFamilyIdWithoutRootPerson_isRejected() {
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> SubGedcomOptions.builder().rootFamilyId(1).build())
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("rootFamilyId requires rootPersonId");
+    }
+
+    @Test
     void format_rootPersonId_null_doesNotWriteRootExtension() throws Exception {
         Gedcom original = freshGedcom();
         List<List<Relationship>> rels = List.of(List.of(Relationship.empty(person(2))));

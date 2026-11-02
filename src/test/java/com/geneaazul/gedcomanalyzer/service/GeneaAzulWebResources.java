@@ -112,6 +112,11 @@ public class GeneaAzulWebResources {
         COUNTRY_ISO.put("Moldavia",             "MD");
     }
 
+    /** Root person id → the marriage the web tree opens on ({@code _ROOT_FAM}); unlisted roots show every marriage. */
+    private static final Map<Integer, Integer> ROOT_FAMILIES = Map.of(
+            // Gennuso: Giuseppe's 1st marriage, to Domenica Vitale (Dima's line)
+            557058, 519904);
+
     record SubGedcomConfig(
             Integer personId,
             boolean directLineageOnly,
@@ -381,7 +386,9 @@ public class GeneaAzulWebResources {
                 // riviere -> Rivière
                 new SubGedcomConfig(562114, true, 0, 1, 5, null, true, true, null, true),
                 // lurbe -> Lurbé
-                new SubGedcomConfig(532738, true, 0, 1, 5, null, true, true, null, true)
+                new SubGedcomConfig(532738, true, 0, 1, 5, null, true, true, null, true),
+                // Collazo
+                new SubGedcomConfig(515982, true, 0, 1, 4, null, true, true, null, true)
         );
 
         Path outputDir = Path.of("../geneaazul-web/data/gedcom");
@@ -422,6 +429,7 @@ public class GeneaAzulWebResources {
                             .profilePictureUrlPrefix(PROFILE_PICTURE_URL_PREFIX)
                             .directLineageOnly(config.directLineageOnly())
                             .rootPersonId(config.personId())
+                            .rootFamilyId(ROOT_FAMILIES.get(config.personId()))
                             .trimTriggerSize(config.trimTriggerSize())
                             .maxAscDepth(config.maxAscDepth())
                             .maxDescDepth(config.maxDescDepth())
