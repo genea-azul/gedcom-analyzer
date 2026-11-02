@@ -15,6 +15,9 @@ import lombok.Builder;
  *                                    fields; notes on events are preserved either way
  * @param directLineageOnly           exclude collateral relatives (siblings, cousins, etc.)
  * @param rootPersonId                if non-null, written as {@code _ROOT} in the output header
+ * @param rootFamilyId                if non-null and the family is in the output, written as {@code _ROOT_FAM}: the
+ *                                    root's marriage the web tree viewer opens on (otherwise it shows them all);
+ *                                    requires {@code rootPersonId}
  * @param trimTriggerSize             null = never trim; 0 = always trim; N &gt; 0 = trim only when the tree exceeds N people
  * @param maxAscDepth                 max ancestor levels included in the main range
  * @param maxDescDepth                max descendant levels included in the main range
@@ -34,6 +37,7 @@ public record SubGedcomOptions(
         boolean displayOnlyBasic,
         boolean directLineageOnly,
         @Nullable Integer rootPersonId,
+        @Nullable Integer rootFamilyId,
         @Nullable Integer trimTriggerSize,
         int maxAscDepth,
         int maxDescDepth,
@@ -46,6 +50,9 @@ public record SubGedcomOptions(
     public SubGedcomOptions {
         if (alivePersonFilter == null) {
             throw new IllegalArgumentException("alivePersonFilter is required");
+        }
+        if (rootFamilyId != null && rootPersonId == null) {
+            throw new IllegalArgumentException("rootFamilyId requires rootPersonId: " + rootFamilyId);
         }
         if (maxAscDepth < 0) {
             throw new IllegalArgumentException("maxAscDepth must be >= 0: " + maxAscDepth);

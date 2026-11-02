@@ -314,7 +314,7 @@ public class GedcomParsingService {
         newGedcom.updateReferences();
 
         if (rootPersonId != null) {
-            setRootPerson(newGedcom, rootPersonId);
+            setRootPerson(newGedcom, rootPersonId, options.rootFamilyId());
         }
 
         if (trimGedcom) {
@@ -366,12 +366,14 @@ public class GedcomParsingService {
         return true;
     }
 
-    private void setRootPerson(Gedcom gedcom, int personId) {
-        GedcomTag rootTag = new GedcomTag(null, "_ROOT", "I" + personId);
+    private void setRootPerson(Gedcom gedcom, int personId, @Nullable Integer familyId) {
         @SuppressWarnings("unchecked")
         List<GedcomTag> existing = (List<GedcomTag>) gedcom.getHeader().getExtension(ModelParser.MORE_TAGS_EXTENSION_KEY);
         List<GedcomTag> moreTags = existing != null ? new ArrayList<>(existing) : new ArrayList<>();
-        moreTags.add(rootTag);
+        moreTags.add(new GedcomTag(null, "_ROOT", "I" + personId));
+        if (familyId != null && gedcom.getFamily("F" + familyId) != null) {
+            moreTags.add(new GedcomTag(null, "_ROOT_FAM", "F" + familyId));
+        }
         gedcom.getHeader().putExtension(ModelParser.MORE_TAGS_EXTENSION_KEY, moreTags);
     }
 
