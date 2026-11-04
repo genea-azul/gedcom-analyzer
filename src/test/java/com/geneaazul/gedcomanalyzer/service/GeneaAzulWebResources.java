@@ -23,12 +23,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.assertj.core.api.Assertions;
 import org.folg.gedcom.model.Name;
+import org.folg.gedcom.visitors.GedcomWriter;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -400,8 +404,46 @@ public class GeneaAzulWebResources {
                 new SubGedcomConfig(562114, true, 0, 1, 5, null, true, true, null, true),
                 // lurbe -> Lurbé
                 new SubGedcomConfig(532738, true, 0, 1, 5, null, true, true, null, true),
-                // Collazo
-                new SubGedcomConfig(515982, true, 0, 1, 4, null, true, true, null, true)
+                // collazo -> Collazo
+                new SubGedcomConfig(515982, true, 0, 1, 4, null, true, true, null, true),
+                // marmouget -> Marmouget
+                new SubGedcomConfig(561682, true, 0, 1, 5, null, true, true, null, true),
+                // cirigliano -> Cirigliano
+                new SubGedcomConfig(8, true, 0, 1, 3, null, true, true, null, true),
+                // maddio -> Maddío
+                new SubGedcomConfig(508394, true, 0, 1, 5, null, true, true, null, true),
+                // galizio -> Galizio
+                new SubGedcomConfig(512272, true, 0, 1, 5, null, true, true, null, true),
+                // draghi -> Draghi
+                new SubGedcomConfig(553990, true, 0, 1, 6, null, true, true, null, true),
+                // del-buono -> Del Buono
+                new SubGedcomConfig(504488, true, 0, 1, 6, null, true, true, null, true),
+                // dascenzo -> Dacenzo
+                new SubGedcomConfig(523136, true, 0, 1, 5, null, true, true, null, true),
+                // rui -> Rui
+                new SubGedcomConfig(557873, true, 0, 1, 3, null, true, true, null, true),
+                // lamanna -> Lamanna
+                new SubGedcomConfig(500611, true, 0, 1, 5, null, true, true, null, true),
+                // ballarena -> Ballarena
+                new SubGedcomConfig(532065, true, 0, 1, 5, null, true, true, null, true),
+                // lapenta -> Lapenta
+                new SubGedcomConfig(514813, true, 0, 1, 4, null, true, true, null, true),
+                // ahets-etcheberry -> Ahets Etcheberry
+                new SubGedcomConfig(531482, true, 0, 1, 5, null, true, true, null, true),
+                // daulerio -> Daulerio
+                new SubGedcomConfig(505600, true, 0, 1, 4, null, true, true, null, true),
+                // berdinas -> Berdiñas
+                new SubGedcomConfig(506471, true, 0, 1, 6, null, true, true, null, true),
+                // anon -> Añón
+                new SubGedcomConfig(517723, true, 0, 1, 6, null, true, true, null, true),
+                // canalicchio -> Canalicchio
+                new SubGedcomConfig(510687, true, 0, 1, 4, null, true, true, null, true),
+                // miracco -> Miracco
+                new SubGedcomConfig(522585, true, 0, 1, 6, null, true, true, null, true),
+                // etchebertz -> Etchevers
+                new SubGedcomConfig(522523, true, 0, 1, 4, null, true, true, null, true),
+                // mongay -> Mongay
+                new SubGedcomConfig(529022, true, 0, 1, 5, null, true, true, null, true)
         );
 
         Path outputDir = Path.of("../geneaazul-web/data/gedcom");
@@ -432,25 +474,7 @@ public class GeneaAzulWebResources {
             System.out.printf("generateWebSubGedcoms: I%d %s — people in tree: %d%n",
                     config.personId(), person.getDisplayName(), relationshipsList.size());
 
-            org.folg.gedcom.model.Gedcom subGedcom = gedcomParsingService.format(
-                    gedcom.getLegacyGedcom().get(),
-                    relationshipsList,
-                    SubGedcomOptions.builder()
-                            .alivePersonFilter(AlivePersonFilter.SHOW_SURNAME_ONLY)
-                            .displayOnlyBasic(true)
-                            // Photos served from the production cache (keys are stable across exports)
-                            .profilePictureUrlPrefix(PROFILE_PICTURE_URL_PREFIX)
-                            .directLineageOnly(config.directLineageOnly())
-                            .rootPersonId(config.personId())
-                            .rootFamilyId(ROOT_FAMILIES.get(config.personId()))
-                            .trimTriggerSize(config.trimTriggerSize())
-                            .maxAscDepth(config.maxAscDepth())
-                            .maxDescDepth(config.maxDescDepth())
-                            .distantAncestorDescLimit(config.distantAncestorDescLimit())
-                            .includeInLawsAtMaxDescDepth(config.includeInLawsAtMaxDescDepth())
-                            .includeInLawsAtMaxAscDepth(config.includeInLawsAtMaxAscDepth())
-                            .maxCollateralDescDepth(config.maxCollateralDescDepth())
-                            .build());
+            org.folg.gedcom.model.Gedcom subGedcom = formatSubGedcom(config, relationshipsList);
 
             Path output = outputDir.resolve("sub-gedcom-" + personLastnames.get(i) + ".ged");
             boolean changed = gedcomParsingService.writeIfChanged(subGedcom, output);
@@ -458,6 +482,184 @@ public class GeneaAzulWebResources {
         }
 
         copyMissingPhotos(outputDir, Path.of("../geneaazul-web/img/photos"));
+    }
+
+    private org.folg.gedcom.model.Gedcom formatSubGedcom(SubGedcomConfig config, List<List<Relationship>> relationshipsList) {
+        return gedcomParsingService.format(
+                gedcom.getLegacyGedcom().get(),
+                relationshipsList,
+                SubGedcomOptions.builder()
+                        .alivePersonFilter(AlivePersonFilter.SHOW_SURNAME_ONLY)
+                        .displayOnlyBasic(true)
+                        // Photos served from the production cache (keys are stable across exports)
+                        .profilePictureUrlPrefix(PROFILE_PICTURE_URL_PREFIX)
+                        .directLineageOnly(config.directLineageOnly())
+                        .rootPersonId(config.personId())
+                        .rootFamilyId(ROOT_FAMILIES.get(config.personId()))
+                        .trimTriggerSize(config.trimTriggerSize())
+                        .maxAscDepth(config.maxAscDepth())
+                        .maxDescDepth(config.maxDescDepth())
+                        .distantAncestorDescLimit(config.distantAncestorDescLimit())
+                        .includeInLawsAtMaxDescDepth(config.includeInLawsAtMaxDescDepth())
+                        .includeInLawsAtMaxAscDepth(config.includeInLawsAtMaxAscDepth())
+                        .maxCollateralDescDepth(config.maxCollateralDescDepth())
+                        .build());
+    }
+
+    /**
+     * Helps add a web tree (geneaazul-web's add-family-tree skill). With {@code -Dtree-query="given surname"}
+     * it lists the matching people; with {@code -Dtree-person-id=N} (or {@code N,M,…}), each person's marriages, descendant
+     * generations (alive people are shown as {@code <privado>} on the site) and the tree size for each
+     * {@code maxDescDepth}. Skipped when neither is given.
+     */
+    @Test
+    public void inspectWebTreeCandidate() throws IOException {
+        String query = System.getProperty("tree-query");
+        String personId = System.getProperty("tree-person-id");
+        Assumptions.assumeTrue(query != null || personId != null, "Pass -Dtree-query or -Dtree-person-id");
+        if (query != null) {
+            printTreeCandidates(query);
+        }
+        if (personId != null) {
+            for (String id : personId.split(",")) {
+                printTreeOptions(Integer.valueOf(id.strip()));
+            }
+        }
+    }
+
+    private void printTreeCandidates(String query) {
+        List<EnrichedPerson> matches = gedcom.getPeople().stream()
+                .filter(p -> matchesNameQuery(p.getDisplayName(), query))
+                .toList();
+        System.out.printf("TREE-CANDIDATES for \"%s\": %d%n", query, matches.size());
+        matches.stream().limit(40).forEach(p -> System.out.printf(
+                "TREE-CANDIDATE I%d | %s | %s | b. %s %s | d. %s %s | parents: %s | spouses: %s | children: %d%n",
+                p.getId(), p.getDisplayName(), p.isAlive() ? "alive" : "deceased",
+                p.getDateOfBirth().map(Date::getYear).map(String::valueOf).orElse("?"),
+                p.getPlaceOfBirth().map(Place::name).orElse(""),
+                p.getDateOfDeath().map(Date::getYear).map(String::valueOf).orElse("?"),
+                p.getPlaceOfDeath().map(Place::name).orElse(""),
+                p.getParents().stream().map(EnrichedPerson::getDisplayName).collect(Collectors.joining(" & ")),
+                p.getSpouses().stream().map(EnrichedPerson::getDisplayName).collect(Collectors.joining(", ")),
+                p.getChildren().size()));
+    }
+
+    private void printTreeOptions(Integer personId) throws IOException {
+        EnrichedPerson person = Objects.requireNonNull(gedcom.getPersonById(personId), "Person not found: I" + personId);
+        String slug = person.getSurname()
+                .map(Surname::simplified)
+                .map(surname -> StringUtils.replaceChars(surname, ' ', '-'))
+                .orElseGet(personId::toString);
+        System.out.printf("TREE-PERSON I%d %s | slug: %s%n", personId, person.getDisplayName(), slug);
+
+        org.folg.gedcom.model.Gedcom legacy = gedcom.getLegacyGedcom().orElseThrow();
+        for (org.folg.gedcom.model.SpouseFamilyRef ref : person.getLegacyPerson().orElseThrow().getSpouseFamilyRefs()) {
+            org.folg.gedcom.model.Family family = legacy.getFamily(ref.getRef());
+            String spouse = Stream.concat(family.getHusbandRefs().stream(), family.getWifeRefs().stream())
+                    .map(org.folg.gedcom.model.SpouseRef::getRef)
+                    .filter(spouseRef -> !spouseRef.equals("I" + personId))
+                    .map(spouseRef -> gedcom.getPersonById(Integer.valueOf(spouseRef.substring(1))))
+                    .filter(Objects::nonNull)
+                    .map(EnrichedPerson::getDisplayName)
+                    .findFirst()
+                    .orElse("(no spouse)");
+            String date = family.getEventsFacts().stream()
+                    .filter(e -> "MARR".equals(e.getTag()) && e.getDate() != null)
+                    .map(org.folg.gedcom.model.EventFact::getDate)
+                    .findFirst()
+                    .orElse("?");
+            System.out.printf("TREE-MARRIAGE %s | %s | married %s | children: %d%n",
+                    family.getId(), spouse, date, family.getChildRefs().size());
+        }
+
+        List<List<EnrichedPerson>> generations = descendantGenerations(person);
+        for (int g = 0; g < generations.size(); g++) {
+            List<EnrichedPerson> generation = generations.get(g);
+            long alive = generation.stream().filter(EnrichedPerson::isAlive).count();
+            System.out.printf("TREE-GENERATION %d | people: %d | alive: %d%s%n",
+                    g + 1, generation.size(), alive, alive == generation.size() ? " (all alive)" : "");
+        }
+
+        List<List<Relationship>> relationshipsList = familyTreeHelper.getRelationshipsWithNotInLawPriority(person, true);
+        for (int depth = 1; depth <= generations.size() + 1; depth++) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            new GedcomWriter().write(formatSubGedcom(webTreeConfig(personId, depth), relationshipsList), out);
+            String text = out.toString(StandardCharsets.UTF_8);
+            System.out.printf("TREE-DEPTH %d | people: %d | private: %d%n", depth,
+                    Pattern.compile("^0 @I\\d+@ INDI$", Pattern.MULTILINE).matcher(text).results().count(),
+                    Pattern.compile("^1 NAME <privado>", Pattern.MULTILINE).matcher(text).results().count());
+        }
+        System.out.printf("TREE-SUGGESTED-DEPTH %d%n", suggestedMaxDescDepth(generations.stream()
+                .map(generation -> generation.stream().allMatch(EnrichedPerson::isAlive))
+                .toList()));
+    }
+
+    /** The settings every web tree uses; only {@code maxDescDepth} varies between trees */
+    static SubGedcomConfig webTreeConfig(Integer personId, int maxDescDepth) {
+        return new SubGedcomConfig(personId, true, 0, 1, maxDescDepth, null, true, true, null, true);
+    }
+
+    /** Descendants by generation (children first), each person once, at the generation they first appear */
+    static List<List<EnrichedPerson>> descendantGenerations(EnrichedPerson root) {
+        List<List<EnrichedPerson>> generations = new ArrayList<>();
+        Set<Integer> seen = new java.util.HashSet<>(Set.of(root.getId()));
+        List<EnrichedPerson> current = List.of(root);
+        while (true) {
+            List<EnrichedPerson> next = current.stream()
+                    .flatMap(p -> p.getChildren().stream())
+                    .filter(child -> seen.add(child.getId()))
+                    .toList();
+            if (next.isEmpty()) {
+                return generations;
+            }
+            generations.add(next);
+            current = next;
+        }
+    }
+
+    /**
+     * Deepest {@code maxDescDepth} that adds at most one generation made only of living people: the site
+     * shows them as {@code <privado>}, so going further only adds private cards. At least 1.
+     */
+    static int suggestedMaxDescDepth(List<Boolean> generationAllAlive) {
+        int firstAllAlive = generationAllAlive.indexOf(true);
+        return Math.max(1, firstAllAlive >= 0 ? firstAllAlive + 1 : generationAllAlive.size());
+    }
+
+    @Test
+    public void suggestedMaxDescDepth_stopsAtTheFirstGenerationOfOnlyLivingPeople() {
+        Assertions.assertThat(suggestedMaxDescDepth(List.of(false, false, false, true, true))).isEqualTo(4);
+        Assertions.assertThat(suggestedMaxDescDepth(List.of(false, true, false))).isEqualTo(2);
+        Assertions.assertThat(suggestedMaxDescDepth(List.of(false, false))).isEqualTo(2);
+        Assertions.assertThat(suggestedMaxDescDepth(List.of(true))).isEqualTo(1);
+        Assertions.assertThat(suggestedMaxDescDepth(List.of())).isEqualTo(1);
+    }
+
+    /** Every word of the query starts a word of the name, ignoring case and accents */
+    static boolean matchesNameQuery(@Nullable String name, String query) {
+        if (name == null) {
+            return false;
+        }
+        List<String> words = List.of(foldForSearch(name).split("[^a-z0-9]+"));
+        return Stream.of(foldForSearch(query).split("[^a-z0-9]+"))
+                .filter(token -> !token.isEmpty())
+                .allMatch(token -> words.stream().anyMatch(word -> word.startsWith(token)));
+    }
+
+    private static String foldForSearch(String s) {
+        return java.text.Normalizer.normalize(s, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase(java.util.Locale.ROOT);
+    }
+
+    @Test
+    public void matchesNameQuery_ignoresCaseAccentsAndWordOrder() {
+        Assertions.assertThat(matchesNameQuery("Nicolás Zacharie Marmouget", "nicolas marmouget")).isTrue();
+        Assertions.assertThat(matchesNameQuery("Nicolás Zacharie Marmouget", "Marmouget Nico")).isTrue();
+        Assertions.assertThat(matchesNameQuery("José López", "jose lopez")).isTrue();
+        Assertions.assertThat(matchesNameQuery("Nicolás Marmouget", "nicolas gennuso")).isFalse();
+        Assertions.assertThat(matchesNameQuery("Ana Marmouget", "mouget")).isFalse();
+        Assertions.assertThat(matchesNameQuery(null, "ana")).isFalse();
     }
 
     /** Keys of the site photos ({@code 2 FILE /img/photos/<key>.jpg}) a sub-GEDCOM references */
